@@ -1,0 +1,9 @@
+*.swp
+.DS_Store
+
+*.out
+*.log
+*.aux
+*.pdf
+
+*.mex*
