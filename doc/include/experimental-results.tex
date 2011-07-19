@@ -6,10 +6,12 @@ There is a number of processing elements (PE) that could have different types of
   PE = \{ PE_i \}
 \]
 
-Each processing element $PE_i$ is DVFS-aware, therefore, it has a number of operational modes $M_i$ characterized by supply voltage $v_{ij}$ and frequency $f_{ij}$:
+\note{If we can to investigate the dependency between the reliability and the thermal cycling, then we should choose the most exposed configuration to this thermal cycling. Therefore, DVFS seems to be a good example, because it is what exactly it does --- causes voltage/frequency and, consequently, temperature variations.}
+
+Each processing element $PE_i$ is DVFS-aware, therefore, it has a number of active states $S_i$ characterized by corresponding supply voltage $v_{ij}$ and frequency $f_{ij}$:
 \begin{align*}
-  & PE_i \rightarrow M_i = \{ \mu_{ij} \} \\
-  & \mu_{ij} \rightarrow (v_{ij}, f_{ij})
+  & PE_i \rightarrow S_i = \{ s_{ij} \} \\
+  & s_{ij} \rightarrow (v_{ij}, f_{ij})
 \end{align*}
 
 Also there is a number of applications and data dependencies between them represented by a task graph:
@@ -24,6 +26,8 @@ Each pair of task $\tau_j$ and processing element $PE_i$ is described by effecti
   (PE_i, \tau_j) \rightarrow (C_{eff \; ij}, WNC_{ij})
 \]
 
+At the same time, each task has a deadline $dl_j$.
+
 \subsection{Temperature-Aware Energy Optimization}
 The total power consumption of a task is a sum of the dynamic power and the leakage power:
 \begin{align*}
@@ -34,7 +38,6 @@ The total power consumption of a task is a sum of the dynamic power and the leak
 
 For the leakage part of the power consumption we use a linear approximation presented in \cite{liu2007}. $M$ and $N$ are the leakage coefficients that are calculated at the reference temperature $T_{ref}$ using Taylor series expansion of the initial equation for the leakage current $I_{leak}$.
 
-
 Therefore, the energy loss is:
 \begin{align*}
   & E = (P_{dyn} + P_{leak}) t \\
@@ -42,7 +45,7 @@ Therefore, the energy loss is:
 \end{align*}
 where $NC$ is the number of clock cycles.
 
-The energy dissipation depends on a particular processing element, its operating mode, and a particular task.
+The energy dissipation depends on a particular processing element, its active state, and a particular task.
 
 \subsection{Temperature-Aware Reliability Optimization}
 We address the thermal cycling (TC) component of common failure mechanisms, which also contain electromigration, time dependent dielectric breakdown, and stress migration \cite{xiang2010}.
