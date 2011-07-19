@@ -1,0 +1,159 @@
+In order to deal with the problem, we use the analytical approach. First of all, we need to be able to solve \equref{eq:initial} efficiently. The direct solution is:
+\begin{equation} \label{eq:solution}
+  T(t) = e^{C^{-1}At}T_{0} + (C^{-1}A)^{-1}(e^{C^{-1}At} - I)C^{-1}B
+\end{equation}
+
+Here we need to find the matrix exponential of $C^{-1} At$, but it would be easier to do if the matrix were symmetric, because a real symmetric matrix is diagonalizable and has independent (orthogonal) real eigenvectors:
+\begin{align}
+  & A = U \Lambda U^T \label{eq:eigenvalue-decomposition} \\
+  & e^A = e^{U \Lambda U^T} = U e^{\Lambda} U^T \nonumber \\
+  & e^{\Lambda} = \left[
+      \begin{array}{ccc}
+        e^{\lambda_0} & \cdots & 0 \\
+        \vdots & \ddots & \vdots \\
+        0 & \cdots & e^{\lambda_{n - 1}}
+      \end{array}
+    \right] \nonumber
+\end{align}
+where:
+\begin{itemize}
+  \item $A$ --- a real symmetric matrix,
+  \item $U$ --- the eigenvectors of $A$,
+  \item $\Lambda$ --- a diagonal matrix of the eigenvalues of $A$ ($\lambda_i$).
+\end{itemize}
+
+Therefore, we want to keep symmetry of the matrix which matrix exponential we are going to compute. In order to achieve this, we do the following substitution:
+\begin{align*}
+  Y & = C^{\frac{1}{2}} T \\
+  D & = C^{-\frac{1}{2}} A C^{-\frac{1}{2}} \\
+  E & = C^{-\frac{1}{2}} B
+\end{align*}
+with the result:
+\begin{align}
+  \frac{dY}{dt} & = DY + E \nonumber \\
+  Y(t) & = e^{Dt}Y_{0} + D^{-1}(e^{Dt} - I)E \label{eq:modified_solution} \\
+  T(t) & = C^{-\frac{1}{2}} Y(t) \nonumber
+\end{align}
+
+Now $D$ is a symmetric matrix, hence, it will be easy to find the matrix exponential of $D t$ using the eigenvalue decomposition (\equref{eq:eigenvalue-decomposition}):
+\[
+  e^{D t} = U e^{t \Lambda} U^T = \left[
+      \begin{array}{ccc}
+        e^{t \lambda_0} & \cdots & 0 \\
+        \vdots & \ddots & \vdots \\
+        0 & \cdots & e^{t \lambda_{n - 1}}
+      \end{array}
+    \right]
+\]
+
+Each line of the power profile $B$ contains power values for all cores, denoted as $B_i$, at the same period of time $t_i$. Each step of the iterative process we get a vector of temperature values for all cores according to \equref{eq:modified_solution}:
+\begin{equation} \label{eq:recurrent}
+  Y_{i+1} = K_i Y_i + G_i B_i
+\end{equation}
+where:
+\begin{itemize}
+  \item $K_i = e^{Dt_i}$,
+  \item $G_i = D^{-1}(e^{Dt_i} - I) C^{-\frac{1}{2}}$.
+\end{itemize}
+
+Since we perform the eigenvalue decomposition of D (\equref{eq:eigenvalue-decomposition}), $D^{-1}$ can be efficiently computed in the following way:
+\[
+  D^{-1} = U \Lambda^{-1} U^T = U \left[
+      \begin{array}{ccc}
+        \frac{1}{\lambda_0} & \cdots & 0 \\
+        \vdots & \ddots & \vdots \\
+        0 & \cdots & \frac{1}{\lambda_{n - 1}}
+      \end{array}
+    \right] U^T \\
+\]
+therefore:
+\begin{align*}
+  G_i & = U \Lambda^{-1} U^T (U e^{t_i \Lambda} U^T - U U^T) C^{-\frac{1}{2}} = \\
+      & = U \left[
+        \begin{array}{ccc}
+          \frac{e^{t_i \lambda_0} - 1}{\lambda_0} & \cdots & 0 \\
+          \vdots & \ddots & \vdots \\
+          0 & \cdots & \frac{e^{t_i \lambda_{n - 1}} - 1}{\lambda_{n - 1}}
+        \end{array}
+      \right] U^T C^{-\frac{1}{2}}
+\end{align*}
+
+If the time intervals are equal, i.e. the distance in time between two vectors of power values stays the same, the iterative process can be described as the following:
+\[
+  Y_{i+1} = KY_i + GB_i
+\]
+where:
+\begin{itemize}
+  \item $t_i = t_s, \forall i$ --- the sampling interval,
+  \item $K = e^{Dt_s}$,
+  \item $G = D^{-1}(e^{Dt_s}-I) C^{-\frac{1}{2}}$.
+\end{itemize}
+
+It should be noticed that $K$ and $G$ are constants, since they depend only on the matrices $A$, $C$, and the sampling interval $t_s$.  Both $Y_i$ and $B_i$ are vectors $n \times 1$.
+
+Therefore, in order to find SSDTC, we need to solve the following system of linear equations:
+\[
+  \begin{cases}
+    K_0 Y_0 - Y_1 & = -Q_0 \\
+    ... \\
+    K_{m-1} Y_{m-1} - Y_{m} & = -Q_{m-1}
+  \end{cases}
+\]
+where $Q_i = G_i B_i$.
+
+Also we have one boundary condition that ensures the temperature to be the same on both sides of the curve:
+\begin{equation} \label{eq:boundary-condition}
+  Y_0 = Y_m
+\end{equation}
+
+Taking it into account, we get:
+\[
+  \begin{cases}
+    K_0 Y_0 - Y_1 & =-Q_0 \\
+    ... \\
+    -Y_0 + K_{m-1} Y_{m-1} & = -Q_{m-1}
+  \end{cases}
+\]
+
+In this notation, the system can be written as:
+\begin{equation} \label{eq:system}
+  AA \; YY = BB
+\end{equation}
+where:
+\begin{itemize}
+  \item
+    $AA = \left[
+      \begin{array}{ccccc}
+        K_0 & -I & 0 & \cdots & 0 \\
+        0 & K_1 & -I &  & \vdots \\
+        \vdots &  & \ddots & -I & 0 \\
+        0 &  &  & K_{m-2} & -I \\
+        -I & 0 & \cdots & 0 & K_{m-1}
+      \end{array}
+    \right]$,
+
+  \item
+    $YY = \left[
+      \begin{array}{c}
+        Y_0 \\
+        Y_1 \\
+        \vdots \\
+        Y_{m-2} \\
+        Y_{m-1}
+      \end{array}
+    \right]$,
+
+  \item $BB = \left[
+    \begin{array}{c}
+      -Q_0 \\
+      -Q_1 \\
+      \vdots \\
+      -Q_{m-2} \\
+      -Q_{m-1}
+    \end{array}
+  \right]$.
+\end{itemize}
+
+$AA$ is a square matrix $nm \times nm$. $YY$ and $BB$ are vectors $nm \times 1$. This is the system that can give us desired SSDTC. It should be observed that if the sampling interval is constant, the block diagonal of the matrix $AA$ is composed of the same blocks $K$.
+
+Such systems could be extremely big, therefore, we need to find a fast and accurate way to solve them.

@@ -1,59 +1,37 @@
 \documentclass[11pt,a4paper]{article}
-\usepackage[english]{babel}
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage{amsmath}
-\usepackage{graphicx}
-\usepackage{appendix}
-\usepackage{hyperref}
+\input{include/common.tex}
 
-\hypersetup{
-  pdfborder={0 0 0},
-  colorlinks=true,
-  linkcolor=red,
-  citecolor=red
-}
-
-\newcommand{\equref}[1]{Equation~(\ref{#1})}
-\newcommand{\figref}[1]{Figure~\ref{#1}}
-\newcommand{\apref}[1]{Appendix~\ref{#1}}
-\newcommand{\secref}[1]{Section~\ref{#1}}
 \newcommand{\ssdtc}{Steady-State Dynamic Temperature Curve}
 
-\author{Min Bao, Ivan Ukhov}
+\author{Min Bao}
 \title{\ssdtc\ for Multiprocessor Systems}
 
 \begin{document}
+  \maketitle
 
-\maketitle
-\section{Introduction}
-It is all began in Africa.
+  \section{Introduction}
+  It is all began in Africa.
 
-\section{Thermal Model}
-About the HotSpot thermal model.
+  \section{Thermal Model}
+  \input{include/hotspot.tex}
 
-\section{Problem Formulation}
+  \section{Problem Formulation}
+  \input{include/problem.tex}
 
-\section{\ssdtc}
-Yeah, we did it.
+  \section{Analytical Solution}
+  \input{include/solution.tex}
 
-\section{Experimental Results and Analysis}
-Temperature-Aware Energy Optimization with Reliability Concern.
+  \section{Condensed Equation} \label{condensed-equation}
+  \input{include/condensed-equation.tex}
 
-\subsection{Energy Optimization and Leakage}
-About leakage.
+  \section{Experimental Results and Analysis}
+  \input{include/experimental-results.tex}
 
-\subsection{Reliability and Thermal Cycling}
-About aging.
+  \subsection{Obtained Results}
+  Looks good.
 
-\subsection{Experimental Setup}
-\emph{Architecture Model}. About the processing elements and communication links.\\
-\emph{Application Model}. About the task graph and friends.
+  \section{Conclusion}
+  Well done.
 
-\subsection{Obtained Results}
-Looks good.
-
-\section{Conclusion}
-Well done.
-
+  \input{include/bibliography.tex}
 \end{document}

@@ -1,0 +1,14 @@
+HotSpot is a modeling methodology for developing compact thermal models based on the popular stacked-layer packaging scheme in modern very large-scale integration systems \cite{huang2006}. It describes thermal systems with the following differential equation \cite{rao2008}:
+\begin{equation} \label{eq:initial}
+  C \frac{dT}{dt} = AT + B
+\end{equation}
+where:
+\begin{itemize}
+  \item $C$ --- a diagonal matrix $n \times n$ that represents the capacitance,
+  \item $A$ --- a symmetric matrix $n \times n$ that represents the conductivity,
+  \item $B$ --- a vector $n \times 1$ that represents the power consumption,
+  \item $n = 4 \; cores + 12$ --- the number of thermal nodes,
+  \item $cores$ --- the number of cores that the processor has.
+\end{itemize}
+
+HotSpot comes with a tool of the same name to calculate this model. It uses the Runge-Kutta numerical method to solve \equref{eq:initial}.
