@@ -1,12 +1,16 @@
 clear all;
 clc;
 
+tic
 tgff = TGFF('simple.tgff');
-ls = LS();
+toc
 
 for i = 1:length(tgff.graphs)
   graph = tgff.graphs{i};
   graph.inspect();
-  ls.process(graph);
+
+  tic
+  ls = LS(graph);
+  toc
   ls.inspect();
 end

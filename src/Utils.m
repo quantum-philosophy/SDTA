@@ -9,10 +9,17 @@ classdef Utils
       end
     end
 
-    function list = map(cells, property)
+    function list = mapToCells(cells, property)
       list = {};
       for i = 1:length(cells)
         list = { list{:} cells{i}.(property) };
+      end
+    end
+
+    function list = mapToVector(cells, property)
+      list = [];
+      for i = 1:length(cells)
+        list = [ list(:) cells{i}.(property) ];
       end
     end
 

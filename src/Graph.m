@@ -3,8 +3,11 @@ classdef Graph < handle
     name
     id
     tasks
-    links_to
-    links_from
+    orderedTasks
+    linksTo
+    linksFrom
+    taskIndexesTo
+    taskIndexesFrom
     attributes
   end
 
@@ -12,32 +15,61 @@ classdef Graph < handle
     function graph = Graph(name, id)
       graph.name = name;
       graph.id = id;
+
       graph.tasks = containers.Map();
-      graph.links_to = containers.Map();
-      graph.links_from = containers.Map();
+      graph.orderedTasks = {};
+
+      % To search by names of tasks
+      graph.linksTo = containers.Map();
+      graph.linksFrom = containers.Map();
+
+      % To search by indexes of tasks
+      graph.taskIndexesTo = {};
+      graph.taskIndexesFrom = {};
+
       graph.attributes = containers.Map();
     end
 
-    function tasks = getStartTasks(graph)
-      tasks = {};
-      keys = graph.tasks.keys;
-      for i = 1:length(keys)
-        if ~graph.links_to.isKey(keys(i))
-          tasks = { tasks{:} graph.tasks(keys{i}) };
-        end
+    function taskIds = getStartPoints(graph)
+      taskIds = zeros(0, 0);
+      for i = 1:length(graph.orderedTasks)
+        if isempty(graph.taskIndexesTo{i}), taskIds = [ taskIds i ]; end
       end
     end
 
     function addTask(graph, name, type)
-      graph.tasks(name) = Task(name, type);
+      task = Task(name, type);
+
+      graph.tasks(name) = task;
+      graph.orderedTasks = { graph.orderedTasks{:} task };
+
+      % Keep track of Link objects
+      graph.linksTo(name) = {};
+      graph.linksFrom(name) = {};
+
+      % Simplified tracking or task indexes
+      index = length(graph.orderedTasks);
+      graph.taskIndexesTo{index} = zeros(0, 0);
+      graph.taskIndexesFrom{index} = zeros(0, 0);
     end
 
     function addLink(graph, lname, fname, tname, type)
       ftask = graph.tasks(fname);
       ttask = graph.tasks(tname);
+
       link = Link(lname, ftask, ttask, type);
-      Utils.addToList(graph.links_from, fname, link);
-      Utils.addToList(graph.links_to, tname, link);
+
+      % Save Link objects
+      links = graph.linksTo(tname);
+      graph.linksTo(tname) = { links{:} link };
+      links = graph.linksFrom(fname);
+      graph.linksFrom(fname) = { links{:} link };
+
+      % Save indexes of tasks
+      findex = graph.findTaskIndexByName(fname);
+      tindex = graph.findTaskIndexByName(tname);
+      graph.taskIndexesTo{tindex} = [ graph.taskIndexesTo{tindex} findex ];
+      graph.taskIndexesFrom{findex} = [ graph.taskIndexesFrom{findex} tindex ];
     end
 
     function addDeadline(graph, dname, tname, time)
@@ -48,9 +80,9 @@ classdef Graph < handle
     end
 
     function bubbleDeadline(graph, task)
-      if ~graph.links_to.isKey(task.name), return; end
+      if ~graph.linksTo.isKey(task.name), return; end
       time = task.deadline;
-      links = graph.links_to(task.name);
+      links = graph.linksTo(task.name);
       for i = 1:length(links)
         task = links{i}.ftask;
         if isempty(task.deadline) || (task.deadline > time)
@@ -62,6 +94,16 @@ classdef Graph < handle
 
     function setAttribute(graph, name, value)
       graph.attributes(name) = value;
+    end
+
+    function index = findTaskIndexByName(graph, name)
+      for i = 1:length(graph.orderedTasks)
+        if strcmp(graph.orderedTasks{i}.name, name)
+          index = i;
+          return;
+        end
+      end
+      index = 0;
     end
 
     function inspect(graph)
@@ -79,8 +121,8 @@ classdef Graph < handle
       for i = 1:length(keys)
         task = graph.tasks(keys{i});
         fprintf('    %s -> [ ', task.name);
-        if graph.links_from.isKey(task.name)
-          links = graph.links_from(task.name);
+        if graph.linksFrom.isKey(task.name)
+          links = graph.linksFrom(task.name);
           for j = 1:length(links)
             if j > 1, fprintf(', '); end
             fprintf('%s', links{j}.ttask.name);
