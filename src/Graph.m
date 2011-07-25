@@ -63,5 +63,31 @@ classdef Graph < handle
     function setAttribute(graph, name, value)
       graph.attributes(name) = value;
     end
+
+    function inspect(graph)
+      fprintf('Task graph: %s %d\n', graph.name, graph.id);
+      fprintf('  Number of tasks: %d\n', length(graph.tasks));
+
+      fprintf('  Attributes:\n');
+      keys = graph.attributes.keys;
+      for i = 1:length(keys)
+        fprintf('    %s = %s\n', keys{i}, num2str(graph.attributes(keys{i})));
+      end
+
+      fprintf('  Tasks:\n');
+      keys = graph.tasks.keys;
+      for i = 1:length(keys)
+        task = graph.tasks(keys{i});
+        fprintf('    %s -> [ ', task.name);
+        if graph.links_from.isKey(task.name)
+          links = graph.links_from(task.name);
+          for j = 1:length(links)
+            if j > 1, fprintf(', '); end
+            fprintf('%s', links{j}.ttask.name);
+          end
+        end
+        fprintf(' ]\n');
+      end
+    end
   end
 end

@@ -1,5 +1,8 @@
 classdef LS < handle
   properties
+    schedule
+    graph
+    priority
   end
 
   methods
@@ -9,17 +12,20 @@ classdef LS < handle
       end
     end
 
-    function s = schedule(graph, priority)
-      s = {};
+    function process(ls, graph, priority)
+      ls.schedule = {};
 
-      if nargin < 2
+      if nargin < 3
         priority = containers.Map();
         keys = graph.tasks.keys;
         for i = 1:length(keys)
-          task = graph.tasks(keys(i));
-          priority(keys(i)) = task.deadline;
+          task = graph.tasks(keys{i});
+          priority(keys{i}) = task.deadline;
         end
       end
+
+      ls.graph = graph;
+      ls.priority = priority;
 
       tasks = graph.getStartTasks();
       while ~isempty(tasks)
@@ -33,18 +39,34 @@ classdef LS < handle
           end
         end
 
-        s = { s{:} task };
+        ls.schedule = { ls.schedule{:} task };
 
         % Exclude the task
         tasks(index) = [];
 
-        % Append new tasks
+        % Append new tasks, ensure absence of repetitions
         if graph.links_from.isKey(task.name)
           links = graph.links_from(task.name);
           for i = 1:length(links)
-            tasks = { tasks{:} links{i}.ttask };
+            task = links{i}.ttask;
+            if ~Utils.include(ls.schedule, task) && ~Utils.include(tasks, task)
+              tasks = { tasks{:} task };
+            end
           end
         end
+      end
+    end
+
+    function inspect(ls)
+      if isempty(ls.graph)
+        fprintf('Schedule is empty\n');
+        return;
+      end
+
+      fprintf('Schedule for %s %d:\n', ls.graph.name, ls.graph.id);
+      for i = 1:length(ls.schedule)
+        tname = ls.schedule{i}.name;
+        fprintf('  %s (%s)\n', tname, num2str(ls.priority(tname)));
       end
     end
   end

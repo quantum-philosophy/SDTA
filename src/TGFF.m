@@ -22,11 +22,11 @@ classdef TGFF < handle
         if ~isempty(attrs)
           name = attrs{1}{1};
           id = str2num(attrs{1}{2});
-          if tgff.isGraph(name)
+          if Utils.include(tgff.graphLabels, name)
             graph = Graph(name, id);
             tgff.parseGraph(graph, fid);
             tgff.graphs{length(tgff.graphs) + 1} = graph;
-          elseif tgff.isTable(name)
+          elseif Utils.include(tgff.tableLabels, name)
             table = Table(name, id);
             tgff.parseTable(table, fid);
             tgff.tables{length(tgff.tables) + 1} = table;
@@ -79,36 +79,36 @@ classdef TGFF < handle
     end
 
     function parseTable(tgff, table, fid)
-      state = 0;
+      state = State.SearchHeader;
 
       line = fgetl(fid);
       while ischar(line) && ~tgff.isEnd(line)
         switch state
-        case 0 % Looking for a header
+        case State.SearchHeader
           header = tgff.parseHeader(line);
           if ~isempty(header)
             if ~strcmp(header{1}, 'type')
-              state = 1;
+              state = State.SearchTableAttributes;
             else
-              state = 3;
+              state = State.SearchTypeHeader;
             end
           end
 
-        case 1 % Looking for the table attributes
+        case State.SearchTableAttributes
           attrs = sscanf(line, '%f');
           if length(attrs) == length(header)
             table.setAttributes(header, attrs);
-            state = 2;
+            state = State.SearchTypeHeader;
           end
 
-        case 2 % Looking for the type header
+        case State.SearchTypeHeader
           header = tgff.parseHeader(line);
           if ~isempty(header) && strcmp(header{1}, 'type')
             table.setHeader(header(2:end));
-            state = 3;
+            state = State.SearchTypeAttributes;
           end
 
-        case 3 % Reading the type attributes
+        case State.SearchTypeAttributes
           attrs = sscanf(line, '%f');
           if length(attrs) == length(header)
             table.setRow(attrs(1) + 1, attrs(2:end));
@@ -117,24 +117,6 @@ classdef TGFF < handle
 
         line = fgetl(fid);
       end
-    end
-
-    function result = isIn(tgff, cells, name)
-      result = 0;
-      for i = 1:length(cells)
-        if strcmp(cells{i}, name)
-          result = 1;
-          return;
-        end
-      end
-    end
-
-    function result = isGraph(tgff, name);
-      result = tgff.isIn(tgff.graphLabels, name);
-    end
-
-    function result = isTable(tgff, name);
-      result = tgff.isIn(tgff.tableLabels, name);
     end
 
     function result = isEnd(tgff, line)
