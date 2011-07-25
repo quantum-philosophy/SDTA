@@ -15,8 +15,8 @@ classdef LS < handle
 
       if nargin < 3
         priority = zeros(0, 0);
-        for i = 1:length(graph.orderedTasks)
-          priority(i) = graph.orderedTasks{i}.deadline;
+        for i = 1:length(graph.tasks)
+          priority(i) = graph.tasks{i}.deadline;
         end
       end
 
@@ -65,7 +65,7 @@ classdef LS < handle
 
       fprintf('Schedule for %s %d:\n', ls.graph.name, ls.graph.id);
       for i = 1:length(ls.schedule)
-        task = ls.graph.orderedTasks{ls.schedule(i)};
+        task = ls.graph.tasks{ls.schedule(i)};
         fprintf('  %s (%s)\n', task.name, num2str(ls.priority(i)));
       end
     end
