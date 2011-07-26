@@ -1,19 +1,22 @@
 classdef TGFF < handle
   properties
-    graphLabels = { 'TASK_GRAPH' };
-    tableLabels = { 'PE', 'COMMUN' };
-    graphs = {};
-    tables = {};
+    graphLabels
+    tableLabels
+    graphs
+    tables
   end
 
   methods
-    function tgff = TGFF(file)
-      if nargin > 0
-        tgff.parseFile(file)
-      end
+    function tgff = TGFF(varargin)
+      if nargin > 0, tgff.process(varargin{:}); end
     end
 
-    function parseFile(tgff, file)
+    function process(tgff, file, graphLabels, tableLabels)
+      tgff.graphLabels = graphLabels;
+      tgff.tableLabels = tableLabels;
+      tgff.graphs = {};
+      tgff.tables = {};
+
       fid = fopen(file);
 
       line = fgetl(fid);
@@ -25,11 +28,11 @@ classdef TGFF < handle
           if Utils.include(tgff.graphLabels, name)
             graph = Graph(name, id);
             tgff.parseGraph(graph, fid);
-            tgff.graphs{length(tgff.graphs) + 1} = graph;
+            tgff.graphs{end + 1} = graph;
           elseif Utils.include(tgff.tableLabels, name)
             table = Table(name, id);
             tgff.parseTable(table, fid);
-            tgff.tables{length(tgff.tables) + 1} = table;
+            tgff.tables{end + 1} = table;
           end
         end
 
@@ -38,7 +41,9 @@ classdef TGFF < handle
 
       fclose(fid);
     end
+  end
 
+  methods (Access = 'private')
     function parseGraph(tgff, graph, fid)
       line = fgetl(fid);
       while ischar(line) && isempty(regexp(line, '^}$'))
@@ -82,7 +87,7 @@ classdef TGFF < handle
       state = State.SearchHeader;
 
       line = fgetl(fid);
-      while ischar(line) && ~tgff.isEnd(line)
+      while ischar(line) && isempty(regexp(line, '^}$'))
         switch state
         case State.SearchHeader
           header = tgff.parseHeader(line);
@@ -117,10 +122,6 @@ classdef TGFF < handle
 
         line = fgetl(fid);
       end
-    end
-
-    function result = isEnd(tgff, line)
-      result = ~isempty(regexp(line, '^}$'));
     end
 
     function header = parseHeader(tgff, line)

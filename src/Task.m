@@ -16,11 +16,11 @@ classdef Task < handle
     end
 
     function addInLink(task, link)
-      task.inLinks = { task.inLinks{:} link };
+      task.inLinks{end + 1} = link;
     end
 
     function addOutLink(task, link)
-      task.outLinks = { task.outLinks{:} link };
+      task.outLinks{end + 1} = link;
     end
   end
 end

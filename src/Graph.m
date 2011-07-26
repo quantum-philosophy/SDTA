@@ -21,14 +21,14 @@ classdef Graph < handle
     function taskIds = getStartPoints(graph)
       taskIds = zeros(0, 0);
       for i = 1:length(graph.tasks)
-        if isempty(graph.taskIndexesTo{i}), taskIds = [ taskIds i ]; end
+        if isempty(graph.taskIndexesTo{i}), taskIds(end + 1) = i; end
       end
     end
 
     function addTask(graph, name, type)
       task = Task(name, type);
 
-      graph.tasks = { graph.tasks{:} task };
+      graph.tasks{end + 1} = task;
 
       index = length(graph.tasks);
       graph.taskIndexesTo{index} = zeros(0, 0);
@@ -55,19 +55,6 @@ classdef Graph < handle
       if isa(time, 'char'), time = str2num(time); end
       task.deadline = time;
       graph.bubbleDeadline(task);
-    end
-
-    function bubbleDeadline(graph, task)
-      if isempty(task.inLinks), return; end
-      time = task.deadline;
-      links = task.inLinks;
-      for i = 1:length(links)
-        task = links{i}.ftask;
-        if isempty(task.deadline) || (task.deadline > time)
-          task.deadline = time;
-          graph.bubbleDeadline(task);
-        end
-      end
     end
 
     function setAttribute(graph, name, value)
@@ -109,6 +96,21 @@ classdef Graph < handle
           fprintf('%s', links{j}.ttask.name);
         end
         fprintf(' ]\n');
+      end
+    end
+  end
+
+  methods (Access = 'private')
+    function bubbleDeadline(graph, task)
+      if isempty(task.inLinks), return; end
+      time = task.deadline;
+      links = task.inLinks;
+      for i = 1:length(links)
+        task = links{i}.ftask;
+        if isempty(task.deadline) || (task.deadline > time)
+          task.deadline = time;
+          graph.bubbleDeadline(task);
+        end
       end
     end
   end
