@@ -12,98 +12,91 @@ classdef GLSA < handle
     generationalTolerance = 1e-6;
   end
 
-  properties (SetAccess = private)
-    taskCount     % Number of tasks
-    tasks         % Instances of tasks
-
-    mobility      % Mobility of the tasks
-    minMobility   % Maximal mobility
-    maxMobility   % Minimal mobility
-
+  properties (Access = private)
+    graph         % Task graph
+    taskCount     % Number of tasks (just a shortcut)
+    pes           % Processing elements
+    mapping       % Mapping for the tasks to the PEs
     options       % Options for GA
+    scheduler     % List scheduler
   end
 
   methods
-    function model = GLSA()
-      taskCount = 5;
-
-      % Generate tasks
-      tasks = {};
-      for i = 1:taskCount
-        tasks{i} = Task();
-      end
-
+    function glsa = GLSA(varargin)
       % Configure GA
       options = gaoptimset;
-      options.EliteCount = floor(model.generationalGap * model.populationSize);
-      options.StallGenLimit = generationalStall;
-      options.TolFun = generationalTolerance;
+      options.EliteCount = floor(glsa.generationalGap * glsa.populationSize);
+      options.StallGenLimit = glsa.generationalStall;
+      options.TolFun = glsa.generationalTolerance;
       options.CrossoverFcn = @crossovertwopoint;
-      options.CreateFcn = @model.create;
-      options.MutationFcn = @model.mutate;
+      options.CreationFcn = @glsa.create;
+      options.MutationFcn = @glsa.mutate;
 
-      model.taskCount = taskCount;
-      model.tasks = tasks;
+      glsa.options = options;
+      glsa.scheduler = LS();
 
-      model.mobility = map(tasks, 'mobility');
-      model.minMobility = max(model.mobility);
-      model.maxMobility = min(model.mobility);
-
-      model.options = options;
+      if nargin > 0, glsa.process(varargin{:}); end
     end
 
-    function population = create(model, varargin)
-      psize = model.populationSize;
-      tcount = model.taskCount;
+    function [ solution, fitness, flag ] = process(glsa, graph, pes, mapping)
+      glsa.taskCount = length(graph.tasks);
+      glsa.graph = graph;
+      glsa.pes = pes;
+      if nargin < 4, mapping = ones(length(glsa.taskCount)); end
+      glsa.mapping = mapping;
+
+      [ solution, fitness, flag ] = ga(@glsa.evaluate, ...
+        glsa.taskCount, [], [], [], [], [], [], [], glsa.options);
+    end
+  end
+
+  methods (Access = private)
+    function population = create(glsa, varargin)
+      psize = glsa.populationSize;
+      tcount = glsa.taskCount;
 
       population = zeros(psize, tcount);
       half = floor(psize / 2);
 
-      mobility = model.mobility;
-      maxm = model.maxMobility;
-      minm = model.minMobility;
-
       % Half of the population is generated based on the mobility
-      % of the tasks
-      for i = 1:half
-        population(i, :) = mobility;
-      end
+      % of the tasks, and the rest is randomly generated with values
+      % between the lowest and highest mobility
 
-      % The rest is randomly generated with values between
-      % the lowest and highest mobility
-      for i = (half + 1):psize
-        population(i, :) = minm + (maxm - minm) * rand(1, tcount);
-      end
+      % Use ordinal numbers instead of plain mobility
+      mobility = Utils.mapToVector(glsa.graph.tasks, 'deadline');
+      [ mobility, I ] = sort(mobility);
+
+      % The first half
+      for i = 1:half, population(i, I) = 1:tcount; end
+
+      % The second half
+      population((half + 1):end, :) = randi(tcount, psize - half, tcount);
     end
 
-    function children = mutate(model, parents, options, d1, state, d2, thisPopulation)
+    function children = mutate(glsa, parents, options, genomeLength, ...
+      fitnessFunc, state, thisScore, thisPopulation)
+
       ccount = length(parents);
-      tcount = model.taskCount;
+      tcount = glsa.taskCount;
 
       % To mutate or not to mutate? That is the question...
       % The probability to mutate should not be less than 15%
-      mprob = max(0.15, 1 / exp(state.Generation * 0.05))
+      mprob = max(0.15, 1 / exp(state.Generation * 0.05));
 
       children = zeros(ccount, tcount);
-
-      maxm = model.maxMobility;
-      minm = model.minMobility;
-      span = maxm - minm;
 
       for i = 1:ccount
         child = thisPopulation(parents(i), :);
         mutationPoints = find(rand(1, tcount) < mprob);
-        child(mutationPoints) = minm + span * rand(1, length(mutationPoints));
-        children(i, :) = child
+        child(mutationPoints) = randi(tcount, 1, length(mutationPoints));
+        children(i, :) = child;
       end
     end
 
-    function fitness = evaluate(model, genome)
-      % Create a list schedule
-      list = model.schedule(genome);
-    end
-
-    function list = schedule(model, priority)
+    function fitness = evaluate(glsa, priority)
+      energy = Estimator.calcEnergy(glsa.graph, glsa.pes, glsa.mapping);
+      % schedule = glsa.scheduler.process(glsa.graph, priority);
+      fitness = energy;
     end
   end
 end

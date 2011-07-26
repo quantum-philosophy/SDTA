@@ -1,10 +1,11 @@
 classdef Graph < handle
-  properties
+  properties (SetAccess = private)
     name
     id
     tasks
     taskIndexesTo
     taskIndexesFrom
+    taskTypes
     attributes
   end
 
@@ -15,6 +16,7 @@ classdef Graph < handle
       graph.tasks = {};
       graph.taskIndexesTo = {};
       graph.taskIndexesFrom = {};
+      graph.taskTypes = zeros(0, 0);
       graph.attributes = containers.Map();
     end
 
@@ -29,6 +31,7 @@ classdef Graph < handle
       task = Task(name, type);
 
       graph.tasks{end + 1} = task;
+      graph.taskTypes{end + 1} = type;
 
       index = length(graph.tasks);
       graph.taskIndexesTo{index} = zeros(0, 0);
@@ -81,32 +84,35 @@ classdef Graph < handle
       fprintf('  Number of tasks: %d\n', length(graph.tasks));
 
       fprintf('  Attributes:\n');
-      keys = graph.attributes.keys;
-      for i = 1:length(keys)
-        fprintf('    %s = %s\n', keys{i}, num2str(graph.attributes(keys{i})));
+      for key = graph.attributes.keys
+        key = key{1};
+        fprintf('    %s = %s\n', key, num2str(graph.attributes(key)));
       end
 
       fprintf('  Tasks:\n');
-      for i = 1:length(graph.tasks)
-        task = graph.tasks{i};
+      for task = graph.tasks
+        task = task{1};
         fprintf('    %s -> [ ', task.name);
-        links = task.outLinks;
-        for j = 1:length(links)
-          if j > 1, fprintf(', '); end
-          fprintf('%s', links{j}.ttask.name);
+        first = true;
+        for link = task.outLinks
+          if ~first
+            fprintf(', ');
+          else
+            first = false;
+          end
+          fprintf('%s', link{1}.ttask.name);
         end
         fprintf(' ]\n');
       end
     end
   end
 
-  methods (Access = 'private')
+  methods (Access = private)
     function bubbleDeadline(graph, task)
       if isempty(task.inLinks), return; end
       time = task.deadline;
-      links = task.inLinks;
-      for i = 1:length(links)
-        task = links{i}.ftask;
+      for link = task.inLinks
+        task = link{1}.ftask;
         if isempty(task.deadline) || (task.deadline > time)
           task.deadline = time;
           graph.bubbleDeadline(task);

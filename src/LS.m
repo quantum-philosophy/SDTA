@@ -1,5 +1,5 @@
 classdef LS < handle
-  properties
+  properties (SetAccess = private)
     graph
     priority
     schedule
@@ -15,9 +15,7 @@ classdef LS < handle
 
       if nargin < 3
         priority = zeros(0, 0);
-        for i = 1:length(graph.tasks)
-          priority(i) = graph.tasks{i}.deadline;
-        end
+        for task = graph.tasks, priority(end + 1) = task{1}.deadline; end
       end
 
       ls.graph = graph;
@@ -45,11 +43,11 @@ classdef LS < handle
 
         % Append new tasks, ensure absence of repetitions
         newIds = graph.taskIndexesFrom{taskNo};
-        for i = 1:length(newIds)
-          if ~done(newIds(i))
-            done(newIds(i)) = 1;
+        for id = newIds
+          if ~done(id)
+            done(id) = 1;
             count = count + 1;
-            taskIds(count) = newIds(i);
+            taskIds(count) = id;
           end
         end
       end

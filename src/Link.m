@@ -1,5 +1,5 @@
 classdef Link < handle
-  properties
+  properties (SetAccess = private)
     name
     ftask
     ttask

@@ -1,8 +1,11 @@
 classdef Task < handle
   properties
+    deadline
+  end
+
+  properties (SetAccess = private)
     name
     type
-    deadline
     inLinks
     outLinks
   end

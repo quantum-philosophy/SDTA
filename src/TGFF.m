@@ -43,7 +43,7 @@ classdef TGFF < handle
     end
   end
 
-  methods (Access = 'private')
+  methods (Access = private)
     function parseGraph(tgff, graph, fid)
       line = fgetl(fid);
       while ischar(line) && isempty(regexp(line, '^}$'))
@@ -60,22 +60,32 @@ classdef TGFF < handle
           case 'TASK'
             attrs = regexp(attrs, ...
               '(\w+)\s+TYPE\s+(\d+)', 'tokens');
-            graph.addTask(attrs{1}{:});
+            if ~isempty(attrs)
+              attrs = attrs{1};
+              % Counting from 1 instead of 0
+              attrs{2} = attrs{2} + 1;
+              graph.addTask(attrs{:});
+            end
 
           case 'ARC'
             attrs = regexp(attrs, ...
               '(\w+)\s+FROM\s+(\w+)\s+TO\s+(\w+)\s+TYPE\s+(\d+)', 'tokens');
-            graph.addLink(attrs{1}{:});
+            if ~isempty(attrs)
+              attrs = attrs{1};
+              % Counting from 1 instead of 0
+              attrs{4} = attrs{4} + 1;
+              graph.addLink(attrs{:});
+            end
 
           case 'SOFT_DEADLINE'
             attrs = regexp(attrs, ...
               '(\w+)\s+ON\s+(\w+)\s+AT\s+(\d+\.?\d*)', 'tokens');
-            graph.addDeadline(attrs{1}{:});
+            if ~isempty(attrs), graph.addDeadline(attrs{1}{:}); end
 
           case 'HARD_DEADLINE'
             attrs = regexp(attrs, ...
               '(\w+)\s+ON\s+(\w+)\s+AT\s+(\d+\.?\d*)', 'tokens');
-            graph.addDeadline(attrs{1}{:});
+            if ~isempty(attrs), graph.addDeadline(attrs{1}{:}); end
           end
         end
 
@@ -116,6 +126,7 @@ classdef TGFF < handle
         case State.SearchTypeAttributes
           attrs = sscanf(line, '%f');
           if length(attrs) == length(header)
+            % Counting from 1 instead of 0
             table.setRow(attrs(1) + 1, attrs(2:end));
           end
         end
