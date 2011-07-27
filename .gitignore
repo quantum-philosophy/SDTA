@@ -8,3 +8,9 @@
 
 *.mex*
 *.tgff
+*.o
+vendor/tgff/tgff
+build
+vendor/hotspot/hotfloorplan
+vendor/hotspot/hotspot
+vendor/hotspot/libhotspot.a
