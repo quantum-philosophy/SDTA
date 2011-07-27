@@ -43,8 +43,8 @@ classdef Table < handle
 
       fprintf('  Types:\n');
       fprintf('%10s', 'id');
-      for title = table.header
-        fprintf('%15s', title{1});
+      for title = table.header, title = title{1};
+        fprintf('%15s', title(1:min(10, length(title))));
       end
       fprintf('\n');
       for i = 1:size(table.values, 1)

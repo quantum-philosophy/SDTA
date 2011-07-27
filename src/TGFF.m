@@ -63,7 +63,7 @@ classdef TGFF < handle
             if ~isempty(attrs)
               attrs = attrs{1};
               % Counting from 1 instead of 0
-              attrs{2} = attrs{2} + 1;
+              attrs{2} = str2num(attrs{2}) + 1;
               graph.addTask(attrs{:});
             end
 
@@ -73,7 +73,7 @@ classdef TGFF < handle
             if ~isempty(attrs)
               attrs = attrs{1};
               % Counting from 1 instead of 0
-              attrs{4} = attrs{4} + 1;
+              attrs{4} = str2num(attrs{4}) + 1;
               graph.addLink(attrs{:});
             end
 

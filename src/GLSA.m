@@ -13,12 +13,11 @@ classdef GLSA < handle
   end
 
   properties (Access = private)
-    graph         % Task graph
-    taskCount     % Number of tasks (just a shortcut)
-    pes           % Processing elements
-    mapping       % Mapping for the tasks to the PEs
-    options       % Options for GA
-    scheduler     % List scheduler
+    graph             % Task graph
+    taskCount         % Number of tasks (just a shortcut)
+    evaluateSchedule  % Evaluate a schedule
+    options           % Options for GA
+    scheduler         % List scheduler
   end
 
   methods
@@ -38,12 +37,10 @@ classdef GLSA < handle
       if nargin > 0, glsa.process(varargin{:}); end
     end
 
-    function [ solution, fitness, flag ] = process(glsa, graph, pes, mapping)
-      glsa.taskCount = length(graph.tasks);
+    function [ solution, fitness, flag ] = process(glsa, graph, evaluateSchedule)
       glsa.graph = graph;
-      glsa.pes = pes;
-      if nargin < 4, mapping = ones(length(glsa.taskCount)); end
-      glsa.mapping = mapping;
+      glsa.taskCount = length(graph.tasks);
+      glsa.evaluateSchedule = evaluateSchedule;
 
       [ solution, fitness, flag ] = ga(@glsa.evaluate, ...
         glsa.taskCount, [], [], [], [], [], [], [], glsa.options);
@@ -94,9 +91,8 @@ classdef GLSA < handle
     end
 
     function fitness = evaluate(glsa, priority)
-      energy = Estimator.calcEnergy(glsa.graph, glsa.pes, glsa.mapping);
-      % schedule = glsa.scheduler.process(glsa.graph, priority);
-      fitness = energy;
+      schedule = glsa.scheduler.process(glsa.graph, priority);
+      fitness = glsa.evaluateSchedule(schedule);
     end
   end
 end

@@ -31,7 +31,7 @@ classdef Graph < handle
       task = Task(name, type);
 
       graph.tasks{end + 1} = task;
-      graph.taskTypes{end + 1} = type;
+      graph.taskTypes(end + 1) = type;
 
       index = length(graph.tasks);
       graph.taskIndexesTo{index} = zeros(0, 0);

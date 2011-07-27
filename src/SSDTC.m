@@ -1,64 +1,71 @@
 classdef SSDTC < handle
-  properties (SetAccess = private)
-    % Heavy objects
-    graphs
-    pes
-    comms
+  properties (Constant)
+    samplingInterval = 0.002;
+  end
 
-    % To speed up the access to the properties of the PEs
+  properties (Access = private)
+    % Tasks
+    graph
+    taskCount
+
+    % PEs
+    peCount
     voltage
     frequency
     ceff
     nc
-  end
 
-  properties (Access = private)
-    scheduler
+    hotspotConfig
+    floorplan
+    mapping
   end
 
   methods
     function ssdtc = SSDTC(varargin)
-      ssdtc.scheduler = GLSA();
-
       if nargin > 0, ssdtc.process(varargin{:}); end
     end
 
-    function process(ssdtc, file, graphLabel, peLabel, commLabel)
-      if nargin < 3, graphLabel = 'TASK_GRAPH'; end
-      if nargin < 4, peLabel = 'PE'; end
-      if nargin < 5, commLabel = 'COMMUN'; end
-
-      % Parse the TGFF configuration file
-      tgff = TGFF(file, { graphLabel }, { peLabel commLabel });
-
-      % Graphs
-      ssdtc.graphs = tgff.graphs;
-
-      % Tables
-      ssdtc.pes = {};
-      ssdtc.comms = {};
-      for i = 1:length(tgff.tables)
-        table = tgff.tables{i};
-        if strcmp(table.name, peLabel), ssdtc.addPE(table);
-        elseif strcmp(table.name, commLabel), ssdtc.addComm(table);
-        end
+    function process(ssdtc, graph, pes, comms, hotspotConfig, floorplan)
+      if length(pes) ~= 1
+        fprintf('Exactly one core is supported right now\n');
+        return;
       end
 
-      for graph = ssdtc.graphs, ssdtc.calculate(graph{1}); end
+      % Tasks
+      ssdtc.graph = graph;
+      ssdtc.taskCount = length(graph.tasks);
+
+      % PEs
+      ssdtc.peCount = 0;
+      ssdtc.voltage = zeros(0, 0);
+      ssdtc.frequency = zeros(0, 0);
+      ssdtc.ceff = zeros(0, 0);
+      ssdtc.nc = zeros(0, 0);
+      for pe = pes, ssdtc.addPE(pe{1}); end
+
+      ssdtc.hotspotConfig = hotspotConfig;
+      ssdtc.floorplan = floorplan;
+
+      % TODO: Communications
+
+      % TODO: Mapping, dummy for the moment
+      ssdtc.mapping = randi(ssdtc.peCount, 1, ssdtc.taskCount);
+
+      % TODO: Genetic list scheduler algorithm
+      % scheduler = GLSA();
+      % [ solution, fitness, flag ] = ...
+      %   scheduler.process(graph, @ssdtc.evaluateSchedule);
+
+      ls = LS(graph);
+      powerProfile = ssdtc.calculatePowerProfile(ls.schedule);
     end
 
     function inspect(ssdtc)
       for graph = ssdtc.graphs, graph{1}.inspect(); end
-      for pe = ssdtc.pes, pe{1}.inspect(); end
-      for comm = ssdtc.comms, comm{1}.inspect(); end
     end
   end
 
   methods (Access = private)
-    function calculate(ssdtc, graph)
-      [ solution, fitness, flag ] = ssdtc.scheduler.process(graph, ssdtc.pes);
-    end
-
     function addPE(ssdtc, pe)
       % Validate PE attributes
       if ~pe.attributes.isKey('frequency')
@@ -74,9 +81,9 @@ classdef SSDTC < handle
       ceff = [];
       nc = [];
       for i = 1:length(pe.header)
-        if strcmp(pe.header{i}, 'Ceff')
+        if strcmp(pe.header{i}, 'effective_switched_capacitance')
           ceff = pe.values(:, i);
-        elseif strcmp(pe.header{i}, 'NC')
+        elseif strcmp(pe.header{i}, 'number_of_clock_cycles')
           nc = pe.values(:, i);
         end
       end
@@ -94,15 +101,69 @@ classdef SSDTC < handle
       end
 
       % Everything is fine, write!
-      ssdtc.pes{end + 1} = pe;
+      ssdtc.peCount = ssdtc.peCount + 1;
       ssdtc.voltage(end + 1) = pe.attributes('voltage');
       ssdtc.frequency(end + 1) = pe.attributes('frequency');
       ssdtc.ceff(end + 1, 1:length(ceff)) = ceff;
       ssdtc.nc(end + 1, 1:length(nc)) = nc;
     end
 
-    function addComm(ssdtc, comm)
-      ssdtc.comms{end + 1} = comm;
+    function fitness = evaluateSchedule(ssdtc, schedule)
+      fitness = ssdtc.estimateEnergy(schedule);
+    end
+
+    function energy = estimateEnergy(ssdtc, schedule);
+      energy = 0;
+    end
+
+    function powerProfile = calculatePowerProfile(ssdtc, schedule)
+      cores = ssdtc.peCount;
+      tasks = ssdtc.taskCount;
+
+      taskTime = zeros(cores, tasks);
+      taskPower = zeros(cores, tasks);
+
+      for i = 1:cores
+        fprintf('PE %d\n', 1);
+        fprintf('  frequency = %f GHz\n', ssdtc.frequency(i) * 10^(-9));
+        fprintf('  voltage = %f\n', ssdtc.voltage(i));
+
+        taskIds = find(ssdtc.mapping == i);
+        taskTypes = ssdtc.graph.taskTypes(taskIds);
+
+        % t = NC / f
+        taskTime(i, taskIds) = ssdtc.nc(i, taskTypes) / ssdtc.frequency(i);
+
+        % Pdyn = Ceff * f * Vdd^2
+        taskPower(i, taskIds) = ssdtc.ceff(i, taskTypes) * ...
+          ssdtc.frequency(i) * ssdtc.voltage(i)^2;
+      end
+
+      powerProfile = zeros(0, cores);
+      timeStep = ssdtc.samplingInterval;
+
+      totalTime = sum(taskTime); % seconds
+      fprintf('total time = %f s\n', totalTime);
+
+      steps = floor(totalTime / timeStep);
+      if steps * timeStep < totalTime, steps = steps + 1; end
+      fprintf('sampling interval = %f s\n', timeStep);
+      fprintf('power steps = %d\n', steps);
+      fprintf('time mismatch = %f\n', steps * timeStep - totalTime);
+
+      for i = 1:cores
+        k = 1;
+        futureTime = taskTime(i, schedule(k)); % Time in tasks
+        currentTime = 0; % Time of the current step
+        for j = 1:steps
+          while currentTime >= futureTime
+            k = k + 1;
+            futureTime = futureTime + taskTime(i, schedule(k));
+          end
+          powerProfile(j, i) = taskPower(i, schedule(k));
+          currentTime = currentTime + timeStep;
+        end
+      end
     end
   end
 end
