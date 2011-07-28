@@ -65,11 +65,11 @@ classdef SSDTC < handle
       ssdtc.mapping = randi(ssdtc.coreCount, 1, ssdtc.taskCount);
 
       % TODO: Genetic list scheduler algorithm
-      % scheduler = GLSA();
+      % scheduler = Algorithms.GLSA();
       % [ solution, fitness, flag ] = ...
       %   scheduler.process(graph, @ssdtc.evaluateSchedule);
 
-      ls = LS(graph);
+      ls = Algorithms.LS(graph);
 
       ssdtc.calculateThermalModel(floorplan, config);
       ssdtc.calculatePowerProfile(ls.schedule);
@@ -186,7 +186,7 @@ classdef SSDTC < handle
     end
 
     function calculateThermalModel(ssdtc, floorplan, config)
-      [ negA, invC ] = obtainHotSpotModel(floorplan, config);
+      [ negA, invC ] = External.obtainHotSpotModel(floorplan, config);
       invC = diag(diag(invC));
 
       sinvC = sqrt(invC);

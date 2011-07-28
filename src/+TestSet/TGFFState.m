@@ -1,6 +1,6 @@
-classdef State
+classdef TGFFState
   enumeration
-    % TGFF Table parser
+    % Table parser
     SearchHeader, SearchTableAttributes, SearchTypeHeader, SearchTypeAttributes
   end
 end

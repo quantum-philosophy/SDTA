@@ -3,22 +3,22 @@ clc;
 
 cores = 1;
 floorplan = '../build/simple.flp';
-tgffConfig = '../build/simple.tgff';
+graphConfig = '../build/simple.tgff';
 hotspotConfig = '../build/hotspot.config';
 graphLabel = 'TASK_GRAPH';
 peLabel = 'PE';
 commLabel = 'COMMUN';
 
 % Generate a floorplan
-generateFloorplan(floorplan, cores);
+Utils.generateFloorplan(floorplan, cores);
 
-% Parse the TGFF configuration file
-tgff = TGFF(tgffConfig, { graphLabel }, { peLabel, commLabel });
+% Parse tasks graphs
+parser = TestSet.TGFFParser(graphConfig, { graphLabel }, { peLabel, commLabel });
 
 pes = {};
 comms = {};
 
-for table = tgff.tables, table = table{1};
+for table = parser.tables, table = table{1};
   if strcmp(table.name, peLabel), pes{end + 1} = table;
   elseif strcmp(table.name, commLabel), comms{end + 1} = table;
   end
@@ -27,8 +27,8 @@ end
 colors = { 'r', 'g', 'b', 'm', 'y', 'c' };
 
 % Steady-State Dynamic Temperature Curve for each task graph
-for graph = tgff.graphs, graph = graph{1};
-  ssdtc = SSDTC(graph, pes, comms, floorplan, hotspotConfig);
+for graph = parser.graphs, graph = graph{1};
+  ssdtc = Algorithms.SSDTC(graph, pes, comms, floorplan, hotspotConfig);
   x = 0:(ssdtc.stepCount - 1);
 
   figure;

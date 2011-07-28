@@ -28,7 +28,7 @@ classdef Graph < handle
     end
 
     function addTask(graph, name, type)
-      task = Task(name, type);
+      task = TestSet.Task(name, type);
 
       graph.tasks{end + 1} = task;
       graph.taskTypes(end + 1) = type;
@@ -42,7 +42,7 @@ classdef Graph < handle
       ftask = graph.findTaskByName(fname);
       ttask = graph.findTaskByName(tname);
 
-      link = Link(lname, ftask, ttask, type);
+      link = TestSet.Link(lname, ftask, ttask, type);
       ftask.addOutLink(link);
       ttask.addInLink(link);
 

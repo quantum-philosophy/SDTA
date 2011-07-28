@@ -1,21 +1,12 @@
-classdef TGFF < handle
-  properties
-    graphLabels
-    tableLabels
-    graphs
-    tables
-  end
-
+classdef TGFFParser < TestSet.Parser
   methods
-    function tgff = TGFF(varargin)
-      if nargin > 0, tgff.process(varargin{:}); end
+    function parser = TGFFParser(varargin)
+      parser@TestSet.Parser(varargin{:});
     end
 
-    function process(tgff, file, graphLabels, tableLabels)
-      tgff.graphLabels = graphLabels;
-      tgff.tableLabels = tableLabels;
-      tgff.graphs = {};
-      tgff.tables = {};
+    function process(parser, file, graphLabels, tableLabels)
+      parser.graphs = {};
+      parser.tables = {};
 
       fid = fopen(file);
 
@@ -25,14 +16,14 @@ classdef TGFF < handle
         if ~isempty(attrs)
           name = attrs{1}{1};
           id = str2num(attrs{1}{2});
-          if Utils.include(tgff.graphLabels, name)
-            graph = Graph(name, id);
-            tgff.parseGraph(graph, fid);
-            tgff.graphs{end + 1} = graph;
-          elseif Utils.include(tgff.tableLabels, name)
-            table = Table(name, id);
-            tgff.parseTable(table, fid);
-            tgff.tables{end + 1} = table;
+          if Utils.include(graphLabels, name)
+            graph = TestSet.Graph(name, id);
+            parser.parseGraph(graph, fid);
+            parser.graphs{end + 1} = graph;
+          elseif Utils.include(tableLabels, name)
+            table = TestSet.Table(name, id);
+            parser.parseTable(table, fid);
+            parser.tables{end + 1} = table;
           end
         end
 
@@ -44,7 +35,7 @@ classdef TGFF < handle
   end
 
   methods (Access = private)
-    function parseGraph(tgff, graph, fid)
+    function parseGraph(parser, graph, fid)
       line = fgetl(fid);
       while ischar(line) && isempty(regexp(line, '^}$'))
         attrs = regexp(line, '^\s*(\w+)\s+(.*)$', 'tokens');
@@ -93,37 +84,37 @@ classdef TGFF < handle
       end
     end
 
-    function parseTable(tgff, table, fid)
-      state = State.SearchHeader;
+    function parseTable(parser, table, fid)
+      state = TestSet.TGFFState.SearchHeader;
 
       line = fgetl(fid);
       while ischar(line) && isempty(regexp(line, '^}$'))
         switch state
-        case State.SearchHeader
-          header = tgff.parseHeader(line);
+        case TestSet.TGFFState.SearchHeader
+          header = parser.parseHeader(line);
           if ~isempty(header)
             if ~strcmp(header{1}, 'type')
-              state = State.SearchTableAttributes;
+              state = TestSet.TGFFState.SearchTableAttributes;
             else
-              state = State.SearchTypeHeader;
+              state = TestSet.TGFFState.SearchTypeHeader;
             end
           end
 
-        case State.SearchTableAttributes
+        case TestSet.TGFFState.SearchTableAttributes
           attrs = sscanf(line, '%f');
           if length(attrs) == length(header)
             table.setAttributes(header, attrs);
-            state = State.SearchTypeHeader;
+            state = TestSet.TGFFState.SearchTypeHeader;
           end
 
-        case State.SearchTypeHeader
-          header = tgff.parseHeader(line);
+        case TestSet.TGFFState.SearchTypeHeader
+          header = parser.parseHeader(line);
           if ~isempty(header) && strcmp(header{1}, 'type')
             table.setHeader(header(2:end));
-            state = State.SearchTypeAttributes;
+            state = TestSet.TGFFState.SearchTypeAttributes;
           end
 
-        case State.SearchTypeAttributes
+        case TestSet.TGFFState.SearchTypeAttributes
           attrs = sscanf(line, '%f');
           if length(attrs) == length(header)
             % Counting from 1 instead of 0
@@ -135,7 +126,7 @@ classdef TGFF < handle
       end
     end
 
-    function header = parseHeader(tgff, line)
+    function header = parseHeader(parser, line)
       header = {};
       chunks = regexp(line, '\s+', 'split');
       if ~isempty(chunks) && strcmp(chunks{1}, '#')
