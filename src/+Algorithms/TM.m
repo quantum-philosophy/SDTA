@@ -1,6 +1,6 @@
 classdef TM < handle
   properties (Constant)
-    samplingInterval = 2e-3;    % Sampling interval
+    samplingInterval = 1e-3;    % Sampling interval
     ambientTemperature = 45.0;  % Ambient temperature
   end
 
@@ -84,8 +84,8 @@ classdef TM < handle
     end
 
     function [ T, it ] = solveWithHotSpot(tm, B, tol, maxit)
-      if nargin < 4, maxit = 10; end
-      if nargin < 3, tol = 1e-2; end
+      if nargin < 4, maxit = 100; end
+      if nargin < 3, tol = 0.01; end
 
       steps = size(B, 1);
       cores = size(B, 2);
@@ -101,6 +101,12 @@ classdef TM < handle
       [ T, it ] = External.solveSSDTCWithHotSpot(...
         tm.floorplan, tm.config, B, tol, maxit);
       T = transpose(T(1:cores, :)) - 273.15;
+
+      if it == maxit
+        fprintf('HotSpot exceeded the maximal number of iterations\n');
+      else
+        fprintf('HotSpot finished in %d iterations\n', it);
+      end
     end
   end
 end

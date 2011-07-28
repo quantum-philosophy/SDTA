@@ -34,7 +34,9 @@ for graph = parser.graphs, graph = graph{1};
 
   tic
   T = ssdtc.solveWithCondensedEquation();
-  % T = ssdtc.solveWithHotSpot();
+  toc
+  tic
+  T1 = ssdtc.solveWithHotSpot(0.1, 100);
   toc
 
   % Plotting
@@ -43,5 +45,6 @@ for graph = parser.graphs, graph = graph{1};
   for i = 1:size(T, 2)
     color = colors{mod(i - 1, length(colors)) + 1};
     line(x, T(:, i), 'Color', color);
+    line(x, T1(:, i), 'Color', color, 'LineStyle', '--');
   end
 end

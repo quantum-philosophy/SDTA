@@ -3,15 +3,15 @@ tg_label TASK_GRAPH
 # Number of graphs
 tg_cnt 1
 # Number of tasks per graph +/- jitter
-task_cnt 10 2
+task_cnt 30 2
 # Number of different tasks
 task_type_cnt 10
 # Average time per task including communication
 task_trans_time 100
 # Deadline jitter
 deadline_jitter 0
-# All tasks are different
-task_unique true
+# All tasks are different?
+task_unique false
 # Write
 tg_write
 

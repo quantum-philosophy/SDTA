@@ -64,8 +64,8 @@ classdef SSDTC < handle
       T = ssdtc.thermalModel.solveWithCondensedEquation(ssdtc.powerProfile);
     end
 
-    function T = solveWithHotSpot(ssdtc)
-      T = ssdtc.thermalModel.solveWithHotSpot(ssdtc.powerProfile);
+    function T = solveWithHotSpot(ssdtc, varargin)
+      T = ssdtc.thermalModel.solveWithHotSpot(ssdtc.powerProfile, varargin{:});
     end
 
     function dumpPowerProfile(ssdtc, file)
