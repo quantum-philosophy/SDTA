@@ -1,9 +1,4 @@
 classdef SSDTC < handle
-  properties (Constant)
-    samplingInterval = 2e-3;    % Sampling interval
-    ambientTemperature = 45.0;  % Ambient temperature
-  end
-
   properties (Access = private)
     % Tasks
     graph
@@ -14,34 +9,20 @@ classdef SSDTC < handle
     ceff
     nc
 
-    hotspotConfig
-    floorplan
-
     mapping
-
-    D           % sqrt(invC) * A * sqrt(invC)
-    DL          % Eigenvalues of D
-    DV          % Eigenvectors of D
-    DVT         % Transposed eigenvectors of D
-    sinvC       % Square root from the inverse of C
-    B           % Power profile
   end
 
   properties (SetAccess = private)
-    temperatureCurve
-
     coreCount
     taskCount
-    nodeCount
     stepCount
+
+    thermalModel
+    powerProfile
   end
 
   methods
-    function ssdtc = SSDTC(varargin)
-      if nargin > 0, ssdtc.process(varargin{:}); end
-    end
-
-    function T = process(ssdtc, graph, pes, comms, floorplan, config)
+    function ssdtc = SSDTC(graph, pes, comms, floorplan, config)
       if length(pes) ~= 1
         fprintf('Exactly one core is supported right now\n');
         return;
@@ -69,15 +50,26 @@ classdef SSDTC < handle
       % [ solution, fitness, flag ] = ...
       %   scheduler.process(graph, @ssdtc.evaluateSchedule);
 
-      ls = Algorithms.LS(graph);
+      scheduler = Algorithms.LS(graph);
+      ssdtc.calculatePowerProfile(scheduler.schedule);
 
-      ssdtc.calculateThermalModel(floorplan, config);
-      ssdtc.calculatePowerProfile(ls.schedule);
-      ssdtc.calculateTemperatureCurve();
+      ssdtc.thermalModel = Algorithms.TM(floorplan, config);
     end
 
     function inspect(ssdtc)
       for graph = ssdtc.graphs, graph{1}.inspect(); end
+    end
+
+    function T = solveWithCondensedEquation(ssdtc)
+      T = ssdtc.thermalModel.solveWithCondensedEquation(ssdtc.powerProfile);
+    end
+
+    function T = solveWithHotSpot(ssdtc)
+      T = ssdtc.thermalModel.solveWithHotSpot(ssdtc.powerProfile);
+    end
+
+    function dumpPowerProfile(ssdtc, file)
+      Utils.dumpPowerProfile(file, ssdtc.powerProfile);
     end
   end
 
@@ -156,7 +148,7 @@ classdef SSDTC < handle
       end
 
       powerProfile = zeros(0, cores);
-      timeStep = ssdtc.samplingInterval;
+      timeStep = Algorithms.TM.samplingInterval;
 
       totalTime = sum(taskTime); % seconds
       fprintf('total time = %f s\n', totalTime);
@@ -182,84 +174,7 @@ classdef SSDTC < handle
       end
 
       ssdtc.stepCount = steps;
-      ssdtc.B = powerProfile;
-    end
-
-    function calculateThermalModel(ssdtc, floorplan, config)
-      [ negA, invC ] = External.obtainHotSpotModel(floorplan, config);
-      invC = diag(diag(invC));
-
-      sinvC = sqrt(invC);
-      D = symmetrize(sinvC * (- negA) * sinvC);
-
-      [ V, L ] = eig(D);
-
-      ssdtc.D = D;
-      ssdtc.DL = diag(L);
-      ssdtc.DV = V;
-      ssdtc.DVT = V';
-      ssdtc.sinvC = sinvC;
-      ssdtc.nodeCount = length(D);
-    end
-
-    function calculateTemperatureCurve(ssdtc)
-      n = ssdtc.nodeCount;
-      m = ssdtc.stepCount;
-      cores = ssdtc.coreCount;
-      nm = n * m;
-
-      sinvC = ssdtc.sinvC;
-      DL = ssdtc.DL;
-      DV = ssdtc.DV;
-      DVT = ssdtc.DVT;
-      ts = ssdtc.samplingInterval;
-      at = ssdtc.ambientTemperature;
-
-      B = transpose(ssdtc.B);
-      B = [ B; zeros(n - cores, m) ];
-
-      % exp(D * t) = U * diag(exp(li * t)) * UT
-      %
-      K = DV * diag(exp(ts * DL)) * DVT;
-
-      % G = D^(-1) (exp(D * t) - I) C^(-1/2) =
-      % U * diag((exp(li * t) - 1) / li) * UT * C^(-1/2)
-      %
-      G = DV * diag((exp(ts * DL) - 1) ./ DL) * DVT * sinvC;
-
-      P = zeros(n, m);
-      Q = zeros(n, m);
-      Q(:, 1) = G * B(:, 1);
-      P(:, 1) = Q(:, 1);
-      for i = 2:m
-        Q(:, i) = G * B(:, i);
-        P(:, i) = K * P(:, i - 1) + Q(:, i);
-      end
-
-      Y = zeros(nm, 1);
-      Y(1:n) = DV * diag(1 ./ (1 - exp(ts * m * DL))) * DVT * P(:, m);
-
-      for i = 2:m
-        op = (i - 2) * n + 1;
-        on = op + n;
-        Y(on:(on + n - 1)) = K * Y(op:(op + n - 1)) + Q(:, i - 1);
-      end
-
-      T = zeros(n, m);
-      T(:, 1) = DV * diag(1 ./ (1 - exp(ts * m * DL))) * DVT * P(:, m);
-
-      for i = 2:m
-        T(:, i) = K * T(:, i - 1) + Q(:, i - 1);
-      end
-
-      T = transpose(T);
-      dsinvC = transpose(diag(sinvC));
-
-      for i = 1:m
-        T(i, :) = T(i, :) .* dsinvC + at;
-      end
-
-      ssdtc.temperatureCurve = T;
+      ssdtc.powerProfile = powerProfile;
     end
   end
 end

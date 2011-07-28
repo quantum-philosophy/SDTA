@@ -51,72 +51,37 @@ int obtain_hotspot_model(char *floorplan, char *config,
 	return 0;
 }
 
-int solve_ssdtc_with_hotspot(char *floorplan, char *power, char *config,
-	double tol, int maxit, int *psteps, int *pcores, HotSpotVector *pT,
-	char *dump = NULL)
+int solve_ssdtc_with_hotspot(char *floorplan, char *config, double *power,
+	int nodes, int steps, double tol, int maxit, double *T, char *dump,
+	printf_t printf)
 {
 	int ret = 0;
 	int i, j, k;
-	int num, total, steps, cores, nodes;
-	char **names;
-	FILE *pin, *pdump = NULL;
-	double *vals, *temp, **profile, *T0;
+	int total, cores;
+	FILE *pdump = NULL;
+	double *temp, *T0;
 	double ts, error, max_error;
-	HotSpotVector T;
 
 	flp_t *flp;
 	RC_model_t *model;
 
-	if (dump) pdump = fopen(dump, "w");
+	if (!fexist(floorplan) || !fexist(config)) return E_IO;
 
-	if (!fexist(floorplan) || !fexist(power) || !fexist(config)) return E_IO;
+	if (dump) pdump = fopen(dump, "w");
 
 	prepare_hotspot(floorplan, config, &flp, &model);
 
+	if (nodes != model->block->n_nodes) {
+		ret = E_MISMATCH;
+		goto ret_dump;
+	}
+
 	cores = model->block->flp->n_units;
-	nodes = model->block->n_nodes;
-
-	if (!(pin = fopen(power, "r"))) {
-		ret = E_PROFILE;
-		goto ret_hotspot;
-	}
-
-	names = alloc_names(MAX_UNITS, STR_SIZE);
-	if (read_names(pin, names) != cores) {
-		ret = E_NAMES;
-		goto ret_names;
-	}
-
-	steps = 0;
-	vals = dvector(MAX_UNITS);
-	profile = dmatrix(MAX_POWER_CHUNK, nodes);
-
-	/* Read the power profile */
-	while ((num = read_vals(pin, vals)) != 0) {
-		if (num != cores) {
-			ret = E_VALUES;
-			goto ret_profile;
-		}
-
-		steps++;
-		if (steps > MAX_POWER_CHUNK) {
-			ret = E_STEPS;
-			goto ret_profile;
-		}
-
-		/* Permute */
-		for (i = 0; i < cores; i++)
-			profile[steps - 1][get_blk_index(flp, names[i])] = vals[i];
-	}
-
 	total = cores * steps;
 
 	/* Initialize temperature */
 	temp = hotspot_vector(model);
 	set_temp(model, temp, model->config->init_temp);
-
-	T = alloc_hotspot_vector(total);
-	memset(T, 0, sizeof(T[0]) * total);
 
 	ts = model->config->sampling_intvl;
 
@@ -127,14 +92,19 @@ int solve_ssdtc_with_hotspot(char *floorplan, char *power, char *config,
 			max_error = 0;
 
 			for (j = 0; j < steps; j++) {
-				compute_temp(model, profile[j], temp, ts);
-				T0 = &T[cores * j];
+				compute_temp(model, &power[nodes * j], temp, ts);
+				T0 = &T[nodes * j];
+
+				/* NOTE: Only for cores. */
 				for (i = 0; i < cores; i++) {
 					if (temp[i] > T0[i]) error = temp[i] - T0[i];
 					else error = T0[i] - temp[i];
 					if (error > max_error) max_error = error;
 				}
-				memcpy(T0, temp, cores * sizeof(temp[0]));
+
+				memcpy(T0, temp, nodes * sizeof(temp[0]));
+
+				/* NOTE: Only for cores. */
 				if (pdump) write_vals(pdump, temp, cores);
 			}
 
@@ -145,40 +115,20 @@ int solve_ssdtc_with_hotspot(char *floorplan, char *power, char *config,
 		/* Without error control */
 		for (k = 0; k < maxit; k++) {
 			for (j = 0; j < steps; j++) {
-				compute_temp(model, profile[j], temp, ts);
-				memcpy(&T[cores * j], temp, cores * sizeof(temp[0]));
+				compute_temp(model, &power[nodes * j], temp, ts);
+				memcpy(&T[nodes * j], temp, nodes * sizeof(temp[0]));
+
+				/* NOTE: Only for cores. */
 				if (pdump) write_vals(pdump, temp, cores);
 			}
 		}
 	}
 
-	/* Permute back */
-	for (j = 0; j < steps; j++) {
-		T0 = &T[j * cores];
-		for (i = 0; i < cores; i++)
-			temp[i] = T0[get_blk_index(flp, names[i])] - KELVIN;
-		memcpy(T0, temp, cores * sizeof(temp[0]));
-	}
-
-	*psteps = steps;
-	*pcores = cores;
-	*pT = T;
-
 	ret = k;
 
 	free_dvector(temp);
 
-ret_profile:
-	free_dmatrix(profile);
-	free_dvector(vals);
-
-ret_names:
-	free_names(names);
-	fclose(pin);
-
-ret_hotspot:
-	free_hotspot(flp, model);
-
+ret_dump:
 	if (pdump) fclose(pdump);
 
 	return ret;
