@@ -24,7 +24,16 @@ for table = tgff.tables, table = table{1};
   end
 end
 
+colors = { 'r', 'g', 'b', 'm', 'y', 'c' };
+
 % Steady-State Dynamic Temperature Curve for each task graph
 for graph = tgff.graphs, graph = graph{1};
-  ssdtc = SSDTC(graph, pes, comms, hotspotConfig, floorplan);
+  ssdtc = SSDTC(graph, pes, comms, floorplan, hotspotConfig);
+  x = 0:(ssdtc.stepCount - 1);
+
+  figure;
+  for i = 1:ssdtc.coreCount;
+    color = colors{mod(i - 1, length(colors)) + 1};
+    line(x, ssdtc.temperatureCurve(:, i), 'Color', color);
+  end
 end
