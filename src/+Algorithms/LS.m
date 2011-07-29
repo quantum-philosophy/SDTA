@@ -1,7 +1,5 @@
 classdef LS < handle
   properties (SetAccess = private)
-    graph
-    priority
     schedule
   end
 
@@ -11,61 +9,54 @@ classdef LS < handle
     end
 
     function schedule = process(ls, graph, priority)
-      schedule = zeros(0, 0);
+      tasks = length(graph.tasks);
 
       if nargin < 3
         priority = zeros(0, 0);
         for task = graph.tasks, priority(end + 1) = task{1}.deadline; end
       end
 
-      ls.graph = graph;
-      ls.priority = priority;
+      pool = graph.getStartPoints();
+      done = zeros(1, tasks);
+      done(pool) = 1;
 
-      taskIds = graph.getStartPoints();
-      count = length(taskIds);
-      done = zeros(1, length(priority));
+      schedule = zeros(0, 0);
 
-      while count > 0
-        % Find the most urgent task
-        index = 1;
-        for i = 2:count
-          if priority(taskIds(index)) > priority(taskIds(i)), index = i; end
-        end
-
-        taskNo = taskIds(index);
+      while ~isempty(pool)
+        % Find the most urgent task (the lower priority, more urgent)
+        [ dummy, index ] = min(priority(pool));
+        id = pool(index);
 
         % Exclude the task
-        taskIds(index) = [];
-        count = count - 1;
+        pool(index) = [];
 
         % Append to the schedule
-        schedule = [ schedule taskNo ];
+        schedule(end + 1) = id;
 
-        % Append new tasks, ensure absence of repetitions
-        newIds = graph.taskIndexesFrom{taskNo};
-        for id = newIds
-          if ~done(id)
-            done(id) = 1;
-            count = count + 1;
-            taskIds(count) = id;
+        % Append new tasks, but only ready ones, and ensure absence
+        % of repetitions
+        nids = graph.taskIndexesFrom{id};
+        for nid = nids
+          if done(nid), continue; end
+          ins = graph.taskIndexesTo{nid};
+          nin = length(ins);
+          if nin == 1 || nin == length(intersect(ins, find(done)))
+            done(nid) = 1;
+            pool(end + 1) = nid;
           end
         end
       end
-
       ls.schedule = schedule;
     end
 
     function inspect(ls)
-      if isempty(ls.graph)
-        fprintf('Schedule is empty\n');
-        return;
-      end
-
-      fprintf('Schedule for %s %d:\n', ls.graph.name, ls.graph.id);
+      fprintf('Schedule: [ ');
       for i = 1:length(ls.schedule)
-        task = ls.graph.tasks{ls.schedule(i)};
-        fprintf('  %s (%s)\n', task.name, num2str(ls.priority(i)));
+        if i ~= 1, fprintf(', %d', ls.schedule(i));
+        else fprintf('%d', ls.schedule(i));
+        end
       end
+      fprintf(' ]\n');
     end
   end
 end

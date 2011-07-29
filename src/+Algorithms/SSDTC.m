@@ -40,6 +40,7 @@ classdef SSDTC < handle
 
       % LS scheduling
       scheduler = Algorithms.LS(graph);
+      scheduler.inspect();
       schedule = scheduler.schedule;
 
       powerProfile = ssdtc.calculatePowerProfile(mapping, schedule);
@@ -209,28 +210,36 @@ classdef SSDTC < handle
         end
       end
 
+      finishTime = zeros(1, tasks);
+
       % Now consider dependencies between tasks
-      pool = ssdtc.graph.getStartPoints();
+      pool = schedule;
+      inpool = ones(1, tasks);
       while ~isempty(pool)
         id = pool(1);
         pool(1) = [];
+        inpool(id) = 0;
 
-        finish = startTime(id) + execTime(id);
+        finishTime(id) = startTime(id) + execTime(id);
 
         nids = ssdtc.graph.taskIndexesFrom{id};
         for nid = nids
-          % Append to the dependency pool
-          pool(end + 1) = nid;
-
-          if startTime(nid) >= finish, continue; end
-          shift = finish - startTime(nid);
+          shift = finishTime(id) - startTime(nid);
+          if shift < 0, continue; end
 
           % Shift the core schedule
           ncid = mapping(nid);
           found = 0;
           for sid = coreSchedule{ncid}
             if ~found && sid == nid, found = 1; end
-              if found, startTime(sid) = startTime(sid) + shift; end
+            if found
+              startTime(sid) = startTime(sid) + shift;
+              if ~inpool(sid)
+                % We need to consider it once again
+                pool(end + 1) = sid;
+                inpool(sid) = 1;
+              end
+            end
           end
         end
       end
