@@ -288,6 +288,7 @@ classdef SSDTC < handle
 
       % Mapping and scheduling
       subplot(plots, 1, 1);
+      title('Mapping and Scheduling');
 
       height = 0.5;
       for i = 1:cores
@@ -318,6 +319,8 @@ classdef SSDTC < handle
       if ~isempty(powerProfile)
         % Power profile
         subplot(plots, 1, 2);
+        title('Power Profile');
+
         x = 1:size(powerProfile, 1);
         x = (x - 1) * Algorithms.TM.samplingInterval;
         for i = 1:cores
@@ -332,6 +335,8 @@ classdef SSDTC < handle
       if ~isempty(temperatureProfile)
         % Temperature
         subplot(plots, 1, 3);
+        title('Temperature Profile');
+
         x = 1:size(temperatureProfile, 1);
         x = (x - 1) * Algorithms.TM.samplingInterval;
 
