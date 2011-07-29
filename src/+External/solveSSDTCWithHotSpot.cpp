@@ -26,14 +26,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	double *power = mxGetPr(prhs[2]);
 
-	double tol = 1e-2;
+	double tol = 2;
 	if (nrhs > 3) {
 		if (!mxIsNumeric(prhs[3]))
 			mexErrMsgTxt("4th input (tol) should be numeric.");
 		tol = mxGetScalar(prhs[3]);
 	}
 
-	int maxit = 100;
+	int maxit = 10;
 	if (nrhs > 4) {
 		if (!mxIsNumeric(prhs[4]))
 			mexErrMsgTxt("5th input (maxit) should be numeric.");

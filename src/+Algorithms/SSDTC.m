@@ -4,35 +4,26 @@ classdef SSDTC < handle
     graph
 
     % PEs
+    pes
     voltage
     frequency
     ceff
     nc
-
-    mapping
   end
 
   properties (SetAccess = private)
     coreCount
     taskCount
-    stepCount
-
-    thermalModel
-    powerProfile
   end
 
   methods
     function ssdtc = SSDTC(graph, pes, comms, floorplan, config)
-      if length(pes) ~= 1
-        fprintf('Exactly one core is supported right now\n');
-        return;
-      end
-
       % Tasks
       ssdtc.graph = graph;
       ssdtc.taskCount = length(graph.tasks);
 
       % PEs
+      ssdtc.pes = {};
       ssdtc.coreCount = 0;
       ssdtc.voltage = zeros(0, 0);
       ssdtc.frequency = zeros(0, 0);
@@ -42,22 +33,29 @@ classdef SSDTC < handle
 
       % TODO: Communications
 
-      % TODO: Mapping, dummy for the moment
-      ssdtc.mapping = randi(ssdtc.coreCount, 1, ssdtc.taskCount);
+      thermalModel = Algorithms.TM(floorplan, config);
 
-      % TODO: Genetic list scheduler algorithm
-      % scheduler = Algorithms.GLSA();
-      % [ solution, fitness, flag ] = ...
-      %   scheduler.process(graph, @ssdtc.evaluateSchedule);
+      % Dummy mapping
+      mapping = randi(ssdtc.coreCount, 1, ssdtc.taskCount);
 
+      % LS scheduling
       scheduler = Algorithms.LS(graph);
-      ssdtc.calculatePowerProfile(scheduler.schedule);
+      schedule = scheduler.schedule;
 
-      ssdtc.thermalModel = Algorithms.TM(floorplan, config);
+      powerProfile = ssdtc.calculatePowerProfile(mapping, schedule);
+
+      steps = size(powerProfile, 1);
+      fprintf('steps = %d\n', steps);
+      fprintf('sampling interval = %f s\n', Algorithms.TM.samplingInterval);
+      fprintf('total time = %f s\n', Algorithms.TM.samplingInterval * steps);
     end
 
     function inspect(ssdtc)
-      for graph = ssdtc.graphs, graph{1}.inspect(); end
+      ssdtc.graph.inspect();
+      for pe = ssdtc.pes, pe{1}.inspect(); end
+
+      fprintf('cores = %d\n', ssdtc.coreCount);
+      fprintf('tasks = %d\n', ssdtc.taskCount);
     end
 
     function T = solveWithCondensedEquation(ssdtc)
@@ -109,6 +107,7 @@ classdef SSDTC < handle
       end
 
       % Everything is fine, write!
+      ssdtc.pes{end + 1} = pe;
       ssdtc.coreCount = ssdtc.coreCount + 1;
       ssdtc.voltage(end + 1) = pe.attributes('voltage');
       ssdtc.frequency(end + 1) = pe.attributes('frequency');
@@ -124,57 +123,184 @@ classdef SSDTC < handle
       energy = 0;
     end
 
-    function calculatePowerProfile(ssdtc, schedule)
+    function powerProfile = calculatePowerProfile(ssdtc, mapping, schedule)
       cores = ssdtc.coreCount;
-      tasks = ssdtc.taskCount;
 
-      taskTime = zeros(cores, tasks);
-      taskPower = zeros(cores, tasks);
+      [ startTime, execTime, taskPower ] = ...
+        ssdtc.calculateTaskConstants(mapping, schedule);
 
-      for i = 1:cores
-        fprintf('PE %d\n', 1);
-        fprintf('  frequency = %f GHz\n', ssdtc.frequency(i) * 10^(-9));
-        fprintf('  voltage = %f\n', ssdtc.voltage(i));
-
-        taskIds = find(ssdtc.mapping == i);
-        taskTypes = ssdtc.graph.taskTypes(taskIds);
-
-        % t = NC / f
-        taskTime(i, taskIds) = ssdtc.nc(i, taskTypes) / ssdtc.frequency(i);
-
-        % Pdyn = Ceff * f * Vdd^2
-        taskPower(i, taskIds) = ssdtc.ceff(i, taskTypes) * ...
-          ssdtc.frequency(i) * ssdtc.voltage(i)^2;
-      end
+      finishTime = startTime + execTime;
 
       powerProfile = zeros(0, cores);
+
       timeStep = Algorithms.TM.samplingInterval;
+      totalTime = max(finishTime);
 
-      totalTime = sum(taskTime); % seconds
-      fprintf('total time = %f s\n', totalTime);
-
+      % ATTENTION: What should we do about this mismatch?
       steps = floor(totalTime / timeStep);
       if steps * timeStep < totalTime, steps = steps + 1; end
-      fprintf('sampling interval = %f s\n', timeStep);
-      fprintf('power steps = %d\n', steps);
-      fprintf('time mismatch = %f\n', steps * timeStep - totalTime);
 
       for i = 1:cores
+        % Find all tasks for this core
+        ids = find(mapping == i);
+        tasks = length(ids);
+
+        if tasks == 0, continue; end
+
+        % Sort them according to their start times
+        [ dummy, I ] = sort(startTime(ids));
+        ids = ids(I);
+
         k = 1;
-        futureTime = taskTime(i, schedule(k)); % Time in tasks
-        currentTime = 0; % Time of the current step
+        time = 0;
+
+        % Fill in all steps
         for j = 1:steps
-          while currentTime >= futureTime
-            k = k + 1;
-            futureTime = futureTime + taskTime(i, schedule(k));
+          % Find the current task
+          for k = k:tasks
+            id = ids(k);
+            if time < startTime(id)
+              break;
+            elseif time < finishTime(id)
+              powerProfile(j, i) = taskPower(id);
+              break;
+            end
           end
-          powerProfile(j, i) = taskPower(i, schedule(k));
-          currentTime = currentTime + timeStep;
+          time = time + timeStep;
         end
       end
 
-      ssdtc.stepCount = steps;
-      ssdtc.powerProfile = powerProfile;
+      ssdtc.drawLoad(mapping, startTime, execTime, powerProfile);
+    end
+
+    function [ startTime, execTime, taskPower ] = calculateTaskConstants(ssdtc, mapping, schedule)
+      cores = ssdtc.coreCount;
+      tasks = ssdtc.taskCount;
+
+      % Execution time and power for each task
+      execTime = zeros(1, tasks);
+      taskPower = zeros(1, tasks);
+      for i = 1:cores
+        ids = find(mapping == i);
+        types = ssdtc.graph.taskTypes(ids);
+
+        % t = NC / f
+        execTime(ids) = ssdtc.nc(i, types) / ssdtc.frequency(i);
+
+        % Pdyn = Ceff * f * Vdd^2
+        taskPower(ids) = ssdtc.ceff(i, types) * ...
+          ssdtc.frequency(i) * ssdtc.voltage(i)^2;
+      end
+
+      % Start time for each task
+      startTime = zeros(1, tasks);
+
+      delay = zeros(1, cores);
+      done = zeros(1, tasks);
+      pool = ssdtc.graph.getStartPoints();
+      for i = 1:tasks
+        id = [];
+
+        for s = 1:length(schedule)
+          for p = 1:length(pool)
+            if schedule(s) == pool(p)
+              id = pool(p);
+              pool(p) = [];
+              schedule(s) = [];
+              break;
+            end
+          end
+          if ~isempty(id), break; end;
+        end
+
+        if isempty(id)
+          fprintf('Cannot find the next task to process\n');
+          return;
+        end
+
+        cid = mapping(id);
+        startTime(id) = max(startTime(id), delay(cid));
+        delay(cid) = startTime(id) + execTime(id);
+
+        % New tasks
+        nids = ssdtc.graph.taskIndexesFrom{id};
+        for nid = nids
+          startTime(nid) = max(startTime(nid), delay(cid));
+          if ~done(nid)
+            pool(end + 1) = nid;
+            done(nid) = 1;
+          end
+        end
+      end
+    end
+
+    function drawLoad(ssdtc, mapping, startTime, execTime, powerProfile)
+      cores = ssdtc.coreCount;
+      tasks = ssdtc.taskCount;
+
+      colors = { 'r', 'g', 'b', 'm', 'y', 'c' };
+
+      % Mapping and scheduling
+      subplot(2, 1, 1);
+
+      height = 0.5;
+      for i = 1:cores
+        t = 0;
+        ids = find(mapping == i);
+        [ d, I ] = sort(startTime(ids));
+        x = [ 0 ];
+        y = [ i ];
+        for id = ids(I)
+          x(end + 1) = startTime(id);
+          y(end + 1) = i;
+
+          x(end + 1) = startTime(id);
+          y(end + 1) = i + height;
+
+          x(end + 1) = startTime(id) + execTime(id);
+          y(end + 1) = i + height;
+
+          x(end + 1) = startTime(id) + execTime(id);
+          y(end + 1) = i;
+
+          text(startTime(id), i + 0.8 * height, sprintf('  core %d', i));
+          text(startTime(id), i + 0.5 * height, sprintf('  task %d', id));
+        end
+        color = colors{mod(i - 1, length(colors)) + 1};
+        line(x, y, 'Color', color);
+      end
+
+      % Power profile
+      subplot(2, 1, 2);
+      x = 1:size(powerProfile, 1);
+      x = (x - 1) * Algorithms.TM.samplingInterval;
+      for i = 1:cores
+        color = colors{mod(i - 1, length(colors)) + 1};
+        line(x, powerProfile(:, i), 'Color', color);
+      end
+
+      % Overall power consumption
+      line(x, sum(powerProfile, 2), 'Color', 'k', 'Line', '--');
+    end
+
+    function frequency = calculateFrequency(ssdtc, Vdd, Vbs)
+      K1 = 0.063;
+      K2 = 0.153;
+      K6 = 5.26e-12;
+      Ld = 10;
+      Vth1 = 0.244;
+      alpha = 1;
+
+      frequency = ((1 + K1) * Vdd + K2 * Vbs - Vth1)^alpha / (K6 * Ld);
+    end
+
+    function power = calculateLeakagePower(ssdtc, Vdd, Vbs)
+      K3 = 5.38e-7;
+      K4 = 1.83;
+      K5 = 4.19;
+      Ij = 4.80e-10;
+
+      power = Vdd * K3 * exp(K4 * Vdd) * exp(K5 * Vbs) - abs(Vbs) * Ij;
     end
   end
 end

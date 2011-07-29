@@ -1,6 +1,6 @@
 classdef TM < handle
   properties (Constant)
-    samplingInterval = 1e-3;    % Sampling interval
+    samplingInterval = 0.7e-3;    % Sampling interval
     ambientTemperature = 45.0;  % Ambient temperature
   end
 
@@ -84,8 +84,8 @@ classdef TM < handle
     end
 
     function [ T, it ] = solveWithHotSpot(tm, B, tol, maxit)
-      if nargin < 4, maxit = 100; end
-      if nargin < 3, tol = 0.01; end
+      if nargin < 4, maxit = 10; end
+      if nargin < 3, tol = 2; end
 
       steps = size(B, 1);
       cores = size(B, 2);

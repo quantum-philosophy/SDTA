@@ -28,15 +28,20 @@ end
 
 colors = { 'r', 'g', 'b', 'm', 'y', 'c' };
 
+rng(0);
+
 % Steady-State Dynamic Temperature Curve for each task graph
 for graph = parser.graphs, graph = graph{1};
   ssdtc = Algorithms.SSDTC(graph, pes, comms, floorplan, hotspotConfig);
+  ssdtc.inspect();
+
+  return;
 
   tic
   T = ssdtc.solveWithCondensedEquation();
   toc
   tic
-  T1 = ssdtc.solveWithHotSpot(0.1, 100);
+  T1 = ssdtc.solveWithHotSpot(2, 10);
   toc
 
   % Plotting
