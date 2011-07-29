@@ -289,6 +289,8 @@ classdef SSDTC < handle
       % Mapping and scheduling
       subplot(plots, 1, 1);
       title('Mapping and Scheduling');
+      xlabel('Time, s');
+      ylabel('Cores');
 
       height = 0.5;
       for i = 1:cores
@@ -316,10 +318,14 @@ classdef SSDTC < handle
         line(x, y, 'Color', color);
       end
 
+      set(gca, 'YTick', 1:cores);
+
       if ~isempty(powerProfile)
         % Power profile
         subplot(plots, 1, 2);
         title('Power Profile');
+        xlabel('Time, s');
+        ylabel('Power, W');
 
         x = 1:size(powerProfile, 1);
         x = (x - 1) * Algorithms.TM.samplingInterval;
@@ -336,6 +342,8 @@ classdef SSDTC < handle
         % Temperature
         subplot(plots, 1, 3);
         title('Temperature Profile');
+        xlabel('Time, s');
+        ylabel('Temperature, C');
 
         x = 1:size(temperatureProfile, 1);
         x = (x - 1) * Algorithms.TM.samplingInterval;
