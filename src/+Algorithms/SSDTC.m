@@ -177,11 +177,18 @@ classdef SSDTC < handle
       cores = ssdtc.coreCount;
       tasks = ssdtc.taskCount;
 
-      % Execution time and power for each task
       execTime = zeros(1, tasks);
+      startTime = zeros(1, tasks);
       taskPower = zeros(1, tasks);
+
+      coreSchedule = cell(cores);
+
       for i = 1:cores
+        coreSchedule{i} = zeros(0, 0);
+
         ids = find(mapping == i);
+        if isempty(ids), continue; end
+
         types = ssdtc.graph.taskTypes(ids);
 
         % t = NC / f
@@ -190,45 +197,40 @@ classdef SSDTC < handle
         % Pdyn = Ceff * f * Vdd^2
         taskPower(ids) = ssdtc.ceff(i, types) * ...
           ssdtc.frequency(i) * ssdtc.voltage(i)^2;
+
+        % Calculate a local schedule, shift its tasks relative to each other
+        shift = 0;
+        for id = schedule
+          if any(ids == id)
+            coreSchedule{i}(end + 1) = id;
+            startTime(id) = shift;
+            shift = shift + execTime(id);
+          end
+        end
       end
 
-      % Start time for each task
-      startTime = zeros(1, tasks);
-
-      delay = zeros(1, cores);
-      done = zeros(1, tasks);
+      % Now consider dependencies between tasks
       pool = ssdtc.graph.getStartPoints();
-      for i = 1:tasks
-        id = [];
+      while ~isempty(pool)
+        id = pool(1);
+        pool(1) = [];
 
-        for s = 1:length(schedule)
-          for p = 1:length(pool)
-            if schedule(s) == pool(p)
-              id = pool(p);
-              pool(p) = [];
-              schedule(s) = [];
-              break;
-            end
-          end
-          if ~isempty(id), break; end;
-        end
+        finish = startTime(id) + execTime(id);
 
-        if isempty(id)
-          fprintf('Cannot find the next task to process\n');
-          return;
-        end
-
-        cid = mapping(id);
-        startTime(id) = max(startTime(id), delay(cid));
-        delay(cid) = startTime(id) + execTime(id);
-
-        % New tasks
         nids = ssdtc.graph.taskIndexesFrom{id};
         for nid = nids
-          startTime(nid) = max(startTime(nid), delay(cid));
-          if ~done(nid)
-            pool(end + 1) = nid;
-            done(nid) = 1;
+          % Append to the dependency pool
+          pool(end + 1) = nid;
+
+          if startTime(nid) >= finish, continue; end
+          shift = finish - startTime(nid);
+
+          % Shift the core schedule
+          ncid = mapping(nid);
+          found = 0;
+          for sid = coreSchedule{ncid}
+            if ~found && sid == nid, found = 1; end
+              if found, startTime(sid) = startTime(sid) + shift; end
           end
         end
       end
