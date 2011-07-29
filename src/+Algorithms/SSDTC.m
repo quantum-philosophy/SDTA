@@ -164,22 +164,12 @@ classdef SSDTC < handle
         [ dummy, I ] = sort(startTime(ids));
         ids = ids(I);
 
-        k = 1;
-        time = 0;
-
-        % Fill in all steps
-        for j = 1:steps
-          % Find the current task
-          for k = k:tasks
-            id = ids(k);
-            if time < startTime(id)
-              break;
-            elseif time < finishTime(id)
-              powerProfile(j, i) = taskPower(id);
-              break;
-            end
-          end
-          time = time + timeStep;
+        for id = ids
+          s = floor(startTime(id) / timeStep) + 1;
+          % NOTE: Here without +1 to eliminate successor and predecessor
+          % are being running at the same time
+          e = floor(finishTime(id) / timeStep);
+          powerProfile(s:e, i) = taskPower(id);
         end
       end
 
@@ -222,8 +212,6 @@ classdef SSDTC < handle
         end
       end
 
-      finishTime = zeros(1, tasks);
-
       % Now consider dependencies between tasks
       pool = schedule;
       inpool = ones(1, tasks);
@@ -232,11 +220,11 @@ classdef SSDTC < handle
         pool(1) = [];
         inpool(id) = 0;
 
-        finishTime(id) = startTime(id) + execTime(id);
+        finish = startTime(id) + execTime(id);
 
         nids = ssdtc.graph.taskIndexesFrom{id};
         for nid = nids
-          shift = finishTime(id) - startTime(nid);
+          shift = finish - startTime(nid);
           if shift < 0, continue; end
 
           % Shift the core schedule
@@ -286,8 +274,7 @@ classdef SSDTC < handle
           x(end + 1) = startTime(id) + execTime(id);
           y(end + 1) = i;
 
-          text(startTime(id), i + 0.8 * height, sprintf('  core %d', i));
-          text(startTime(id), i + 0.5 * height, sprintf('  task %d', id));
+          text(startTime(id), i + 0.5 * height, sprintf('  %d', id - 1));
         end
         color = colors{mod(i - 1, length(colors)) + 1};
         line(x, y, 'Color', color);
