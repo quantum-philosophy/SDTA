@@ -9,22 +9,12 @@ powerDump = '../build/simple.ptrace';
 cores = 1;
 graphLabel = 'TASK_GRAPH';
 peLabel = 'PE';
-commLabel = 'COMMUN';
 
 % Generate a floorplan
 Utils.generateFloorplan(floorplan, cores);
 
 % Parse tasks graphs
-parser = TestSet.TGFFParser(graphConfig, { graphLabel }, { peLabel, commLabel });
-
-pes = {};
-comms = {};
-
-for table = parser.tables, table = table{1};
-  if strcmp(table.name, peLabel), pes{end + 1} = table;
-  elseif strcmp(table.name, commLabel), comms{end + 1} = table;
-  end
-end
+parser = TestSet.TGFFParser(graphConfig, { graphLabel }, { peLabel });
 
 colors = { 'r', 'g', 'b', 'm', 'y', 'c' };
 
@@ -32,7 +22,7 @@ rng(0);
 
 % Steady-State Dynamic Temperature Curve for each task graph
 for graph = parser.graphs, graph = graph{1};
-  ssdtc = Algorithms.SSDTC(graph, pes, comms, floorplan, hotspotConfig);
+  ssdtc = Algorithms.SSDTC(graph, parser.tables, floorplan, hotspotConfig);
   ssdtc.inspect();
 
   return;

@@ -9,15 +9,21 @@ classdef SSDTC < handle
     frequency
     ceff
     nc
+
+    thermalModel
+    mapping
+    schedule
+    powerProfile
   end
 
   properties (SetAccess = private)
     coreCount
     taskCount
+    stepCount
   end
 
   methods
-    function ssdtc = SSDTC(graph, pes, comms, floorplan, config)
+    function ssdtc = SSDTC(graph, pes, floorplan, config)
       % Tasks
       ssdtc.graph = graph;
       ssdtc.taskCount = length(graph.tasks);
@@ -31,32 +37,38 @@ classdef SSDTC < handle
       ssdtc.nc = zeros(0, 0);
       for pe = pes, ssdtc.addProcessingElement(pe{1}); end
 
-      % TODO: Communications
-
-      thermalModel = Algorithms.TM(floorplan, config);
+      % Thermal model
+      ssdtc.thermalModel = Algorithms.TM(floorplan, config);
 
       % Dummy mapping
-      mapping = randi(ssdtc.coreCount, 1, ssdtc.taskCount);
+      ssdtc.mapping = randi(ssdtc.coreCount, 1, ssdtc.taskCount);
 
       % LS scheduling
-      scheduler = Algorithms.LS(graph);
-      scheduler.inspect();
-      schedule = scheduler.schedule;
+      ssdtc.schedule = Algorithms.LS(graph);
 
-      powerProfile = ssdtc.calculatePowerProfile(mapping, schedule);
-
-      steps = size(powerProfile, 1);
-      fprintf('steps = %d\n', steps);
-      fprintf('sampling interval = %f s\n', Algorithms.TM.samplingInterval);
-      fprintf('total time = %f s\n', Algorithms.TM.samplingInterval * steps);
+      % Power profile
+      ssdtc.powerProfile = ssdtc.calculatePowerProfile(...
+        ssdtc.mapping, ssdtc.schedule);
+      ssdtc.stepCount = size(ssdtc.powerProfile, 1);
     end
 
     function inspect(ssdtc)
+      % Graph
       ssdtc.graph.inspect();
+
+      % PEs
       for pe = ssdtc.pes, pe{1}.inspect(); end
 
-      fprintf('cores = %d\n', ssdtc.coreCount);
-      fprintf('tasks = %d\n', ssdtc.taskCount);
+      % Mapping
+      Utils.inspectVector('Mapping', ssdtc.mapping);
+
+      % Schedule
+      Utils.inspectVector('Schedule', ssdtc.schedule);
+
+      % Power
+      fprintf('steps = %d\n', ssdtc.stepCount);
+      fprintf('sampling interval = %f s\n', Algorithms.TM.samplingInterval);
+      fprintf('total time = %f s\n', Algorithms.TM.samplingInterval * ssdtc.stepCount);
     end
 
     function T = solveWithCondensedEquation(ssdtc)
