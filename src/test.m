@@ -6,7 +6,7 @@ graphConfig = '../build/simple.tgff';
 hotspotConfig = '../build/hotspot.config';
 powerDump = '../build/simple.ptrace';
 
-cores = 1;
+cores = 4;
 graphLabel = 'TASK_GRAPH';
 peLabel = 'PE';
 

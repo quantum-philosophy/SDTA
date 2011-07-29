@@ -109,11 +109,11 @@ classdef SSDTC < handle
     function addProcessingElement(ssdtc, pe)
       % Validate PE attributes
       if ~pe.attributes.isKey('frequency')
-        fprintf('Can not determine frequency for %s %d\n', pe.name, pe.id);
+        Utils.eprintf('Can not determine frequency for %s %d\n', pe.name, pe.id);
         return;
       end
       if ~pe.attributes.isKey('voltage')
-        fprintf('Can not determine voltage for %s %d\n', pe.name, pe.id);
+        Utils.eprintf('Can not determine voltage for %s %d\n', pe.name, pe.id);
         return;
       end
 
@@ -130,13 +130,13 @@ classdef SSDTC < handle
 
       % Effective switched capacitance
       if isempty(ceff)
-        fprintf('Can not determine Ceff for %s %d\n', pe.name, pe.id);
+        Utils.eprintf('Can not determine Ceff for %s %d\n', pe.name, pe.id);
         return;
       end
 
       % Number of clock cycles
       if isempty(nc)
-        fprintf('Can not determine NC for %s %d\n', pe.name, pe.id);
+        Utils.eprintf('Can not determine NC for %s %d\n', pe.name, pe.id);
         return;
       end
 

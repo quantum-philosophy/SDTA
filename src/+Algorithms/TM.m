@@ -17,6 +17,13 @@ classdef TM < handle
 
     function T = solveWithCondensedEquation(tm, B)
       [ negA, invC ] = External.obtainHotSpotModel(tm.floorplan, tm.config);
+
+      if size(negA, 1) ~= 4 * size(B, 2) + 12
+        Utils.eprintf('The floorplan does not match the task case');
+        T = [];
+        return;
+      end
+
       invC = diag(diag(invC));
 
       sinvC = sqrt(invC);
