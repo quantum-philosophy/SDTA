@@ -98,8 +98,10 @@ classdef TM < handle
       % Plus provide HotSpot with zero power slots.
       B = transpose(B);
       B = [ B; zeros(nodes - cores, steps) ];
+      tic
       [ T, it ] = External.solveSSDTCWithHotSpot(...
         tm.floorplan, tm.config, B, tol, maxit);
+      toc
       T = transpose(T(1:cores, :)) - 273.15;
 
       if it == maxit
