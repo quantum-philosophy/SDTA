@@ -1,4 +1,4 @@
-function stopTimer()
+function time = stopTimer()
   global timerNames
   global timerTimes
 

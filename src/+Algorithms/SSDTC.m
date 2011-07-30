@@ -81,22 +81,22 @@ classdef SSDTC < handle
       fprintf('total time = %f s\n', Algorithms.TM.samplingInterval * ssdtc.stepCount);
 
       if draw
-        ssdtc.drawSimulation(ssdtc.mapping, ssdtc.startTime, ssdtc.execTime, ...
-          ssdtc.powerProfile, ssdtc.temperatureProfile);
+        ssdtc.drawSimulation(ssdtc.mapping, ssdtc.startTime, ...
+          ssdtc.execTime, ssdtc.powerProfile);
       end
     end
 
-    function T = solveWithCondensedEquation(ssdtc)
+    function [ T, time ] = solveWithCondensedEquation(ssdtc)
       Utils.startTimer('Solve with condensed equation');
       T = ssdtc.thermalModel.solveWithCondensedEquation(ssdtc.powerProfile);
-      Utils.stopTimer();
+      time = Utils.stopTimer();
       ssdtc.temperatureProfile = T;
     end
 
-    function T = solveWithHotSpot(ssdtc, varargin)
+    function [ T, time ] = solveWithHotSpot(ssdtc, varargin)
       Utils.startTimer('Solve with HotSpot');
       T = ssdtc.thermalModel.solveWithHotSpot(ssdtc.powerProfile, varargin{:});
-      Utils.stopTimer();
+      time = Utils.stopTimer();
       ssdtc.temperatureProfile = T;
     end
 
@@ -266,28 +266,14 @@ classdef SSDTC < handle
       end
     end
 
-    function drawSimulation(ssdtc, mapping, startTime, execTime,...
-      powerProfile, temperatureProfile)
-
+    function drawSimulation(ssdtc, mapping, startTime, execTime, powerProfile)
       cores = ssdtc.coreCount;
-      tasks = ssdtc.taskCount;
+      steps = ssdtc.stepCount;
 
       colors = { 'r', 'g', 'b', 'm', 'y', 'c' };
 
-      plots = 1;
-      if nargin < 5 || isempty(powerProfile)
-        powerProfile = [];
-      else
-        plots = plots + 1;
-      end
-      if nargin < 6 || isempty(temperatureProfile)
-        temperatureProfile = [];
-      else
-        plots = plots + 1;
-      end
-
       % Mapping and scheduling
-      subplot(plots, 1, 1);
+      subplot(2, 1, 1);
       title('Mapping and Scheduling');
       xlabel('Time, s');
       ylabel('Cores');
@@ -320,39 +306,11 @@ classdef SSDTC < handle
 
       set(gca, 'YTick', 1:cores);
 
-      if ~isempty(powerProfile)
-        % Power profile
-        subplot(plots, 1, 2);
-        title('Power Profile');
-        xlabel('Time, s');
-        ylabel('Power, W');
-
-        x = 1:size(powerProfile, 1);
-        x = (x - 1) * Algorithms.TM.samplingInterval;
-        for i = 1:cores
-          color = colors{mod(i - 1, length(colors)) + 1};
-          line(x, powerProfile(:, i), 'Color', color);
-        end
-
-        % Overall power consumption
-        line(x, sum(powerProfile, 2), 'Color', 'k', 'Line', '--');
-      end
-
-      if ~isempty(temperatureProfile)
-        % Temperature
-        subplot(plots, 1, 3);
-        title('Temperature Profile');
-        xlabel('Time, s');
-        ylabel('Temperature, C');
-
-        x = 1:size(temperatureProfile, 1);
-        x = (x - 1) * Algorithms.TM.samplingInterval;
-
-        for i = 1:cores
-          color = colors{mod(i - 1, length(colors)) + 1};
-          line(x, temperatureProfile(:, i), 'Color', color);
-        end
-      end
+      % Power profile
+      subplot(2, 1, 2);
+      x = ((1:steps) - 1) * Algorithms.TM.samplingInterval;
+      Utils.drawLines('Dynamic Power Profile', 'Time, s', 'Power, W', x, powerProfile);
+      line(x, sum(powerProfile, 2), 'Color', 'k', 'Line', '--');
     end
 
     function frequency = calculateFrequency(ssdtc, Vdd, Vbs)

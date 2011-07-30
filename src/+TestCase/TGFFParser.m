@@ -1,7 +1,7 @@
-classdef TGFFParser < TestSet.Parser
+classdef TGFFParser < TestCase.Parser
   methods
     function parser = TGFFParser(varargin)
-      parser@TestSet.Parser(varargin{:});
+      parser@TestCase.Parser(varargin{:});
     end
 
     function process(parser, file, graphLabels, tableLabels)
@@ -17,11 +17,11 @@ classdef TGFFParser < TestSet.Parser
           name = attrs{1}{1};
           id = str2num(attrs{1}{2});
           if Utils.include(graphLabels, name)
-            graph = TestSet.Graph(name, id);
+            graph = TestCase.Graph(name, id);
             parser.parseGraph(graph, fid);
             parser.graphs{end + 1} = graph;
           elseif Utils.include(tableLabels, name)
-            table = TestSet.Table(name, id);
+            table = TestCase.Table(name, id);
             parser.parseTable(table, fid);
             parser.tables{end + 1} = table;
           end
@@ -85,36 +85,36 @@ classdef TGFFParser < TestSet.Parser
     end
 
     function parseTable(parser, table, fid)
-      state = TestSet.TGFFState.SearchHeader;
+      state = TestCase.TGFFState.SearchHeader;
 
       line = fgetl(fid);
       while ischar(line) && isempty(regexp(line, '^}$'))
         switch state
-        case TestSet.TGFFState.SearchHeader
+        case TestCase.TGFFState.SearchHeader
           header = parser.parseHeader(line);
           if ~isempty(header)
             if ~strcmp(header{1}, 'type')
-              state = TestSet.TGFFState.SearchTableAttributes;
+              state = TestCase.TGFFState.SearchTableAttributes;
             else
-              state = TestSet.TGFFState.SearchTypeHeader;
+              state = TestCase.TGFFState.SearchTypeHeader;
             end
           end
 
-        case TestSet.TGFFState.SearchTableAttributes
+        case TestCase.TGFFState.SearchTableAttributes
           attrs = sscanf(line, '%f');
           if length(attrs) == length(header)
             table.setAttributes(header, attrs);
-            state = TestSet.TGFFState.SearchTypeHeader;
+            state = TestCase.TGFFState.SearchTypeHeader;
           end
 
-        case TestSet.TGFFState.SearchTypeHeader
+        case TestCase.TGFFState.SearchTypeHeader
           header = parser.parseHeader(line);
           if ~isempty(header) && strcmp(header{1}, 'type')
             table.setHeader(header(2:end));
-            state = TestSet.TGFFState.SearchTypeAttributes;
+            state = TestCase.TGFFState.SearchTypeAttributes;
           end
 
-        case TestSet.TGFFState.SearchTypeAttributes
+        case TestCase.TGFFState.SearchTypeAttributes
           attrs = sscanf(line, '%f');
           if length(attrs) == length(header)
             % Counting from 1 instead of 0
