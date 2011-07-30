@@ -116,6 +116,13 @@ classdef SSDTC < handle
       ssdtc.temperatureProfile = T;
     end
 
+    function [ T, time ] = solveWithBlockCirculant(ssdtc)
+      Utils.startTimer('Solve with block circulant');
+      T = ssdtc.thermalModel.solveWithBlockCirculant(ssdtc.powerProfile);
+      time = Utils.stopTimer();
+      ssdtc.temperatureProfile = T;
+    end
+
     function dumpPowerProfile(ssdtc, file)
       Utils.dumpPowerProfile(file, ssdtc.powerProfile);
     end

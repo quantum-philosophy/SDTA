@@ -11,26 +11,18 @@ classdef TM < handle
     end
 
     function T = solveWithCondensedEquation(tm, B)
-      [ negA, invC ] = External.obtainHotSpotModel(tm.floorplan, tm.config);
+      [ D, sinvC ] = tm.obtainCoefficients();
 
-      if size(negA, 1) ~= 4 * size(B, 2) + 12
+      if size(D, 1) ~= 4 * size(B, 2) + 12
         Utils.eprintf('The floorplan does not match the task case');
         T = [];
         return;
       end
 
-      invC = diag(diag(invC));
-
-      sinvC = sqrt(invC);
-      D = Utils.symmetrize(sinvC * (- negA) * sinvC);
-
       [ V, L ] = eig(D);
 
-      DL = diag(L);
-      DV = V;
-      DVT = V';
-      sinvC = sinvC;
-      nodeCount = length(D);
+      L = diag(L);
+      VT = V';
 
       n = length(D);
       m = size(B, 1);
@@ -43,14 +35,7 @@ classdef TM < handle
       B = transpose(B);
       B = [ B; zeros(n - cores, m) ];
 
-      % exp(D * t) = U * diag(exp(li * t)) * UT
-      %
-      K = DV * diag(exp(ts * DL)) * DVT;
-
-      % G = D^(-1) (exp(D * t) - I) C^(-1/2) =
-      % U * diag((exp(li * t) - 1) / li) * UT * C^(-1/2)
-      %
-      G = DV * diag((exp(ts * DL) - 1) ./ DL) * DVT * sinvC;
+      [ K, G ] = tm.calculateConstants(L, V, VT, sinvC, ts);
 
       P = zeros(n, m);
       Q = zeros(n, m);
@@ -62,7 +47,7 @@ classdef TM < handle
       end
 
       Y = zeros(nm, 1);
-      Y(1:n) = DV * diag(1 ./ (1 - exp(ts * m * DL))) * DVT * P(:, m);
+      Y(1:n) = V * diag(1 ./ (1 - exp(ts * m * L))) * VT * P(:, m);
 
       for i = 2:m
         op = (i - 2) * n + 1;
@@ -71,7 +56,7 @@ classdef TM < handle
       end
 
       T = zeros(n, m);
-      T(:, 1) = DV * diag(1 ./ (1 - exp(ts * m * DL))) * DVT * P(:, m);
+      T(:, 1) = V * diag(1 ./ (1 - exp(ts * m * L))) * VT * P(:, m);
 
       for i = 2:m
         T(:, i) = K * T(:, i - 1) + Q(:, i - 1);
@@ -140,6 +125,82 @@ classdef TM < handle
 
       % Skip the header line and all excessive repetitions
       T = dlmread(tempEx, '\t', 1 + (repeat - 1) * steps, 0);
+    end
+
+    function T = solveWithBlockCirculant(tm, B)
+      [ D, sinvC ] = tm.obtainCoefficients();
+
+      if size(D, 1) ~= 4 * size(B, 2) + 12
+        Utils.eprintf('The floorplan does not match the task case');
+        T = [];
+        return;
+      end
+
+      [ V, L ] = eig(D);
+
+      L = diag(L);
+      VT = V';
+
+      n = length(D);
+      m = size(B, 1);
+      cores = size(B, 2);
+      nm = n * m;
+
+      ts = Constants.samplingInterval;
+      at = Constants.ambientTemperature;
+
+      B = transpose(B);
+      B = [ B; zeros(n - cores, m) ];
+
+      [ K, G ] = tm.calculateConstants(L, V, VT, sinvC, ts);
+
+      AA = zeros(2, n, n);
+      AA(1, :, :) = K;
+      AA(2, :, :) = -eye(n);
+
+      BB = zeros(n, m);
+
+      for i = 1:m
+        BB(:, i) = - G * B(:, i);
+      end
+
+      AA = conj(fft(AA, m, 1));
+      BB = fft(BB, m, 2);
+
+      YY = zeros(n, m);
+
+      for i = 1:m
+        YY(:, i) = squeeze(AA(i, :, :)) \ BB(:, i);
+      end
+
+      YY = transpose(ifft(YY, m, 2));
+
+      dsinvC = transpose(diag(sinvC(1:cores, 1:cores)));
+
+      T = zeros(m, cores);
+
+      for i = 1:m
+        T(i, :) = YY(i, 1:cores) .* dsinvC + at;
+      end
+    end
+  end
+
+  methods (Access = private)
+    function [ D, sinvC ] = obtainCoefficients(tm)
+      [ negA, invC ] = External.obtainHotSpotModel(tm.floorplan, tm.config);
+
+      invC = diag(diag(invC));
+      sinvC = sqrt(invC);
+      D = Utils.symmetrize(sinvC * (- negA) * sinvC);
+    end
+
+    function [ K, G ] = calculateConstants(tm, L, V, VT, sinvC, ts)
+      % exp(D * t) = U * diag(exp(li * t)) * UT
+      K = V * diag(exp(ts * L)) * VT;
+
+      % G = D^(-1) (exp(D * t) - I) C^(-1/2) =
+      % U * diag((exp(li * t) - 1) / li) * UT * C^(-1/2)
+      G = V * diag((exp(ts * L) - 1) ./ L) * VT * sinvC;
     end
   end
 end

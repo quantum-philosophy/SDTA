@@ -19,6 +19,6 @@ function compareCEAndHS(ssdtc)
   % Error
   subplot(3, 1, 3);
   error = T1 - T2;
-  Utils.drawLines(sprintf('Error T1 - T2 (max %.3f s)', max(max(error))), ...
+  Utils.drawLines(sprintf('Error T1 - T2 (max %.3f C)', max(max(error))), ...
     'Time, s', 'Temperature, C', x, error);
 end
