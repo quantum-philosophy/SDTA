@@ -1,9 +1,4 @@
 classdef TM < handle
-  properties (Constant)
-    samplingInterval = 0.7e-3;    % Sampling interval
-    ambientTemperature = 45.0;  % Ambient temperature
-  end
-
   properties (Access = private)
     floorplan
     config
@@ -42,8 +37,8 @@ classdef TM < handle
       cores = size(B, 2);
       nm = n * m;
 
-      ts = tm.samplingInterval;
-      at = tm.ambientTemperature;
+      ts = Constants.samplingInterval;
+      at = Constants.ambientTemperature;
 
       B = transpose(B);
       B = [ B; zeros(n - cores, m) ];
@@ -116,6 +111,35 @@ classdef TM < handle
       else
         fprintf('HotSpot finished in %d iterations\n', it);
       end
+    end
+
+    function T = solveWithPlainHotSpot(tm, power, steps, repeat)
+      powerEx = [ power, sprintf('_x_%d', repeat) ];
+
+      if isempty(strfind(powerEx, 'ptrace'))
+        tempEx = [ powerEx, '.ttrace' ];
+      else
+        tempEx = strrep(powerEx, 'ptrace', 'ttrace');
+      end
+
+      Utils.startTimer('Extend the power profile');
+      Utils.extendPowerProfile(power, powerEx, repeat);
+      Utils.stopTimer();
+
+      status = Utils.run('hotspot', ...
+        '-f', tm.floorplan, ...
+        '-p', powerEx, ...
+        '-c', tm.config, ...
+        '-o', tempEx);
+
+      if status ~= 0
+        Utils.eprintf('Cannot execute HotSpot');
+        T = [];
+        return;
+      end
+
+      % Skip the header line and all excessive repetitions
+      T = dlmread(tempEx, '\t', 1 + (repeat - 1) * steps, 0);
     end
   end
 end

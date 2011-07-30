@@ -10,7 +10,7 @@ function names = generateFloorplan(file, cores, dimension)
   for i = 0:(cores - 1)
     x = mod(i, row) * dimension;
     y = floor(i / row) * dimension;
-    names{i + 1} = sprintf('core%d', i);
+    names{i + 1} = sprintf('core%d', i + 1);
     fprintf(f, '%s\t%f\t%f\t%f\t%f\n',...
       names{i + 1}, dimension, dimension, x, y);
   end

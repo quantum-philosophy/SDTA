@@ -3,7 +3,7 @@ function drawLines(labelTitle, labelX, labelY, x, y, varargin)
   xlabel(labelX);
   ylabel(labelY);
 
-  colors = { 'r', 'g', 'b', 'm', 'y', 'c' };
+  colors = Constants.roundRobinColors;
 
   for i = 1:size(y, 2)
     color = colors{mod(i - 1, length(colors)) + 1};

@@ -77,8 +77,8 @@ classdef SSDTC < handle
 
       % Power
       fprintf('steps = %d\n', ssdtc.stepCount);
-      fprintf('sampling interval = %f s\n', Algorithms.TM.samplingInterval);
-      fprintf('total time = %f s\n', Algorithms.TM.samplingInterval * ssdtc.stepCount);
+      fprintf('sampling interval = %f s\n', Constants.samplingInterval);
+      fprintf('total time = %f s\n', Constants.samplingInterval * ssdtc.stepCount);
 
       if draw
         ssdtc.drawSimulation(ssdtc.mapping, ssdtc.startTime, ...
@@ -96,6 +96,22 @@ classdef SSDTC < handle
     function [ T, time ] = solveWithHotSpot(ssdtc, varargin)
       Utils.startTimer('Solve with HotSpot');
       T = ssdtc.thermalModel.solveWithHotSpot(ssdtc.powerProfile, varargin{:});
+      time = Utils.stopTimer();
+      ssdtc.temperatureProfile = T;
+    end
+
+    function [ T, time ] = solveWithPlainHotSpot(ssdtc, repeat)
+      powerFile = sprintf('cores_%d_steps_%d.ptrace', ...
+        ssdtc.coreCount, ssdtc.stepCount);
+      powerFile = Utils.path(powerFile);
+
+      Utils.startTimer('Dump the power profile');
+      ssdtc.dumpPowerProfile(powerFile);
+      Utils.stopTimer();
+
+      Utils.startTimer('Solve with plain HotSpot');
+      T = ssdtc.thermalModel.solveWithPlainHotSpot(...
+        powerFile, ssdtc.stepCount, repeat);
       time = Utils.stopTimer();
       ssdtc.temperatureProfile = T;
     end
@@ -169,7 +185,7 @@ classdef SSDTC < handle
 
       powerProfile = zeros(0, cores);
 
-      timeStep = Algorithms.TM.samplingInterval;
+      timeStep = Constants.samplingInterval;
       totalTime = max(finishTime);
 
       % ATTENTION: What should we do about this mismatch?
@@ -270,7 +286,7 @@ classdef SSDTC < handle
       cores = ssdtc.coreCount;
       steps = ssdtc.stepCount;
 
-      colors = { 'r', 'g', 'b', 'm', 'y', 'c' };
+      colors = Constants.roundRobinColors;
 
       % Mapping and scheduling
       subplot(2, 1, 1);
@@ -308,29 +324,17 @@ classdef SSDTC < handle
 
       % Power profile
       subplot(2, 1, 2);
-      x = ((1:steps) - 1) * Algorithms.TM.samplingInterval;
+      x = ((1:steps) - 1) * Constants.samplingInterval;
       Utils.drawLines('Dynamic Power Profile', 'Time, s', 'Power, W', x, powerProfile);
       line(x, sum(powerProfile, 2), 'Color', 'k', 'Line', '--');
     end
 
     function frequency = calculateFrequency(ssdtc, Vdd, Vbs)
-      K1 = 0.063;
-      K2 = 0.153;
-      K6 = 5.26e-12;
-      Ld = 10;
-      Vth1 = 0.244;
-      alpha = 1;
-
-      frequency = ((1 + K1) * Vdd + K2 * Vbs - Vth1)^alpha / (K6 * Ld);
+      frequency = ((1 + Constants.K1) * Vdd + Constants.K2 * Vbs - Constants.Vth1)^Constants.alpha / (Constants.K6 * Constants.Ld);
     end
 
     function power = calculateLeakagePower(ssdtc, Vdd, Vbs)
-      K3 = 5.38e-7;
-      K4 = 1.83;
-      K5 = 4.19;
-      Ij = 4.80e-10;
-
-      power = Vdd * K3 * exp(K4 * Vdd) * exp(K5 * Vbs) - abs(Vbs) * Ij;
+      power = Vdd * Constants.K3 * exp(Constants.K4 * Vdd) * exp(Constants.K5 * Vbs) - abs(Vbs) * Constants.Ij;
     end
   end
 end

@@ -4,17 +4,15 @@ clc;
 % Fix the randomness
 rng(0);
 
-floorplan = '../build/simple.flp';
-graphConfig = '../build/simple.tgff';
-hotspotConfig = '../build/hotspot.config';
-powerDump = '../build/simple.ptrace';
-
-graphLabel = 'TASK_GRAPH';
-peLabel = 'PE';
+floorplan     = Utils.path('simple.flp');
+graphConfig   = Utils.path('simple.tgff');
+hotspotConfig = Utils.path('hotspot.config');
+powerDump     = Utils.path('simple.ptrace');
 
 % Parse tasks graphs
 Utils.startTimer('Parse a test case');
-parser = TestCase.TGFFParser(graphConfig, { graphLabel }, { peLabel });
+parser = TestCase.TGFFParser(graphConfig, ...
+  { Constants.graphLabel }, { Constants.peLabel });
 Utils.stopTimer();
 
 cores = length(parser.tables);
@@ -30,26 +28,9 @@ graph = parser.graphs{1};
 ssdtc = Algorithms.SSDTC(graph, parser.tables, floorplan, hotspotConfig);
 ssdtc.inspect(true);
 
-steps = ssdtc.stepCount;
+% Test 1: Compare our results with results from HotSpot
+compareCEAndHS(ssdtc);
 
-x = ((1:steps) - 1) * Algorithms.TM.samplingInterval;
-
-figure;
-
-% The Condensed Equation Method
-subplot(3, 1, 1);
-[ T1, t1 ] = ssdtc.solveWithCondensedEquation();
-Utils.drawLines(sprintf('Condensed Equation (%.3f s)', t1), ...
-  'Time, s', 'Temperature, C', x, T1);
-
-% Compare with HotSpot
-subplot(3, 1, 2);
-[ T2, t2 ] = ssdtc.solveWithHotSpot(2, 10);
-Utils.drawLines(sprintf('HotSpot (%.3f s)', t2), ...
-  'Time, s', 'Temperature, C', x, T2);
-
-% Error
-subplot(3, 1, 3);
-error = T1 - T2;
-Utils.drawLines(sprintf('Error T1 - T2 (max %.3f)', max(max(error))), ...
-  'Time, s', 'Temperature, C', x, error);
+% Test 2: Ensure that our MatLab interface to HotSpot works fine through
+% comparison with original HotSpot (system call to the compiled tool)
+% verifyHS(ssdtc);

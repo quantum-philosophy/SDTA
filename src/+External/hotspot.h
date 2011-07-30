@@ -1,6 +1,9 @@
 #ifndef __HOTSPOT_H__
 #define __HOTSPOT_H__
 
+#include <unistd.h>
+#include <sys/times.h>
+
 #include <hotspot/flp.h>
 #include <hotspot/temperature.h>
 #include <hotspot/temperature_block.h>
@@ -31,5 +34,20 @@ int solve_ssdtc_with_hotspot(char *floorplan, char *config, double *power,
 
 int solve_sst_with_hotspot(char *floorplan, char *power, char *config,
 	int *cores, HotSpotVector *T);
+
+#define define_timer(name) \
+	struct tms __start_ ## name ## _tm; \
+	struct tms __stop_ ## name ## _tm; \
+	clock_t __start_ ## name; \
+	clock_t __stop_ ## name;
+
+#define start_timer(name) \
+	__start_ ## name = times(&__start_ ## name ## _tm)
+
+#define stop_timer(name) \
+	__stop_ ## name = times(&__stop_ ## name ## _tm)
+
+#define timer_result(name) \
+	((double)(__stop_ ## name  - __start_ ## name) / sysconf(_SC_CLK_TCK))
 
 #endif
