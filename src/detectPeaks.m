@@ -11,7 +11,7 @@ function detectPeaks(ssdtc)
   cores = ssdtc.coreCount;
   for i = 1:cores
     [ maxp, minp ] = Utils.peakdet(T(:, i), Constants.peakThreshold);
-    line(x(maxp(:, 1)), T(maxp(:, 1), i), 'Color', 'k', 'LineStyle', 'x');
-    line(x(minp(:, 1)), T(minp(:, 1), i), 'Color', 'k', 'LineStyle', 'x');
+    index = sort([ maxp(:, 1); minp(:, 1) ]);
+    line(x(index), T(index, i), 'Color', 'k', 'LineStyle', 'x');
   end
 end

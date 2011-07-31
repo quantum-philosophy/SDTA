@@ -85,7 +85,7 @@ classdef TM < handle
       B = transpose(B);
       B = [ B; zeros(nodes - cores, steps) ];
       tic
-      [ T, it ] = External.solveSSDTCWithHotSpot(...
+      [ T, it ] = HotSpot.solveSSDTC(...
         tm.floorplan, tm.config, B, tol, maxit);
       toc
       T = transpose(T(1:cores, :)) - 273.15;
@@ -184,7 +184,7 @@ classdef TM < handle
 
   methods (Access = private)
     function [ D, sinvC ] = obtainCoefficients(tm)
-      [ negA, invC ] = External.obtainHotSpotModel(tm.floorplan, tm.config);
+      [ negA, invC ] = HotSpot.obtainModel(tm.floorplan, tm.config);
 
       invC = diag(diag(invC));
       sinvC = sqrt(invC);
