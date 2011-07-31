@@ -13,27 +13,16 @@
 #define E_IO		-3
 #define E_MISMATCH	-4
 #define E_NAMES		-5
-#define KELVIN 273.15
+#define E_MEM		-6
 
-typedef double *HotSpotVector;
-typedef double **HotSpotMatrix;
-typedef int (*printf_t)(const char *, ...);
+int obtain_coefficients(char *floorplan, char *config,
+	double **negA, double **invC, void *(*alloc)(size_t), void (*dealloc)(void *));
 
-#define alloc_hotspot_matrix(rows, cols) (HotSpotMatrix)dmatrix(rows, cols)
-#define free_hotspot_matrix(M) free_dmatrix((double **)M)
+int solve_ssdtc_original(char *floorplan, char *config, double *power,
+	int nodes, int steps, double tol, int maxit, double *T, char *dump);
 
-#define alloc_hotspot_vector(size) (HotSpotVector)dvector(size)
-#define free_hotspot_vector(V) free_dvector((double *)V)
-
-int obtain_hotspot_model(char *floorplan, char *config,
-	int *nodes, HotSpotMatrix *negA, HotSpotMatrix *invC);
-
-int solve_ssdtc_with_hotspot(char *floorplan, char *config, double *power,
-	int nodes, int steps, double tol, int maxit, double *T, char *dump,
-	printf_t printf);
-
-int solve_sst_with_hotspot(char *floorplan, char *power, char *config,
-	int *cores, HotSpotVector *T);
+int solve_ssdtc_condensed_equation(char *floorplan, char *config, double *power,
+	int nodes, int steps, double *T);
 
 #define define_timer(name) \
 	struct tms __start_ ## name ## _tm; \

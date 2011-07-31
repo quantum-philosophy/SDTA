@@ -184,10 +184,9 @@ classdef TM < handle
 
   methods (Access = private)
     function [ D, sinvC ] = obtainCoefficients(tm)
-      [ negA, invC ] = HotSpot.obtainModel(tm.floorplan, tm.config);
+      [ negA, dinvC ] = HotSpot.obtainModel(tm.floorplan, tm.config);
 
-      invC = diag(diag(invC));
-      sinvC = sqrt(invC);
+      sinvC = sqrt(diag(dinvC));
       D = Utils.symmetrize(sinvC * (- negA) * sinvC);
     end
 

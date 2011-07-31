@@ -1,5 +1,6 @@
 #include "hotspot.h"
 
+#include <math.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
@@ -15,52 +16,64 @@ char **alloc_names(int, int);
 void write_vals(FILE *, double *, int);
 int fexist(char *);
 
-int obtain_hotspot_model(char *floorplan, char *config,
-	int *pnodes, HotSpotMatrix *negA, HotSpotMatrix *invC)
+int obtain_coefficients(char *floorplan, char *config,
+	double **pnegA, double **pdinvC,
+	void *(*alloc)(size_t), void (*dealloc)(void *))
 {
-	int i, j;
-	int nodes, cores;
-	block_model_t *block;
+	int ret = 0;
+	int i, nodes;
+	double *negA, *dinvC;
 
     flp_t *flp;
     RC_model_t *model;
+	block_model_t *block;
+
+	if (!alloc) alloc = malloc;
+	if (!dealloc) dealloc = free;
 
 	if (!fexist(floorplan) || !fexist(config)) return E_IO;
 
 	prepare_hotspot(floorplan, config, &flp, &model);
 
 	block = model->block;
-	cores = block->n_units;
 	nodes = block->n_nodes;
 
-	*negA = alloc_hotspot_matrix(nodes, nodes);
-	*invC = alloc_hotspot_matrix(nodes, nodes);
-
-	for (i = 0; i < nodes; i++) {
-		for (j = 0; j < nodes; j++) {
-			(*negA)[i][j] = block->b[i][j];
-			(*invC)[i][j] = 0;
-		}
-		(*invC)[i][i] = block->inva[i];
+	negA = (double *)alloc(sizeof(double) * nodes * nodes);
+	if (!negA) {
+		ret = E_MEM;
+		goto ret_hotspot;
 	}
 
-	*pnodes = nodes;
+	dinvC = (double *)alloc(sizeof(double) * nodes);
+	if (!dinvC) {
+		dealloc(negA);
+		ret = E_MEM;
+		goto ret_hotspot;
+	}
 
+	memcpy(dinvC, block->inva, sizeof(double) * nodes);
+
+	for (i = 0; i < nodes; i++)
+		memcpy(&negA[i * nodes], block->b[i], sizeof(double) * nodes);
+
+	*pnegA = negA;
+	*pdinvC = dinvC;
+
+ret_hotspot:
 	free_hotspot(flp, model);
 
-	return 0;
+	return nodes;
 }
 
-int solve_ssdtc_with_hotspot(char *floorplan, char *config, double *power,
-	int nodes, int steps, double tol, int maxit, double *T, char *dump,
-	printf_t printf)
+int solve_ssdtc_original(char *floorplan, char *config, double *power,
+	int nodes, int steps, double tol, int maxit, double *T, char *dump)
 {
 	int ret = 0;
-	int i, j, k;
+	int i, j, k, goon;
 	int total, cores;
 	FILE *pdump = NULL;
 	double *temp, *T0;
-	double ts, error, max_error;
+	double ts;
 
 	flp_t *flp;
 	RC_model_t *model;
@@ -73,7 +86,7 @@ int solve_ssdtc_with_hotspot(char *floorplan, char *config, double *power,
 
 	if (nodes != model->block->n_nodes) {
 		ret = E_MISMATCH;
-		goto ret_dump;
+		goto ret_hotspot;
 	}
 
 	cores = model->block->flp->n_units;
@@ -89,18 +102,15 @@ int solve_ssdtc_with_hotspot(char *floorplan, char *config, double *power,
 	if (tol > 0) {
 		/* With error control */
 		for (k = 0; k < maxit; k++) {
-			max_error = 0;
+			goon = 0;
 
 			for (j = 0; j < steps; j++) {
 				compute_temp(model, &power[nodes * j], temp, ts);
 				T0 = &T[nodes * j];
 
 				/* NOTE: Only for cores. */
-				for (i = 0; i < cores; i++) {
-					if (temp[i] > T0[i]) error = temp[i] - T0[i];
-					else error = T0[i] - temp[i];
-					if (error > max_error) max_error = error;
-				}
+				for (i = 0; !goon && (i < cores); i++)
+					if (abs(temp[i] - T0[i]) >= tol) goon = 1;
 
 				memcpy(T0, temp, nodes * sizeof(temp[0]));
 
@@ -108,7 +118,7 @@ int solve_ssdtc_with_hotspot(char *floorplan, char *config, double *power,
 				if (pdump) write_vals(pdump, temp, cores);
 			}
 
-			if (max_error < tol) break;
+			if (!goon) break;
 		}
 	}
 	else {
@@ -128,79 +138,39 @@ int solve_ssdtc_with_hotspot(char *floorplan, char *config, double *power,
 
 	free_dvector(temp);
 
-ret_dump:
+ret_hotspot:
+	free_hotspot(flp, model);
+
 	if (pdump) fclose(pdump);
 
 	return ret;
 }
 
-int solve_sst_with_hotspot(char *floorplan, char *power, char *config,
-	int *pcores, HotSpotVector *pT)
+int solve_ssdtc_condensed_equation(char *floorplan, char *config, double *power,
+	int nodes, int steps, double *T)
 {
 	int ret = 0;
-	int i;
-	int num, steps, cores, nodes;
-	char **names;
-	FILE *pin;
-	double *vals, *overall_power;
-	HotSpotVector T;
+	int total, cores;
+	double ts;
 
 	flp_t *flp;
 	RC_model_t *model;
 
-	if (!fexist(floorplan) || !fexist(power) || !fexist(config)) return E_IO;
+	if (!fexist(floorplan) || !fexist(config)) return E_IO;
 
 	prepare_hotspot(floorplan, config, &flp, &model);
 
-	cores = model->block->flp->n_units;
-	nodes = model->block->n_nodes;
-
-	if (!(pin = fopen(power, "r"))) {
-		ret = E_PROFILE;
+	if (nodes != model->block->n_nodes) {
+		ret = E_MISMATCH;
 		goto ret_hotspot;
 	}
 
-	names = alloc_names(MAX_UNITS, STR_SIZE);
-	if (read_names(pin, names) != cores) {
-		ret = E_NAMES;
-		goto ret_names;
-	}
+	cores = model->block->flp->n_units;
+	total = cores * steps;
 
-	steps = 0;
-	vals = dvector(MAX_UNITS);
-	overall_power = hotspot_vector(model);
+	ts = model->config->sampling_intvl;
 
-	/* Read the power profile */
-	while ((num = read_vals(pin, vals)) != 0) {
-		if (num != cores) {
-			ret = E_VALUES;
-			goto ret_profile;
-		}
-
-		/* Permute & sum up */
-		for (i = 0; i < cores; i++)
-			overall_power[get_blk_index(flp, names[i])] += vals[i];
-
-		steps++;
-	}
-
-	for (i = 0; i < cores; i++) overall_power[i] /= (double)steps;
-
-	T = hotspot_vector(model);
-	steady_state_temp(model, overall_power, T);
-
-	for (i = 0; i < cores; i++) T[i] = T[i] - KELVIN;
-
-	*pcores = cores;
-	*pT = T;
-
-ret_profile:
-	free_dvector(overall_power);
-	free_dvector(vals);
-
-ret_names:
-	free_names(names);
-	fclose(pin);
+	/* TODO */
 
 ret_hotspot:
 	free_hotspot(flp, model);

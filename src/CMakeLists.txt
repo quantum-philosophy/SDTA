@@ -31,7 +31,6 @@ set (MEX_RAINFLOW_FLAGS
 add_custom_target (matlab
   COMMAND mex ${HOTSPOT_DIR}/obtainModel.cpp ${MEX_HOTSPOT_FLAGS}
   COMMAND mex ${HOTSPOT_DIR}/solveSSDTC.cpp ${MEX_HOTSPOT_FLAGS}
-  COMMAND mex ${HOTSPOT_DIR}/solveSST.cpp ${MEX_HOTSPOT_FLAGS}
   COMMAND mex ${RAINFLOW_DIR}/rainflow.c ${MEX_RAINFLOW_FLAGS}
 )
 add_dependencies (matlab hotspot)

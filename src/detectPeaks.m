@@ -12,6 +12,11 @@ function detectPeaks(ssdtc)
   for i = 1:cores
     [ maxp, minp ] = Utils.peakdet(T(:, i), Constants.peakThreshold);
     index = sort([ maxp(:, 1); minp(:, 1) ]);
-    line(x(index), T(index, i), 'Color', 'k', 'LineStyle', 'x');
+    ext = T(index, i);
+    line(x(index), ext, 'Color', 'k', 'LineStyle', 'x');
+    mx = max(ext);
+    mn = min(ext);
+    fprintf('Core %d, max %.3f C, min %.3f C, amplitude %.3f C\n', ...
+      i, mx, mn, mx - mn);
   end
 end

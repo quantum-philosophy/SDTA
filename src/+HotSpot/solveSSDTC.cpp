@@ -1,17 +1,13 @@
 #include <mex.h>
 #include <hotspot.h>
-#include <sys/stat.h>
-#include <string.h>
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-	if (nrhs < 3)
-		mexErrMsgTxt(
-			"Three inputs are required: floorplan, config, and power.");
+	if (nrhs < 3) mexErrMsgTxt(
+		"At least three inputs are required: floorplan, config, and power.");
 
-	if (!mxIsChar(prhs[0]) || !mxIsChar(prhs[1]))
-		mexErrMsgTxt(
-			"1st and 2nd inputs (floorplan and config) should be strings.");
+	if (!mxIsChar(prhs[0]) || !mxIsChar(prhs[1])) mexErrMsgTxt(
+		"The first two inputs should be file names.");
 
 	/* ATTENTION: Due to the fact that MatLab stores matrices column by
 	 * column, not row by row as regular c/c++ arrays, as input we expect
@@ -20,30 +16,29 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	int nodes = mxGetM(prhs[2]); /* rows */
 	int steps = mxGetN(prhs[2]); /* columns */
 
-	if (nodes <= 0 || steps <= 0)
-		mexErrMsgTxt(
-			"3rd input (power) should be a matrix.");
+	if (nodes <= 0 || steps <= 0) mexErrMsgTxt(
+		"The third input should be a matrix.");
 
 	double *power = mxGetPr(prhs[2]);
 
 	double tol = 2;
 	if (nrhs > 3) {
-		if (!mxIsNumeric(prhs[3]))
-			mexErrMsgTxt("4th input (tol) should be numeric.");
+		if (!mxIsNumeric(prhs[3])) mexErrMsgTxt(
+			"The forth input (tol) should be numeric.");
 		tol = mxGetScalar(prhs[3]);
 	}
 
 	int maxit = 10;
 	if (nrhs > 4) {
-		if (!mxIsNumeric(prhs[4]))
-			mexErrMsgTxt("5th input (maxit) should be numeric.");
+		if (!mxIsNumeric(prhs[4])) mexErrMsgTxt(
+			"The fifth input (maxit) should be numeric.");
 		maxit = (int)mxGetScalar(prhs[4]);
 	}
 
 	char *dump = NULL;
 	if (nrhs > 5) {
-		if (!mxIsChar(prhs[5]))
-			mexErrMsgTxt("6th input (dump) should be string.");
+		if (!mxIsChar(prhs[5])) mexErrMsgTxt(
+			"The sixth input (dump) should be a file name.");
 		dump = mxArrayToString(prhs[5]);
 	}
 
@@ -59,12 +54,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	start_timer(calc);
 
-	int it = solve_ssdtc_with_hotspot(floorplan, config, power,
-		nodes, steps, tol, maxit, T, dump, mexPrintf);
+	int it = solve_ssdtc_original(floorplan, config, power,
+		nodes, steps, tol, maxit, T, dump);
 
 	stop_timer(calc);
 
-	mexPrintf("Internal computation time of HotSpot: %.3f s\n", timer_result(calc));
+	mexPrintf("The original solution: %.3f s\n", timer_result(calc));
 
 	mxFree(floorplan);
 	mxFree(config);
@@ -72,8 +67,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	if (it < 0) {
 		mxDestroyArray(out_T);
-		mexErrMsgIdAndTxt("hotspot:bad",
-			"Cannot solve SSDTC with HotSpot (%d).", it);
+		mexErrMsgIdAndTxt("solveSSDTC:solve_ssdtc_original",
+			"Cannot solve SSDTC using the original method (%d).", it);
 	}
 
 	mxArray *out_it = mxCreateDoubleMatrix(1, 1, mxREAL);
