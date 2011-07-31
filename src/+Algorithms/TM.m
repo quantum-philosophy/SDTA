@@ -45,15 +45,6 @@ classdef TM < handle
         P(:, i) = K * P(:, i - 1) + Q(:, i);
       end
 
-      Y = zeros(nm, 1);
-      Y(1:n) = V * diag(1 ./ (1 - exp(ts * m * L))) * VT * P(:, m);
-
-      for i = 2:m
-        op = (i - 2) * n + 1;
-        on = op + n;
-        Y(on:(on + n - 1)) = K * Y(op:(op + n - 1)) + Q(:, i - 1);
-      end
-
       T = zeros(n, m);
       T(:, 1) = V * diag(1 ./ (1 - exp(ts * m * L))) * VT * P(:, m);
 
