@@ -13,12 +13,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	/* ATTENTION: Due to the fact that MatLab stores matrices column by
 	 * column, not row by row as regular C/C++ arrays, as input we expect
-	 * to get a power profile where columns are steps, and rows are nodes.
+	 * to get a power profile where columns are steps, and rows are cores.
 	 */
-	int nodes = mxGetM(prhs[2]); /* rows */
+	int cores = mxGetM(prhs[2]); /* rows */
 	int steps = mxGetN(prhs[2]); /* columns */
 
-	if (nodes <= 0 || steps <= 0) mexErrMsgTxt(
+	if (cores <= 0 || steps <= 0) mexErrMsgTxt(
 		"The third input should be a matrix.");
 
 	char *floorplan = mxArrayToString(prhs[0]);
@@ -27,7 +27,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	/* ATTENTION: The same note (look above) with the output temperature.
 	 */
-    mxArray *out_T = mxCreateDoubleMatrix(nodes, steps, mxREAL);
+    mxArray *out_T = mxCreateDoubleMatrix(cores, steps, mxREAL);
 	double *T = mxGetPr(out_T);
 
 	define_timer(calc);
@@ -35,7 +35,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	start_timer(calc);
 
 	int ret = solve_ssdtc_condensed_equation(floorplan, config, power,
-		nodes, steps, T);
+		cores, steps, T);
 
 	stop_timer(calc);
 

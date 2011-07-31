@@ -10,7 +10,7 @@ classdef TM < handle
       tm.config = config;
     end
 
-    function T = solveWithCondensedEquation(tm, B)
+    function T = solveWithNativeCondensedEquation(tm, B)
       [ D, sinvC ] = tm.obtainCoefficients();
 
       if size(D, 1) ~= 4 * size(B, 2) + 12
@@ -60,6 +60,16 @@ classdef TM < handle
       end
     end
 
+    function T = solveWithCondensedEquation(tm, B)
+      % ATTENTION: B is a steps-by-cores matrix right now. Because of the fact
+      % than MatLab stores matrices column by column, not row by row as
+      % it is in C/C++, the external code will get uncomfortable formatted
+      % data. To eliminate extra transformations there, we do them here.
+      B = transpose(B);
+      T = HotSpot.solveSSDTCCE(tm.floorplan, tm.config, B);
+      T = transpose(T) - Constants.degreeKelvin;
+    end
+
     function [ T, it ] = solveWithHotSpot(tm, B, tol, maxit)
       if nargin < 4, maxit = 10; end
       if nargin < 3, tol = 2; end
@@ -71,15 +81,13 @@ classdef TM < handle
       % ATTENTION: B is a steps-by-cores matrix right now. Because of the fact
       % than MatLab stores matrices column by column, not row by row as
       % it is in C/C++, the external code will get uncomfortable formatted
-      % data. No eliminate extra transformations there, we do them here.
+      % data. To eliminate extra transformations there, we do them here.
       % Plus provide HotSpot with zero power slots.
       B = transpose(B);
       B = [ B; zeros(nodes - cores, steps) ];
-      tic
       [ T, it ] = HotSpot.solveSSDTC(...
         tm.floorplan, tm.config, B, tol, maxit);
-      toc
-      T = transpose(T(1:cores, :)) - 273.15;
+      T = transpose(T(1:cores, :)) - Constants.degreeKelvin;
 
       if it == maxit
         fprintf('HotSpot exceeded the maximal number of iterations\n');

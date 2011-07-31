@@ -10,7 +10,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		"The first two inputs should be file names.");
 
 	/* ATTENTION: Due to the fact that MatLab stores matrices column by
-	 * column, not row by row as regular c/c++ arrays, as input we expect
+	 * column, not row by row as regular C/C++ arrays, as input we expect
 	 * to get a power profile where columns are steps, and rows are nodes.
 	 */
 	int nodes = mxGetM(prhs[2]); /* rows */

@@ -19,6 +19,9 @@ classdef Constants < handle
     % Peak threshold of local minima and maxima (for the cycle counting)
     peakThreshold = 1.0; % C
 
+    % Kelvin to Celsius
+    degreeKelvin = 273.15;
+
     % Power model
     K1 = 0.063;
     K2 = 0.153;
