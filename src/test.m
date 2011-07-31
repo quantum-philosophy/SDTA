@@ -29,8 +29,11 @@ ssdtc = Algorithms.SSDTC(graph, parser.tables, floorplan, hotspotConfig);
 ssdtc.inspect(true);
 
 % Test 1: Compare our results with results from HotSpot
-compareCEAndHS(ssdtc);
+% compareCEAndHS(ssdtc);
 
 % Test 2: Ensure that our MatLab interface to HotSpot works fine through
 % comparison with original HotSpot (system call to the compiled tool)
 % verifyHS(ssdtc);
+
+% Test 3: Find local minima and maxima on the temperature curves
+detectPeaks(ssdtc);

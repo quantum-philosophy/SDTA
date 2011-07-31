@@ -11,10 +11,13 @@ classdef Constants < handle
     roundRobinColors = { 'r', 'g', 'b', 'm', 'y', 'c' };
 
     % Sampling interval
-    samplingInterval = 0.7e-3;
+    samplingInterval = 0.7e-3; % s
 
     % Ambient temperature
-    ambientTemperature = 45.0;
+    ambientTemperature = 45.0; % C
+
+    % Peak threshold of local minima and maxima (for the cycle counting)
+    peakThreshold = 1.0; % C
 
     % Power model
     K1 = 0.063;

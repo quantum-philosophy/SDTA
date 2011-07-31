@@ -14,9 +14,8 @@ classdef TM < handle
       [ D, sinvC ] = tm.obtainCoefficients();
 
       if size(D, 1) ~= 4 * size(B, 2) + 12
-        Utils.eprintf('The floorplan does not match the task case');
-        T = [];
-        return;
+        error('TM:solveWithCondensedEquation', ...
+          'The floorplan does not match the task case');
       end
 
       [ V, L ] = eig(D);
@@ -118,9 +117,8 @@ classdef TM < handle
         '-o', tempEx);
 
       if status ~= 0
-        Utils.eprintf('Cannot execute HotSpot');
-        T = [];
-        return;
+        error('TM:solveWithPlainHotSpot', ...
+          'Cannot execute HotSpot');
       end
 
       % Skip the header line and all excessive repetitions
@@ -131,9 +129,8 @@ classdef TM < handle
       [ D, sinvC ] = tm.obtainCoefficients();
 
       if size(D, 1) ~= 4 * size(B, 2) + 12
-        Utils.eprintf('The floorplan does not match the task case');
-        T = [];
-        return;
+        error('TM:solveWithBlockCirculant', ...
+          'The floorplan does not match the task case');
       end
 
       [ V, L ] = eig(D);
