@@ -5,7 +5,6 @@
 #include <eigen_sym.h>
 
 #include <errno.h>
-#include <assert.h>
 
 #include <hotspot/flp.h>
 #include <hotspot/temperature.h>
