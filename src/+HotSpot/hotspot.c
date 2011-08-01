@@ -1,10 +1,10 @@
+#include <errno.h>
+
 #include "hotspot.h"
 #include "matrix.h"
 
 #include <nr3.h>
 #include <eigen_sym.h>
-
-#include <errno.h>
 
 #include <hotspot/flp.h>
 #include <hotspot/temperature.h>
