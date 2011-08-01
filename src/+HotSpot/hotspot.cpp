@@ -1,17 +1,17 @@
 #include <errno.h>
 
-#include "hotspot.h"
-#include "matrix.h"
-
 #include <nr3.h>
 #include <eigen_sym.h>
+
+#include "hotspot.h"
+#include "matrix.h"
 
 #include <hotspot/flp.h>
 #include <hotspot/temperature.h>
 #include <hotspot/temperature_block.h>
 
 void prepare_hotspot(char *floorplan, char *config,
-	flp_t **flp, RC_model_t **model)
+	str_pair *add_table, int tsize, flp_t **flp, RC_model_t **model)
 {
 	int i;
 	thermal_config_t thermal_config;
@@ -22,6 +22,10 @@ void prepare_hotspot(char *floorplan, char *config,
 		str_pair table[MAX_ENTRIES];
 		i = read_str_pairs(&table[0], MAX_ENTRIES, config);
 		thermal_config_add_from_strs(&thermal_config, table, i);
+	}
+
+	if (add_table && tsize) {
+		thermal_config_add_from_strs(&thermal_config, add_table, tsize);
 	}
 
 	*flp = read_flp(floorplan, FALSE);
@@ -69,7 +73,7 @@ int obtain_coefficients(char *floorplan, char *config,
 
 	if (!fexist(floorplan) || !fexist(config)) return -EIO;
 
-	prepare_hotspot(floorplan, config, &flp, &model);
+	prepare_hotspot(floorplan, config, NULL, 0, &flp, &model);
 
 	block = model->block;
 	nodes = block->n_nodes;
@@ -118,7 +122,7 @@ int solve_ssdtc_original(char *floorplan, char *config, double *power,
 
 	if (dump) pdump = fopen(dump, "w");
 
-	prepare_hotspot(floorplan, config, &flp, &model);
+	prepare_hotspot(floorplan, config, NULL, 0, &flp, &model);
 
 	if (nodes != model->block->n_nodes) {
 		ret = -EINVAL;
@@ -182,8 +186,8 @@ ret_hotspot:
 	return ret;
 }
 
-int solve_ssdtc_condensed_equation(char *floorplan, char *config, double *power,
-	int cores, int steps, double *T)
+int solve_ssdtc_condensed_equation(char *floorplan, char *config,
+	str_pair *table, int tsize, double *power, int cores, int steps, double *T)
 {
 	int ret = 0;
 	int i, j, total, nodes;
@@ -195,7 +199,7 @@ int solve_ssdtc_condensed_equation(char *floorplan, char *config, double *power,
 
 	if (!fexist(floorplan) || !fexist(config)) return -EIO;
 
-	prepare_hotspot(floorplan, config, &flp, &model);
+	prepare_hotspot(floorplan, config, table, tsize, &flp, &model);
 
 	block = model->block;
 

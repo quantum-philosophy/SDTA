@@ -12,8 +12,8 @@ set (hotspot_SRCS
 	${PROJECT_SOURCE_DIR}/vendor/hotspot/util.c
 	${PROJECT_SOURCE_DIR}/vendor/hotspot/npe.c
 	${PROJECT_SOURCE_DIR}/vendor/hotspot/shape.c
-	${HOTSPOT_DIR}/matrix.c
-	${HOTSPOT_DIR}/hotspot.c
+	${HOTSPOT_DIR}/matrix.cpp
+	${HOTSPOT_DIR}/hotspot.cpp
 )
 include_directories (
 	${HOTSPOT_DIR}
@@ -37,7 +37,7 @@ set (MEX_RAINFLOW_FLAGS
 add_custom_target (matlab
   COMMAND mex ${HOTSPOT_DIR}/obtainModel.cpp ${MEX_HOTSPOT_FLAGS}
   COMMAND mex ${HOTSPOT_DIR}/solveSSDTC.cpp ${MEX_HOTSPOT_FLAGS}
-  COMMAND mex ${HOTSPOT_DIR}/solveSSDTCCE.cpp ${MEX_HOTSPOT_FLAGS}
+  COMMAND mex ${HOTSPOT_DIR}/solveSSDTCCE.cpp ${HOTSPOT_DIR}/utils.cpp ${MEX_HOTSPOT_FLAGS}
   COMMAND mex ${RAINFLOW_DIR}/rainflow.c ${MEX_RAINFLOW_FLAGS}
 )
 add_dependencies (matlab hotspot)

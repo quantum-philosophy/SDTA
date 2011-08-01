@@ -29,7 +29,7 @@ classdef TM < handle
       nm = n * m;
 
       ts = Constants.samplingInterval;
-      at = Constants.ambientTemperature;
+      at = Constants.ambientTemperature - Constants.degreeKelvin;
 
       B = transpose(B);
       B = [ B; zeros(n - cores, m) ];
@@ -61,12 +61,16 @@ classdef TM < handle
     end
 
     function T = solveWithCondensedEquation(tm, B)
+      options = struct(...
+        'ambient', Constants.ambientTemperature, ...
+        'sampling_intvl', Constants.samplingInterval);
+
       % ATTENTION: B is a steps-by-cores matrix right now. Because of the fact
       % than MatLab stores matrices column by column, not row by row as
       % it is in C/C++, the external code will get uncomfortable formatted
       % data. To eliminate extra transformations there, we do them here.
       B = transpose(B);
-      T = HotSpot.solveSSDTCCE(tm.floorplan, tm.config, B);
+      T = HotSpot.solveSSDTCCE(tm.floorplan, tm.config, B, options);
       T = transpose(T) - Constants.degreeKelvin;
     end
 
@@ -143,7 +147,7 @@ classdef TM < handle
       nm = n * m;
 
       ts = Constants.samplingInterval;
-      at = Constants.ambientTemperature;
+      at = Constants.ambientTemperature - Constants.degreeKelvin;
 
       B = transpose(B);
       B = [ B; zeros(n - cores, m) ];

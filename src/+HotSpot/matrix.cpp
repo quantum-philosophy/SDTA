@@ -1,4 +1,4 @@
-#include "matrix.h"
+#include <nr3.h>
 
 void transpose_matrix(const MatDoub &U, MatDoub &UT)
 {

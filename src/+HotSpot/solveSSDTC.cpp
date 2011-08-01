@@ -1,6 +1,8 @@
 #include <mex.h>
 #include <hotspot.h>
 
+#include "utils.h"
+
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
 	if (nrhs < 3) mexErrMsgTxt(
