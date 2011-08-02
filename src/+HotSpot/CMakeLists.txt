@@ -4,15 +4,16 @@ set (MEX_SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/hotspot.cpp
 )
 
-set (MEX_FLAGS
-  -outdir ${CMAKE_CURRENT_SOURCE_DIR}
-  -I${CMAKE_CURRENT_SOURCE_DIR}
-  -I${VENDOR_DIR}/numerical_recipes
-)
-
 foreach (version ${HOTSPOT_VERSIONS})
   set (MEX_LIBS
     ${VENDOR_DIR}/hotspot-${version}/libhotspot.a
+  )
+
+  set (MEX_FLAGS
+    -outdir ${CMAKE_CURRENT_SOURCE_DIR}
+    -I${CMAKE_CURRENT_SOURCE_DIR}
+    -I${VENDOR_DIR}/numerical_recipes
+    -DHOTSPOT_VERSION="${version}"
   )
 
   add_custom_target (matlab-${version}
@@ -25,7 +26,7 @@ foreach (version ${HOTSPOT_VERSIONS})
   )
 
   add_custom_target (link-${version}
-    COMMAND ln -fs ${VENDOR_DIR}/hotspot-${version} ${CMAKE_CURRENT_SOURCE_DIR}/hotspot
+    COMMAND ln -sfh ${VENDOR_DIR}/hotspot-${version} ${CMAKE_CURRENT_SOURCE_DIR}/hotspot
   )
 
   add_dependencies (matlab-${version} hotspot-${version} link-${version})

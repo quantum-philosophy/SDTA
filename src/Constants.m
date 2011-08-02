@@ -4,7 +4,7 @@ classdef Constants < handle
     workingDirectory = '../build';
 
     % HotSpot version
-    hotspotVersion = '5.01';
+    hotspotVersion = '5.0';
 
     % TGFF
     graphLabel = 'TASK_GRAPH';
@@ -14,7 +14,7 @@ classdef Constants < handle
     roundRobinColors = { 'r', 'g', 'b', 'm', 'y', 'c' };
 
     % Sampling interval
-    samplingInterval = 0.7e-3; % s
+    samplingInterval = 1e-3; % s
 
     % Ambient temperature
     ambientTemperature = 318.15; % K
