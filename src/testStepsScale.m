@@ -51,5 +51,5 @@ for tasks = taskTestCases
     'Parent', ax2, 'Color', 'r');
 end
 
-line(lifeTime, compTime(1, :), 'Color', 'b', 'Parent', ax1);
-line(lifeTime, compTime(2, :), 'Color', 'r', 'Parent', ax2);
+line(lifeTime, compTime(1, :), 'Color', 'b', 'Marker', 'o', 'Parent', ax1);
+line(lifeTime, compTime(2, :), 'Color', 'r', 'Marker', 'o', 'Parent', ax2);
