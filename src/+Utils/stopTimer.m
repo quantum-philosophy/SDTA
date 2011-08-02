@@ -8,5 +8,5 @@ function time = stopTimer()
   timerNames(end) = [];
   timerTimes(end) = [];
 
-  fprintf('%-30s: %f s\n', name, time);
+  if ~isempty(name), fprintf('%-30s: %f s\n', name, time); end
 end

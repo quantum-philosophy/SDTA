@@ -16,7 +16,6 @@ classdef SSDTC < handle
     execTime
     startTime
     powerProfile
-    temperatureProfile
   end
 
   properties (SetAccess = private)
@@ -86,21 +85,15 @@ classdef SSDTC < handle
       end
     end
 
-    function [ T, time ] = solveWithCondensedEquation(ssdtc)
-      Utils.startTimer('Solve with condensed equation');
+    function T = solveWithCondensedEquation(ssdtc)
       T = ssdtc.thermalModel.solveWithCondensedEquation(ssdtc.powerProfile);
-      time = Utils.stopTimer();
-      ssdtc.temperatureProfile = T;
     end
 
-    function [ T, time ] = solveWithHotSpot(ssdtc, varargin)
-      Utils.startTimer('Solve with HotSpot');
-      T = ssdtc.thermalModel.solveWithHotSpot(ssdtc.powerProfile, varargin{:});
-      time = Utils.stopTimer();
-      ssdtc.temperatureProfile = T;
+    function [ T, it ] = solveWithHotSpot(ssdtc, varargin)
+      [ T, it ] = ssdtc.thermalModel.solveWithHotSpot(ssdtc.powerProfile, varargin{:});
     end
 
-    function [ T, time ] = solveWithPlainHotSpot(ssdtc, repeat)
+    function T = solveWithPlainHotSpot(ssdtc, repeat)
       powerFile = sprintf('cores_%d_steps_%d.ptrace', ...
         ssdtc.coreCount, ssdtc.stepCount);
       powerFile = Utils.path(powerFile);
@@ -109,18 +102,12 @@ classdef SSDTC < handle
       ssdtc.dumpPowerProfile(powerFile);
       Utils.stopTimer();
 
-      Utils.startTimer('Solve with plain HotSpot');
       T = ssdtc.thermalModel.solveWithPlainHotSpot(...
         powerFile, ssdtc.stepCount, repeat);
-      time = Utils.stopTimer();
-      ssdtc.temperatureProfile = T;
     end
 
-    function [ T, time ] = solveWithBlockCirculant(ssdtc)
-      Utils.startTimer('Solve with block circulant');
+    function T = solveWithBlockCirculant(ssdtc)
       T = ssdtc.thermalModel.solveWithBlockCirculant(ssdtc.powerProfile);
-      time = Utils.stopTimer();
-      ssdtc.temperatureProfile = T;
     end
 
     function dumpPowerProfile(ssdtc, file)

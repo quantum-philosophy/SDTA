@@ -12,14 +12,14 @@ repeat = 3;
 
 % Our HotSpot interface
 subplot(3, 1, 1);
-[ T1, t1 ] = ssdtc.solveWithHotSpot(0, repeat);
-Utils.drawLines(sprintf('HotSpot interface for MatLab (%.3f s)', t1), ...
+T1 = ssdtc.solveWithHotSpot(0, repeat);
+Utils.drawLines('HotSpot interface for MatLab', ...
   'Time, s', 'Temperature, C', x, T1);
 
 % Original HotSpot
 subplot(3, 1, 2);
-[ T2, t2 ] = ssdtc.solveWithPlainHotSpot(repeat);
-Utils.drawLines(sprintf('Original HotSpot (%.3f s)', t2), ...
+T2 = ssdtc.solveWithPlainHotSpot(repeat);
+Utils.drawLines('Original HotSpot (%.3f s)', ...
   'Time, s', 'Temperature, C', x, T2);
 
 % Error

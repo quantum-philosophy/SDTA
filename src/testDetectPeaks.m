@@ -8,7 +8,7 @@ cores = ssdtc.coreCount;
 steps = ssdtc.stepCount;
 x = ((1:steps) - 1) * Constants.samplingInterval;
 
-[ T, t ] = ssdtc.solveWithCondensedEquation();
+T = ssdtc.solveWithCondensedEquation();
 
 % Draw full curves
 subplot(2, 1, 1);

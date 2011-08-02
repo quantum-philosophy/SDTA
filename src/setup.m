@@ -1,17 +1,19 @@
-function ssdtc = setup()
-  clear all;
-  clc;
+function ssdtc = setup(name)
+  if nargin < 1, name = 'simple'; end
 
-  % Fix the randomness
-  rng(0);
-
-  floorplan     = Utils.path('simple.flp');
-  graphConfig   = Utils.path('simple.tgff');
+  floorplan     = Utils.path([ name, '.flp' ]);
+  graphConfig   = Utils.path([ name, '.tgffopt' ]);
+  testCase      = Utils.path([ name, '.tgff' ]);
   hotspotConfig = Utils.path('hotspot.config');
 
+  % Generate the test case
+  Utils.startTimer('Generate a test case');
+  if Utils.run('tgff', name, true) == 1, error('Cannot run TGFF'); end
+  Utils.stopTimer();
+
   % Parse tasks graphs
-  Utils.startTimer('Parse a test case');
-  parser = TestCase.TGFFParser(graphConfig, ...
+  Utils.startTimer('Parse the test case');
+  parser = TestCase.TGFFParser(testCase, ...
     { Constants.graphLabel }, { Constants.peLabel });
   Utils.stopTimer();
 
@@ -26,5 +28,4 @@ function ssdtc = setup()
   graph = parser.graphs{1};
 
   ssdtc = Algorithms.SSDTC(graph, parser.tables, floorplan, hotspotConfig);
-  ssdtc.inspect(true);
 end
