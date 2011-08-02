@@ -1,0 +1,32 @@
+# Task graph label
+tg_label TASK_GRAPH
+# Number of graphs
+tg_cnt 1
+# Number of tasks per graph +/- jitter
+task_cnt 90 10
+# Number of different tasks
+task_type_cnt 10
+# Average time per task including communication
+task_trans_time 100
+# Deadline jitter
+deadline_jitter 0
+# All tasks are different?
+task_unique false
+# Write
+tg_write
+eps_write
+
+# Processing element (PE) label
+table_label PE
+# Number of PEs
+table_cnt 4
+# Attributes of PEs
+table_attrib \
+  frequency 2e9 0.5e9 0 0.1e9, \
+  voltage 0.8 0.3
+# Attributes of tasks for particular PE
+type_attrib \
+  effective_switched_capacitance 2e-8 1e-8, \
+  number_of_clock_cycles 1e10 0.8e10
+# Write
+pe_write
