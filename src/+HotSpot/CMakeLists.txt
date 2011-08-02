@@ -26,7 +26,7 @@ foreach (version ${HOTSPOT_VERSIONS})
   )
 
   add_custom_target (link-${version}
-    COMMAND ln -sfh ${VENDOR_DIR}/hotspot-${version} ${CMAKE_CURRENT_SOURCE_DIR}/hotspot
+    COMMAND ln -sfn ${VENDOR_DIR}/hotspot-${version} ${CMAKE_CURRENT_SOURCE_DIR}/hotspot
   )
 
   add_dependencies (matlab-${version} hotspot-${version} link-${version})
