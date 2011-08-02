@@ -33,15 +33,16 @@ for tasks = taskTestCases
   fprintf('Perform task case: %s\n', name);
   ssdtc = setup(name);
 
+  steps = ssdtc.stepCount;
+
   Utils.startTimer();
-  T = ssdtc.solveWithCondensedEquation();
+  T1 = ssdtc.solveWithCondensedEquation();
   compTime(1, end + 1) = Utils.stopTimer();
 
   Utils.startTimer();
-  [ T, it ] = ssdtc.solveWithHotSpot(2, 10);
+  [ T2, it ] = ssdtc.solveWithHotSpot(2, 0.01 * steps, 10);
   compTime(2, end) = Utils.stopTimer();
 
-  steps = size(T, 1);
   lifeTime(end + 1) = steps * Constants.samplingInterval;
 
   text(lifeTime(end), compTime(1, end), sprintf('  %d steps', steps), ...
@@ -49,6 +50,12 @@ for tasks = taskTestCases
 
   text(lifeTime(end), compTime(2, end), sprintf('  %d iter', it), ...
     'Parent', ax2, 'Color', 'r');
+
+  fprintf('CE is faster by %.3f times\n', compTime(2, end) / compTime(1, end));
+
+  error = max(max(Utils.calcError(T1, T2)));
+
+  fprintf('HotSpot error is %.3f degrees\n', error);
 end
 
 line(lifeTime, compTime(1, :), 'Color', 'b', 'Marker', 'o', 'Parent', ax1);

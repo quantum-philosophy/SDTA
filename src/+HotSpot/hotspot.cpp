@@ -108,21 +108,19 @@ ret_hotspot:
 }
 
 int solve_ssdtc_original(char *floorplan, char *config, double *power,
-	int nodes, int steps, double tol, int maxit, double *T, char *dump)
+	int nodes, int steps, double tol, int minbad, int maxit, double *T)
 {
 	int ret = 0;
-	int i, j, k, goon;
+	int i, j, k;
 	int total, cores;
-	FILE *pdump = NULL;
 	double *temp, *T0;
 	double ts;
+	int bad;
 
 	flp_t *flp;
 	RC_model_t *model;
 
 	if (!fexist(floorplan) || !fexist(config)) return -EIO;
-
-	if (dump) pdump = fopen(dump, "w");
 
 	prepare_hotspot(floorplan, config, NULL, 0, &flp, &model);
 
@@ -144,23 +142,20 @@ int solve_ssdtc_original(char *floorplan, char *config, double *power,
 	if (tol > 0) {
 		/* With error control */
 		for (k = 0; k < maxit; k++) {
-			goon = 0;
+			bad = 0;
 
 			for (j = 0; j < steps; j++) {
 				compute_temp(model, &power[nodes * j], temp, ts);
 				T0 = &T[nodes * j];
 
 				/* NOTE: Only for cores. */
-				for (i = 0; !goon && (i < cores); i++)
-					if (abs(temp[i] - T0[i]) >= tol) goon = 1;
+				for (i = 0; i < cores; i++)
+					if (abs(temp[i] - T0[i]) >= tol) bad++;
 
 				memcpy(T0, temp, nodes * sizeof(temp[0]));
-
-				/* NOTE: Only for cores. */
-				if (pdump) dump_vector(pdump, temp, cores);
 			}
 
-			if (!goon) break;
+			if (bad <= minbad) break;
 		}
 	}
 	else {
@@ -169,9 +164,6 @@ int solve_ssdtc_original(char *floorplan, char *config, double *power,
 			for (j = 0; j < steps; j++) {
 				compute_temp(model, &power[nodes * j], temp, ts);
 				memcpy(&T[nodes * j], temp, nodes * sizeof(temp[0]));
-
-				/* NOTE: Only for cores. */
-				if (pdump) dump_vector(pdump, temp, cores);
 			}
 		}
 	}
@@ -182,8 +174,6 @@ int solve_ssdtc_original(char *floorplan, char *config, double *power,
 
 ret_hotspot:
 	free_hotspot(flp, model);
-
-	if (pdump) fclose(pdump);
 
 	return ret;
 }

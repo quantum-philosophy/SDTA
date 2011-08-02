@@ -30,18 +30,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		tol = mxGetScalar(prhs[3]);
 	}
 
-	int maxit = 10;
+	int minbad = 0;
 	if (nrhs > 4) {
 		if (!mxIsNumeric(prhs[4])) mexErrMsgTxt(
-			"The fifth input (maxit) should be numeric.");
-		maxit = (int)mxGetScalar(prhs[4]);
+			"The fifth input (minbad) should be numeric.");
+		minbad = (int)mxGetScalar(prhs[4]);
 	}
 
-	char *dump = NULL;
+	int maxit = 10;
 	if (nrhs > 5) {
-		if (!mxIsChar(prhs[5])) mexErrMsgTxt(
-			"The sixth input (dump) should be a file name.");
-		dump = mxArrayToString(prhs[5]);
+		if (!mxIsNumeric(prhs[5])) mexErrMsgTxt(
+			"The fifth input (maxit) should be numeric.");
+		maxit = (int)mxGetScalar(prhs[5]);
 	}
 
 	char *floorplan = mxArrayToString(prhs[0]);
@@ -57,7 +57,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	start_timer(calc);
 
 	int it = solve_ssdtc_original(floorplan, config, power,
-		nodes, steps, tol, maxit, T, dump);
+		nodes, steps, tol, minbad, maxit, T);
 
 	stop_timer(calc);
 
@@ -65,7 +65,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	mxFree(floorplan);
 	mxFree(config);
-	mxFree(dump);
 
 	if (it < 0) {
 		mxDestroyArray(out_T);

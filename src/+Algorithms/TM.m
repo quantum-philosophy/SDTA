@@ -74,9 +74,10 @@ classdef TM < handle
       T = transpose(T) - Constants.degreeKelvin;
     end
 
-    function [ T, it ] = solveWithHotSpot(tm, B, tol, maxit)
-      if nargin < 4, maxit = 10; end
+    function [ T, it ] = solveWithHotSpot(tm, B, tol, minbad, maxit)
       if nargin < 3, tol = 2; end
+      if nargin < 4, minbad = 0; end
+      if nargin < 5, maxit = 10; end
 
       steps = size(B, 1);
       cores = size(B, 2);
@@ -90,7 +91,7 @@ classdef TM < handle
       B = transpose(B);
       B = [ B; zeros(nodes - cores, steps) ];
       [ T, it ] = HotSpot.solveSSDTC(...
-        tm.floorplan, tm.config, B, tol, maxit);
+        tm.floorplan, tm.config, B, tol, minbad, maxit);
       T = transpose(T(1:cores, :)) - Constants.degreeKelvin;
 
       if it == maxit
