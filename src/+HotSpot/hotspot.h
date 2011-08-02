@@ -1,7 +1,9 @@
 #ifndef __HOTSPOT_H__
 #define __HOTSPOT_H__
 
+extern "C" {
 #include <hotspot/util.h>
+}
 
 int obtain_coefficients(char *floorplan, char *config,
 	double **negA, double **invC, void *(*alloc)(size_t), void (*dealloc)(void *));

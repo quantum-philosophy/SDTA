@@ -6,9 +6,11 @@
 #include "hotspot.h"
 #include "matrix.h"
 
+extern "C" {
 #include <hotspot/flp.h>
 #include <hotspot/temperature.h>
 #include <hotspot/temperature_block.h>
+}
 
 void prepare_hotspot(char *floorplan, char *config,
 	str_pair *add_table, int tsize, flp_t **flp, RC_model_t **model)

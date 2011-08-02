@@ -14,3 +14,4 @@ build
 vendor/hotspot/hotfloorplan
 vendor/hotspot/hotspot
 vendor/hotspot/libhotspot.a
+src/+HotSpot/hotspot

@@ -3,6 +3,9 @@ classdef Constants < handle
     % Working directory, everything goes here
     workingDirectory = '../build';
 
+    % HotSpot version
+    hotspotVersion = '5.01';
+
     % TGFF
     graphLabel = 'TASK_GRAPH';
     peLabel = 'PE';
