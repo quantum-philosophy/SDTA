@@ -1,11 +1,9 @@
-In order to demonstrate the speed and accuracy of the proposed solution, we apply it in the context of temperature-aware energy and reliability optimization.
+In order to demonstrate the speed and accuracy of the proposed solution, we apply it in the context of temperature-aware mapping and scheduling in order to optimize the energy consumption. Both mapping and scheduling are based on genetic algorithms described in \cite{schmitz2004}. The genetic scheduling internally relies on the list scheduler.
 
-\todo{Describe what we are trying to achieve with this example.}
-
-\note{Do not dig too deep into details. We are trying to stay on the system level, give a big picture of the usage and benefits of SSDTC.}
+Let us start from the description of the system model that we use.
 
 \subsection{System Model}
-There is a number of processing elements (PE) that could have different types of architecture:
+We consider a multiprocessor system with heterogeneous architecture that is composed of a number of processing elements (PE):
 \[
   PE = \{ PE_i \}
 \]
@@ -18,22 +16,22 @@ Each processing element $PE_i$ is DVFS-aware, therefore, it has a number of acti
   & s_{ij} \rightarrow (v_{ij}, f_{ij})
 \end{align*}
 
-Also there is a number of applications and data dependencies between them represented by a task graph:
+The system runs a number of periodic tasks. The tasks themselves and the data dependencies between them are represented with a task graph:
 \begin{align*}
   & G = (\Pi, \Gamma) \\
   & \Pi = \{\tau_i\} \\
   & \Gamma = \{\gamma_i\}
 \end{align*}
 
-Each pair of task $\tau_j$ and processing element $PE_i$ is described by effective switched capacitance $C_{eff \; ij}$ and the worse case number of clock cycles $WNC_{ij}$:
+Each pair of a task $\tau_j$ and a processing element $PE_i$ is described by effective switched capacitance $C_{eff \; ij}$ and the worse case number of clock cycles $WNC_{ij}$:
 \[
   (PE_i, \tau_j) \rightarrow (C_{eff \; ij}, WNC_{ij})
 \]
 
-At the same time, each task has a deadline $dl_j$.
+In addition, each task has a deadline $dl_j$.
 
 \subsection{Mapping and Scheduling}
-\todo{Describe a bit the algorithms that we use, all this genetic stuff, the list scheduling, etc. \cite{schmitz2004}.}
+We use genetic algorithms for mapping and scheduling from \cite{schmitz2004}.
 
 \subsection{Temperature-Aware Energy Optimization}
 The energy dissipation depends on a particular processing element, its active state, and a particular task:

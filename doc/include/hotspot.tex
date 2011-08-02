@@ -1,17 +1,19 @@
-We consider a well-known thermal model called HotSpot. HotSpot is a modeling methodology for developing compact thermal models based on the popular stacked-layer packaging scheme in modern very large-scale integration systems \cite{huang2006}. It describes thermal systems with the following differential equation \cite{rao2008}:
+We consider a well-known thermal model called HotSpot. HotSpot is a modeling methodology for developing compact thermal models based on the popular stacked-layer packaging scheme in modern very large-scale integration systems \cite{huang2006}. It describes thermal systems with the following widespread differential equation \cite{rao2008}:
+\[
+  C \frac{dT}{dt} + GT = P
+\]
+where:
+\begin{itemize}
+  \item $C$ --- a diagonal matrix $n \times n$ of the thermal capacitance,
+  \item $G$ --- a symmetric matrix $n \times n$ of the thermal conductivity ($\frac{1}{R}$),
+  \item $P$ --- a $n \times 1$ vector of the power consumption,
+  \item $n$ --- the number of thermal nodes.
+\end{itemize}
+
+For convenience, we move $GT$ to the right part of the equation and change the denotation:
 \begin{equation} \label{eq:initial}
   C \frac{dT}{dt} = AT + B
 \end{equation}
-where:
-\begin{itemize}
-  \item $C$ --- a diagonal matrix $n \times n$ that represents the capacitance,
-  \item $A$ --- a symmetric matrix $n \times n$ that represents the conductivity,
-  \item $B$ --- a $n \times 1$ vector that represents the power consumption,
-  \item $n = 4 \; cores + 12$ --- the number of thermal nodes,
-  \item $cores$ --- the number of cores that the processor has.
-\end{itemize}
-
-\note{May be we should use more conventional denotations: $-G$ instead of $A$ (over even more obvious $-\frac{1}{R}$), and $P$ instead of $B$?}
 
 HotSpot comes with a tool of the same name to calculate this model. It uses the Runge-Kutta numerical method to solve \equref{eq:initial}.
 
