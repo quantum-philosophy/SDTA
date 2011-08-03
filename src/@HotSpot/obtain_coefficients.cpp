@@ -1,16 +1,11 @@
 #include <mex.h>
 #include <hotspot.h>
+#include "utils.h"
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-	if (nrhs != 2) mexErrMsgTxt(
-		"Exactly two inputs are required: floorplan, and config.");
-
-	if (!mxIsChar(prhs[0]) || !mxIsChar(prhs[1]))
-		mexErrMsgTxt("Both inputs should be file names.");
-
-	char *floorplan = mxArrayToString(prhs[0]);
-	char *config = mxArrayToString(prhs[1]);
+	char *floorplan, *config;
+	verify_and_fetch_properties(nrhs, prhs, &floorplan, &config);
 
 	double *negA, *dinvC;
 
@@ -20,7 +15,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	mxFree(floorplan);
 	mxFree(config);
 
-	if (nodes < 0) mexErrMsgIdAndTxt("obtainModel:obtain_coefficients",
+	if (nodes < 0) mexErrMsgIdAndTxt("HotSpot:obtain_coefficients",
 		"Cannot obtain the coefficient matrices (%d).", nodes);
 
     plhs[0] = mxCreateDoubleMatrix(0, 0, mxREAL);

@@ -17,11 +17,11 @@ foreach (version ${HOTSPOT_VERSIONS})
   )
 
   add_custom_target (matlab-${version}
-    COMMAND mex ${CMAKE_CURRENT_SOURCE_DIR}/obtainModel.cpp
+    COMMAND mex ${CMAKE_CURRENT_SOURCE_DIR}/obtain_coefficients.cpp
       ${MEX_SRCS} ${MEX_LIBS} ${MEX_FLAGS}
-    COMMAND mex ${CMAKE_CURRENT_SOURCE_DIR}/solveSSDTC.cpp
+    COMMAND mex ${CMAKE_CURRENT_SOURCE_DIR}/solve_original.cpp
       ${MEX_SRCS} ${MEX_LIBS} ${MEX_FLAGS}
-    COMMAND mex ${CMAKE_CURRENT_SOURCE_DIR}/solveSSDTCCE.cpp
+    COMMAND mex ${CMAKE_CURRENT_SOURCE_DIR}/solve_condensed_equation.cpp
       ${MEX_SRCS} ${MEX_LIBS} ${MEX_FLAGS}
   )
 

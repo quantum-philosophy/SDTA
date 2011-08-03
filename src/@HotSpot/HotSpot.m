@@ -1,20 +1,20 @@
-classdef TM < handle
+classdef HotSpot < handle
   properties (Access = private)
     floorplan
     config
   end
 
   methods
-    function tm = TM(floorplan, config)
-      tm.floorplan = floorplan;
-      tm.config = config;
+    function hs = HotSpot(floorplan, config)
+      hs.floorplan = floorplan;
+      hs.config = config;
     end
 
-    function T = solveWithNativeCondensedEquation(tm, B)
-      [ D, sinvC ] = tm.obtainCoefficients();
+    function T = solveNativeCondensedEquation(hs, B)
+      [ D, sinvC ] = hs.obtainCoefficients();
 
       if size(D, 1) ~= 4 * size(B, 2) + 12
-        error('TM:solveWithCondensedEquation', ...
+        error('HotSpot:solveCondensedEquation', ...
           'The floorplan does not match the task case');
       end
 
@@ -34,7 +34,7 @@ classdef TM < handle
       B = transpose(B);
       B = [ B; zeros(n - cores, m) ];
 
-      [ K, G ] = tm.calculateConstants(L, V, VT, sinvC, ts);
+      [ K, G ] = hs.calculateConstants(L, V, VT, sinvC, ts);
 
       P = zeros(n, m);
       Q = zeros(n, m);
@@ -60,7 +60,7 @@ classdef TM < handle
       end
     end
 
-    function T = solveWithCondensedEquation(tm, B)
+    function T = solveCondensedEquation(hs, B)
       options = struct(...
         'ambient', Constants.ambientTemperature, ...
         'sampling_intvl', Constants.samplingInterval);
@@ -70,11 +70,12 @@ classdef TM < handle
       % it is in C/C++, the external code will get uncomfortable formatted
       % data. To eliminate extra transformations there, we do them here.
       B = transpose(B);
-      T = HotSpot.solveSSDTCCE(tm.floorplan, tm.config, B, options);
+      % External call
+      T = hs.solve_condensed_equation(B, options);
       T = transpose(T) - Constants.degreeKelvin;
     end
 
-    function [ T, it ] = solveWithHotSpot(tm, B, tol, minbad, maxit)
+    function [ T, it ] = solveOriginal(hs, B, tol, minbad, maxit)
       if nargin < 3, tol = 2; end
       if nargin < 4, minbad = 0; end
       if nargin < 5, maxit = 10; end
@@ -90,8 +91,8 @@ classdef TM < handle
       % Plus provide HotSpot with zero power slots.
       B = transpose(B);
       B = [ B; zeros(nodes - cores, steps) ];
-      [ T, it ] = HotSpot.solveSSDTC(...
-        tm.floorplan, tm.config, B, tol, minbad, maxit);
+      % External call
+      [ T, it ] = hs.solve_original(B, tol, minbad, maxit);
       T = transpose(T(1:cores, :)) - Constants.degreeKelvin;
 
       if it == maxit
@@ -101,7 +102,7 @@ classdef TM < handle
       end
     end
 
-    function T = solveWithPlainHotSpot(tm, power, steps, repeat)
+    function T = solvePlainOriginal(hs, power, steps, repeat)
       powerEx = [ power, sprintf('_x_%d', repeat) ];
 
       if isempty(strfind(powerEx, 'ptrace'))
@@ -115,25 +116,24 @@ classdef TM < handle
       Utils.stopTimer();
 
       status = Utils.run(sprintf('hotspot-%s', Constants.hotspotVersion), ...
-        '-f', tm.floorplan, ...
+        '-f', hs.floorplan, ...
         '-p', powerEx, ...
-        '-c', tm.config, ...
+        '-c', hs.config, ...
         '-o', tempEx);
 
       if status ~= 0
-        error('TM:solveWithPlainHotSpot', ...
-          'Cannot execute HotSpot');
+        error('HotSpot:solvePlainHotSpot', 'Cannot execute HotSpot');
       end
 
       % Skip the header line and all excessive repetitions
       T = dlmread(tempEx, '\t', 1 + (repeat - 1) * steps, 0);
     end
 
-    function T = solveWithBlockCirculant(tm, B)
-      [ D, sinvC ] = tm.obtainCoefficients();
+    function T = solveBlockCirculant(hs, B)
+      [ D, sinvC ] = hs.obtainCoefficients();
 
       if size(D, 1) ~= 4 * size(B, 2) + 12
-        error('TM:solveWithBlockCirculant', ...
+        error('HotSpot:solveBlockCirculant', ...
           'The floorplan does not match the task case');
       end
 
@@ -153,7 +153,7 @@ classdef TM < handle
       B = transpose(B);
       B = [ B; zeros(n - cores, m) ];
 
-      [ K, G ] = tm.calculateConstants(L, V, VT, sinvC, ts);
+      [ K, G ] = hs.calculateConstants(L, V, VT, sinvC, ts);
 
       AA = zeros(2, n, n);
       AA(1, :, :) = K;
@@ -187,14 +187,15 @@ classdef TM < handle
   end
 
   methods (Access = private)
-    function [ D, sinvC ] = obtainCoefficients(tm)
-      [ negA, dinvC ] = HotSpot.obtainModel(tm.floorplan, tm.config);
+    function [ D, sinvC ] = obtainCoefficients(hs)
+      % External call
+      [ negA, dinvC ] = hs.obtain_coefficients();
 
       sinvC = sqrt(diag(dinvC));
       D = Utils.symmetrize(sinvC * (- negA) * sinvC);
     end
 
-    function [ K, G ] = calculateConstants(tm, L, V, VT, sinvC, ts)
+    function [ K, G ] = calculateConstants(hs, L, V, VT, sinvC, ts)
       % exp(D * t) = U * diag(exp(li * t)) * UT
       K = V * diag(exp(ts * L)) * VT;
 

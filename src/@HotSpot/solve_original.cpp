@@ -1,51 +1,43 @@
 #include <mex.h>
 #include <hotspot.h>
-
 #include "utils.h"
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-	if (nrhs < 3) mexErrMsgTxt(
-		"At least three inputs are required: floorplan, config, and power.");
+	char *floorplan, *config;
+	verify_and_fetch_properties(nrhs, prhs, &floorplan, &config);
 
-	if (!mxIsChar(prhs[0]) || !mxIsChar(prhs[1])) mexErrMsgTxt(
-		"The first two inputs should be file names.");
+	if (nrhs < 2 || mxIsEmpty(prhs[1])) mexErrMsgTxt(
+		"The second input should be a matrix of the power profile.");
 
 	/* ATTENTION: Due to the fact that MatLab stores matrices column by
 	 * column, not row by row as regular C/C++ arrays, as input we expect
 	 * to get a power profile where columns are steps, and rows are nodes.
 	 */
-	int nodes = mxGetM(prhs[2]); /* rows */
-	int steps = mxGetN(prhs[2]); /* columns */
-
-	if (nodes <= 0 || steps <= 0) mexErrMsgTxt(
-		"The third input should be a matrix.");
-
-	double *power = mxGetPr(prhs[2]);
+	int nodes = mxGetM(prhs[1]); /* rows */
+	int steps = mxGetN(prhs[1]); /* columns */
+	double *power = mxGetPr(prhs[1]);
 
 	double tol = 2;
-	if (nrhs > 3) {
-		if (!mxIsNumeric(prhs[3])) mexErrMsgTxt(
+	if (nrhs > 2) {
+		if (!mxIsNumeric(prhs[2])) mexErrMsgTxt(
 			"The forth input (tol) should be numeric.");
-		tol = mxGetScalar(prhs[3]);
+		tol = mxGetScalar(prhs[2]);
 	}
 
 	int minbad = 0;
-	if (nrhs > 4) {
-		if (!mxIsNumeric(prhs[4])) mexErrMsgTxt(
+	if (nrhs > 3) {
+		if (!mxIsNumeric(prhs[3])) mexErrMsgTxt(
 			"The fifth input (minbad) should be numeric.");
-		minbad = (int)mxGetScalar(prhs[4]);
+		minbad = (int)mxGetScalar(prhs[3]);
 	}
 
 	int maxit = 10;
-	if (nrhs > 5) {
-		if (!mxIsNumeric(prhs[5])) mexErrMsgTxt(
+	if (nrhs > 4) {
+		if (!mxIsNumeric(prhs[4])) mexErrMsgTxt(
 			"The fifth input (maxit) should be numeric.");
-		maxit = (int)mxGetScalar(prhs[5]);
+		maxit = (int)mxGetScalar(prhs[4]);
 	}
-
-	char *floorplan = mxArrayToString(prhs[0]);
-	char *config = mxArrayToString(prhs[1]);
 
 	/* ATTENTION: The same note (look above) with output temperature.
 	 */
@@ -56,7 +48,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	start_timer(calc);
 
-	int it = solve_ssdtc_original(floorplan, config, power,
+	int it = solve_original(floorplan, config, power,
 		nodes, steps, tol, minbad, maxit, T);
 
 	stop_timer(calc);
@@ -68,8 +60,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	if (it < 0) {
 		mxDestroyArray(out_T);
-		mexErrMsgIdAndTxt("solveSSDTC:solve_ssdtc_original",
-			"Cannot solve SSDTC using the original method (%d).", it);
+		mexErrMsgIdAndTxt("HotSpot:solve_original",
+			"Cannot solve using the original method (%d).", it);
 	}
 
 	mxArray *out_it = mxCreateDoubleMatrix(1, 1, mxREAL);

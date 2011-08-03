@@ -1,5 +1,9 @@
 % Test: Find local minima and maxima on the temperature curves
 
+clear all;
+clc;
+rng(0);
+
 ssdtc = setup();
 
 figure;
@@ -8,7 +12,7 @@ cores = ssdtc.coreCount;
 steps = ssdtc.stepCount;
 x = ((1:steps) - 1) * Constants.samplingInterval;
 
-T = ssdtc.solveWithCondensedEquation();
+T = ssdtc.solveCondensedEquation();
 
 % Draw full curves
 subplot(2, 1, 1);

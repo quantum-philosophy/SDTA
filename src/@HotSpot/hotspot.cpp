@@ -107,7 +107,7 @@ ret_hotspot:
 	return nodes;
 }
 
-int solve_ssdtc_original(char *floorplan, char *config, double *power,
+int solve_original(char *floorplan, char *config, double *power,
 	int nodes, int steps, double tol, int minbad, int maxit, double *T)
 {
 	int ret = 0;
@@ -178,7 +178,7 @@ ret_hotspot:
 	return ret;
 }
 
-int solve_ssdtc_condensed_equation(char *floorplan, char *config,
+int solve_condensed_equation(char *floorplan, char *config,
 	str_pair *table, int tsize, double *power, int cores, int steps, double *T)
 {
 	int ret = 0;

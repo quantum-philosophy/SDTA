@@ -1,1 +1,1 @@
-add_subdirectory (+HotSpot)
+add_subdirectory (@HotSpot)

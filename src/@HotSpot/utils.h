@@ -18,6 +18,9 @@
 
 int parse_structure_config(const mxArray *structure, str_pair **ptable);
 
+void verify_and_fetch_properties(int nrhs, const mxArray *prhs[],
+	char **floorplan, char **config);
+
 #define define_timer(name) \
 	struct tms __start_ ## name ## _tm; \
 	struct tms __stop_ ## name ## _tm; \

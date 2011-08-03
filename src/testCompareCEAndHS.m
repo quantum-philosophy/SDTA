@@ -15,8 +15,8 @@ x = ((1:steps) - 1) * Constants.samplingInterval;
 
 % The Condensed Equation Method
 subplot(3, 1, 1);
-Utils.startTimer('Solve with condensed equation');
-T1 = ssdtc.solveWithCondensedEquation();
+Utils.startTimer('Solve with the condensed equation method');
+T1 = ssdtc.solveCondensedEquation();
 t1 = Utils.stopTimer();
 Utils.drawLines(sprintf('Condensed Equation (%.3f s)', t1), ...
   'Time, s', 'Temperature, C', x, T1);
@@ -24,7 +24,7 @@ Utils.drawLines(sprintf('Condensed Equation (%.3f s)', t1), ...
 % Compare with HotSpot
 subplot(3, 1, 2);
 Utils.startTimer('Solve with HotSpot');
-T2 = ssdtc.solveWithHotSpot(2, 0.01 * steps, 10);
+T2 = ssdtc.solveOriginal(2, 0.01 * steps, 10);
 t2 = Utils.stopTimer();
 Utils.drawLines(sprintf('HotSpot (%.3f s)', t2), ...
   'Time, s', 'Temperature, C', x, T2);

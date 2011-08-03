@@ -40,7 +40,7 @@ classdef SSDTC < handle
       for pe = pes, ssdtc.addProcessingElement(pe{1}); end
 
       % Thermal model
-      ssdtc.thermalModel = Algorithms.TM(floorplan, config);
+      ssdtc.thermalModel = HotSpot(floorplan, config);
 
       % Dummy mapping
       ssdtc.mapping = randi(ssdtc.coreCount, 1, ssdtc.taskCount);
@@ -85,15 +85,15 @@ classdef SSDTC < handle
       end
     end
 
-    function T = solveWithCondensedEquation(ssdtc)
-      T = ssdtc.thermalModel.solveWithCondensedEquation(ssdtc.powerProfile);
+    function T = solveCondensedEquation(ssdtc)
+      T = ssdtc.thermalModel.solveCondensedEquation(ssdtc.powerProfile);
     end
 
-    function [ T, it ] = solveWithHotSpot(ssdtc, varargin)
-      [ T, it ] = ssdtc.thermalModel.solveWithHotSpot(ssdtc.powerProfile, varargin{:});
+    function [ T, it ] = solveOriginal(ssdtc, varargin)
+      [ T, it ] = ssdtc.thermalModel.solveOriginal(ssdtc.powerProfile, varargin{:});
     end
 
-    function T = solveWithPlainHotSpot(ssdtc, repeat)
+    function T = solvePlainOriginal(ssdtc, repeat)
       powerFile = sprintf('cores_%d_steps_%d.ptrace', ...
         ssdtc.coreCount, ssdtc.stepCount);
       powerFile = Utils.path(powerFile);
@@ -102,12 +102,12 @@ classdef SSDTC < handle
       ssdtc.dumpPowerProfile(powerFile);
       Utils.stopTimer();
 
-      T = ssdtc.thermalModel.solveWithPlainHotSpot(...
+      T = ssdtc.thermalModel.solvePlainOriginal(...
         powerFile, ssdtc.stepCount, repeat);
     end
 
-    function T = solveWithBlockCirculant(ssdtc)
-      T = ssdtc.thermalModel.solveWithBlockCirculant(ssdtc.powerProfile);
+    function T = solveBlockCirculant(ssdtc)
+      T = ssdtc.thermalModel.solveBlockCirculant(ssdtc.powerProfile);
     end
 
     function dumpPowerProfile(ssdtc, file)

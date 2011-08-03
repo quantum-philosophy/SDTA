@@ -38,3 +38,27 @@ int parse_structure_config(const mxArray *structure, str_pair **ptable)
 
 	return tsize;
 }
+
+void verify_and_fetch_properties(int nrhs, const mxArray *prhs[],
+	char **floorplan, char **config)
+{
+	if (nrhs < 1 || strcmp("HotSpot", mxGetClassName(prhs[0])) != 0)
+		mexErrMsgTxt("The first input should be an instance of the HotSpot class.");
+
+	/* Floorplan */
+	mxArray *pfloorplan = mxGetProperty(prhs[0], 0, "floorplan");
+	if (!pfloorplan) mexErrMsgTxt("Cannot read the floorplan property.");
+
+	*floorplan = mxArrayToString(pfloorplan);
+	if (!*floorplan) mexErrMsgTxt("Cannot read the floorplan property.");
+
+	/* HotSpot config */
+	mxArray *pconfig = mxGetProperty(prhs[0], 0, "config");
+	if (!pfloorplan) mexErrMsgTxt("Cannot read the config property.");
+
+	*config = mxArrayToString(pconfig);
+	if (!*config) {
+		mxFree(*floorplan);
+		mexErrMsgTxt("Cannot read the config property.");
+	}
+}

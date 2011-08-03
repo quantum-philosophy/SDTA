@@ -36,11 +36,11 @@ for tasks = taskTestCases
   steps = ssdtc.stepCount;
 
   Utils.startTimer();
-  T1 = ssdtc.solveWithCondensedEquation();
+  T1 = ssdtc.solveCondensedEquation();
   compTime(1, end + 1) = Utils.stopTimer();
 
   Utils.startTimer();
-  [ T2, it ] = ssdtc.solveWithHotSpot(2, 0.01 * steps, 10);
+  [ T2, it ] = ssdtc.solveOriginal(2, 0.01 * steps, 10);
   compTime(2, end) = Utils.stopTimer();
 
   lifeTime(end + 1) = steps * Constants.samplingInterval;
