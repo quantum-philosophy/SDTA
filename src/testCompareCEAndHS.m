@@ -5,7 +5,6 @@ clc;
 rng(0);
 
 ssdtc = setup();
-ssdtc.inspect(true);
 
 figure;
 

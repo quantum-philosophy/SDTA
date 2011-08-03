@@ -16,8 +16,7 @@ T = ssdtc.solveCondensedEquation();
 
 % Draw full curves
 subplot(2, 1, 1);
-Utils.drawLines(sprintf('SSDTC (%.3f s)', t), ...
-  'Time, s', 'Temperature, C', x, T);
+Utils.drawLines('SSDTC', 'Time, s', 'Temperature, C', x, T);
 
 index = zeros(steps, cores);
 
@@ -35,7 +34,7 @@ for i = 1:cores
 end
 
 % Outline minima and maxima
-Utils.drawLines([], [], [], x, T, index, 'LineStyle', 'x');
+Utils.drawLines([], [], [], x, T, index, 'LineStyle', 'none', 'Marker', 'x');
 
 % Draw curves only by minima and maxima
 subplot(2, 1, 2);

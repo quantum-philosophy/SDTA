@@ -7,8 +7,8 @@ classdef Constants < handle
     hotspotVersion = '5.0';
 
     % TGFF
-    graphLabel = 'TASK_GRAPH';
-    peLabel = 'PE';
+    graphLabels = { 'TASK_GRAPH' };
+    peLabels = { 'PE' };
 
     % Visualization
     roundRobinColors = { 'r', 'g', 'b', 'm', 'y', 'c' };
