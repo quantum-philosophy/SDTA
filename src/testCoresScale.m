@@ -1,17 +1,18 @@
-% Test: See how we can scale with the number of steps
+% Test: See how we can scale with the number of cores
 
 clear all;
 clc;
 rng(0);
 
-cores = 4;
-taskTestCases = [ 10, 30, 60, 90, 120, 150, 250 ];
+coreTestCases = [ 1, 2, 4, 8, 16, 32, 64, 128, 256 ];
+tasks = 30;
+steps = 100000;
 
-lifeTime = zeros(0, 0);
 compTime = zeros(0, 0);
 
 figure;
-title(sprintf('Scaling for %d cores', cores));
+title(sprintf('Scaling for %d steps, %.3f seconds', ...
+  steps, steps * Constants.samplingInterval));
 
 ax1 = gca;
 set(ax1, 'YColor', 'b');
@@ -24,16 +25,16 @@ ax2 = axes('Position', get(ax1,'Position'),...
   'XColor', 'k', ...
   'YColor', 'r');
 
-xlabel(ax1, 'Simulation time, s');
+xlabel(ax1, 'Cores');
 ylabel(ax1, 'Condensed Equation, s');
 ylabel(ax2, 'HotSpot, s');
 
-for tasks = taskTestCases
+for cores = coreTestCases
   name = sprintf('test_cases/test_case_%d_%d', cores, tasks);
   fprintf('Perform test case: %s\n', name);
   ssdtc = setup(name, false);
 
-  steps = ssdtc.stepCount;
+  ssdtc.fitPowerProfile(steps);
 
   Utils.startTimer();
   T1 = ssdtc.solveCondensedEquation();
@@ -43,12 +44,7 @@ for tasks = taskTestCases
   [ T2, it ] = ssdtc.solveOriginal(2, 0.01 * steps, 10);
   compTime(2, end) = Utils.stopTimer();
 
-  lifeTime(end + 1) = steps * Constants.samplingInterval;
-
-  text(lifeTime(end), compTime(1, end), sprintf('  %d steps', steps), ...
-    'Parent', ax1, 'Color', 'k');
-
-  text(lifeTime(end), compTime(2, end), sprintf('  %d iter', it), ...
+  text(cores, compTime(2, end), sprintf('  %d iter', it), ...
     'Parent', ax2, 'Color', 'r');
 
   fprintf('CE is faster by %.3f times\n', compTime(2, end) / compTime(1, end));
@@ -58,5 +54,5 @@ for tasks = taskTestCases
   fprintf('HotSpot error is %.3f degrees\n', error);
 end
 
-line(lifeTime, compTime(1, :), 'Color', 'b', 'Marker', 'o', 'Parent', ax1);
-line(lifeTime, compTime(2, :), 'Color', 'r', 'Marker', 'o', 'Parent', ax2);
+line(coreTestCases, compTime(1, :), 'Color', 'b', 'Marker', 'o', 'Parent', ax1);
+line(coreTestCases, compTime(2, :), 'Color', 'r', 'Marker', 'o', 'Parent', ax2);

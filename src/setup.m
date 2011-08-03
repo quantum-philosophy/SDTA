@@ -4,14 +4,11 @@ function ssdtc = setup(name, debug, draw)
   if nargin < 3, draw = true; end
   if ~debug, draw = false; end
 
+  % NOTE: Should already be generated!
   floorplan     = Utils.path([ name, '.flp' ]);
-  config        = Utils.path('hotspot.config');
   testCase      = Utils.path([ name, '.tgff' ]);
 
-  % Generate the test case
-  Utils.startTimer('Generate a test case');
-  if Utils.run('tgff', name, true) == 1, error('Cannot run TGFF'); end
-  Utils.stopTimer();
+  config        = Utils.path('hotspot.config');
 
   % Parse tasks graphs
   Utils.startTimer('Parse the test case');
@@ -27,11 +24,6 @@ function ssdtc = setup(name, debug, draw)
     graph.inspect();
     for pe = pes, pe{1}.inspect(); end
   end
-
-  % Generate a floorplan
-  Utils.startTimer('Generate a floorplan');
-  Utils.generateFloorplan(floorplan, cores);
-  Utils.stopTimer();
 
   % Thermal model
   thermalModel = HotSpot(floorplan, config);

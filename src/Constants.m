@@ -20,7 +20,7 @@ classdef Constants < handle
     ambientTemperature = 318.15; % K
 
     % Peak threshold of local minima and maxima (for the cycle counting)
-    peakThreshold = 1.0; % C
+    peakThreshold = 1.0; % K
 
     % Kelvin to Celsius
     degreeKelvin = 273.15;

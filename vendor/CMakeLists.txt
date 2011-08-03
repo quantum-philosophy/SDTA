@@ -1,3 +1,4 @@
+# HotSpot
 add_custom_target (hotspot)
 
 foreach (version ${HOTSPOT_VERSIONS})
@@ -16,3 +17,14 @@ foreach (version ${HOTSPOT_VERSIONS})
   add_dependencies (hotspot-${version} patch-${version})
   add_dependencies (hotspot hotspot-${version})
 endforeach (version)
+
+# TGFF
+set (tgff_dir ${CMAKE_CURRENT_SOURCE_DIR}/tgff)
+add_custom_target (tgff
+  COMMAND ${CMAKE_BUILD_TOOL} -C ${tgff_dir}
+)
+add_custom_command (
+  TARGET tgff
+  POST_BUILD
+  COMMAND ln -fs ${tgff_dir}/tgff ${PROJECT_BINARY_DIR}/tgff
+)

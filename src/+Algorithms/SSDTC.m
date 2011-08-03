@@ -44,5 +44,30 @@ classdef SSDTC < handle
     function dumpPowerProfile(ssdtc, file)
       Utils.dumpPowerProfile(file, ssdtc.powerProfile);
     end
+
+    function fitPowerProfile(ssdtc, steps)
+      currentSteps = ssdtc.stepCount;
+
+      Utils.startTimer('Transform the power profile from %d to %d', ...
+        currentSteps, steps);
+
+      if steps < currentSteps
+        ssdtc.powerProfile = ssdtc.powerProfile(1:steps, :);
+      elseif steps > currentSteps
+        repeat = floor(steps / currentSteps);
+        profile = zeros(0, 0);
+        for i = 1:repeat
+          profile = [ profile; ssdtc.powerProfile ];
+        end
+        rest = steps - repeat * currentSteps;
+        profile = [ profile; ssdtc.powerProfile(1:rest, :) ];
+
+        ssdtc.powerProfile = profile;
+      end
+
+      Utils.stopTimer();
+
+      ssdtc.stepCount = steps;
+    end
   end
 end
