@@ -19,7 +19,7 @@ eps_write
 # Processing element (PE) label
 table_label PE
 # Number of PEs
-table_cnt 8
+table_cnt 9
 # Attributes of PEs
 table_attrib \
   frequency 2e9 0.5e9 0 0.1e9, \

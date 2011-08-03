@@ -4,7 +4,7 @@ clear all;
 clc;
 rng(0);
 
-coreTestCases = [ 1, 2, 4, 8, 16, 32, 64, 128, 256 ];
+coreTestCases = [ 1, 4, 9, 16, 25, 36, 64, 100 ];
 tasks = 30;
 steps = 100000;
 
@@ -32,6 +32,10 @@ ylabel(ax2, 'HotSpot, s');
 for cores = coreTestCases
   name = sprintf('test_cases/test_case_%d_%d', cores, tasks);
   fprintf('Perform test case: %s\n', name);
+  dims = (4 * cores + 12) * steps;
+  fprintf('Matrix dimensions: %d\n', dims);
+  fprintf('Matrix size: %f Mb\n', 8 * dims / 1024 / 1024);
+
   ssdtc = setup(name, false);
 
   ssdtc.fitPowerProfile(steps);
