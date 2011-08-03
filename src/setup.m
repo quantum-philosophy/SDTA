@@ -1,5 +1,8 @@
-function ssdtc = setup(name)
+function ssdtc = setup(name, debug, draw)
   if nargin < 1, name = 'simple'; end
+  if nargin < 2, debug = true; end
+  if nargin < 3, draw = true; end
+  if ~debug, draw = false; end
 
   floorplan     = Utils.path([ name, '.flp' ]);
   config        = Utils.path('hotspot.config');
@@ -20,8 +23,10 @@ function ssdtc = setup(name)
   pes = tgff.pes;
   cores = length(pes);
 
-  graph.inspect();
-  for pe = pes, pe{1}.inspect(); end
+  if debug
+    graph.inspect();
+    for pe = pes, pe{1}.inspect(); end
+  end
 
   % Generate a floorplan
   Utils.startTimer('Generate a floorplan');
@@ -34,14 +39,18 @@ function ssdtc = setup(name)
   % Dummy mapping
   mapping = randi(cores, 1, graph.taskCount);
 
-  Utils.inspectVector('Mapping', mapping);
+  if debug
+    Utils.inspectVector('Mapping', mapping);
+  end
 
   % LS scheduling
   Utils.startTimer('List scheduling');
   scheduler = Algorithms.LS(graph);
   Utils.stopTimer();
 
-  scheduler.inspect();
+  if debug
+    scheduler.inspect();
+  end
 
   % Scheduling in time across the cores
   Utils.startTimer('Scheduling in time across all the cores');
@@ -54,13 +63,16 @@ function ssdtc = setup(name)
     graph, startTime, execTime, pes, mapping);
   Utils.stopTimer();
 
-  steps = size(powerProfile, 1);
+  if debug
+    steps = size(powerProfile, 1);
+    fprintf('Number of steps: %d\n', steps);
+    fprintf('Total simulation time: %.3f s\n', steps * Constants.samplingInterval);
+  end
 
-  fprintf('Number of steps: %d\n', steps);
-  fprintf('Total simulation time: %.3f s\n', steps * Constants.samplingInterval);
-
-  % Draw a bit
-  Utils.drawSimulation(startTime, execTime, mapping, powerProfile);
+  if draw
+    % Draw a bit
+    Utils.drawSimulation(startTime, execTime, mapping, powerProfile);
+  end
 
   ssdtc = Algorithms.SSDTC(thermalModel, powerProfile);
 end

@@ -31,7 +31,7 @@ ylabel(ax2, 'HotSpot, s');
 for tasks = taskTestCases
   name = sprintf('test_case_%d_%d', cores, tasks);
   fprintf('Perform task case: %s\n', name);
-  ssdtc = setup(name);
+  ssdtc = setup(name, false);
 
   steps = ssdtc.stepCount;
 
