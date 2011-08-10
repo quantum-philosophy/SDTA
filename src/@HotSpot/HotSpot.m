@@ -29,7 +29,7 @@ classdef HotSpot < handle
       nm = n * m;
 
       ts = Constants.samplingInterval;
-      at = Constants.ambientTemperature - Constants.degreeKelvin;
+      at = Constants.ambientTemperature;
 
       B = transpose(B);
       B = [ B; zeros(n - cores, m) ];
@@ -72,7 +72,7 @@ classdef HotSpot < handle
       B = transpose(B);
       % External call
       T = hs.solve_condensed_equation(B, options);
-      T = transpose(T) - Constants.degreeKelvin;
+      T = transpose(T);
     end
 
     function [ T, it ] = solveOriginal(hs, B, tol, minbad, maxit)
@@ -93,7 +93,7 @@ classdef HotSpot < handle
       B = [ B; zeros(nodes - cores, steps) ];
       % External call
       [ T, it ] = hs.solve_original(B, tol, minbad, maxit);
-      T = transpose(T(1:cores, :)) - Constants.degreeKelvin;
+      T = transpose(T(1:cores, :));
 
       if it == maxit
         fprintf('HotSpot exceeded the maximal number of iterations\n');
@@ -148,7 +148,7 @@ classdef HotSpot < handle
       nm = n * m;
 
       ts = Constants.samplingInterval;
-      at = Constants.ambientTemperature - Constants.degreeKelvin;
+      at = Constants.ambientTemperature;
 
       B = transpose(B);
       B = [ B; zeros(n - cores, m) ];

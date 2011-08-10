@@ -1,4 +1,8 @@
-function drawSimulation(startTime, execTime, mapping, powerProfile)
+function drawSimulation(graph, powerProfile)
+  startTime = graph.startTime;
+  execTime = graph.execTime;
+  mapping = graph.mapping;
+
   steps = size(powerProfile, 1);
   cores = size(powerProfile, 2);
 

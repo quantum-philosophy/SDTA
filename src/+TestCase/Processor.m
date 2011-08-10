@@ -5,6 +5,7 @@ classdef Processor < handle
 
     frequency
     voltage
+    ngate
 
     ceff
     nc
@@ -27,6 +28,10 @@ classdef Processor < handle
 
     function setVoltage(pe, value)
       pe.voltage = value;
+    end
+
+    function setNgate(pe, value)
+      pe.ngate = value;
     end
 
     function addType(pe, id, ceff, nc)

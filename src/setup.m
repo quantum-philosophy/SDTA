@@ -1,4 +1,4 @@
-function ssdtc = setup(name, debug, draw)
+function [ ssdtc, graph ] = setup(name, debug, draw)
   if nargin < 1, name = 'simple'; end
   if nargin < 2, debug = true; end
   if nargin < 3, draw = true; end
@@ -20,39 +20,24 @@ function ssdtc = setup(name, debug, draw)
   pes = tgff.pes;
   cores = length(pes);
 
-  if debug
-    graph.inspect();
-    for pe = pes, pe{1}.inspect(); end
-  end
-
   % Thermal model
   thermalModel = HotSpot(floorplan, config);
 
   % Dummy mapping
   mapping = randi(cores, 1, graph.taskCount);
-
-  if debug
-    Utils.inspectVector('Mapping', mapping);
-  end
+  graph.assignMapping(pes, mapping);
 
   % LS scheduling
-  Utils.startTimer('List scheduling');
-  scheduler = Algorithms.LS(graph);
-  Utils.stopTimer();
-
-  if debug
-    scheduler.inspect();
-  end
-
-  % Scheduling in time across the cores
   Utils.startTimer('Scheduling in time across all the cores');
-  [ startTime, execTime ] = scheduler.calculateTime(pes, mapping);
+  schedule = Algorithms.LS(graph);
+  graph.assignSchedule(schedule);
   Utils.stopTimer();
+
+  if debug, graph.inspect(); end
 
   % Power profile
-  Utils.startTimer('Generate a power profile');
-  powerProfile = Power.calculateProfile(...
-    graph, startTime, execTime, pes, mapping);
+  Utils.startTimer('Generate a dynamic power profile');
+  powerProfile = Power.calculateDynamicProfile(graph);
   Utils.stopTimer();
 
   if debug
@@ -63,7 +48,7 @@ function ssdtc = setup(name, debug, draw)
 
   if draw
     % Draw a bit
-    Utils.drawSimulation(startTime, execTime, mapping, powerProfile);
+    Utils.drawSimulation(graph, powerProfile);
   end
 
   ssdtc = Algorithms.SSDTC(thermalModel, powerProfile);

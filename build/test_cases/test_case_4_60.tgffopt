@@ -1,11 +1,19 @@
+seed 100
+
 # Task graph label
 tg_label TASK_GRAPH
 # Number of graphs
 tg_cnt 1
 # Number of tasks per graph +/- jitter
 task_cnt 60 10
+
+# Generate parallel chains
+gen_series_parallel true
+series_wid 10 5
+series_len 4 2
+
 # Number of different tasks
-task_type_cnt 10
+task_type_cnt 20
 # Average time per task including communication
 task_trans_time 100
 # Deadline jitter
@@ -23,10 +31,11 @@ table_cnt 4
 # Attributes of PEs
 table_attrib \
   frequency 2e9 0.5e9 0 0.1e9, \
-  voltage 0.8 0.3
+  voltage 0.8 0.3, \
+  ngate 1e5 0.5e5
 # Attributes of tasks for particular PE
 type_attrib \
-  effective_switched_capacitance 2e-8 1e-8, \
-  number_of_clock_cycles 1e10 0.8e10
+  effective_switched_capacitance 4e-8 2e-8, \
+  number_of_clock_cycles 3e10 1e10
 # Write
 pe_write
