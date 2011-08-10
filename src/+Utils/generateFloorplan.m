@@ -1,6 +1,6 @@
 function names = generateFloorplan(file, cores, dimension)
-  % 2cm x 2cm the whole chip
-  if nargin < 3, dimension = 0.02; end
+  % 1cm x 1cm the whole chip
+  if nargin < 3, dimension = 0.01; end
   if nargin < 2, cores = 4; end
 
   inline = floor(sqrt(cores));

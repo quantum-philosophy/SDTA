@@ -7,7 +7,6 @@ function [ ssdtc, graph ] = setup(name, debug, draw)
   % NOTE: Should already be generated!
   floorplan     = Utils.path([ name, '.flp' ]);
   testCase      = Utils.path([ name, '.tgff' ]);
-
   config        = Utils.path('hotspot.config');
 
   % Parse tasks graphs

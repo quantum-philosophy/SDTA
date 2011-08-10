@@ -36,9 +36,7 @@ classdef Power < handle
       profile = Power.distributePower(graph, taskPower);
     end
 
-    function profile = calculateStaticProfile(graph, T)
-      pes = graph.pes;
-
+    function profile = calculateStaticProfile(pes, T)
       steps = size(T, 1);
       cores = size(T, 2);
       profile = zeros(steps, cores);
