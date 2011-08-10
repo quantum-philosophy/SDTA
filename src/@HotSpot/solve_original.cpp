@@ -21,21 +21,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	double tol = 2;
 	if (nrhs > 2) {
 		if (!mxIsNumeric(prhs[2])) mexErrMsgTxt(
-			"The forth input (tol) should be numeric.");
+			"The forth input should be numeric (tol).");
 		tol = mxGetScalar(prhs[2]);
 	}
 
 	int minbad = 0;
 	if (nrhs > 3) {
 		if (!mxIsNumeric(prhs[3])) mexErrMsgTxt(
-			"The fifth input (minbad) should be numeric.");
+			"The fifth input should be numeric (minbad).");
 		minbad = (int)mxGetScalar(prhs[3]);
 	}
 
 	int maxit = 10;
 	if (nrhs > 4) {
 		if (!mxIsNumeric(prhs[4])) mexErrMsgTxt(
-			"The fifth input (maxit) should be numeric.");
+			"The fifth input should be numeric (maxit).");
 		maxit = (int)mxGetScalar(prhs[4]);
 	}
 

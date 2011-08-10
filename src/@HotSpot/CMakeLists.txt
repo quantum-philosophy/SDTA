@@ -23,6 +23,8 @@ foreach (version ${HOTSPOT_VERSIONS})
       ${MEX_SRCS} ${MEX_LIBS} ${MEX_FLAGS}
     COMMAND mex ${CMAKE_CURRENT_SOURCE_DIR}/solve_condensed_equation.cpp
       ${MEX_SRCS} ${MEX_LIBS} ${MEX_FLAGS}
+    COMMAND mex ${CMAKE_CURRENT_SOURCE_DIR}/solve_condensed_equation_with_leakage.cpp
+      ${MEX_SRCS} ${MEX_LIBS} ${MEX_FLAGS}
   )
 
   add_custom_target (link-${version}

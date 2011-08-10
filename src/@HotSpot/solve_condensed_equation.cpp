@@ -20,10 +20,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	int tsize = 0;
 	str_pair *table = NULL;
-
     if (nrhs > 2) {
 		if (!mxIsStruct(prhs[2])) mexErrMsgTxt(
-			"The third input should be a structure.");
+			"The third input should be a structure (config).");
 		tsize = parse_structure_config(prhs[2], &table);
 		if (!table || !tsize) mexErrMsgTxt(
 			"The format of the configuration structure is wrong.");
