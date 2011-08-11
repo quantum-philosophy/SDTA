@@ -15,7 +15,14 @@ tgff = TestCase.TGFF(testCase);
 Utils.stopTimer();
 pes = tgff.pes;
 
-for pe = pes, pe{1}.inspect(); end
+vdd = zeros(0, 0);
+ngate = zeros(0, 0);
+
+for pe = pes, pe = pe{1};
+  pe.inspect();
+  vdd(end + 1) = pe.voltage;
+  ngate(end + 1) = pe.ngate;
+end
 
 tol = 0.01; % K
 maxit = 10;
@@ -44,7 +51,7 @@ figure;
 x = ((1:steps) - 1) * Constants.samplingInterval;
 
 % Dynamic power profile
-subplot(3, 1, 1);
+subplot(2, 2, 1);
 Utils.drawLines(...
   sprintf('Dynamic Power Profile (total %d W)', maxPower), ...
   'Time, s', 'Power, W', ...
@@ -52,6 +59,8 @@ Utils.drawLines(...
 line(x, sum(dynamicPowerProfile, 2), 'Color', 'k', 'Line', '--');
 
 T = ones(size(dynamicPowerProfile)) * Constants.ambientTemperature;
+
+startTic = tic;
 
 for i = 1:maxit
   % Static power profile
@@ -70,21 +79,40 @@ for i = 1:maxit
   if error < tol, break; end
 end
 
+t = toc(startTic);
+
+% The same, but in C++ only
+Utils.startTimer();
+[ Tcpp, icpp ] = hotspot.solveCondensedEquationWithLeakage(...
+  dynamicPowerProfile, vdd, ngate, tol, maxit);
+tcpp = Utils.stopTimer();
+fprintf('Solved with C++ in %.2f s, %d iterations\n', icpp, tcpp);
+
+T = T - Constants.degreeKelvin;
+Tcpp = Tcpp - Constants.degreeKelvin;
+
 % Static power profile
-subplot(3, 1, 2);
+subplot(2, 2, 2);
 Utils.drawLines('Static Power Profile', 'Time, s', 'Power, W', ...
   x, staticPowerProfile);
 line(x, sum(staticPowerProfile, 2), 'Color', 'k', 'Line', '--');
 
-T = T - Constants.degreeKelvin;
-
 % Temperature profile
-subplot(3, 1, 3);
+subplot(2, 2, 3);
 Utils.drawLines(...
-  sprintf('Temperature Profile (%d iterations)', i), ...
+  sprintf('Temperature in MatLab (%.2f s, %d iterations)', t, i), ...
   'Time, s', 'Temperature, C', x, T);
 
-x = ([1, steps] - 1) * Constants.samplingInterval;
+% Temperature profile
+subplot(2, 2, 4);
+Utils.drawLines(...
+  sprintf('Temperature in C++ only (%.2f s, %d iterations)', tcpp, icpp), ...
+  'Time, s', 'Temperature, C', x, Tcpp);
 
+% Ambient line
+x = ([1, steps] - 1) * Constants.samplingInterval;
 am = Constants.ambientTemperature - Constants.degreeKelvin;
+subplot(2, 2, 3);
+line(x, [ am, am ],  'Color', 'k', 'Line', '--');
+subplot(2, 2, 4);
 line(x, [ am, am ],  'Color', 'k', 'Line', '--');

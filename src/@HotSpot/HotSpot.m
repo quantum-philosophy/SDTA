@@ -136,62 +136,6 @@ classdef HotSpot < handle
       % Skip the header line and all excessive repetitions
       T = dlmread(tempEx, '\t', 1 + (repeat - 1) * steps, 0);
     end
-
-    function T = solveBlockCirculant(hs, B)
-      [ D, sinvC ] = hs.obtainCoefficients();
-
-      if size(D, 1) ~= 4 * size(B, 2) + 12
-        error('HotSpot:solveBlockCirculant', ...
-          'The floorplan does not match the task case');
-      end
-
-      [ V, L ] = eig(D);
-
-      L = diag(L);
-      VT = V';
-
-      n = length(D);
-      m = size(B, 1);
-      cores = size(B, 2);
-      nm = n * m;
-
-      ts = Constants.samplingInterval;
-      at = Constants.ambientTemperature;
-
-      B = transpose(B);
-      B = [ B; zeros(n - cores, m) ];
-
-      [ K, G ] = hs.calculateConstants(L, V, VT, sinvC, ts);
-
-      AA = zeros(2, n, n);
-      AA(1, :, :) = K;
-      AA(2, :, :) = -eye(n);
-
-      BB = zeros(n, m);
-
-      for i = 1:m
-        BB(:, i) = - G * B(:, i);
-      end
-
-      AA = conj(fft(AA, m, 1));
-      BB = fft(BB, m, 2);
-
-      YY = zeros(n, m);
-
-      for i = 1:m
-        YY(:, i) = squeeze(AA(i, :, :)) \ BB(:, i);
-      end
-
-      YY = transpose(ifft(YY, m, 2));
-
-      dsinvC = transpose(diag(sinvC(1:cores, 1:cores)));
-
-      T = zeros(m, cores);
-
-      for i = 1:m
-        T(i, :) = YY(i, 1:cores) .* dsinvC + at;
-      end
-    end
   end
 
   methods (Access = private)

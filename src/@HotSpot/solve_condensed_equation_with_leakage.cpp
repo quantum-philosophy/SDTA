@@ -20,13 +20,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	if (nrhs < 3 || mxIsEmpty(prhs[2])) mexErrMsgTxt(
 		"The third input should be a vector of the voltage supply.");
-	if (mxGetM(prhs[2]) != cores) mexErrMsgTxt(
+	if (mxGetN(prhs[2]) * mxGetM(prhs[2]) != cores) mexErrMsgTxt(
 		"Dimensions of the power profile and the voltage supply should agree.");
 	double *vdd = mxGetPr(prhs[2]);
 
 	if (nrhs < 4 || mxIsEmpty(prhs[3])) mexErrMsgTxt(
 		"The fourth input should be a vector of the number of gates.");
-	if (mxGetM(prhs[3]) != cores) mexErrMsgTxt(
+	if (mxGetN(prhs[3]) * mxGetM(prhs[3]) != cores) mexErrMsgTxt(
 		"Dimensions of the power profile and the number of gates should agree.");
 	double *ngate = mxGetPr(prhs[3]);
 

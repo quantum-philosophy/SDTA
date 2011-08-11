@@ -316,7 +316,7 @@ int solve_condensed_equation(
 }
 
 void inject_leakage(const double *dynamic_power, const double *vdd,
-	const double *ngate, int steps, int cores, const double *T, double *total_power)
+	const double *ngate, int cores, int steps, const double *T, double *total_power)
 {
 	int i, j, k;
 	double favg;
@@ -335,7 +335,7 @@ void inject_leakage(const double *dynamic_power, const double *vdd,
 
 	k = 0;
 	for (i = 0; i < steps; i++)
-		for (j = 0; j < cores; i++, k++) {
+		for (j = 0; j < cores; j++, k++) {
 			favg = __A * T[k] * T[k] *
 				exp((__alpha * vdd[j] + __beta) / T[k]) +
 				__B * exp(__gamma * vdd[j] + __delta);
@@ -347,14 +347,14 @@ void inject_leakage(const double *dynamic_power, const double *vdd,
 
 /* Initial leakage with the same ambient temperature */
 void inject_leakage(const double *dynamic_power, const double *vdd,
-	const double *ngate, int steps, int cores, double T, double *total_power)
+	const double *ngate, int cores, int steps, double T, double *total_power)
 {
 	int i, j, k;
 	double favg;
 
 	k = 0;
 	for (i = 0; i < steps; i++)
-		for (j = 0; j < cores; i++, k++) {
+		for (j = 0; j < cores; j++, k++) {
 			favg = __A * T * T *
 				exp((__alpha * vdd[j] + __beta) / T) +
 				__B * exp(__gamma * vdd[j] + __delta);
@@ -474,7 +474,7 @@ int solve_condensed_equation_with_leakage(
 
 	power = (double *)malloc(sizeof(double) * steps * cores);
 
-	inject_leakage(dynamic_power, vdd, ngate, steps, cores, am, power);
+	inject_leakage(dynamic_power, vdd, ngate, cores, steps, am, power);
 
 	/* We come to the iterative part */
 	for (it = 0;;) {
@@ -516,10 +516,12 @@ int solve_condensed_equation_with_leakage(
 				T[k] = tmp;
 			}
 
-		if (max_error < tol) break;
-		if (++it >= maxit) break;
+		it++;
 
-		inject_leakage(dynamic_power, vdd, ngate, steps, cores, T, power);
+		if (max_error < tol) break;
+		if (it >= maxit) break;
+
+		inject_leakage(dynamic_power, vdd, ngate, cores, steps, T, power);
 	}
 
 	free(power);
