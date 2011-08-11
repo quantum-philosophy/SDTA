@@ -17,6 +17,8 @@ classdef Power < handle
   end
 
   methods (Static)
+    profile = fitProfile(powerProfile, steps);
+
     function profile = calculateDynamicProfile(graph)
       pes = graph.pes;
       mapping = graph.mapping;

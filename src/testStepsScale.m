@@ -31,16 +31,14 @@ ylabel(ax2, 'HotSpot, s');
 for tasks = taskTestCases
   name = sprintf('test_cases/test_case_%d_%d', cores, tasks);
   fprintf('Perform test case: %s\n', name);
-  ssdtc = setup(name, false);
-
-  steps = ssdtc.stepCount;
+  [ hotspot, profile, dummy, steps ] = setup(name, false);
 
   Utils.startTimer();
-  T1 = ssdtc.solveCondensedEquation();
+  T1 = hotspot.solveCondensedEquation(profile);
   compTime(1, end + 1) = Utils.stopTimer();
 
   Utils.startTimer();
-  [ T2, it ] = ssdtc.solveOriginal(2, 0.01 * steps, 10);
+  [ T2, it ] = hotspot.solveOriginal(profile, 2, 0.01 * steps, 10);
   compTime(2, end) = Utils.stopTimer();
 
   lifeTime(end + 1) = steps * Constants.samplingInterval;

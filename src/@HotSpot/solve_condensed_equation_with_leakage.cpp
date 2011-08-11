@@ -20,10 +20,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	if (nrhs < 3 || mxIsEmpty(prhs[2])) mexErrMsgTxt(
 		"The third input should be a vector of the voltage supply.");
+	if (mxGetM(prhs[2]) != cores) mexErrMsgTxt(
+		"Dimensions of the power profile and the voltage supply should agree.");
 	double *vdd = mxGetPr(prhs[2]);
 
 	if (nrhs < 4 || mxIsEmpty(prhs[3])) mexErrMsgTxt(
 		"The fourth input should be a vector of the number of gates.");
+	if (mxGetM(prhs[3]) != cores) mexErrMsgTxt(
+		"Dimensions of the power profile and the number of gates should agree.");
 	double *ngate = mxGetPr(prhs[3]);
 
 	double tol = 0.01;
@@ -50,8 +54,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			"The format of the configuration structure is wrong.");
 	}
 
-	/* ATTENTION: The same note (look above) with the output temperature.
-	 */
+	/* ATTENTION: The same note as above */
     mxArray *out_T = mxCreateDoubleMatrix(cores, steps, mxREAL);
 	double *T = mxGetPr(out_T);
 
@@ -77,5 +80,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	mexPrintf("The condensed equation method: %.3f s, %d iterations (v" VERSION ")\n",
 		timer_result(calc), it);
 
+	mxArray *out_it = mxCreateDoubleMatrix(1, 1, mxREAL);
+	*mxGetPr(out_it) = it;
+
     plhs[0] = out_T;
+    plhs[1] = out_it;
 }

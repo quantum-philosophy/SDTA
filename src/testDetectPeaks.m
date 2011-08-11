@@ -4,15 +4,13 @@ clear all;
 clc;
 rng(0);
 
-ssdtc = setup();
+[ hotspot, profile, cores, steps ] = setup();
 
 figure;
 
-cores = ssdtc.coreCount;
-steps = ssdtc.stepCount;
 x = ((1:steps) - 1) * Constants.samplingInterval;
 
-T = ssdtc.solveCondensedEquation();
+T = hotspot.solveCondensedEquation(profile);
 
 % Draw full curves
 subplot(2, 1, 1);
@@ -22,7 +20,6 @@ index = zeros(steps, cores);
 
 legendLabels = {};
 
-cores = ssdtc.coreCount;
 for i = 1:cores
   [ maxp, minp ] = Utils.peakdet(T(:, i), Constants.peakThreshold);
   ext = sort([ maxp(:, 1); minp(:, 1) ]);

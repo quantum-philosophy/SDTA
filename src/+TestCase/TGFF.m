@@ -116,24 +116,17 @@ classdef TGFF < handle
         case TestCase.TGFF.SearchTableAttributes
           attrs = sscanf(line, '%f');
           if length(attrs) == length(header)
-            found = zeros(1, 3);
             for i = 1:length(header)
               name = header{i};
               if strcmp(name, 'frequency')
-                found(1) = 1;
                 pe.setFrequency(attrs(i));
               elseif strcmp(name, 'voltage')
-                found(2) = 1;
                 pe.setVoltage(attrs(i));
               elseif strcmp(name, 'ngate')
-                found(3) = 1;
                 pe.setNgate(attrs(i));
               else
                 error('Found an unknown attribute for a processing element');
               end
-            end
-            if ~all(found)
-              error('Cannot find all necessary attributes for a processing element');
             end
             state = TestCase.TGFF.SearchTypeHeader;
           end

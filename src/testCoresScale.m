@@ -32,20 +32,16 @@ ylabel(ax2, 'HotSpot, s');
 for cores = coreTestCases
   name = sprintf('test_cases/test_case_%d_%d', cores, tasks);
   fprintf('Perform test case: %s\n', name);
-  dims = (4 * cores + 12) * steps;
-  fprintf('Matrix dimensions: %d\n', dims);
-  fprintf('Matrix size: %f Mb\n', 8 * dims / 1024 / 1024);
+  [ hotspot, profile, cores ] = setup(name, false);
 
-  ssdtc = setup(name, false);
-
-  ssdtc.fitPowerProfile(steps);
+  profile = Power.fitProfile(profile, steps);
 
   Utils.startTimer();
-  T1 = ssdtc.solveCondensedEquation();
+  T1 = hotspot.solveCondensedEquation(profile);
   compTime(1, end + 1) = Utils.stopTimer();
 
   Utils.startTimer();
-  [ T2, it ] = ssdtc.solveOriginal(2, 0.01 * steps, 10);
+  [ T2, it ] = hotspot.solveOriginal(profile, 2, 0.01 * steps, 10);
   compTime(2, end) = Utils.stopTimer();
 
   text(cores, compTime(2, end), sprintf('  %d iter', it), ...

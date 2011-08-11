@@ -3,11 +3,11 @@
 clear all;
 clc;
 
-name          = 'test_cases/test_case_4_60';
+name = 'test_cases/test_case_4_60';
 
-floorplan     = Utils.path([ name, '.flp' ]);
-testCase      = Utils.path([ name, '.tgff' ]);
-config        = Utils.path('hotspot.config');
+floorplan = Utils.path([ name, '.flp' ]);
+testCase = Utils.path([ name, '.tgff' ]);
+config = Utils.path('hotspot.config');
 
 % Parse tasks graphs. Note, we are only interested in PEs here.
 Utils.startTimer('Obtain the description of PEs');
@@ -30,10 +30,10 @@ fprintf('Number of steps: %d\n', steps);
 fprintf('Number of cores: %d\n', cores);
 
 % Thermal model
-thermalModel = HotSpot(floorplan, config);
+hotspot = HotSpot(floorplan, config);
 
 % Random power profile
-dynamicPowerProfile = rand(steps, cores);
+dynamicPowerProfile = 0.2 + rand(steps, cores);
 for i = 1:steps
   multiplier = maxPower / sum(dynamicPowerProfile(i, :));
   dynamicPowerProfile(i, :) = multiplier * dynamicPowerProfile(i, :);
@@ -57,12 +57,9 @@ for i = 1:maxit
   % Static power profile
   staticPowerProfile = Power.calculateStaticProfile(pes, T);
 
-  ssdtc = Algorithms.SSDTC(thermalModel, ...
-    dynamicPowerProfile + staticPowerProfile);
-
   % The Condensed Equation Method
   Utils.startTimer();
-  nextT = ssdtc.solveCondensedEquation();
+  nextT = hotspot.solveCondensedEquation(dynamicPowerProfile + staticPowerProfile);
   t = Utils.stopTimer();
 
   error = max(max(abs(T - nextT)));

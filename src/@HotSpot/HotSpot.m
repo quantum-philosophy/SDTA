@@ -1,7 +1,11 @@
 classdef HotSpot < handle
-  properties (Access = private)
+  properties (SetAccess = private)
     floorplan
     config
+    options = struct(...
+      'ambient', Constants.ambientTemperature, ...
+      'init_temp', Constants.ambientTemperature, ...
+      'sampling_intvl', Constants.samplingInterval);
   end
 
   methods
@@ -61,18 +65,25 @@ classdef HotSpot < handle
     end
 
     function T = solveCondensedEquation(hs, B)
-      options = struct(...
-        'ambient', Constants.ambientTemperature, ...
-        'init_temp', Constants.ambientTemperature, ...
-        'sampling_intvl', Constants.samplingInterval);
-
       % ATTENTION: B is a steps-by-cores matrix right now. Because of the fact
       % than MatLab stores matrices column by column, not row by row as
       % it is in C/C++, the external code will get uncomfortable formatted
       % data. To eliminate extra transformations there, we do them here.
       B = transpose(B);
-      % External call
-      T = hs.solve_condensed_equation(B, options);
+      T = hs.solve_condensed_equation(B, hs.options);
+      T = transpose(T);
+    end
+
+    function [ T, it ] = solveCondensedEquationWithLeakage(hs, B, ...
+      vdd, ngate, tol, maxit)
+
+      if nargin < 5, tol = 0.01; end
+      if nargin < 6, maxit = 10; end
+
+      % ATTENTION: The same note as above.
+      B = transpose(B);
+      [ T, it ] = hs.solve_condensed_equation_with_leakage(...
+        B, vdd, ngate, tol, maxit, hs.options);
       T = transpose(T);
     end
 
@@ -85,14 +96,10 @@ classdef HotSpot < handle
       cores = size(B, 2);
       nodes = 4 * cores + 12;
 
-      % ATTENTION: B is a steps-by-cores matrix right now. Because of the fact
-      % than MatLab stores matrices column by column, not row by row as
-      % it is in C/C++, the external code will get uncomfortable formatted
-      % data. To eliminate extra transformations there, we do them here.
-      % Plus provide HotSpot with zero power slots.
+      % ATTENTION: The same note as above, plus provide HotSpot with
+      % zero power slots.
       B = transpose(B);
       B = [ B; zeros(nodes - cores, steps) ];
-      % External call
       [ T, it ] = hs.solve_original(B, tol, minbad, maxit);
       T = transpose(T(1:cores, :));
 
