@@ -86,10 +86,13 @@ Utils.startTimer();
 [ Tcpp, icpp ] = hotspot.solveCondensedEquationWithLeakage(...
   dynamicPowerProfile, vdd, ngate, tol, maxit);
 tcpp = Utils.stopTimer();
-fprintf('Solved with C++ in %.2f s, %d iterations\n', icpp, tcpp);
+fprintf('Solved with C++ in %.2f s, %d iterations\n', tcpp, icpp);
 
 T = T - Constants.degreeKelvin;
 Tcpp = Tcpp - Constants.degreeKelvin;
+
+% Error
+fprintf('Error: %f\n', max(max(abs(T - Tcpp))));
 
 % Static power profile
 subplot(2, 2, 2);
