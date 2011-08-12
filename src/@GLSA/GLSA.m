@@ -45,10 +45,10 @@ classdef GLSA < handle
       glsa.options = options;
     end
 
-    function [ solution, fitness, flag ] = solve(glsa, graph, thermalModel)
-      glsa.cache = containers.Map('KeyType', 'char', 'ValueType', 'double');
-      glsa.pause = true;
+    function [ solution, fitness, flag ] = solve(glsa, graph, thermalModel, pause)
+      if nargin < 4, glsa.pause = false; end
 
+      glsa.cache = containers.Map('KeyType', 'char', 'ValueType', 'double');
       glsa.graph = graph;
       glsa.thermalModel = thermalModel;
 
@@ -116,7 +116,7 @@ classdef GLSA < handle
         fitness = glsa.cache(key);
       else
         % Make a new schedule
-        schedule = Algorithms.LS(glsa.graph, chromosome);
+        schedule = LS.schedule(glsa.graph, chromosome);
 
         % Assign it to the graph, recalculate start/execution times
         glsa.graph.assignSchedule(schedule);
