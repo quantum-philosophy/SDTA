@@ -21,8 +21,5 @@ classdef Constants < handle
 
     % Ambient temperature
     ambientTemperature = 27 + Constants.degreeKelvin; % K
-
-    % Peak threshold of local minima and maxima (for the cycle counting)
-    peakThreshold = 1.0; % K
   end
 end

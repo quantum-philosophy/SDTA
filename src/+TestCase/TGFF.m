@@ -119,11 +119,11 @@ classdef TGFF < handle
             for i = 1:length(header)
               name = header{i};
               if strcmp(name, 'frequency')
-                pe.setFrequency(attrs(i));
+                pe.frequency = attrs(i);
               elseif strcmp(name, 'voltage')
-                pe.setVoltage(attrs(i));
+                pe.voltage = attrs(i);
               elseif strcmp(name, 'ngate')
-                pe.setNgate(attrs(i));
+                pe.ngate = attrs(i);
               else
                 error('Found an unknown attribute for a processing element');
               end

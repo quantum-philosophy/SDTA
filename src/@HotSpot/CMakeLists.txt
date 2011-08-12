@@ -16,7 +16,7 @@ foreach (version ${HOTSPOT_VERSIONS})
     -DHOTSPOT_VERSION="${version}"
   )
 
-  add_custom_target (matlab-${version}
+  add_custom_target (mhotspot-${version}
     COMMAND mex ${CMAKE_CURRENT_SOURCE_DIR}/obtain_coefficients.cpp
       ${MEX_SRCS} ${MEX_LIBS} ${MEX_FLAGS}
     COMMAND mex ${CMAKE_CURRENT_SOURCE_DIR}/solve_original.cpp
@@ -31,8 +31,5 @@ foreach (version ${HOTSPOT_VERSIONS})
     COMMAND ln -sfn ${VENDOR_DIR}/hotspot-${version} ${CMAKE_CURRENT_SOURCE_DIR}/hotspot
   )
 
-  add_dependencies (matlab-${version} hotspot-${version} link-${version})
+  add_dependencies (mhotspot-${version} hotspot-${version} link-${version})
 endforeach (version)
-
-add_custom_target (matlab)
-add_dependencies (matlab matlab-${HOTSPOT_DEFAULT_VERSION})

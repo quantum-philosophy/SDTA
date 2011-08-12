@@ -77,8 +77,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			"Cannot solve using the condensed equation method (%d).", it);
 	}
 
+	/*
 	mexPrintf("The condensed equation method: %.3f s, %d iterations (v" VERSION ")\n",
 		timer_result(calc), it);
+	*/
 
 	mxArray *out_it = mxCreateDoubleMatrix(1, 1, mxREAL);
 	*mxGetPr(out_it) = it;

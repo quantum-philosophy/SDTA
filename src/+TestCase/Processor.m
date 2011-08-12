@@ -3,14 +3,16 @@ classdef Processor < handle
     name
     id
 
-    frequency
-    voltage
-    ngate
-
     ceff
     nc
 
     typeCount
+  end
+
+  properties
+    frequency
+    voltage
+    ngate
   end
 
   methods
@@ -26,18 +28,6 @@ classdef Processor < handle
       pe.nc = zeros(0, 0);
 
       pe.typeCount = 0;
-    end
-
-    function setFrequency(pe, value)
-      pe.frequency = value;
-    end
-
-    function setVoltage(pe, value)
-      pe.voltage = value;
-    end
-
-    function setNgate(pe, value)
-      pe.ngate = value;
     end
 
     function addType(pe, id, ceff, nc)
