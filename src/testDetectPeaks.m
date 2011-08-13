@@ -6,8 +6,6 @@ rng(0);
 
 [ hotspot, profile, cores, steps ] = setup('test_cases/test_case_4_60');
 
-figure;
-
 x = ((1:steps) - 1) * Constants.samplingInterval;
 
 T = hotspot.solveCondensedEquation(profile);

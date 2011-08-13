@@ -26,13 +26,15 @@ classdef TGFF < handle
         attrs = regexp(line, '^@(\w+) (\d+) {$', 'tokens');
         if ~isempty(attrs)
           name = attrs{1}{1};
-          id = str2num(attrs{1}{2});
+          type = str2num(attrs{1}{2});
           if Utils.include(graphLabels, name)
-            graph = TestCase.Graph(name, id);
+            id = length(graphs) + 1;
+            graph = TestCase.Graph(id, name, type);
             TestCase.TGFF.parseGraph(graph, fid);
             graphs{end + 1} = graph;
           elseif Utils.include(peLabels, name)
-            pe = TestCase.Processor(name, id);
+            id = length(pes) + 1;
+            pe = TestCase.Processor(id, name, type);
             TestCase.TGFF.parseProcessor(pe, fid);
             pes{end + 1} = pe;
           end
@@ -60,7 +62,7 @@ classdef TGFF < handle
 
           switch command
           case 'PERIOD'
-            graph.setPeriod(str2num(attrs));
+            graph.assignPeriod(str2num(attrs));
 
           case 'TASK'
             attrs = regexp(attrs, '(\w+)\s+TYPE\s+(\d+)', 'tokens');
@@ -86,7 +88,7 @@ classdef TGFF < handle
               '(\w+)\s+ON\s+(\w+)\s+AT\s+(\d+\.?\d*)', 'tokens');
             attrs = attrs{1};
             attrs{3} = str2num(attrs{3});
-            if ~isempty(attrs), graph.setDeadline(attrs{:}); end
+            if ~isempty(attrs), graph.assignDeadline(attrs{:}); end
           end
         end
 

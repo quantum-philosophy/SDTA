@@ -1,99 +1,68 @@
 classdef Graph < handle
   properties (SetAccess = private)
-    name
     id
+    name
+    type
 
     period
 
-    taskCount
-
-    nameMap
-
-    linksTo
-    linksFrom
-    taskTypes
-
-    deadline
+    tasks
+    taskMap
 
     pes
     mapping
     schedule
-    startTime
-    execTime
+    ordinalSchedule
   end
 
   methods
-    function graph = Graph(name, id)
-      graph.name = name;
+    function graph = Graph(id, name, type)
       graph.id = id;
-
-      graph.taskCount = 0;
-
-      graph.nameMap = containers.Map();
-
-      graph.linksTo = {};
-      graph.linksFrom = {};
-      graph.taskTypes = zeros(0, 0);
-
-      graph.deadline = zeros(0, 0);
+      graph.name = name;
+      graph.type = type;
+      graph.tasks = {};
+      graph.taskMap = containers.Map();
     end
 
-    function ids = getStartPoints(graph)
+    function tasks = getRoots(graph)
+      tasks = {};
+      for task = graph.tasks
+        task = task{1};
+        if task.isRoot, tasks{end + 1} = task; end
+      end
+    end
+
+    function ids = getRootIds(graph)
       ids = zeros(0, 0);
-      for id = 1:graph.taskCount
-        if isempty(graph.linksTo{id})
-          ids(end + 1) = id;
+      for task = graph.tasks
+        task = task{1};
+        if task.isRoot
+          ids(end + 1) = task.id;
         end
       end
     end
 
     function addTask(graph, name, type)
-      graph.taskTypes(end + 1) = type;
-      graph.linksTo{end + 1} = zeros(0, 0);
-      graph.linksFrom{end + 1} = zeros(0, 0);
-      graph.taskCount = graph.taskCount + 1;
-      graph.nameMap(name) = graph.taskCount;
+      id = length(graph.tasks) + 1;
+      task = TestCase.Task(id, name, type);
+      graph.tasks{end + 1} = task;
+      graph.taskMap(name) = task;
     end
 
-    function addLink(graph, lname, fname, tname, type)
-      fid = graph.nameMap(fname);
-      tid = graph.nameMap(tname);
-      graph.linksTo{tid} = [ graph.linksTo{tid} fid ];
-      graph.linksFrom{fid} = [ graph.linksFrom{fid} tid ];
+    function addLink(graph, link, parent, child, type)
+      parent = graph.taskMap(parent);
+      child = graph.taskMap(child);
+      parent.addChild(child);
+      child.addParent(parent);
     end
 
-    function setPeriod(graph, value)
+    function assignPeriod(graph, value)
       graph.period = value;
     end
 
-    function setDeadline(graph, dname, tname, time)
-      id = graph.nameMap(tname);
-      graph.deadline(id) = time;
-      graph.bubbleDeadline(id, time);
-    end
-
-    function inspect(graph)
-      fprintf('Task graph: %s %d\n', graph.name, graph.id);
-      fprintf('  Period: %f\n', graph.period);
-      fprintf('  Number of tasks: %d\n', graph.taskCount);
-      fprintf('  Tasks:\n');
-
-      for id = 1:graph.taskCount
-        fprintf('    %d -> [ ', id);
-        first = true;
-        for lid = graph.linksFrom{id}
-          if ~first, fprintf(', ');
-          else first = false;
-          end
-          fprintf('%d', lid);
-        end
-        fprintf(' ]\n');
-      end
-
-      for pe = graph.pes, pe{1}.inspect(); end
-
-      Utils.inspectVector('Mapping', graph.mapping);
-      Utils.inspectVector('Schedule', graph.schedule);
+    function assignDeadline(graph, deadline, task, time)
+      task = graph.taskMap(task);
+      task.assignDeadline(time);
     end
 
     function assignMapping(graph, pes, mapping)
@@ -102,92 +71,99 @@ classdef Graph < handle
     end
 
     function assignSchedule(graph, schedule)
+      % Order of the tasks, one id by another id
       graph.schedule = schedule;
+
+      % Ordinal numbers of the tasks in the schedule
+      [ dummy, graph.ordinalSchedule ] = sort(schedule);
+
       graph.calculateTime();
+    end
+
+    function tasks = getPETasks(graph, pe)
+      ids = find(graph.mapping == pe.id);
+      tasks = graph.tasks(ids);
+    end
+
+    function schedule = getPESchedule(graph, pe)
+      ids = find(graph.mapping == pe.id);
+
+      % Ordinal number of the tasks in the schedule
+      ordinalSchedule = graph.ordinalSchedule(ids);
+
+      % Sort tasks according to the schedule
+      [ dummy, I ] = sort(ordinalSchedule);
+      schedule = ids(I);
+    end
+
+    function inspect(graph)
+      fprintf('Task graph: %s %d\n', graph.name, graph.id);
+      fprintf('  Period: %f\n', graph.period);
+      fprintf('  Number of tasks: %d\n', length(graph.tasks));
+
+      fprintf('  Data dependencies:\n');
+      for task = graph.tasks
+        task = task{1};
+        fprintf('    %d -> [ ', task.id);
+        first = true;
+        for child = task.children
+          child = child{1};
+          if ~first, fprintf(', ');
+          else first = false;
+          end
+          fprintf('%d', child.id);
+        end
+        fprintf(' ]\n');
+      end
+
+      for pe = graph.pes
+        pe = pe{1};
+        pe.inspect();
+
+        if isempty(graph.schedule), continue; end
+
+        fprintf('  ');
+        Utils.inspectVector('Local schedule', graph.getPESchedule(pe));
+      end
+
+      Utils.inspectVector('Mapping', graph.mapping);
+      Utils.inspectVector('Schedule', graph.schedule);
     end
   end
 
   methods (Access = private)
-    function bubbleDeadline(graph, tid, time)
-      % Parents
-      pids = graph.linksTo{tid};
-      if isempty(pids), return; end
-      for id = pids
-        if length(graph.deadline) < id || graph.deadline(id) > time
-          graph.deadline(id) = time;
-          graph.bubbleDeadline(id, time);
-        end
-      end
-    end
-
     function calculateTime(graph)
-      pes = graph.pes;
-      mapping = graph.mapping;
+      % First, distribute the tasks about the cores and calculate
+      % their execution time
+      for pe = graph.pes
+        pe = pe{1};
 
-      cores = length(pes);
-      tasks = graph.taskCount;
+        schedule = graph.getPESchedule(pe);
 
-      execTime = zeros(1, tasks);
-      startTime = zeros(1, tasks);
+        ancestor = [];
+        for id = schedule
+          successor = graph.tasks{id};
 
-      coreSchedule = cell(cores);
+          % Drop all ancestors and successors
+          successor.resetMapping();
 
-      for i = 1:cores
-        coreSchedule{i} = zeros(0, 0);
+          % t = NC / f
+          successor.assignDuration(pe.nc(successor.type) / pe.frequency);
 
-        ids = find(mapping == i);
-        if isempty(ids), continue; end
-
-        types = graph.taskTypes(ids);
-
-        % t = NC / f
-        execTime(ids) = pes{i}.nc(types) / pes{i}.frequency;
-
-        % Calculate a local schedule, shift its tasks relative to each other
-        shift = 0;
-        for id = graph.schedule
-          if any(ids == id)
-            coreSchedule{i}(end + 1) = id;
-            startTime(id) = shift;
-            shift = shift + execTime(id);
+          if ~isempty(ancestor)
+            ancestor.setSuccessor(successor);
+            successor.setAncestor(ancestor);
           end
+
+          ancestor = successor;
         end
       end
 
-      % Now consider dependencies between tasks
-      pool = graph.schedule;
-      inpool = ones(1, tasks);
-      while ~isempty(pool)
-        id = pool(1);
-        pool(1) = [];
-        inpool(id) = 0;
+      % Now each task knows its execution time, its dependent tasks,
+      % and its successors on the same core
 
-        finish = startTime(id) + execTime(id);
-
-        nids = graph.linksFrom{id};
-        for nid = nids
-          shift = finish - startTime(nid);
-          if shift < 0, continue; end
-
-          % Shift the core schedule
-          ncid = mapping(nid);
-          found = 0;
-          for sid = coreSchedule{ncid}
-            if ~found && sid == nid, found = 1; end
-            if found
-              startTime(sid) = startTime(sid) + shift;
-              if ~inpool(sid)
-                % We need to consider it once again
-                pool(end + 1) = sid;
-                inpool(sid) = 1;
-              end
-            end
-          end
-        end
-      end
-
-      graph.startTime = startTime;
-      graph.execTime = execTime;
+      % Let us move the task relative to each other starting from the roots
+      for task = graph.getRoots, task{1}.shiftDependentTasks(); end
     end
   end
 end

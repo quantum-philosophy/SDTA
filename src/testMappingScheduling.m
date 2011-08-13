@@ -16,10 +16,11 @@ pes = tgff.pes;
 
 hotspot = HotSpot(floorplan, config);
 
-mapping = Utils.generateEvenMapping(length(pes), graph.taskCount);
+mapping = Utils.generateEvenMapping(length(pes), length(graph.tasks));
 graph.assignMapping(pes, mapping);
 
-schedule = [ 34, 37, 16, 42, 47, 8, 11, 44, 30, 3, 48, 50, 19, 25, 13, 4, 26, 20, 40, 45, 12, 49, 35, 36, 21, 28, 1, 32, 14, 6, 43, 31, 10, 22, 23, 24, 41, 51, 15, 17, 9, 2, 18, 46, 29, 5, 39, 38, 27, 33, 52, 7 ];
+priority = randperm(length(graph.tasks));
+schedule = LS.schedule(graph, priority);
 
 Utils.inspectVector('Schedule', schedule);
 

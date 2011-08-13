@@ -20,70 +20,48 @@ classdef Power < handle
     profile = fitProfile(powerProfile, steps);
 
     function profile = calculateDynamicProfile(graph)
-      pes = graph.pes;
-      mapping = graph.mapping;
+      taskPower = zeros(1, length(graph.tasks));
 
-      taskPower = zeros(1, length(mapping));
+      for pe = graph.pes
+        pe = pe{1};
 
-      for i = 1:length(pes)
-        pe = pes{i};
-        ids = find(mapping == i);
-        if isempty(ids), continue; end
-        types = graph.taskTypes(ids);
-
-        taskPower(ids) = Power.calculateDynamic(pe.ceff(types), ...
-          pe.frequency, pe.voltage);
+        for task = graph.getPETasks(pe)
+          task = task{1};
+          taskPower(task.id) = Power.calculateDynamic(...
+            pe.ceff(task.type), pe.frequency, pe.voltage);
+        end
       end
 
       profile = Power.distributePower(graph, taskPower);
     end
 
     function profile = calculateStaticProfile(pes, T)
-      steps = size(T, 1);
-      cores = size(T, 2);
-      profile = zeros(steps, cores);
+      stepCount = size(T, 1);
+      peCount = size(T, 2);
+      profile = zeros(stepCount, peCount);
 
-      for i = 1:cores
+      for i = 1:peCount
         profile(:, i) = Power.calculateStatic(...
           pes{i}.ngate, T(:, i), pes{i}.voltage);
       end
     end
 
     function profile = distributePower(graph, taskPower)
-      startTime = graph.startTime;
-      execTime = graph.execTime;
-      mapping = graph.mapping;
+      profile = zeros(0, length(graph.pes));
+      ts = Constants.samplingInterval;
 
-      cores = length(graph.pes);
+      for pe = graph.pes
+        pe = pe{1};
 
-      finishTime = startTime + execTime;
+        schedule = graph.getPESchedule(pe);
 
-      profile = zeros(0, cores);
-
-      timeStep = Constants.samplingInterval;
-      totalTime = max(finishTime);
-
-      % ATTENTION: What should we do about this mismatch?
-      steps = floor(totalTime / timeStep);
-      if steps * timeStep < totalTime, steps = steps + 1; end
-
-      for i = 1:cores
-        % Find all tasks for this core
-        ids = find(mapping == i);
-        tasks = length(ids);
-
-        if tasks == 0, continue; end
-
-        % Sort them according to their start times
-        [ dummy, I ] = sort(startTime(ids));
-        ids = ids(I);
-
-        for id = ids
-          s = floor(startTime(id) / timeStep) + 1;
+        for id = schedule
+          task = graph.tasks{id};
+          s = floor(task.start / ts) + 1;
           % NOTE: Here without +1 to eliminate successor and predecessor
           % are being running at the same time
-          e = floor(finishTime(id) / timeStep);
-          profile(s:e, i) = taskPower(id);
+          e = floor((task.start + task.duration) / ts);
+          profile(s:e, pe.id) = taskPower(id);
         end
       end
     end

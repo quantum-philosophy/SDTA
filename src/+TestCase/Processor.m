@@ -1,7 +1,8 @@
 classdef Processor < handle
   properties (SetAccess = private)
-    name
     id
+    name
+    type
 
     ceff
     nc
@@ -16,9 +17,10 @@ classdef Processor < handle
   end
 
   methods
-    function pe = Processor(name, id)
-      pe.name = name;
+    function pe = Processor(id, name, type)
       pe.id = id;
+      pe.name = name;
+      pe.type = type;
 
       pe.frequency = 2 * 1e9; % Hz
       pe.voltage = 1; % V

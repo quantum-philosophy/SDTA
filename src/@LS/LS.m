@@ -2,42 +2,78 @@ classdef LS < handle
   methods (Static)
     function schedule = schedule(graph, priority)
       if nargin < 2
-        priority = zeros(0, 0);
-        for id = 1:graph.taskCount
-          priority(end + 1) = graph.deadline(id);
+        priority = zeros(0);
+        for task = graph.tasks
+          priority(end + 1) = task{1}.deadline;
         end
       end
 
-      tasks = graph.taskCount;
+      taskCount = length(graph.tasks);
 
-      pool = graph.getStartPoints();
-      done = zeros(1, tasks);
-      done(pool) = 1;
+      % Obtain roots and sort them according to their priority
+      ids = graph.getRootIds();
+      [ dummy, I ] = sort(priority(ids));
+      ids = ids(I);
+
+      pool = graph.tasks(ids);
+
+      processed = zeros(1, taskCount);
+      scheduled = zeros(1, taskCount);
+
+      processed(ids) = 1;
 
       schedule = zeros(0, 0);
 
       while ~isempty(pool)
-        % Find the most urgent task (the lower priority, more urgent)
-        [ dummy, index ] = min(priority(pool));
-        id = pool(index);
+        % The pool is always sorted according to the priority
+        task = pool{1};
 
         % Exclude the task
-        pool(index) = [];
+        pool(1) = [];
 
         % Append to the schedule
-        schedule(end + 1) = id;
+        schedule(end + 1) = task.id;
+        scheduled(task.id) = 1;
 
         % Append new tasks, but only ready ones, and ensure absence
         % of repetitions
-        nids = graph.linksFrom{id};
-        for nid = nids
-          if done(nid), continue; end
-          ins = graph.linksTo{nid};
-          nin = length(ins);
-          if nin == 1 || nin == length(intersect(ins, find(done)))
-            done(nid) = 1;
-            pool(end + 1) = nid;
+        for child = task.children
+          child = child{1};
+
+          % Do not do again
+          if processed(child.id), continue; end
+
+          % All parents should be scheduled
+          ready = true;
+          for parent = child.parents
+            parent = parent{1};
+            if ~scheduled(parent.id)
+              ready = false;
+              break;
+            end
           end
+
+          % Is it ready or should we wait for another parent?
+          if ~ready, continue; end
+
+          % We need to insert it in the right place in order to keep
+          % the pool sorted by priority
+          index = 1;
+          childPriority = priority(child.id);
+          for competitor = pool
+            competitor = competitor{1};
+            if priority(competitor.id) > childPriority
+              break;
+            end
+            index = index + 1;
+          end
+          if index > length(pool), pool{end + 1} = child;
+          elseif index == 1, pool = { child pool{:} };
+          else pool = { pool{1:index - 1} child pool{index:end} };
+          end
+
+          % We are done with it
+          processed(child.id) = 1;
         end
       end
     end

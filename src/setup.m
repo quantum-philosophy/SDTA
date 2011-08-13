@@ -23,7 +23,7 @@ function [ thermalModel, powerProfile, cores, steps ] = setup(name, debug, draw)
   thermalModel = HotSpot(floorplan, config);
 
   % Dummy mapping
-  mapping = Utils.generateEvenMapping(cores, graph.taskCount);
+  mapping = Utils.generateEvenMapping(cores,length(graph.tasks));
   graph.assignMapping(pes, mapping);
 
   % LS scheduling

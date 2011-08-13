@@ -85,8 +85,9 @@ classdef GLSA < handle
       end
 
       % The second half
-      population((half + 1):end, :) = ...
-        randi(chromosomeLength, psize - half, chromosomeLength);
+      for i = (half + 1):psize
+        population(i, :) = randperm(chromosomeLength);
+      end
     end
 
     function children = mutate(glsa, parents, options, chromosomeLength, ...
@@ -115,6 +116,8 @@ classdef GLSA < handle
       if glsa.cache.isKey(key)
         fitness = glsa.cache(key);
       else
+        Utils.inspectVector('Priority', chromosome);
+
         % Make a new schedule
         schedule = LS.schedule(glsa.graph, chromosome);
 
