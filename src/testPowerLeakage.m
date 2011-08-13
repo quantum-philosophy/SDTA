@@ -2,6 +2,7 @@
 
 clear all;
 clc;
+rng(0);
 
 name = 'test_cases/test_case_4_60';
 
