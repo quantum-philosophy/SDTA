@@ -16,7 +16,7 @@ pes = tgff.pes;
 
 hotspot = HotSpot(floorplan, config);
 
-mapping = Utils.generateEvenMapping(length(pes), graph.taskCount);
+mapping = Utils.generateEvenMapping(length(pes), length(graph.tasks));
 graph.assignMapping(pes, mapping);
 
 graph.inspect();
@@ -24,5 +24,19 @@ graph.inspect();
 glsa = GLSA();
 
 Utils.startTimer('Solve with GLSA');
-priority = glsa.solve(graph, hotspot);
+[ priority, fitness ] = glsa.solve(graph, hotspot);
 Utils.stopTimer();
+
+LS.schedule(graph, priority);
+
+Utils.drawMappingScheduling(graph);
+
+dynamicPowerProfile = Power.calculateDynamicProfile(graph);
+
+[ T, it ] = glsa.thermalModel.solveCondensedEquationWithLeakage( ...
+  dynamicPowerProfile, glsa.vdd, glsa.ngate, ...
+  glsa.leakageTolerance, glsa.maxLeakageIterations);
+
+mttf = Lifetime.predictAndDraw(T)
+
+fprintf('MTTF = %f\n', -fitness);

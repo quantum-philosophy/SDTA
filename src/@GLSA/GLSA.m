@@ -18,7 +18,7 @@ classdef GLSA < handle
     leakageTolerance = 0.01; % K
   end
 
-  properties (Access = private)
+  properties (SetAccess = private)
     options
 
     graph
@@ -30,6 +30,9 @@ classdef GLSA < handle
     pause
 
     cache
+
+    evaluationCount
+    bar
   end
 
   methods
@@ -60,8 +63,13 @@ classdef GLSA < handle
         glsa.ngate(end + 1) = pe.ngate;
       end
 
+      glsa.evaluationCount = 0;
+      glsa.bar = waitbar(0, 'Genetic List Scheduling Algorithm');
+
       [ solution, fitness, flag ] = ga(@glsa.evaluate, ...
-        graph.taskCount, [], [], [], [], [], [], [], glsa.options);
+        length(graph.tasks), [], [], [], [], [], [], [], glsa.options);
+
+      waitbar(1, glsa.bar);
     end
   end
 
@@ -77,7 +85,9 @@ classdef GLSA < handle
       % between the lowest and highest mobility
 
       % Use ordinal numbers instead of plain mobility
-      [ dummy, I ] = sort(glsa.graph.deadline);
+      deadlines = zeros(0);
+      for task = glsa.graph.tasks, deadlines(end + 1) = task{1}.deadline; end
+      [ dummy, I ] = sort(deadlines);
 
       % The first half
       for i = 1:half
@@ -111,18 +121,17 @@ classdef GLSA < handle
     end
 
     function fitness = evaluate(glsa, chromosome) % i.e. priority
+      glsa.evaluationCount = glsa.evaluationCount + 1;
+      waitbar(mod(glsa.evaluationCount, 10) / 10, glsa.bar, ...
+        [ 'Evaluation #' num2str(glsa.evaluationCount) ]);
+
       key = Utils.mMD5(chromosome);
 
       if glsa.cache.isKey(key)
         fitness = glsa.cache(key);
       else
-        Utils.inspectVector('Priority', chromosome);
-
         % Make a new schedule
-        schedule = LS.schedule(glsa.graph, chromosome);
-
-        % Assign it to the graph, recalculate start/execution times
-        glsa.graph.assignSchedule(schedule);
+        LS.schedule(glsa.graph, chromosome);
 
         % The graph is rescheduled now, obtain the dynamic power profile
         dynamicPowerProfile = Power.calculateDynamicProfile(glsa.graph);
@@ -143,8 +152,6 @@ classdef GLSA < handle
         % Cache it!
         glsa.cache(key) = fitness;
       end
-
-      fprintf('MTTF = %f\n', -fitness);
     end
   end
 end

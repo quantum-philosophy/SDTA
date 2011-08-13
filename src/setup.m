@@ -28,8 +28,7 @@ function [ thermalModel, powerProfile, cores, steps ] = setup(name, debug, draw)
 
   % LS scheduling
   Utils.startTimer('Scheduling in time across all the cores');
-  schedule = LS.schedule(graph);
-  graph.assignSchedule(schedule);
+  LS.schedule(graph);
   Utils.stopTimer();
 
   if debug, graph.inspect(); end

@@ -76,6 +76,8 @@ classdef LS < handle
           processed(child.id) = 1;
         end
       end
+
+      graph.assignSchedule(schedule);
     end
   end
 end
