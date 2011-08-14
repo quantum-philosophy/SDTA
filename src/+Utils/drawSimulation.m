@@ -1,6 +1,8 @@
 function drawSimulation(graph, powerProfile)
   steps = size(powerProfile, 1);
 
+  figure;
+
   % Mapping and scheduling
   subplot(2, 1, 1);
   Utils.drawMappingScheduling(graph);

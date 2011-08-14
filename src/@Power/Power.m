@@ -17,7 +17,38 @@ classdef Power < handle
   end
 
   methods (Static)
-    profile = fitProfile(powerProfile, steps);
+    function profile = fitProfile(powerProfile, steps)
+      currentSteps = size(powerProfile, 1);
+
+      Utils.startTimer('Transform the power profile from %d to %d', ...
+        currentSteps, steps);
+
+      if steps < currentSteps
+        profile = powerProfile(1:steps, :);
+      elseif steps > currentSteps
+        repeat = floor(steps / currentSteps);
+        profile = zeros(0, 0);
+        for i = 1:repeat
+          profile = [ profile; powerProfile ];
+        end
+        rest = steps - repeat * currentSteps;
+        profile = [ profile; powerProfile(1:rest, :) ];
+      end
+
+      Utils.stopTimer();
+    end
+
+    function profile = generateConstantProfile(cores, steps, maxPower)
+      profile = ones(steps, cores) * (maxPower / cores);
+    end
+
+    function profile = generateRandomProfile(cores, steps, maxPower)
+      profile = 0.2 + rand(steps, cores);
+      for i = 1:steps
+        multiplier = maxPower / sum(profile(i, :));
+        profile(i, :) = multiplier * profile(i, :);
+      end
+    end
 
     function profile = calculateDynamicProfile(graph)
       taskPower = zeros(1, length(graph.tasks));

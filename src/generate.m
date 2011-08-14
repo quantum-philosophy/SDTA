@@ -1,12 +1,14 @@
 function generate(varargin)
   if nargin > 0
+    prefix = '';
     testCases = struct();
     for i = 1:nargin
       testCases(i).name = varargin{i};
     end
   else
+    prefix = 'test_cases/';
     fprintf('Processing all test cases in %s\n', Utils.path('test_cases'));
-    testCases = dir(Utils.path('test_cases/*.tgffopt'));
+    testCases = dir(Utils.path([ prefix, '*.tgffopt' ]));
   end
 
   for i = 1:length(testCases)
@@ -14,8 +16,8 @@ function generate(varargin)
 
     fprintf('%d. Generate a test case: %s\n', i, name);
 
-    floorplan = Utils.path([ 'test_cases/', name, '.flp' ]);
-    config = Utils.path([ 'test_cases/', name ]);
+    floorplan = Utils.path([ prefix, name, '.flp' ]);
+    config = Utils.path([ prefix, name ]);
 
     % Generate a test case
     result = Utils.run('tgff', config, true);

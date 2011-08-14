@@ -17,14 +17,18 @@ classdef Processor < handle
   end
 
   methods
-    function pe = Processor(id, name, type)
+    function pe = Processor(id, name, type, frequency, voltage, ngate)
       pe.id = id;
       pe.name = name;
       pe.type = type;
 
-      pe.frequency = 2 * 1e9; % Hz
-      pe.voltage = 1; % V
-      pe.ngate = 1e7;
+      if nargin < 4, frequency = 2e9; end % Hz
+      if nargin < 5, voltage = 0.8; end % V
+      if nargin < 6, ngate = 1e7; end
+
+      pe.frequency = frequency;
+      pe.voltage = voltage;
+      pe.ngate = ngate;
 
       pe.ceff = zeros(0, 0);
       pe.nc = zeros(0, 0);

@@ -61,7 +61,7 @@ classdef Task < handle
       if ~isempty(task.deadline) && task.deadline <= time, return; end
       task.deadline = time;
       for parent = task.parents
-        parent{1}.assignDeadline(time);
+        parent{1}.assignDeadline(max(0, time - 1));
       end
     end
 

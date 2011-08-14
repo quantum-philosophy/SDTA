@@ -98,9 +98,10 @@ classdef Graph < handle
 
     function inspect(graph)
       fprintf('Task graph: %s %d\n', graph.name, graph.id);
-      fprintf('  Period: %f\n', graph.period);
+      fprintf('  Period: %d\n', graph.period);
       fprintf('  Number of tasks: %d\n', length(graph.tasks));
 
+      % Graph
       fprintf('  Data dependencies:\n');
       for task = graph.tasks
         task = task{1};
@@ -116,18 +117,38 @@ classdef Graph < handle
         fprintf(' ]\n');
       end
 
-      for pe = graph.pes
-        pe = pe{1};
-        pe.inspect();
+      % Mapping
+      if ~isempty(graph.mapping)
+        Utils.inspectVector('Mapping', graph.mapping);
 
-        if isempty(graph.schedule), continue; end
+        for pe = graph.pes
+          pe = pe{1};
+          pe.inspect();
 
-        fprintf('  ');
-        Utils.inspectVector('Local schedule', graph.getPESchedule(pe));
+          if isempty(graph.schedule), continue; end
+
+          Utils.inspectVector('  Local schedule', graph.getPESchedule(pe));
+        end
       end
 
-      Utils.inspectVector('Mapping', graph.mapping);
-      Utils.inspectVector('Schedule', graph.schedule);
+      % Schedule
+      if ~isempty(graph.schedule)
+        Utils.inspectVector('Schedule', graph.schedule);
+      end
+
+      % Tasks' stats
+      if ~isempty(graph.mapping) && ~isempty(graph.schedule)
+        durations = zeros(0);
+
+        for task = graph.tasks
+          durations(end + 1) = task{1}.duration;
+        end
+
+        fprintf('Minimal execution time: %f s\n', min(durations));
+        fprintf('Average execution time: %f s\n', mean(durations));
+        fprintf('Maximal execution time: %f s\n', max(durations));
+        fprintf('Estimated total time: %f s\n', graph.period * mean(durations));
+      end
     end
   end
 

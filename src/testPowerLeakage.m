@@ -4,36 +4,34 @@ clear all;
 clc;
 rng(0);
 
-name = 'test_cases/test_case_4_60';
+name = 'simple';
 
-floorplan = Utils.path([ name, '.flp' ]);
-testCase = Utils.path([ name, '.tgff' ]);
-config = Utils.path('hotspot.config');
-
-% Parse tasks graphs. Note, we are only interested in PEs here.
-Utils.startTimer('Obtain the description of PEs');
-tgff = TestCase.TGFF(testCase);
-Utils.stopTimer();
-pes = tgff.pes;
-
-vdd = zeros(0, 0);
-ngate = zeros(0, 0);
-
-for pe = pes, pe = pe{1};
-  pe.inspect();
-  vdd(end + 1) = pe.voltage;
-  ngate(end + 1) = pe.ngate;
-end
+cores = 4;
+dieSize = 81e-6; % m^2
+maxPower = 150; % W
+totalTime = 100; % s
 
 tol = 0.01; % K
 maxit = 10;
-maxPower = 150; % W
-simulationTime = 100; % s
-steps = simulationTime / Constants.samplingInterval;
-cores = length(pes);
+
+floorplan = Utils.path([ name, '.flp' ]);
+config = Utils.path('hotspot.config');
+
+steps = floor(totalTime / Constants.samplingInterval);
+
+Utils.generateFloorplan(floorplan, cores, dieSize);
+
+vdd = 0.8 + 0.2 * (rand(1, cores) - 0.5);
+ngate = 1e6 + 0.1e6 * (rand(1, cores) - 0.5);
+
+pes = {};
+for i = 1:cores
+  pes{end + 1} = TestCase.Processor(i, '', i, 2e6, vdd(i), ngate(i));
+  pes{end}.inspect();
+end
 
 fprintf('Maximal power:   %d W\n', maxPower);
-fprintf('Simulation time: %d s\n', simulationTime);
+fprintf('Simulation time: %d s\n', totalTime);
 fprintf('Number of steps: %d\n', steps);
 fprintf('Number of cores: %d\n', cores);
 
@@ -41,11 +39,7 @@ fprintf('Number of cores: %d\n', cores);
 hotspot = HotSpot(floorplan, config);
 
 % Random power profile
-dynamicPowerProfile = 0.2 + rand(steps, cores);
-for i = 1:steps
-  multiplier = maxPower / sum(dynamicPowerProfile(i, :));
-  dynamicPowerProfile(i, :) = multiplier * dynamicPowerProfile(i, :);
-end
+dynamicPowerProfile = Power.generateRandomProfile(cores, steps, maxPower);
 
 figure;
 
@@ -89,6 +83,9 @@ Utils.startTimer();
 tcpp = Utils.stopTimer();
 fprintf('Solved with C++ in %.2f s, %d iterations\n', tcpp, icpp);
 
+fprintf('Solved in MatLab in %.2f s\n', t);
+fprintf('Solved in C++ in %.2f s\n', tcpp);
+
 T = T - Constants.degreeKelvin;
 Tcpp = Tcpp - Constants.degreeKelvin;
 
@@ -101,16 +98,18 @@ Utils.drawLines('Static Power Profile', 'Time, s', 'Power, W', ...
   x, staticPowerProfile);
 line(x, sum(staticPowerProfile, 2), 'Color', 'k', 'Line', '--');
 
-% Temperature profile
+T = hotspot.solveCondensedEquation(dynamicPowerProfile) - Constants.degreeKelvin;
+
+% Temperature profile without leakage
 subplot(2, 2, 3);
 Utils.drawLines(...
-  sprintf('Temperature in MatLab (%.2f s, %d iterations)', t, i), ...
+  sprintf('Temperature without leakage', t, i), ...
   'Time, s', 'Temperature, C', x, T);
 
 % Temperature profile
 subplot(2, 2, 4);
 Utils.drawLines(...
-  sprintf('Temperature in C++ only (%.2f s, %d iterations)', tcpp, icpp), ...
+  sprintf('Temperature with leakage', tcpp, icpp), ...
   'Time, s', 'Temperature, C', x, Tcpp);
 
 % Ambient line

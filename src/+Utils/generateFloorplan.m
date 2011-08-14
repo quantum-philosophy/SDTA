@@ -1,10 +1,9 @@
-function names = generateFloorplan(file, cores, dimension)
-  % 1cm x 1cm the whole chip
-  if nargin < 3, dimension = 0.01; end
-  if nargin < 2, cores = 4; end
+function names = generateFloorplan(file, cores, dieSize)
+  % Intel i7 620M processing die size 81mm^2
+  if nargin < 3, dieSize = 81e-6; end
 
   inline = floor(sqrt(cores));
-  dimension = dimension / inline;
+  dimension = sqrt(dieSize) / inline;
   names = {};
 
   f = fopen(file, 'w');
