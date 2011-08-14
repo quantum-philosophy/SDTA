@@ -33,17 +33,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxArray *out_T = mxCreateDoubleMatrix(cores, steps, mxREAL);
 	double *T = mxGetPr(out_T);
 
-	define_timer(calc);
-
-	start_timer(calc);
-
 	int ret = solve_condensed_equation(floorplan, config,
 		table, tsize, power, cores, steps, T);
-
-	stop_timer(calc);
-
-	mexPrintf("The condensed equation method: %.3f s (v" VERSION ")\n",
-		timer_result(calc));
 
 	if (table) mxFree(table);
 	mxFree(floorplan);

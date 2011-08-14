@@ -58,14 +58,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxArray *out_T = mxCreateDoubleMatrix(cores, steps, mxREAL);
 	double *T = mxGetPr(out_T);
 
-	define_timer(calc);
-
-	start_timer(calc);
-
 	int it = solve_condensed_equation_with_leakage(floorplan, config,
 		table, tsize, cores, steps, dynamic_power, vdd, ngate, T, tol, maxit);
-
-	stop_timer(calc);
 
 	if (table) mxFree(table);
 	mxFree(floorplan);
@@ -76,11 +70,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		mexErrMsgIdAndTxt("HotSpot:solve_condensed_equation_with_leakage",
 			"Cannot solve using the condensed equation method (%d).", it);
 	}
-
-	/*
-	mexPrintf("The condensed equation method: %.3f s, %d iterations (v" VERSION ")\n",
-		timer_result(calc), it);
-	*/
 
 	mxArray *out_it = mxCreateDoubleMatrix(1, 1, mxREAL);
 	*mxGetPr(out_it) = it;
