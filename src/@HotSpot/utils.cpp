@@ -4,7 +4,9 @@
 
 int parse_structure_config(const mxArray *structure, str_pair **ptable)
 {
-	int tsize = mxGetNumberOfElements(structure);
+	if (mxGetNumberOfElements(structure) != 1) return 0;
+
+	int tsize = mxGetNumberOfFields(structure);
 	if (!tsize) return 0;
 
 	int i;
@@ -14,8 +16,7 @@ int parse_structure_config(const mxArray *structure, str_pair **ptable)
 
 	str_pair *table = (str_pair *)mxCalloc(tsize, sizeof(str_pair));
 
-	/* ATTENTION: Unsafe strcpy and sprintf, with hope for the best...
-	 */
+	/* ATTENTION: Unsafe strcpy and sprintf, with hope for the best... */
 	for (i = 0; i < tsize; i++) {
 		value = mxGetFieldByNumber(structure, 0, i);
 		name = mxGetFieldNameByNumber(structure, i);

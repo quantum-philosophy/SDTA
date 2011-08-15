@@ -11,8 +11,8 @@ steps = 100000;
 compTime = zeros(0, 0);
 
 figure;
-title(sprintf('Scaling for %d steps, %.3f seconds', ...
-  steps, steps * Constants.samplingInterval));
+title([ 'Scaling with the number of cores for ', num2str(steps), ' steps, ', ...
+  num2str(steps * Constants.samplingInterval), ' seconds' ]);
 
 ax1 = gca;
 set(ax1, 'YColor', 'b');

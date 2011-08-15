@@ -11,7 +11,7 @@ lifeTime = zeros(0, 0);
 compTime = zeros(0, 0);
 
 figure;
-title(sprintf('Scaling for %d cores', cores));
+title([ 'Scaling with the number of steps for ', num2str(cores), ' cores' ]);
 
 ax1 = gca;
 set(ax1, 'YColor', 'b');

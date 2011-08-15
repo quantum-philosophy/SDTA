@@ -109,6 +109,8 @@ classdef HotSpot < handle
       [ T, it ] = hs.solve_original(B, tol, minbad, maxit, options);
       T = transpose(T(1:cores, :));
 
+      return;
+
       if it == maxit
         fprintf('HotSpot exceeded the maximal number of iterations\n');
       else
