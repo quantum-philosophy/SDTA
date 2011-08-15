@@ -64,13 +64,16 @@ classdef HotSpot < handle
       end
     end
 
-    function T = solveCondensedEquation(hs, B)
+    function T = solveCondensedEquation(hs, B, ts)
+      options = hs.options;
+      if nargin > 2, options.sampling_intvl = ts; end
+
       % ATTENTION: B is a steps-by-cores matrix right now. Because of the fact
       % than MatLab stores matrices column by column, not row by row as
       % it is in C/C++, the external code will get uncomfortable formatted
       % data. To eliminate extra transformations there, we do them here.
       B = transpose(B);
-      T = hs.solve_condensed_equation(B, hs.options);
+      T = hs.solve_condensed_equation(B, options);
       T = transpose(T);
     end
 
@@ -87,10 +90,13 @@ classdef HotSpot < handle
       T = transpose(T);
     end
 
-    function [ T, it ] = solveOriginal(hs, B, tol, minbad, maxit)
+    function [ T, it ] = solveOriginal(hs, B, tol, minbad, maxit, ts)
       if nargin < 3, tol = 2; end
       if nargin < 4, minbad = 0; end
       if nargin < 5, maxit = 10; end
+
+      options = hs.options;
+      if nargin > 5, options.sampling_intvl = ts; end
 
       steps = size(B, 1);
       cores = size(B, 2);
@@ -100,7 +106,7 @@ classdef HotSpot < handle
       % zero power slots.
       B = transpose(B);
       B = [ B; zeros(nodes - cores, steps) ];
-      [ T, it ] = hs.solve_original(B, tol, minbad, maxit);
+      [ T, it ] = hs.solve_original(B, tol, minbad, maxit, options);
       T = transpose(T(1:cores, :));
 
       if it == maxit

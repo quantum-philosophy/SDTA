@@ -39,14 +39,25 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		maxit = (int)mxGetScalar(prhs[4]);
 	}
 
+	int tsize = 0;
+	str_pair *table = NULL;
+	if (nrhs > 5) {
+		if (!mxIsStruct(prhs[5])) mexErrMsgTxt(
+			"The sixth input should be a structure (config).");
+		tsize = parse_structure_config(prhs[5], &table);
+		if (!table || !tsize) mexErrMsgTxt(
+			"The format of the configuration structure is wrong.");
+	}
+
 	/* ATTENTION: The same note (look above) with output temperature.
 	 */
     mxArray *out_T = mxCreateDoubleMatrix(nodes, steps, mxREAL);
 	double *T = mxGetPr(out_T);
 
-	int it = solve_original(floorplan, config, power,
-		nodes, steps, tol, minbad, maxit, T);
+	int it = solve_original(floorplan, config, table, tsize,
+		power, nodes, steps, tol, minbad, maxit, T);
 
+	if (table) mxFree(table);
 	mxFree(floorplan);
 	mxFree(config);
 

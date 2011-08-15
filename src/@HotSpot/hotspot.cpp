@@ -107,8 +107,10 @@ ret_hotspot:
 	return nodes;
 }
 
-int solve_original(char *floorplan, char *config, double *power,
-	int nodes, int steps, double tol, int minbad, int maxit, double *T)
+int solve_original(
+	char *floorplan, char *config, str_pair *table, int tsize,
+	double *power, int nodes, int steps,
+	double tol, int minbad, int maxit, double *T)
 {
 	int ret = 0;
 	int i, j, k;
@@ -122,7 +124,7 @@ int solve_original(char *floorplan, char *config, double *power,
 
 	if (!fexist(floorplan) || !fexist(config)) return -EIO;
 
-	prepare_hotspot(floorplan, config, NULL, 0, &flp, &model);
+	prepare_hotspot(floorplan, config, table, tsize, &flp, &model);
 
 	if (nodes != model->block->n_nodes) {
 		ret = -EINVAL;

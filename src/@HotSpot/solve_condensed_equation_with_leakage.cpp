@@ -46,7 +46,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	int tsize = 0;
 	str_pair *table = NULL;
-    if (nrhs > 6) {
+	if (nrhs > 6) {
 		if (!mxIsStruct(prhs[6])) mexErrMsgTxt(
 			"The seventh input should be a structure (config).");
 		tsize = parse_structure_config(prhs[6], &table);
