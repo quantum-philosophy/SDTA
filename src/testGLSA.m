@@ -21,6 +21,29 @@ graph.assignMapping(pes, mapping);
 
 graph.inspect();
 
+vdd = zeros(0);
+ngate = zeros(0);
+
+for pe = graph.pes, pe = pe{1};
+  vdd(end + 1) = pe.voltage;
+  ngate(end + 1) = pe.ngate;
+end
+
+% First what we have without any affords
+LS.schedule(graph); % Default priority of the tasks
+figure;
+Utils.drawMappingScheduling(graph);
+dynamicPowerProfile = Power.calculateDynamicProfile(graph);
+
+[ T, it ] = hotspot.solveCondensedEquationWithLeakage( ...
+  dynamicPowerProfile, vdd, ngate, ...
+  GLSA.leakageTolerance, GLSA.maxLeakageIterations);
+
+[ mttf1, cycles1 ] = Lifetime.predictAndDraw(T)
+
+fprintf('MTTF without optimization is %f time units\n', min(mttf1));
+
+% Now try to optimize with GLSA
 glsa = GLSA();
 
 Utils.startTimer('Solve with GLSA');
@@ -28,15 +51,17 @@ Utils.startTimer('Solve with GLSA');
 Utils.stopTimer();
 
 LS.schedule(graph, priority);
-
+figure;
 Utils.drawMappingScheduling(graph);
-
 dynamicPowerProfile = Power.calculateDynamicProfile(graph);
 
-[ T, it ] = glsa.thermalModel.solveCondensedEquationWithLeakage( ...
-  dynamicPowerProfile, glsa.vdd, glsa.ngate, ...
-  glsa.leakageTolerance, glsa.maxLeakageIterations);
+[ T, it ] = hotspot.solveCondensedEquationWithLeakage( ...
+  dynamicPowerProfile, vdd, ngate, ...
+  GLSA.leakageTolerance, GLSA.maxLeakageIterations);
 
-mttf = Lifetime.predictAndDraw(T)
+[ mttf2, cycles2 ] = Lifetime.predictAndDraw(T)
 
-fprintf('MTTF = %f\n', -fitness);
+fprintf('MTTF with optimization is %f time units\n', -fitness);
+
+% Compare
+fprintf('MTTF improvement is %.2f times\n', min(mttf2)/min(mttf1));

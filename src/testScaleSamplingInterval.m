@@ -64,7 +64,7 @@ for i = 1:length(samplingIntervals)
   t1 = Utils.stopTimer();
 
   Utils.startTimer();
-  [ T2, it ] = hotspot.solveOriginal(profile, 0, 0, 2, ts);
+  [ T2, it ] = hotspot.solveOriginal(profile, 0.01, 0.01 * steps, 100, ts);
   t2 = Utils.stopTimer();
 
   if i == 1, continue; end
@@ -73,8 +73,8 @@ for i = 1:length(samplingIntervals)
   compTime(1, end + 1) = t1;
   compTime(2, end) = t2;
 
-  % text(x(end), compTime(2, end), sprintf('  %d iter', it), ...
-  %   'Parent', ax2, 'Color', 'r');
+  text(x(end), compTime(2, end), sprintf('  %d iter', it), ...
+    'Parent', ax2, 'Color', 'r');
 
   acceleration = compTime(2, end) / compTime(1, end);
   error(end + 1) = max(max(Utils.calcError(T1, T2)));
@@ -92,5 +92,5 @@ set(ax1, 'YLim', [ 0 (1.1 * m) ]);
 subplot(2, 1, 2);
 title('Error of HotSpot');
 line(x, error);
-xlabel('log10(Sampling Interval)');
-ylabel('max(abs(T1 - T2)), C');
+xlabel('log10(Sampling interval)');
+ylabel('Max abs error, C');
