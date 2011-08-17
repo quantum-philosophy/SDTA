@@ -66,15 +66,19 @@ classdef Lifetime < handle
       mttf = totalTime * Lifetime.C / totalDamage;
     end
 
-    function mttf = predict(T, varargin)
-      mttf = zeros(0, 0);
+    function [ mttf, cycles ] = predict(T, varargin)
+      mttf = zeros(0);
+      cycles = zeros(0);
       for i = 1:size(T, 2)
-        mttf(end + 1) = Lifetime.predictSingle(T(:, i), varargin{:});
+        [ mttf(end + 1), dummy, dummy, discreteCycle ] = ...
+          Lifetime.predictSingle(T(:, i), varargin{:});
+        cycles(end + 1) = sum(discreteCycle);
       end
     end
 
-    function mttf = predictAndDraw(T, varargin)
-      mttf = zeros(0, 0);
+    function [ mttf, cycles ] = predictAndDraw(T, varargin)
+      mttf = zeros(0);
+      cycles = zeros(0);
 
       figure;
 
@@ -83,8 +87,9 @@ classdef Lifetime < handle
       index = zeros(steps, cores);
 
       for i = 1:size(T, 2)
-        [ mttf(end + 1), maxp, minp, cycles ] = ...
+        [ mttf(end + 1), maxp, minp, discreteCycle ] = ...
           Lifetime.predictSingle(T(:, i), varargin{:});
+        cycles(end + 1) = sum(discreteCycle);
 
         I = sort([ maxp(:, 1); minp(:, 1) ]);
         index(1:length(I), i) = I;
