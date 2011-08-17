@@ -118,7 +118,9 @@ classdef HotSpot < handle
       end
     end
 
-    function T = solvePlainOriginal(hs, power, steps, repeat)
+    function [ T, t ] = solvePlainOriginal(hs, power, steps, repeat, truncate)
+      if nargin < 5, truncate = true; end
+
       powerEx = [ power, sprintf('_x_%d', repeat) ];
 
       if isempty(strfind(powerEx, 'ptrace'))
@@ -131,18 +133,29 @@ classdef HotSpot < handle
       Utils.extendPowerProfile(power, powerEx, repeat);
       Utils.stopTimer();
 
+      start = tic;
+
       status = Utils.run(sprintf('hotspot-%s', Constants.hotspotVersion), ...
         '-f', hs.floorplan, ...
         '-p', powerEx, ...
         '-c', hs.config, ...
         '-o', tempEx);
 
+      t = toc(start);
+
       if status ~= 0
         error('HotSpot:solvePlainHotSpot', 'Cannot execute HotSpot');
       end
 
-      % Skip the header line and all excessive repetitions
-      T = dlmread(tempEx, '\t', 1 + (repeat - 1) * steps, 0);
+      % Skip the header line
+      skip = 1;
+
+      if truncate
+        % Skip all excessive repetitions
+        skip = skip + (repeat - 1) * steps;
+      end
+
+      T = dlmread(tempEx, '\t', skip, 0);
     end
   end
 
