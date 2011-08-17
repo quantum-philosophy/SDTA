@@ -44,8 +44,8 @@ classdef Processor < handle
 
     function inspect(pe)
       fprintf('Processor: %s %d\n', pe.name, pe.id);
-      fprintf('  Frequency: %d\n', pe.frequency);
-      fprintf('  Voltage: %f\n', pe.voltage);
+      fprintf('  Frequency: %.2f GHz\n', pe.frequency / 1e9);
+      fprintf('  Voltage: %.2f V\n', pe.voltage);
       fprintf('  Number of gates: %d\n', pe.ngate);
       fprintf('  Number of types: %d\n', pe.typeCount);
     end

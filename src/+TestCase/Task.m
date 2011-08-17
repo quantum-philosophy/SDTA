@@ -29,6 +29,11 @@ classdef Task < handle
       task.resetMapping();
     end
 
+    function scale(task, factor)
+      task.start = task.start * factor;
+      task.duration = task.duration * factor;
+    end
+
     function resetMapping(task)
       task.ancestor = [];
       task.successor = [];

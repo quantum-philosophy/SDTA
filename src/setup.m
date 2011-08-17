@@ -42,7 +42,6 @@ function [ thermalModel, powerProfile, cores, steps ] = setup(name, debug, draw)
 
   if debug
     fprintf('Number of steps: %d\n', steps);
-    fprintf('Total simulation time: %.3f s\n', steps * Constants.samplingInterval);
   end
 
   if draw

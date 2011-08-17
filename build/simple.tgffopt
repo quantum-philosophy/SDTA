@@ -7,7 +7,7 @@ task_cnt 30 2
 # Number of different tasks
 task_type_cnt 10
 # Average time per task including communication
-task_trans_time 100
+task_trans_time 1
 # Deadline jitter
 deadline_jitter 0
 # All tasks are different?

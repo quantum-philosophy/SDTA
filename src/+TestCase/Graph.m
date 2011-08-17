@@ -96,6 +96,24 @@ classdef Graph < handle
       schedule = ids(I);
     end
 
+    function fitTime(graph, desiredTime)
+      factor = desiredTime / graph.calculateDuration;
+
+      for task = graph.tasks, task = task{1};
+        task.scale(factor);
+      end
+    end
+
+    function time = calculateDuration(graph)
+      endTime = zeros(0);
+
+      for task = graph.tasks, task = task{1};
+        endTime(end + 1) = task.start + task.duration;
+      end
+
+      time = max(endTime);
+    end
+
     function inspect(graph)
       fprintf('Task graph: %s %d\n', graph.name, graph.id);
       fprintf('  Period: %d\n', graph.period);
@@ -148,6 +166,7 @@ classdef Graph < handle
         fprintf('Average execution time: %f s\n', mean(durations));
         fprintf('Maximal execution time: %f s\n', max(durations));
         fprintf('Estimated total time: %f s\n', graph.period * mean(durations));
+        fprintf('Actual total time: %f s\n', graph.calculateDuration);
       end
     end
   end

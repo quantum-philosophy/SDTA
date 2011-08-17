@@ -50,7 +50,9 @@ classdef Power < handle
       end
     end
 
-    function profile = calculateDynamicProfile(graph)
+    function profile = calculateDynamicProfile(graph, ts)
+      if nargin < 2, ts = Constants.samplingInterval; end
+
       taskPower = zeros(1, length(graph.tasks));
 
       for pe = graph.pes
@@ -63,7 +65,7 @@ classdef Power < handle
         end
       end
 
-      profile = Power.distributePower(graph, taskPower);
+      profile = Power.distributePower(graph, taskPower, ts);
     end
 
     function profile = calculateStaticProfile(pes, T)
@@ -77,9 +79,8 @@ classdef Power < handle
       end
     end
 
-    function profile = distributePower(graph, taskPower)
+    function profile = distributePower(graph, taskPower, ts)
       profile = zeros(0, length(graph.pes));
-      ts = Constants.samplingInterval;
 
       for pe = graph.pes
         pe = pe{1};

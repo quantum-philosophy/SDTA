@@ -118,8 +118,11 @@ classdef HotSpot < handle
       end
     end
 
-    function [ T, t ] = solvePlainOriginal(hs, power, steps, repeat, truncate)
-      if nargin < 5, truncate = true; end
+    function [ T, t ] = solvePlainOriginal(hs, power, steps, repeat, ts, truncate)
+      if nargin < 5, ts = Constants.samplingInterval; end
+      if nargin < 6, truncate = true; end
+
+      am = Constants.ambientTemperature;
 
       powerEx = [ power, sprintf('_x_%d', repeat) ];
 
@@ -136,6 +139,9 @@ classdef HotSpot < handle
       start = tic;
 
       status = Utils.run(sprintf('hotspot-%s', Constants.hotspotVersion), ...
+        '-ambient', num2str(am), ...
+        '-init_temp', num2str(am), ...
+        '-sampling_intvl', num2str(ts), ...
         '-f', hs.floorplan, ...
         '-p', powerEx, ...
         '-c', hs.config, ...
