@@ -1,18 +1,12 @@
 We consider a well-known thermal model called HotSpot. HotSpot is a modeling methodology for developing compact thermal models based on the popular stacked-layer packaging scheme in modern very large-scale integration systems \cite{huang2006}. It describes thermal systems with the following widespread differential equation \cite{rao2008}:
 \[
-  C \frac{dT}{dt} + GT = P
+  C \cdot \frac{dT}{dt} + G \cdot T = P
 \]
-where:
-\begin{itemize}
-  \item $C$ --- a diagonal matrix $n \times n$ of the thermal capacitance,
-  \item $G$ --- a symmetric matrix $n \times n$ of the thermal conductivity ($\frac{1}{R}$),
-  \item $P$ --- a $n \times 1$ vector of the power consumption,
-  \item $n$ --- the number of thermal nodes.
-\end{itemize}
+where $C$ is a diagonal matrix $n \times n$ of the thermal capacitance, $G$ is a symmetric matrix $n \times n$ of the thermal conductivity ($\frac{1}{R}$), $P$ is a $n \times 1$ vector of the power consumption, and $n$ is the number of thermal nodes.
 
 For convenience, we move $GT$ to the right part of the equation and change the denotation:
 \begin{equation} \label{eq:initial}
-  C \frac{dT}{dt} = AT + B
+  C \cdot \frac{dT}{dt} = A \cdot T + B
 \end{equation}
 
 HotSpot comes with a tool of the same name to calculate this model. It uses the Runge-Kutta numerical method to solve \equref{eq:initial}.
@@ -35,10 +29,6 @@ If we are talking about a power profile, then we have a number of vectors $B$ fo
       \end{array}
     \right]
 \]
-where:
-\begin{itemize}
-  \item $m$ --- the number of time steps,
-  \item $b_{ij}$ --- the power supplied to the $i$-th core on the $j$-th step.
-\end{itemize}
+where $m$ is the number of time steps, $b_{ij}$ id the power supplied to the $i$-th core on the $j$-th step.
 
 One approach to find SSDTC would be to call HotSpot (the tool) with a very long power profile composed of some repeating chunk, but it would take much time to compute (see the comparison in \secref{sec:comparison}).
