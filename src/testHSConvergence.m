@@ -50,7 +50,7 @@ fprintf('Number of steps: %d\n', steps);
 fprintf('Total simulation time: %.3f s\n', steps * ts);
 
 % Draw a bit
-Utils.drawSimulation(graph, powerProfile);
+% Utils.drawSimulation(graph, powerProfile);
 
 % Original HotSpot
 powerFile = sprintf('cores_%d_steps_%d.ptrace', cores, steps);
@@ -60,20 +60,22 @@ Utils.startTimer('Dump the power profile');
 Utils.dumpPowerProfile(powerFile, powerProfile);
 Utils.stopTimer();
 
+start = tic;
 [ T, t ] = hotspot.solvePlainOriginal(powerFile, steps, repeat, ts, false);
-fprintf('Solved with HotSpot in %.2f seconds\n', t);
-
-figure;
+t = toc(start);
 
 totalSteps = size(T, 1);
 am = Constants.ambientTemperature - Constants.degreeKelvin; % C
 maxT = max(max(T)); % C
 
+figure;
+
 % Curves
 subplot(2, 1, 1);
 x = ((1:totalSteps) - 1) * ts;
-Utils.drawLines(sprintf('HotSpot Convergence, %d cores, %d steps, %d repetitions',...
-  cores, steps, repeat), 'Time, s', 'Temperature, C', x, T);
+Utils.drawLines(...
+  sprintf('HotSpot, %d cores, %d x %d steps (%.2f s)',...
+  cores, steps, repeat, t), 'Time, s', 'Temperature, C', x, T);
 
 set(gca, 'YLim', [ 0 (maxT + 20) ]);
 
@@ -102,11 +104,15 @@ for i = 1:(repeat - 1)
 end
 
 % Condensed Equation
+start = tic;
 Tce = hotspot.solveCondensedEquation(powerProfile, ts) - Constants.degreeKelvin;
+tce = toc(start);
 
 subplot(2, 1, 2);
 x = ((1:steps) - 1) * ts;
-Utils.drawLines('Condensed Equation', 'Time, s', 'Temperature, C', x, Tce);
+Utils.drawLines(...
+  sprintf('Condensed Equation (%.2f s)', tce), ...
+  'Time, s', 'Temperature, C', x, Tce);
 
 maxT = max(max(Tce)); % C
 
