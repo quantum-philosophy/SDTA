@@ -13,8 +13,11 @@ classdef Task < handle
     ancestor
     successor
 
-    start
     duration
+
+    start     % ASAP, as soon as possible
+    alap      % ALAP, as late as possible
+    mobility  % ALAP - ASAP
   end
 
   methods
@@ -25,6 +28,8 @@ classdef Task < handle
 
       task.parents = {};
       task.children = {};
+
+      task.duration = 0;
 
       task.resetMapping();
     end
@@ -37,9 +42,9 @@ classdef Task < handle
     function resetMapping(task)
       task.ancestor = [];
       task.successor = [];
-
       task.start = 0;
-      task.duration = 0;
+      task.alap = Inf;
+      task.mobility = 0;
     end
 
     function addParent(task, parent)
@@ -78,6 +83,10 @@ classdef Task < handle
       result = isempty(task.parents);
     end
 
+    function result = isLeaf(task)
+      result = isempty(task.children);
+    end
+
     function shiftDependentTasks(task, time)
       if nargin > 1
         if task.start >= time, return; end
@@ -96,6 +105,30 @@ classdef Task < handle
       % Shift space dependent tasks (the same core)
       if ~isempty(task.successor)
         task.successor.shiftDependentTasks(finish);
+      end
+    end
+
+    function propagateMobility(task, time)
+      % As late as possible
+      alap = time - task.duration;
+
+      % We might already have an assigned mobility with
+      % smaller ALAP time
+      if ~(alap < task.alap), return; end
+
+      task.alap = alap;
+
+      % Mobility = ALAP - ASAP
+      task.mobility = alap - task.start;
+
+      % Shift data dependent tasks
+      for parent = task.parents
+        parent{1}.propagateMobility(alap);
+      end
+
+      % Shift space dependent tasks (the same core)
+      if ~isempty(task.ancestor)
+        task.ancestor.propagateMobility(alap);
       end
     end
   end

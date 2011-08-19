@@ -88,7 +88,7 @@ classdef TGFF < handle
               '(\w+)\s+ON\s+(\w+)\s+AT\s+(\d+\.?\d*)', 'tokens');
             attrs = attrs{1};
             attrs{3} = str2num(attrs{3});
-            if ~isempty(attrs), graph.assignDeadline(attrs{:}); end
+            if ~isempty(attrs), graph.assignTaskDeadline(attrs{:}); end
           end
         end
 
