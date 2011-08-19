@@ -3,7 +3,7 @@ tg_label TASK_GRAPH
 # Number of graphs
 tg_cnt 1
 # Number of tasks per graph +/- jitter
-task_cnt 60 5
+task_cnt 60 1
 # Number of different tasks
 task_type_cnt 20
 # Average time per task including communication
@@ -12,9 +12,6 @@ task_trans_time 1
 deadline_jitter 0
 # All tasks are different?
 task_unique false
-# Make it end in one point
-gen_series_parallel true
-series_must_rejoin true
 
 # Write
 tg_write
@@ -26,12 +23,12 @@ table_label PE
 table_cnt 4
 # Attributes of PEs
 table_attrib \
-  frequency 2e9 0.2e9, \
-  voltage 0.8 0.2, \
+  frequency 3e9 0.2e9, \
+  voltage 0.7 0.1, \
   ngate 1e6 0.5e6
 # Attributes of tasks for particular PE
 type_attrib \
   effective_switched_capacitance 3e-8 1e-8, \
-  number_of_clock_cycles 1e10 0.5e10
+  number_of_clock_cycles 3e8 1e8
 # Write
 pe_write
