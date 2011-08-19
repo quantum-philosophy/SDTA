@@ -12,7 +12,6 @@ task_trans_time 1
 deadline_jitter 0
 # All tasks are different?
 task_unique false
-
 # Write
 tg_write
 eps_write

@@ -33,7 +33,7 @@ classdef HotSpot < handle
       nm = n * m;
 
       ts = Constants.samplingInterval;
-      at = Constants.ambientTemperature;
+      am = Constants.ambientTemperature;
 
       B = transpose(B);
       B = [ B; zeros(n - cores, m) ];
@@ -60,20 +60,17 @@ classdef HotSpot < handle
       dsinvC = transpose(diag(sinvC(1:cores, 1:cores)));
 
       for i = 1:m
-        T(i, :) = T(i, :) .* dsinvC + at;
+        T(i, :) = T(i, :) .* dsinvC + am;
       end
     end
 
-    function T = solveCondensedEquation(hs, B, ts)
-      options = hs.options;
-      if nargin > 2, options.sampling_intvl = ts; end
-
+    function T = solveCondensedEquation(hs, B)
       % ATTENTION: B is a steps-by-cores matrix right now. Because of the fact
       % than MatLab stores matrices column by column, not row by row as
       % it is in C/C++, the external code will get uncomfortable formatted
       % data. To eliminate extra transformations there, we do them here.
       B = transpose(B);
-      T = hs.solve_condensed_equation(B, options);
+      T = hs.solve_condensed_equation(B, hs.options);
       T = transpose(T);
     end
 
@@ -90,13 +87,10 @@ classdef HotSpot < handle
       T = transpose(T);
     end
 
-    function [ T, it ] = solveOriginal(hs, B, tol, minbad, maxit, ts)
+    function [ T, it ] = solveOriginal(hs, B, tol, minbad, maxit)
       if nargin < 3, tol = 2; end
       if nargin < 4, minbad = 0; end
       if nargin < 5, maxit = 10; end
-
-      options = hs.options;
-      if nargin > 5, options.sampling_intvl = ts; end
 
       steps = size(B, 1);
       cores = size(B, 2);
@@ -106,7 +100,7 @@ classdef HotSpot < handle
       % zero power slots.
       B = transpose(B);
       B = [ B; zeros(nodes - cores, steps) ];
-      [ T, it ] = hs.solve_original(B, tol, minbad, maxit, options);
+      [ T, it ] = hs.solve_original(B, tol, minbad, maxit, hs.options);
       T = transpose(T(1:cores, :));
 
       return;
@@ -118,11 +112,11 @@ classdef HotSpot < handle
       end
     end
 
-    function [ T, t ] = solvePlainOriginal(hs, power, steps, repeat, ts, truncate)
-      if nargin < 5, ts = Constants.samplingInterval; end
-      if nargin < 6, truncate = true; end
+    function [ T, t ] = solvePlainOriginal(hs, power, steps, repeat, truncate)
+      if nargin < 5, truncate = true; end
 
       am = Constants.ambientTemperature;
+      ts = Constants.samplingInterval;
 
       powerEx = [ power, sprintf('_x_%d', repeat) ];
 
