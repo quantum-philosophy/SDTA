@@ -4,15 +4,10 @@ clear all;
 clc;
 rng(0);
 
-[ hotspot, profile, cores, steps ] = setup('test_cases/test_case_4_60');
+[ graph, hotspot, powerProfile ] = setup('test_cases/test_case_4_60');
 
-figure;
-
-% The Condensed Equation Method
-Utils.startTimer('Solve with the condensed equation method');
-T = hotspot.solveCondensedEquation(profile) ;
+Utils.startTimer('Solve with the CE');
+T = hotspot.solveCondensedEquation(powerProfile) ;
 t = Utils.stopTimer();
-T = T - Constants.degreeKelvin;
-x = ((1:steps) - 1) * Constants.samplingInterval;
-Utils.drawLines(sprintf('Condensed Equation (%.3f s)', t), ...
-  'Time, s', 'Temperature, C', x, T);
+
+Utils.drawSimulation(graph, powerProfile, T);

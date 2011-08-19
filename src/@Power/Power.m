@@ -8,12 +8,6 @@ classdef Power < handle
     gamma = 6.28153;
     delta = 6.9094;
     Is = Power.calculateMeanIs();
-
-    % Power model
-    K3 = 5.38e-7;
-    K4 = 1.83;
-    K5 = 4.19;
-    Ij = 4.80e-10;
   end
 
   methods (Static)
@@ -50,9 +44,7 @@ classdef Power < handle
       end
     end
 
-    function profile = calculateDynamicProfile(graph, ts)
-      if nargin < 2, ts = Constants.samplingInterval; end
-
+    function profile = calculateDynamicProfile(graph)
       taskPower = zeros(1, length(graph.tasks));
 
       for pe = graph.pes
@@ -65,7 +57,7 @@ classdef Power < handle
         end
       end
 
-      profile = Power.distributePower(graph, taskPower, ts);
+      profile = Power.distributePower(graph, taskPower);
     end
 
     function profile = calculateStaticProfile(pes, T)
@@ -79,8 +71,13 @@ classdef Power < handle
       end
     end
 
-    function profile = distributePower(graph, taskPower, ts)
-      profile = zeros(0, length(graph.pes));
+    function profile = distributePower(graph, taskPower)
+      ts = Constants.samplingInterval;
+
+      % Here we build a profile for the whole time period of the graph
+      % including its actual duration (only tasks) plus the gap to
+      % the deadline
+      profile = zeros(ceil(graph.deadline / ts), length(graph.pes));
 
       for pe = graph.pes
         pe = pe{1};
@@ -128,28 +125,7 @@ classdef Power < handle
       f = Power.A .* T.^2 .* exp((Power.alpha .* Vdd + Power.beta) ./ T) + ...
         Power.B .* exp(Power.gamma .* Vdd + Power.delta);
 
-      % f = 1: Vdd ~= 4.03
-    end
-
-    function Is = calculateIs(Vdd, Vbs)
-      % The leakage power for just one gate
-      %
-      % "Combined Dynamic Voltage Scaling and Adaptive Body Biasing for
-      % Lower Power Microprocessors under Dynamic Workloads"
-      %
-      % This model is for the 65nm technology, and it seems that it is
-      % only valid for the temperature equal to 27C = 300.15K
-      %
-      Pleak = Vdd * Power.K3 * exp(Power.K4 * Vdd) * exp(Power.K5 * Vbs) + ...
-        abs(Vbs) * Power.Ij;
-
-      % Pleak = Is * Vdd
-      % Is = Iavg(Tref, Vddref)
-      %
-      % "Temperature and Supply Voltage Aware Performance and
-      % Power Modeling at Microarchitecture Level"
-      %
-      Is = Pleak / Vdd;
+      % f = 1: Vdd ~= 4.03, the authors say it is not true
     end
 
     function Is = calculateMeanIs()

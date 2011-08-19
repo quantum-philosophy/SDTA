@@ -1,8 +1,6 @@
-function [ thermalModel, powerProfile, cores, steps ] = setup(name, debug, draw)
+function [ graph, hotspot, powerProfile ] = setup(name, debug)
   if nargin < 1, name = 'simple'; end
   if nargin < 2, debug = true; end
-  if nargin < 3, draw = true; end
-  if ~debug, draw = false; end
 
   % NOTE: Should already be generated!
   floorplan = Utils.path([ name, '.flp' ]);
@@ -20,10 +18,10 @@ function [ thermalModel, powerProfile, cores, steps ] = setup(name, debug, draw)
   cores = length(pes);
 
   % Thermal model
-  thermalModel = HotSpot(floorplan, config);
+  hotspot = HotSpot(floorplan, config);
 
   % Dummy mapping
-  mapping = Utils.generateEvenMapping(cores,length(graph.tasks));
+  mapping = Utils.generateEvenMapping(cores, length(graph.tasks));
   graph.assignMapping(pes, mapping);
 
   % LS scheduling
@@ -38,14 +36,8 @@ function [ thermalModel, powerProfile, cores, steps ] = setup(name, debug, draw)
   powerProfile = Power.calculateDynamicProfile(graph);
   Utils.stopTimer();
 
-  steps = size(powerProfile, 1);
-
   if debug
+    steps = size(powerProfile, 1);
     fprintf('Number of steps: %d\n', steps);
-  end
-
-  if draw
-    % Draw a bit
-    Utils.drawSimulation(graph, powerProfile);
   end
 end

@@ -26,4 +26,4 @@ LS.schedule(graph, randperm(length(graph.tasks)));
 graph.inspect();
 
 figure;
-Utils.drawMappingScheduling(graph);
+Utils.drawMappingScheduling(graph, true);
