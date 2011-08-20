@@ -8,7 +8,7 @@ classdef GLSA < handle
 
     % Stop criterion: there is no considerable improvement
     % through several generations
-    generationalStall = 10;
+    generationalStall = 50;
     generationalTolerance = 1;
 
     % Maximal number of iterations for the leakage loop
@@ -27,11 +27,17 @@ classdef GLSA < handle
     vdd
     ngate
 
+    mobility
+    maxMobility
+    minMobility
+
     pause
 
     cache
 
     evaluationCount
+    evolution
+
     bar
   end
 
@@ -43,12 +49,15 @@ classdef GLSA < handle
       options.StallGenLimit = glsa.generationalStall;
       options.TolFun = glsa.generationalTolerance;
       options.CrossoverFcn = @crossovertwopoint;
+      options.CrossoverFraction = 0; % Excluding the elite
       options.CreationFcn = @glsa.create;
       options.MutationFcn = @glsa.mutate;
       glsa.options = options;
     end
 
-    function [ solution, fitness, flag ] = solve(glsa, graph, thermalModel, pause)
+    function [ solution, fitness, exitflag, output, evolution ] = solve(...
+      glsa, graph, thermalModel, pause)
+
       if nargin < 4, glsa.pause = false; end
 
       glsa.cache = containers.Map('KeyType', 'char', 'ValueType', 'double');
@@ -63,13 +72,26 @@ classdef GLSA < handle
         glsa.ngate(end + 1) = pe.ngate;
       end
 
+      chromosomeLength = length(graph.tasks);
+
+      % Collect mobility
+      glsa.mobility = zeros(1, chromosomeLength);
+      for i = 1:chromosomeLength
+        glsa.mobility(i) = graph.tasks{i}.mobility;
+      end
+      glsa.maxMobility = max(glsa.mobility);
+      glsa.minMobility = min(glsa.mobility);
+
       glsa.evaluationCount = 0;
+      glsa.evolution = zeros(0);
       glsa.bar = waitbar(0, 'Genetic List Scheduling Algorithm');
 
-      [ solution, fitness, flag ] = ga(@glsa.evaluate, ...
-        length(graph.tasks), [], [], [], [], [], [], [], glsa.options);
+      [ solution, fitness, exitflag, output ] = ga(@glsa.evaluate, ...
+        chromosomeLength, [], [], [], [], [], [], [], glsa.options);
 
-      waitbar(1, glsa.bar);
+      evolution = glsa.evolution;
+
+      delete(glsa.bar);
     end
   end
 
@@ -84,20 +106,12 @@ classdef GLSA < handle
       % of the tasks, and the rest is randomly generated with values
       % between the lowest and highest mobility
 
-      % Use ordinal numbers instead of plain mobility
-      deadlines = zeros(0);
-      for task = glsa.graph.tasks, deadlines(end + 1) = task{1}.deadline; end
-      [ dummy, I ] = sort(deadlines);
-
       % The first half
-      for i = 1:half
-        population(i, I) = 1:chromosomeLength;
-      end
+      for i = 1:half, population(i, :) = glsa.mobility; end
 
       % The second half
-      for i = (half + 1):psize
-        population(i, :) = randperm(chromosomeLength);
-      end
+      population((half + 1):psize, :) = ...
+        glsa.rand(psize - half, chromosomeLength);
     end
 
     function children = mutate(glsa, parents, options, chromosomeLength, ...
@@ -109,18 +123,20 @@ classdef GLSA < handle
       % The probability to mutate should not be less than 15%
       mprob = max(0.15, 1 / exp(state.Generation * 0.05));
 
+      fprintf('Generation %d, children %d, probabylity to mutate %.2f\n', ...
+        state.Generation, ccount, mprob);
+
       children = zeros(ccount, chromosomeLength);
 
       for i = 1:ccount
         child = thisPopulation(parents(i), :);
         mutationPoints = find(rand(1, chromosomeLength) < mprob);
-        child(mutationPoints) = ...
-          randi(chromosomeLength, 1, length(mutationPoints));
+        child(mutationPoints) = glsa.rand(1, length(mutationPoints));
         children(i, :) = child;
       end
     end
 
-    function fitness = evaluate(glsa, chromosome) % i.e. priority
+    function fitness = evaluate(glsa, chromosome)
       glsa.evaluationCount = glsa.evaluationCount + 1;
       waitbar(mod(glsa.evaluationCount, 10) / 10, glsa.bar, ...
         [ 'Evaluation #' num2str(glsa.evaluationCount) ]);
@@ -152,6 +168,13 @@ classdef GLSA < handle
         % Cache it!
         glsa.cache(key) = fitness;
       end
+
+      glsa.evolution(end + 1) = fitness;
+    end
+
+    function mobility = rand(glsa, rows, cols)
+      mobility = glsa.minMobility + ...
+        (glsa.maxMobility - glsa.minMobility) * rand(rows, cols);
     end
   end
 end

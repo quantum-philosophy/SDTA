@@ -173,8 +173,8 @@ classdef Graph < handle
       fprintf('Data dependencies:\n');
       for task = graph.tasks
         task = task{1};
-        fprintf('  %4d (%8.2f : %8.2f : %8.2f) -> [ ', ...
-          task.id, task.start, task.mobility, task.alap);
+        fprintf('  %4d (%8.2f : %8.2f : %8.2f | %d) -> [ ', ...
+          task.id, task.start, task.mobility, task.alap, task.deadline);
         first = true;
         for child = task.children
           child = child{1};

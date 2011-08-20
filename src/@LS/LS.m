@@ -8,6 +8,9 @@ classdef LS < handle
         end
       end
 
+      % Go to the ordinal numbers
+      [ dummy, priority ] = sort(priority);
+
       taskCount = length(graph.tasks);
 
       % Obtain roots and sort them according to their priority

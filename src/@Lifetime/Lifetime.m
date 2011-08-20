@@ -1,7 +1,7 @@
 classdef Lifetime < handle
   properties (Constant)
     % Peak threshold of local minima and maxima (for the cycle counting)
-    peakThreshold = 1.0; % K
+    peakThreshold = 2; % K
 
     % Miner's rule constant [1]
     % sum(ni / Ni) = C
@@ -19,9 +19,6 @@ classdef Lifetime < handle
     % Coffin-Manson equation with the Arrhenius term [3]
     % Ntc = Atc * (dT - dT0)^(-q) * exp(Eatc / (k * Tmax))
 
-    % Empirically determined constant
-    Atc = 1;
-
     % Activation energy [4], [5]
     Eatc = 0.7; % eV, depends on particular failure mechanism and
     % material involved, typically ranges from 0.3 up to 1.5
@@ -31,6 +28,9 @@ classdef Lifetime < handle
 
     % Shortcut for Eatc / k
     beta =  Lifetime.Eatc / Lifetime.k;
+
+    % Empirically determined constant
+    Atc = 1; % Lifetime.calculateAtc;
   end
 
   methods (Static)
@@ -62,7 +62,10 @@ classdef Lifetime < handle
       N = Lifetime.Atc .* (dT - Lifetime.dT0).^(-Lifetime.q) .* ...
         exp(Lifetime.beta ./ Tmax);
 
-      totalDamage = sum(cycles ./ N);
+      % Count all detected cycles (even 0.5) as completed,
+      % since we have cycling temperature fluctuations
+      % (1 instead of cycles here)
+      totalDamage = sum(1 ./ N);
       mttf = totalTime * Lifetime.C / totalDamage;
     end
 
@@ -86,10 +89,14 @@ classdef Lifetime < handle
 
       index = zeros(steps, cores);
 
+      cycleLegend = {};
+
       for i = 1:size(T, 2)
         [ mttf(end + 1), maxp, minp, discreteCycle ] = ...
           Lifetime.predictSingle(T(:, i), varargin{:});
         cycles(end + 1) = sum(discreteCycle);
+
+        cycleLegend{end + 1} = sprintf('%.2f cycles', cycles(end));
 
         I = sort([ maxp(:, 1); minp(:, 1) ]);
         index(1:length(I), i) = I;
@@ -102,12 +109,38 @@ classdef Lifetime < handle
       subplot(2, 1, 1);
       Utils.drawLines('SSDTC', 'Time, s', 'Temperature, C', x, T);
 
+      set(gca, 'XLim', [ 0 x(end) ]);
+      YLim = get(gca, 'YLim');
+
       % Outline minima and maxima
       Utils.drawLines([], [], [], x, T, index, 'LineStyle', 'none', 'Marker', 'x');
 
       % Draw curves only by minima and maxima
       subplot(2, 1, 2);
       Utils.drawLines('SSDTC (only peaks)', 'Time, s', 'Temperature, C', x, T, index);
+
+      legend(cycleLegend{:});
+
+      set(gca, 'XLim', [ 0 x(end) ]);
+      set(gca, 'YLim', YLim);
+    end
+
+    function Atc = calculateAtc
+      % Let us assume to have the mean time to failure equal to 20 years
+      % with the average temperature of 60 C, the total application period
+      % of 200ms, and 100 equal cycles of 10 C.
+
+      mttf = 100 * 365 * 24 * 60 * 30; % s, 20 years
+      Tavg = 60 + Constants.degreeKelvin; % K, 60 C
+      totalTime = 1; % s
+      m = 50; % Number of cycles
+      dT = 10; % K
+      Tmax = Tavg + dT / 2;
+
+      factor = m * (dT - Lifetime.dT0)^Lifetime.q * ...
+        exp(-Lifetime.Eatc / (Lifetime.k * Tmax));
+
+      Atc = mttf * factor / totalTime;
     end
   end
 end

@@ -1,64 +1,76 @@
-function [maxtab, mintab]=peakdet(v, delta, x)
-%PEAKDET Detect peaks in a vector
-%        [MAXTAB, MINTAB] = PEAKDET(V, DELTA) finds the local
-%        maxima and minima ("peaks") in the vector V.
-%        MAXTAB and MINTAB consists of two columns. Column 1
-%        contains indices in V, and column 2 the found values.
-%
-%        With [MAXTAB, MINTAB] = PEAKDET(V, DELTA, X) the indices
-%        in MAXTAB and MINTAB are replaced with the corresponding
-%        X-values.
-%
-%        A point is considered a maximum peak if it has the maximal
-%        value, and was preceded (to the left) by a value lower by
-%        DELTA.
+function [ maxtab, mintab ] = peakdet(v, delta)
+  maxtab = [];
+  mintab = [];
 
-% Eli Billauer, 3.4.05 (Explicitly not copyrighted).
-% This function is released to the public domain; Any use is allowed.
+  mn = Inf;
+  mx = -Inf;
+  mnpos = NaN;
+  mxpos = NaN;
 
-maxtab = [];
-mintab = [];
+  lookformax = true;
 
-v = v(:); % Just in case this wasn't a proper vector
+  for i = 1:length(v)
+    this = v(i);
 
-if nargin < 3
-  x = (1:length(v))';
-else
-  x = x(:);
-  if length(v)~= length(x)
-    error('Input vectors v and x must have same length');
-  end
-end
+    if this > mx, mx = this; mxpos = i; end
+    if this < mn, mn = this; mnpos = i; end
 
-if (length(delta(:)))>1
-  error('Input argument DELTA must be a scalar');
-end
-
-if delta <= 0
-  error('Input argument DELTA must be positive');
-end
-
-mn = Inf; mx = -Inf;
-mnpos = NaN; mxpos = NaN;
-
-lookformax = 1;
-
-for i=1:length(v)
-  this = v(i);
-  if this > mx, mx = this; mxpos = x(i); end
-  if this < mn, mn = this; mnpos = x(i); end
-
-  if lookformax
-    if this < mx-delta
-      maxtab = [maxtab ; mxpos mx];
-      mn = this; mnpos = x(i);
-      lookformax = 0;
+    if lookformax
+      if this < (mx - delta)
+        maxtab(end + 1, :) = [ mxpos mx ];
+        mn = this;
+        mnpos = i;
+        lookformax = false;
+      end
+    else
+      if this > (mn + delta)
+        mintab(end + 1, :) = [ mnpos mn ];
+        mx = this;
+        mxpos = i;
+        lookformax = true;
+      end
     end
+  end
+
+  % Go around through the first extremum to the second one
+  if maxtab(1, 1) < mintab(1, 1)
+    lookforanothermax = true;
+    if size(mintab, 1) < 2, return; end
+    nexti = mintab(2, 1);
   else
-    if this > mn+delta
-      mintab = [mintab ; mnpos mn];
-      mx = this; mxpos = x(i);
-      lookformax = 1;
+    lookforanothermax = false;
+    if size(maxtab, 1) < 2, return; end
+    nexti = maxtab(2, 1);
+  end
+
+  for i = 1:(nexti - 1)
+    this = v(i);
+
+    if this > mx, mx = this; mxpos = i; end
+    if this < mn, mn = this; mnpos = i; end
+
+    if lookformax
+      if this < (mx - delta)
+        if lookforanothermax
+          % Remove the first one, append to the end
+          maxtab = [ maxtab(2:end, :); mxpos mx ];
+        else
+          % Append to the end
+          maxtab(end + 1, :) = [ mxpos mx ];
+        end
+        break;
+      end
+    else
+      if this > (mn + delta)
+        if ~lookforanothermax
+          % Remove the first one, append to the end
+          mintab = [ mintab(2:end, :); mnpos mn ];
+        else
+          % Append to the end
+          mintab(end + 1, :) = [ mnpos mn ];
+        end
+        break;
+      end
     end
   end
 end
