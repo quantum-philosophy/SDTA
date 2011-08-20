@@ -23,7 +23,7 @@ fprintf('MTTF without optimization is %.2f time units\n', min(mttf1));
 % Now try to optimize with GLSA
 glsa = GLSA();
 Utils.startTimer('Solve with GLSA');
-[ priority, fitness, output ] = glsa.solve(graph, hotspot);
+[ priority, fitness, output ] = glsa.solve(graph, hotspot, true);
 Utils.stopTimer();
 fprintf('Number of generation is %d\n', output.generations);
 
@@ -37,14 +37,3 @@ fprintf('MTTF with optimization is %.2f time units\n', -fitness);
 
 % Compare
 fprintf('MTTF improved by %.2f times\n', min(mttf2)/min(mttf1));
-
-figure;
-
-hold on;
-plot(-glsa.evolution, 'Color', 'b');
-plot(-glsa.evolution, 'Color', 'r', 'Line', 'None', 'Marker', 'o');
-hold off;
-
-title('Lifetime');
-xlabel('Generation');
-ylabel('Lifetime, time units');

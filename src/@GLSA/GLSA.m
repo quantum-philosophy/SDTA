@@ -31,18 +31,20 @@ classdef GLSA < handle
     graph
     hotspot
 
+    % Leakage
     vdd
     ngate
 
+    % Creation
     mobility
     maxMobility
     minMobility
 
     evaluations
-    evolution
 
     cache
 
+    drawing
     bar
   end
 
@@ -71,7 +73,9 @@ classdef GLSA < handle
     end
 
     function [ solution, fitness, output ] = solve(...
-      glsa, graph, hotspot)
+      glsa, graph, hotspot, draw)
+
+      if nargin < 4, draw = false; end
 
       glsa.cache = containers.Map('KeyType', 'char', 'ValueType', 'double');
       glsa.graph = graph;
@@ -95,6 +99,9 @@ classdef GLSA < handle
       glsa.maxMobility = max(glsa.mobility);
       glsa.minMobility = min(glsa.mobility);
 
+      if draw, glsa.initializeDrawing(); end
+
+      % Reset
       glsa.evaluations = 0;
       glsa.bar = waitbar(0, 'Genetic List Scheduling Algorithm');
 
@@ -231,55 +238,73 @@ classdef GLSA < handle
 
       if glsa.cache.isKey(key)
         fitness = glsa.cache(key);
-      else
-        % Make a new schedule
-        LS.schedule(glsa.graph, chromosome);
-
-        % The graph is rescheduled now, obtain the dynamic power profile
-        dynamicPowerProfile = Power.calculateDynamicProfile(glsa.graph);
-
-        % Get the temperature curve
-        [ T, it ] = glsa.hotspot.solveCondensedEquationWithLeakage( ...
-          dynamicPowerProfile, glsa.vdd, glsa.ngate, ...
-          glsa.leakageTolerance, glsa.maxLeakageIterations);
-
-        fitness = -min(Lifetime.predict(T));
-
-        % Cache it!
-        glsa.cache(key) = fitness;
+        return;
       end
+
+      % Make a new schedule
+      LS.schedule(glsa.graph, chromosome);
+
+      % The graph is rescheduled now, obtain the dynamic power profile
+      dynamicPowerProfile = Power.calculateDynamicProfile(glsa.graph);
+
+      % Get the temperature curve
+      [ T, it ] = glsa.hotspot.solveCondensedEquationWithLeakage( ...
+        dynamicPowerProfile, glsa.vdd, glsa.ngate, ...
+        glsa.leakageTolerance, glsa.maxLeakageIterations);
+
+      fitness = -min(Lifetime.predict(T));
+
+      % Cache it!
+      glsa.cache(key) = fitness;
     end
 
     function [ state, options, changed ] = output(glsa, ...
       options, state, flag, interval)
 
       changed = false;
-      glsa.evolution = state.Best;
+
+      if glsa.drawing, glsa.drawGeneration(state); end
 
       no = state.Generation;
 
       if no >= glsa.generationalLimit
         state.StopFlag = 'Exceed the number of generations';
-        return;
-      end
+      elseif no >= glsa.generationalStall
+        left = state.Best(end - glsa.generationalStall + 1);
+        right = state.Best(end);
 
-      stall = glsa.generationalStall;
-      if no < stall, return; end
+        improvement = abs((right - left) / left);
 
-      left = state.Best(end - stall + 1);
-      right = state.Best(end);
-
-      improvement = abs((right - left) / left);
-
-      if improvement < glsa.generationalTolerance
-        state.StopFlag = 'Observed a generational stall';
-        return;
+        if improvement < glsa.generationalTolerance
+          state.StopFlag = 'Observed a generational stall';
+        end
       end
     end
 
     function mobility = rand(glsa, rows, cols)
       mobility = glsa.minMobility + ...
         (glsa.maxMobility - glsa.minMobility) * rand(rows, cols);
+    end
+
+    function initializeDrawing(glsa)
+      glsa.drawing = figure;
+      title('Lifetime');
+      xlabel('Generation');
+      ylabel('Lifetime, time units');
+    end
+
+    function drawGeneration(glsa, state)
+      no = state.Generation;
+      psize = length(state.Score);
+
+      figure(glsa.drawing);
+
+      if length(state.Best) > 1
+        line([ no - 1, no ], -state.Best(end-1:end), 'Color', 'b');
+      end
+
+      line(ones(1, psize) * state.Generation, -state.Score, ...
+        'Line', 'None', 'Marker', 'x', 'Color', 'r');
     end
   end
 end
