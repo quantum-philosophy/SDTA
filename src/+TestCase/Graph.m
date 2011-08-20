@@ -171,9 +171,11 @@ classdef Graph < handle
 
       % Graph itself
       fprintf('Data dependencies:\n');
+      fprintf('  %4s (%8s : %8s : %8s | %3s) -> [ %s ]\n', ...
+        'id', 'asap', 'mobility', 'alap', 'dl', 'children');
       for task = graph.tasks
         task = task{1};
-        fprintf('  %4d (%8.2f : %8.2f : %8.2f | %d) -> [ ', ...
+        fprintf('  %4d (%8.2f : %8.2f : %8.2f | %3d) -> [ ', ...
           task.id, task.start, task.mobility, task.alap, task.deadline);
         first = true;
         for child = task.children
