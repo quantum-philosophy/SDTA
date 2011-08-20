@@ -6,13 +6,17 @@ classdef GLSA < handle
     generationalTolerance = 0.01; % percent of fitness
 
     % Size of the solution pool
-    populationSize = 25;
+    populationSize = 25; % individuals
 
     % Fraction of individuals who survive
     generationalGap = 0.5;
 
     % How much to crossover and mutate?
-    crossoverFraction = 0.8; % Excluding the elite (generationalGap)
+    % (excluding the elite specified by generationalGap)
+    crossoverFraction = 0.8;
+
+    % Minimal probability for mutation
+    minimalMutationProbability = 0.2;
 
     % Maximal number of iterations for the leakage loop
     maxLeakageIterations = 10;
@@ -205,7 +209,8 @@ classdef GLSA < handle
 
       % To mutate or not to mutate? That is the question...
       % The probability to mutate should not be less than 15%
-      mprob = max(0.15, 1 / exp(state.Generation * 0.05));
+      mprob = max(glsa.minimalMutationProbability, ...
+        1 / exp(state.Generation * 0.05));
 
       children = zeros(ccount, chromosomeLength);
 
