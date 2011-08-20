@@ -1,15 +1,18 @@
 classdef GLSA < handle
   properties (Constant)
+    % Stop criteria
+    generationalLimit = 200; % generations
+    generationalStall = 20; % generations
+    generationalTolerance = 0.01; % percent of fitness
+
     % Size of the solution pool
     populationSize = 25;
 
-    % Half of individuals in the solution pool survive
+    % Fraction of individuals who survive
     generationalGap = 0.5;
 
-    % Stop criterion: there is no considerable improvement
-    % through several generations
-    generationalStall = 50;
-    generationalTolerance = 1;
+    % How much to crossover and mutate?
+    crossoverFraction = 0.8; % Excluding the elite (generationalGap)
 
     % Maximal number of iterations for the leakage loop
     maxLeakageIterations = 10;
@@ -22,7 +25,7 @@ classdef GLSA < handle
     options
 
     graph
-    thermalModel
+    hotspot
 
     vdd
     ngate
@@ -31,12 +34,10 @@ classdef GLSA < handle
     maxMobility
     minMobility
 
-    pause
+    evaluations
+    evolution
 
     cache
-
-    evaluationCount
-    evolution
 
     bar
   end
@@ -45,24 +46,32 @@ classdef GLSA < handle
     function glsa = GLSA()
       % Configure GA
       options = gaoptimset;
+
+      % We know when to stop ourselves
+      options.Generations = Inf;
+      options.StallGenLimit = Inf;
+      options.TolFun = 0;
+
+      options.PopulationSize = glsa.populationSize;
       options.EliteCount = floor(glsa.generationalGap * glsa.populationSize);
-      options.StallGenLimit = glsa.generationalStall;
-      options.TolFun = glsa.generationalTolerance;
-      options.CrossoverFcn = @crossovertwopoint;
-      options.CrossoverFraction = 0; % Excluding the elite
+      options.CrossoverFraction = glsa.crossoverFraction;
+
+      options.FitnessScalingFcn = @glsa.rank;
+      options.SelectionFcn = @glsa.select;
+      options.CrossoverFcn = @glsa.crossover;
       options.CreationFcn = @glsa.create;
       options.MutationFcn = @glsa.mutate;
+      options.OutputFcns = [ @glsa.output ];
+
       glsa.options = options;
     end
 
-    function [ solution, fitness, exitflag, output, evolution ] = solve(...
-      glsa, graph, thermalModel, pause)
-
-      if nargin < 4, glsa.pause = false; end
+    function [ solution, fitness, output ] = solve(...
+      glsa, graph, hotspot)
 
       glsa.cache = containers.Map('KeyType', 'char', 'ValueType', 'double');
       glsa.graph = graph;
-      glsa.thermalModel = thermalModel;
+      glsa.hotspot = hotspot;
 
       glsa.vdd = zeros(0, 0);
       glsa.ngate = zeros(0, 0);
@@ -82,14 +91,11 @@ classdef GLSA < handle
       glsa.maxMobility = max(glsa.mobility);
       glsa.minMobility = min(glsa.mobility);
 
-      glsa.evaluationCount = 0;
-      glsa.evolution = zeros(0);
+      glsa.evaluations = 0;
       glsa.bar = waitbar(0, 'Genetic List Scheduling Algorithm');
 
       [ solution, fitness, exitflag, output ] = ga(@glsa.evaluate, ...
         chromosomeLength, [], [], [], [], [], [], [], glsa.options);
-
-      evolution = glsa.evolution;
 
       delete(glsa.bar);
     end
@@ -114,6 +120,84 @@ classdef GLSA < handle
         glsa.rand(psize - half, chromosomeLength);
     end
 
+    function expectation = rank(glsa, scores, pcount)
+      psize = length(scores);
+      [ dummy, I ] = sort(scores);
+      expectation = zeros(1, psize);
+      expectation(I) = 1 ./ ((1:psize) .^ 0.5);
+      expectation = pcount * expectation ./ sum(expectation);
+    end
+
+    function expectation = rankTop(glsa, scores, pcount)
+      psize = length(scores);
+      quantity = round(0.25 * psize);
+      [ dummy, I ] = sort(scores);
+      expectation = zeros(1, psize);
+      expectation(I(1:quantity)) = pcount / quantity;
+    end
+
+    function parents = select(glsa, expectation, pcount, options)
+      % High ranked individuals have a high probability to be selected.
+      % +expected+ is the expected number of children for individuals.
+
+      psize = length(expectation);
+
+      % Normalize to have 1 in total
+      expectation = expectation / sum(expectation);
+
+      parents = zeros(1, pcount);
+      for i = 1:pcount
+        point = rand;
+        com = 0;
+        for j = 1:psize
+          com = com + expectation(j);
+          if point < com
+            parents(i) = j;
+            break;
+          end
+        end
+      end
+    end
+
+    function children = crossover(glsa, parents, options, genomeLength, ...
+      FitnessFcn, dummy, thisPopulation)
+
+      ccount = floor(length(parents) / 2);
+      children = zeros(ccount, genomeLength);
+
+      index = 1;
+
+      for i = 1:ccount
+        % Parents
+        father = thisPopulation(parents(index), :);
+        index = index + 1;
+        mother = thisPopulation(parents(index), :);
+        index = index + 1;
+
+        % Points
+        mp  = length(father) - 1;
+        xp1 = ceil(mp * rand);
+        xp2 = ceil(mp * rand);
+        while xp2 == xp1
+          xp2 = ceil(mp * rand);
+        end
+
+        if xp1 < xp2
+          left = xp1;
+          right = xp2;
+        else
+          left = xp2;
+          right = xp1;
+          swap = father;
+          father = mother;
+          mother = swap;
+        end
+
+        children(i, :) = ...
+          [ father(1:left), mother((left + 1):right), father((right + 1):end) ];
+      end
+    end
+
     function children = mutate(glsa, parents, options, chromosomeLength, ...
       fitnessFunc, state, thisScore, thisPopulation)
 
@@ -122,9 +206,6 @@ classdef GLSA < handle
       % To mutate or not to mutate? That is the question...
       % The probability to mutate should not be less than 15%
       mprob = max(0.15, 1 / exp(state.Generation * 0.05));
-
-      fprintf('Generation %d, children %d, probabylity to mutate %.2f\n', ...
-        state.Generation, ccount, mprob);
 
       children = zeros(ccount, chromosomeLength);
 
@@ -137,9 +218,9 @@ classdef GLSA < handle
     end
 
     function fitness = evaluate(glsa, chromosome)
-      glsa.evaluationCount = glsa.evaluationCount + 1;
-      waitbar(mod(glsa.evaluationCount, 10) / 10, glsa.bar, ...
-        [ 'Evaluation #' num2str(glsa.evaluationCount) ]);
+      glsa.evaluations = glsa.evaluations + 1;
+      waitbar(mod(glsa.evaluations, 10) / 10, glsa.bar, ...
+        [ 'Evaluation #' num2str(glsa.evaluations) ]);
 
       key = Utils.mMD5(chromosome);
 
@@ -153,23 +234,42 @@ classdef GLSA < handle
         dynamicPowerProfile = Power.calculateDynamicProfile(glsa.graph);
 
         % Get the temperature curve
-        [ T, it ] = glsa.thermalModel.solveCondensedEquationWithLeakage( ...
+        [ T, it ] = glsa.hotspot.solveCondensedEquationWithLeakage( ...
           dynamicPowerProfile, glsa.vdd, glsa.ngate, ...
           glsa.leakageTolerance, glsa.maxLeakageIterations);
 
-        if glsa.pause
-          fitness = -min(Lifetime.predictAndDraw(T));
-          glsa.pause = false;
-          pause;
-        else
-          fitness = -min(Lifetime.predict(T));
-        end
+        fitness = -min(Lifetime.predict(T));
 
         % Cache it!
         glsa.cache(key) = fitness;
       end
+    end
 
-      glsa.evolution(end + 1) = fitness;
+    function [ state, options, changed ] = output(glsa, ...
+      options, state, flag, interval)
+
+      changed = false;
+      glsa.evolution = state.Best;
+
+      no = state.Generation;
+
+      if no >= glsa.generationalLimit
+        state.StopFlag = 'Exceed the number of generations';
+        return;
+      end
+
+      stall = glsa.generationalStall;
+      if no < stall, return; end
+
+      left = state.Best(end - stall + 1);
+      right = state.Best(end);
+
+      improvement = abs((right - left) / left);
+
+      if improvement < glsa.generationalTolerance
+        state.StopFlag = 'Observed a generational stall';
+        return;
+      end
     end
 
     function mobility = rand(glsa, rows, cols)
