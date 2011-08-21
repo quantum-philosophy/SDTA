@@ -35,10 +35,16 @@ line(aging, energy, 'Marker', '*', 'MarkerSize', 15, ...
   'Color', 'g', 'LineWidth', 1.1);
 
 % Now, try to optimize with the GLSA
-glsa = Genetic.LSAgingEnergy(graph, hotspot);
+ls = Genetic.LSAgingEnergy(graph, hotspot);
 
 Utils.startTimer('Solve with the GLSA');
-[ priority, fitness, output ] = glsa.solve(drawing);
+[ priority, fitness, output ] = ls.solve(drawing);
 Utils.stopTimer();
+
+aging = -fitness(:, 1);
+energy = fitness(:, 2);
+
+[ dummy, I ] = sort(aging);
+line(aging(I), energy(I), 'Color', 'b');
 
 fprintf('Number of generation: %d\n', output.generations);

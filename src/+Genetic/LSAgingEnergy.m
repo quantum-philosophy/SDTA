@@ -8,6 +8,8 @@ classdef LSAgingEnergy < Genetic.LS
       ls = ls@Genetic.LS(varargin{:});
       ls.options.FitnessScalingFcn = [];
       ls.options.SelectionFcn = [];
+
+      ls.generationLimit = 50;
     end
 
     function [ solution, fitness, output ] = solve(ls, drawing)

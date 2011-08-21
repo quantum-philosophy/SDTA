@@ -1,5 +1,13 @@
 classdef LS < handle
   properties (Constant)
+    % Maximal number of iterations for the leakage loop
+    maxLeakageIterations = 10;
+
+    % Tolerance for the leakage loop
+    leakageTolerance = 0.01; % K
+  end
+
+  properties (SetAccess = protected)
     % Stop criteria
     generationLimit = 200;
     generationalStall = 20; % generations
@@ -21,12 +29,6 @@ classdef LS < handle
 
     % Minimal probability for mutation
     minimalMutationProbability = 0.5;
-
-    % Maximal number of iterations for the leakage loop
-    maxLeakageIterations = 10;
-
-    % Tolerance for the leakage loop
-    leakageTolerance = 0.01; % K
   end
 
   properties (SetAccess = protected)
