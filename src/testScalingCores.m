@@ -4,7 +4,7 @@ clear all;
 clc;
 rng(0);
 
-coreTestCases = [ 1, 4, 9 ]; %, 16, 25, 36, 64, 100 ];
+coreTestCases = [ 1, 4, 9, 16, 25, 36, 64, 100 ];
 
 desiredPrecision = 1; % C
 badFactor = 0.01;
