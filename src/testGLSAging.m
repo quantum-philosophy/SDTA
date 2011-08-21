@@ -16,15 +16,18 @@ end
 
 % First, without any efforts
 [ T, it, totalPowerProfile ] = hotspot.solveCondensedEquationWithLeakage( ...
-  dynamicPowerProfile, vdd, ngate, GLSA.leakageTolerance, GLSA.maxLeakageIterations);
-[ mttf1, cycles1 ] = Lifetime.predictAndDraw(T);
+  dynamicPowerProfile, vdd, ngate, Genetic.LS.leakageTolerance, ...
+  Genetic.LS.maxLeakageIterations);
+[ mttf1, cycles1 ] = Lifetime.predict(T);
 fprintf('MTTF without optimization: %.2f\n', min(mttf1));
 fprintf('Energy: %.2f J\n', sum(sum(totalPowerProfile * Constants.samplingInterval)));
 
+drawing = figure;
+
 % Now try to optimize with GLSA
-glsa = GLSA();
-Utils.startTimer('Solve with GLSA');
-[ priority, fitness, output ] = glsa.solve(graph, hotspot, true);
+ls = Genetic.LSAging(graph, hotspot);
+Utils.startTimer('Solve with the GLSA');
+[ priority, fitness, output ] = ls.solve(drawing);
 Utils.stopTimer();
 fprintf('Number of generation: %d\n', output.generations);
 
@@ -32,8 +35,9 @@ fprintf('Number of generation: %d\n', output.generations);
 LS.schedule(graph, priority);
 dynamicPowerProfile = Power.calculateDynamicProfile(graph);
 [ T, it, totalPowerProfile ] = hotspot.solveCondensedEquationWithLeakage( ...
-  dynamicPowerProfile, vdd, ngate, GLSA.leakageTolerance, GLSA.maxLeakageIterations);
-[ mttf2, cycles2 ] = Lifetime.predictAndDraw(T);
+  dynamicPowerProfile, vdd, ngate, Genetic.LS.leakageTolerance, ...
+  Genetic.LS.maxLeakageIterations);
+[ mttf2, cycles2 ] = Lifetime.predict(T);
 fprintf('MTTF with optimization: %.2f\n', -fitness);
 fprintf('Energy: %.2f J\n', sum(sum(totalPowerProfile * Constants.samplingInterval)));
 
