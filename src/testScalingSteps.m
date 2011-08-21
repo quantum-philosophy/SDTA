@@ -4,8 +4,13 @@ clear all;
 clc;
 rng(0);
 
-cores = 4;
 taskTestCases = [ 10, 30, 60, 90, 120, 150, 250 ];
+
+cores = 4;
+
+desiredPrecision = 1; % C
+badFactor = 0.01;
+maxIterations = 10;
 
 lifeTime = zeros(0, 0);
 compTime = zeros(0, 0);
@@ -28,17 +33,20 @@ xlabel(ax1, 'Simulation time, s');
 ylabel(ax1, 'Condensed Equation, s');
 ylabel(ax2, 'HotSpot, s');
 
+fprintf('%10s%10s%15s%15s%15s\n', 'Steps', 'Tasks', 'Time', 'Speed up', 'Error');
 for tasks = taskTestCases
   name = sprintf('test_cases/test_case_%d_%d', cores, tasks);
-  fprintf('Perform test case: %s\n', name);
-  [ hotspot, profile, dummy, steps ] = setup(name, false);
+
+  [ graph, hotspot, powerProfile ] = setup(name);
+  steps = size(powerProfile, 1);
 
   Utils.startTimer();
-  T1 = hotspot.solveCondensedEquation(profile);
+  T1 = hotspot.solveCondensedEquation(powerProfile);
   compTime(1, end + 1) = Utils.stopTimer();
 
   Utils.startTimer();
-  [ T2, it ] = hotspot.solveOriginal(profile, 2, 0.01 * steps, 10);
+  [ T2, it ] = hotspot.solveOriginal(powerProfile, ...
+    desiredPrecision, badFactor * steps, maxIterations);
   compTime(2, end) = Utils.stopTimer();
 
   lifeTime(end + 1) = steps * Constants.samplingInterval;
@@ -49,11 +57,10 @@ for tasks = taskTestCases
   text(lifeTime(end), compTime(2, end), sprintf('  %d iter', it), ...
     'Parent', ax2, 'Color', 'r');
 
-  fprintf('CE is faster by %.3f times\n', compTime(2, end) / compTime(1, end));
+  [ dummy, maxError ] = Utils.calcError(T1, T2);
 
-  error = max(max(Utils.calcError(T1, T2)));
-
-  fprintf('HotSpot error is %.3f degrees\n', error);
+  fprintf('%10d%10d%15.2f%15.2f%15.2f\n', ...
+    steps, tasks, compTime(2, end), compTime(2, end) / compTime(1, end), maxError);
 end
 
 line(lifeTime, compTime(1, :), 'Color', 'b', 'Marker', 'o', 'Parent', ax1);

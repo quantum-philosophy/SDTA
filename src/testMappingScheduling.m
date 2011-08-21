@@ -4,8 +4,7 @@ clear all;
 clc;
 rng(0);
 
-name = 'simple';
-
+name = 'test_cases/test_case_4_60';
 floorplan = Utils.path([ name, '.flp' ]);
 testCase = Utils.path([ name, '.tgff' ]);
 config = Utils.path('hotspot.config');
@@ -26,5 +25,4 @@ LS.schedule(graph, randperm(length(graph.tasks)));
 graph.assignDeadline(Constants.deadlineFactor * graph.duration);
 
 graph.inspect();
-
 graph.draw();

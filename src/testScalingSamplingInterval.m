@@ -4,22 +4,26 @@ clear all;
 clc;
 rng(0);
 
-name = 'simple';
+samplingIntervals = 10 .^ (-6:0.5:-2);
 
 cores = 4;
 dieSize = 81e-6; % m^2
 steps = 1e4;
 maxPower = 35; % W
+
+name = 'simple';
 floorplan = Utils.path([ name, '.flp' ]);
 config = Utils.path('hotspot.config');
+
+desiredPrecision = 1; % C
+badFactor = 0.01;
+maxIterations = 10;
 
 Utils.generateFloorplan(floorplan, cores, dieSize);
 
 hotspot = HotSpot(floorplan, config);
 
-profile = Power.generateRandomProfile(cores, steps, maxPower);
-
-samplingIntervals = 10 .^ (-6:0.5:-2);
+powerProfile = Power.generateRandomProfile(cores, steps, maxPower);
 
 compTime = zeros(0, 0);
 
@@ -48,7 +52,7 @@ fprintf('Number of steps: %d\n', steps);
 fprintf('\n');
 
 fprintf('%15s%15s%15s%15s%15s%15s\n', ...
-  'Step, s', 'Total time, s', 'CE, s', 'HS, s', 'Speed up', 'Error');
+  'Step', 'Total time', 'CE', 'HS', 'Speed up', 'Error');
 
 % Warm up!
 samplingIntervals = [ samplingIntervals(1), samplingIntervals ];
@@ -60,11 +64,12 @@ for i = 1:length(samplingIntervals)
   ts = samplingIntervals(i);
 
   Utils.startTimer();
-  T1 = hotspot.solveCondensedEquation(profile, ts);
+  T1 = hotspot.solveCondensedEquation(powerProfile, ts);
   t1 = Utils.stopTimer();
 
   Utils.startTimer();
-  [ T2, it ] = hotspot.solveOriginal(profile, 0.01, 0.01 * steps, 100, ts);
+  [ T2, it ] = hotspot.solveOriginal(powerProfile, ...
+    desiredPrecision, badFactor * steps, maxIterations, ts);
   t2 = Utils.stopTimer();
 
   if i == 1, continue; end
@@ -77,9 +82,9 @@ for i = 1:length(samplingIntervals)
     'Parent', ax2, 'Color', 'r');
 
   acceleration = compTime(2, end) / compTime(1, end);
-  error(end + 1) = max(max(Utils.calcError(T1, T2)));
+  [ dummy, error(end + 1) ] = Utils.calcError(T1, T2);
 
-  fprintf('%15f%15f%15f%15f%15f%15f\n', ...
+  fprintf('%15f%15.2f%15.2f%15.2f%15.2f%15.2f\n', ...
     ts, steps * ts, compTime(1, end), compTime(2, end), acceleration, error(end));
 end
 

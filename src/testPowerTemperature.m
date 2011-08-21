@@ -8,7 +8,7 @@ name = 'simple';
 
 cores = 1;
 dieSize = 81e-6; % m^2
-totalTime = 100; % s
+totalTime = 1; % s
 floorplan = Utils.path([ name, '.flp' ]);
 config = Utils.path('hotspot.config');
 
@@ -24,7 +24,7 @@ for power = maxPower
   powerProfile = Power.generateConstantProfile(cores, steps, power);
   T0 = hotspot.solveCondensedEquation(powerProfile);
   T(end+1, 1:size(T0, 2)) = mean(T0) - Constants.degreeKelvin;
-  fprintf('Maximal power %d W, average temperature %.2f\n', power, T(end));
+  fprintf('Maximal power %3d W, average temperature %6.2f C\n', power, T(end));
 end
 
 plot(maxPower, T, 'Color', 'r');

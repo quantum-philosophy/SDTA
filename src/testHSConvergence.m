@@ -4,10 +4,9 @@ clear all;
 clc;
 rng(0);
 
-repeat = 20;
-desiredTime = 1; % s
+repeat = 10;
 
-name = 'test_cases/test_case_4_30';
+name = 'test_cases/test_case_4_60';
 floorplan = Utils.path([ name, '.flp' ]);
 testCase = Utils.path([ name, '.tgff' ]);
 config = Utils.path('hotspot.config');
@@ -34,8 +33,6 @@ Utils.startTimer('Scheduling in time across all the cores');
 LS.schedule(graph);
 Utils.stopTimer();
 
-% graph.fitTime(desiredTime);
-
 graph.inspect();
 
 % Power profile
@@ -47,9 +44,6 @@ steps = size(powerProfile, 1);
 
 fprintf('Number of steps: %d\n', steps);
 fprintf('Total simulation time: %.3f s\n', steps * Constants.samplingInterval);
-
-% Draw a bit
-% Utils.drawSimulation(graph, powerProfile);
 
 figure;
 

@@ -4,9 +4,10 @@ clear all;
 clc;
 rng(0);
 
-[ hotspot, profile, cores, steps ] = setup('test_cases/test_case_4_60');
+[ graph, hotspot, powerProfile ] = setup('test_cases/test_case_4_60');
+[ steps, cores ] = size(powerProfile);
 
 x = ((1:steps) - 1) * Constants.samplingInterval;
 
-T = hotspot.solveCondensedEquation(profile);
+T = hotspot.solveCondensedEquation(powerProfile);
 mttf = Lifetime.predictAndDraw(T)

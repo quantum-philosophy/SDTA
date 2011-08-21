@@ -9,7 +9,7 @@ name = 'simple';
 cores = 4;
 dieSize = 81e-6; % m^2
 maxPower = 150; % W
-totalTime = 100; % s
+totalTime = 1; % s
 
 tol = 0.01; % K
 maxit = 10;
