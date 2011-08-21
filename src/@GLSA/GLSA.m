@@ -1,8 +1,8 @@
 classdef GLSA < handle
   properties (Constant)
     % Stop criteria
-    generationalLimit = 200; % generations
-    generationalStall = 20; % generations
+    generationalLimit = 500; % generations
+    generationalStall = 50; % generations
     generationalTolerance = 0.01; % percent of fitness
 
     % How many individuals of the start population are generated
@@ -10,7 +10,7 @@ classdef GLSA < handle
     mobilityCreationFactor = 0.5;
 
     % Size of the solution pool
-    populationSize = 25; % individuals
+    populationSize = 30; % individuals
 
     % Fraction of individuals who survive
     generationalGap = 0.5;
@@ -69,9 +69,9 @@ classdef GLSA < handle
 
       options.FitnessScalingFcn = @glsa.rank;
       options.SelectionFcn = @glsa.select;
-      options.CrossoverFcn = @glsa.crossover;
+      options.CrossoverFcn = @glsa.crossover; % crossoverRealRandom;
       options.CreationFcn = @glsa.create;
-      options.MutationFcn = @glsa.mutate;
+      options.MutationFcn = @glsa.mutate; % mutateNothing;
       options.OutputFcns = [ @glsa.output ];
 
       glsa.options = options;
@@ -220,6 +220,29 @@ classdef GLSA < handle
       end
     end
 
+    function children = crossoverRealRandom(glsa, parents, options, genomeLength, ...
+      FitnessFcn, dummy, thisPopulation)
+
+      ccount = floor(length(parents) / 2);
+      children = zeros(ccount, genomeLength);
+
+      index = 1;
+
+      for i = 1:ccount
+        % Parents
+        father = thisPopulation(parents(index), :);
+        index = index + 1;
+        mother = thisPopulation(parents(index), :);
+        index = index + 1;
+
+        % Boundaries
+        mx = max(father, mother);
+        mn = min(father, mother);
+
+        children(i, :) = mn + (mx - mn) .* rand(1, genomeLength);
+      end
+    end
+
     function children = mutate(glsa, parents, options, chromosomeLength, ...
       fitnessFunc, state, thisScore, thisPopulation)
 
@@ -238,6 +261,12 @@ classdef GLSA < handle
         child(mutationPoints) = glsa.rand(1, length(mutationPoints));
         children(i, :) = child;
       end
+    end
+
+    function children = mutateNothing(glsa, parents, options, chromosomeLength, ...
+      fitnessFunc, state, thisScore, thisPopulation)
+
+      children = parents;
     end
 
     function fitness = evaluate(glsa, chromosome)
