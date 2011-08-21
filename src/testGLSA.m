@@ -2,9 +2,9 @@
 
 clear all;
 clc;
-rng(3);
+rng(0);
 
-[ graph, hotspot, powerProfile ] = setup('test_cases/test_case_4_60');
+[ graph, hotspot, dynamicPowerProfile ] = setup('test_cases/test_case_4_60');
 
 vdd = zeros(0);
 ngate = zeros(0);
@@ -15,10 +15,11 @@ for pe = graph.pes, pe = pe{1};
 end
 
 % First, without any efforts
-[ T, it ] = hotspot.solveCondensedEquationWithLeakage( ...
-  powerProfile, vdd, ngate, GLSA.leakageTolerance, GLSA.maxLeakageIterations);
+[ T, it, totalPowerProfile ] = hotspot.solveCondensedEquationWithLeakage( ...
+  dynamicPowerProfile, vdd, ngate, GLSA.leakageTolerance, GLSA.maxLeakageIterations);
 [ mttf1, cycles1 ] = Lifetime.predictAndDraw(T);
-fprintf('MTTF without optimization is %.2f time units\n', min(mttf1));
+fprintf('MTTF without optimization: %.2f\n', min(mttf1));
+fprintf('Energy: %.2f J\n', sum(sum(totalPowerProfile * Constants.samplingInterval)));
 
 % Now try to optimize with GLSA
 glsa = GLSA();
@@ -29,11 +30,12 @@ fprintf('Number of generation: %d\n', output.generations);
 
 % Calculate the best one
 LS.schedule(graph, priority);
-powerProfile = Power.calculateDynamicProfile(graph);
-[ T, it ] = hotspot.solveCondensedEquationWithLeakage( ...
-  powerProfile, vdd, ngate, GLSA.leakageTolerance, GLSA.maxLeakageIterations);
+dynamicPowerProfile = Power.calculateDynamicProfile(graph);
+[ T, it, totalPowerProfile ] = hotspot.solveCondensedEquationWithLeakage( ...
+  dynamicPowerProfile, vdd, ngate, GLSA.leakageTolerance, GLSA.maxLeakageIterations);
 [ mttf2, cycles2 ] = Lifetime.predictAndDraw(T);
-fprintf('MTTF with optimization is %.2f time units\n', -fitness);
+fprintf('MTTF with optimization: %.2f\n', -fitness);
+fprintf('Energy: %.2f J\n', sum(sum(totalPowerProfile * Constants.samplingInterval)));
 
 % Compare
-fprintf('MTTF improved by %.2f times\n', min(mttf2)/min(mttf1));
+fprintf('MTTF improved by %.2f %%\n', (min(mttf2)/min(mttf1) - 1) * 100);

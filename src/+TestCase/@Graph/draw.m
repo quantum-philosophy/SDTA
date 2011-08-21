@@ -11,6 +11,8 @@ function draw(graph, createFigure)
   xlabel('Time, s');
   ylabel('Cores');
 
+  last = max(graph.deadline, graph.duration);
+
   height = 0.8;
   for i = 1:peCount
     pe = graph.pes{i};
@@ -40,13 +42,16 @@ function draw(graph, createFigure)
       text(task.start, y0 + 0.5 * height, sprintf('  %d', id));
     end
 
-    x(end + 1) = graph.deadline;
+    x(end + 1) = last;
     y(end + 1) = y0;
 
     color = colors{mod(i - 1, length(colors)) + 1};
     line(x, y, 'Color', color);
   end
 
+  line([ graph.deadline, graph.deadline ], [ 1 (peCount + 1) ], ...
+    'Line', '--', 'Color', 'k');
+
   set(gca, 'YTick', 1:peCount);
-  set(gca, 'XLim', [ 0 graph.deadline ]);
+  set(gca, 'XLim', [ 0 last ]);
 end

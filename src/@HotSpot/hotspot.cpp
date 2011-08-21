@@ -371,7 +371,7 @@ int solve_condensed_equation_with_leakage(
 	char *floorplan, char *config, str_pair *table, int tsize,
 	/* Dynamic power */
 	int cores, int steps,
-	const double *dynamic_power,
+	double *dynamic_power,
 	/* Static power */
 	const double *vdd, const double *ngate,
 	/* Final temperature with error control */
@@ -520,11 +520,13 @@ int solve_condensed_equation_with_leakage(
 
 		it++;
 
-		if (max_error < tol) break;
-		if (it >= maxit) break;
+		if (max_error < tol || it >= maxit) break;
 
 		inject_leakage(dynamic_power, vdd, ngate, cores, steps, T, power);
 	}
+
+	/* Return the power back with the leakage part */
+	memcpy((void *)dynamic_power, (void *)power, sizeof(double) * steps * cores);
 
 	free(power);
 

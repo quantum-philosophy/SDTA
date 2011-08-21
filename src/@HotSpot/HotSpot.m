@@ -77,7 +77,7 @@ classdef HotSpot < handle
       T = transpose(T);
     end
 
-    function [ T, it ] = solveCondensedEquationWithLeakage(hs, B, ...
+    function [ T, it, B ] = solveCondensedEquationWithLeakage(hs, B, ...
       vdd, ngate, tol, maxit)
 
       if nargin < 5, tol = 0.01; end
@@ -88,6 +88,7 @@ classdef HotSpot < handle
       [ T, it ] = hs.solve_condensed_equation_with_leakage(...
         B, vdd, ngate, tol, maxit, hs.options);
       T = transpose(T);
+      B = transpose(B);
     end
 
     function [ T, it ] = solveOriginal(hs, B, tol, minbad, maxit, ts)

@@ -45,7 +45,7 @@ int solve_condensed_equation_with_leakage(
 	char *floorplan, char *config, str_pair *table, int tsize,
 	/* Dynamic power */
 	int cores, int steps,
-	const double *dynamic_power,
+	double *dynamic_power,
 	/* Static power */
 	const double *vdd, const double *ngate,
 	/* Final temperature with error control */

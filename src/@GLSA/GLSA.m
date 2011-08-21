@@ -7,20 +7,20 @@ classdef GLSA < handle
 
     % How many individuals of the start population are generated
     % with the same chromosomes based on the initial mobility?
-    mobilityCreationFactor = 0.5;
+    mobilityCreationFactor = 0.4;
 
     % Size of the solution pool
-    populationSize = 30; % individuals
+    populationSize = 50; % individuals
 
     % Fraction of individuals who survive
-    generationalGap = 0.5;
+    generationalGap = 0.4;
 
     % How much to crossover and mutate?
     % (excluding the elite specified by generationalGap)
-    crossoverFraction = 0.8;
+    crossoverFraction = 0.5;
 
     % Minimal probability for mutation
-    minimalMutationProbability = 0.15;
+    minimalMutationProbability = 0.5;
 
     % Maximal number of iterations for the leakage loop
     maxLeakageIterations = 10;
@@ -49,7 +49,9 @@ classdef GLSA < handle
 
     cache
 
+    % Drawing and progress
     drawing
+    lastBest
     bar
   end
 
@@ -108,13 +110,16 @@ classdef GLSA < handle
       glsa.maxMobility = max(glsa.mobility);
       glsa.minMobility = min(glsa.mobility);
 
-      if draw, glsa.initializeDrawing(); end
-
       glsa.cache = containers.Map('KeyType', 'char', 'ValueType', 'double');
 
       % Reset
       glsa.evaluations = 0;
       glsa.bar = waitbar(0, 'Genetic List Scheduling Algorithm');
+
+      if draw
+        glsa.lastBest = [];
+        glsa.initializeDrawing();
+      end
 
       [ solution, fitness, exitflag, output ] = ga(@glsa.evaluate, ...
         chromosomeLength, [], [], [], [], [], [], [], glsa.options);
@@ -291,9 +296,10 @@ classdef GLSA < handle
         dynamicPowerProfile = Power.calculateDynamicProfile(glsa.graph);
 
         % Get the temperature curve
-        [ T, it ] = glsa.hotspot.solveCondensedEquationWithLeakage( ...
-          dynamicPowerProfile, glsa.vdd, glsa.ngate, ...
-          glsa.leakageTolerance, glsa.maxLeakageIterations);
+        [ T, it, totalPowerProfile ] = ...
+          glsa.hotspot.solveCondensedEquationWithLeakage( ...
+            dynamicPowerProfile, glsa.vdd, glsa.ngate, ...
+            glsa.leakageTolerance, glsa.maxLeakageIterations);
 
         fitness = -min(Lifetime.predict(T));
       end
@@ -338,16 +344,22 @@ classdef GLSA < handle
     end
 
     function drawGeneration(glsa, state)
+      scores = -state.Score;
+
       no = state.Generation;
-      psize = length(state.Score);
+      psize = length(scores);
 
       figure(glsa.drawing);
 
-      if length(state.Best) > 1
-        line([ no - 1, no ], -state.Best(end-1:end), 'Color', 'b');
+      currentBest = max(scores);
+
+      if ~isempty(glsa.lastBest)
+        line([ no - 1, no ], [ glsa.lastBest, currentBest ], 'Color', 'b');
       end
 
-      line(ones(1, psize) * state.Generation, -state.Score, ...
+      glsa.lastBest = currentBest;
+
+      line(ones(1, psize) * state.Generation, scores, ...
         'Line', 'None', 'Marker', 'x', 'Color', 'r');
     end
   end

@@ -8,7 +8,7 @@ name = 'simple';
 
 cores = 4;
 dieSize = 81e-6; % m^2
-maxPower = 150; % W
+maxPower = 100; % W
 totalTime = 1; % s
 
 tol = 0.01; % K
@@ -46,10 +46,8 @@ figure;
 x = ((1:steps) - 1) * Constants.samplingInterval;
 
 % Dynamic power profile
-subplot(2, 2, 1);
-Utils.drawLines(...
-  sprintf('Dynamic Power Profile (total %d W)', maxPower), ...
-  'Time, s', 'Power, W', ...
+subplot(2, 3, 1);
+Utils.drawLines('Dynamic Power Profile', 'Time, s', 'Power, W', ...
   x, dynamicPowerProfile);
 line(x, sum(dynamicPowerProfile, 2), 'Color', 'k', 'Line', '--');
 
@@ -75,39 +73,53 @@ for i = 1:maxit
 end
 
 t = toc(startTic);
+T = T - Constants.degreeKelvin;
 
 % The same, but in C++ only
 Utils.startTimer();
-[ Tcpp, icpp ] = hotspot.solveCondensedEquationWithLeakage(...
+[ Tcpp, icpp, totalPowerProfile ] = hotspot.solveCondensedEquationWithLeakage(...
   dynamicPowerProfile, vdd, ngate, tol, maxit);
 tcpp = Utils.stopTimer();
-fprintf('Solved with C++ in %.2f s, %d iterations\n', tcpp, icpp);
-
-fprintf('Solved in MatLab in %.2f s\n', t);
-fprintf('Solved in C++ in %.2f s\n', tcpp);
-
-T = T - Constants.degreeKelvin;
 Tcpp = Tcpp - Constants.degreeKelvin;
 
-% Error
+fprintf('Solved in MatLab in %.2f s\n', t);
+fprintf('Solved in C++    in %.2f s\n', tcpp);
 fprintf('Error: %f\n', max(max(abs(T - Tcpp))));
 
+fprintf('Energy without leakage: %.2f J\n', ...
+  sum(sum(dynamicPowerProfile * Constants.samplingInterval)));
+fprintf('Energy with leakage:    %.2f J\n', ...
+  sum(sum(totalPowerProfile * Constants.samplingInterval)));
+
 % Static power profile
-subplot(2, 2, 2);
+subplot(2, 3, 2);
 Utils.drawLines('Static Power Profile', 'Time, s', 'Power, W', ...
   x, staticPowerProfile);
 line(x, sum(staticPowerProfile, 2), 'Color', 'k', 'Line', '--');
 
+% Total power profile
+subplot(2, 3, 3);
+Utils.drawLines('Total Power Profile', 'Time, s', 'Power, W', ...
+  x, totalPowerProfile);
+line(x, sum(totalPowerProfile, 2), 'Color', 'k', 'Line', '--');
+
+% Balance axes
+YLim = get(gca, 'YLim');
+subplot(2, 3, 2);
+set(gca, 'YLim', YLim);
+subplot(2, 3, 1);
+set(gca, 'YLim', YLim);
+
 T = hotspot.solveCondensedEquation(dynamicPowerProfile) - Constants.degreeKelvin;
 
 % Temperature profile without leakage
-subplot(2, 2, 3);
+subplot(2, 3, 4);
 Utils.drawLines(...
   sprintf('Temperature without leakage', t, i), ...
   'Time, s', 'Temperature, C', x, T);
 
 % Temperature profile
-subplot(2, 2, 4);
+subplot(2, 3, 6);
 Utils.drawLines(...
   sprintf('Temperature with leakage', tcpp, icpp), ...
   'Time, s', 'Temperature, C', x, Tcpp);
@@ -115,7 +127,12 @@ Utils.drawLines(...
 % Ambient line
 x = ([1, steps] - 1) * Constants.samplingInterval;
 am = Constants.ambientTemperature - Constants.degreeKelvin;
-subplot(2, 2, 3);
+subplot(2, 3, 4);
 line(x, [ am, am ],  'Color', 'k', 'Line', '--');
-subplot(2, 2, 4);
+subplot(2, 3, 6);
 line(x, [ am, am ],  'Color', 'k', 'Line', '--');
+
+% Balance axes
+YLim = get(gca, 'YLim');
+subplot(2, 3, 4);
+set(gca, 'YLim', YLim);
