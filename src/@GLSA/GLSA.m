@@ -2,15 +2,13 @@ classdef GLSA < handle
   properties (Constant)
     % Stop criteria
     generationalLimit = 500; % generations
-    generationalStall = 50; % generations
-    generationalTolerance = 0.01; % percent of fitness
 
     % How many individuals of the start population are generated
     % with the same chromosomes based on the initial mobility?
     mobilityCreationFactor = 0.4;
 
     % Size of the solution pool
-    populationSize = 50; % individuals
+    populationSize = 25; % individuals
 
     % Fraction of individuals who survive
     generationalGap = 0.4;
@@ -51,7 +49,7 @@ classdef GLSA < handle
 
     % Drawing and progress
     drawing
-    lastBest
+    currentLine
     bar
   end
 
@@ -69,8 +67,6 @@ classdef GLSA < handle
       options.EliteCount = floor(glsa.generationalGap * glsa.populationSize);
       options.CrossoverFraction = glsa.crossoverFraction;
 
-      options.FitnessScalingFcn = @glsa.rank;
-      options.SelectionFcn = @glsa.select;
       options.CrossoverFcn = @glsa.crossover; % crossoverRealRandom;
       options.CreationFcn = @glsa.create;
       options.MutationFcn = @glsa.mutate; % mutateNothing;
@@ -110,19 +106,17 @@ classdef GLSA < handle
       glsa.maxMobility = max(glsa.mobility);
       glsa.minMobility = min(glsa.mobility);
 
-      glsa.cache = containers.Map('KeyType', 'char', 'ValueType', 'double');
+      glsa.cache = containers.Map('KeyType', 'char', 'ValueType', 'any');
 
       % Reset
       glsa.evaluations = 0;
       glsa.bar = waitbar(0, 'Genetic List Scheduling Algorithm');
 
-      if draw
-        glsa.lastBest = [];
-        glsa.initializeDrawing();
-      end
+      if draw, glsa.initializeDrawing(); end
 
-      [ solution, fitness, exitflag, output ] = ga(@glsa.evaluate, ...
-        chromosomeLength, [], [], [], [], [], [], [], glsa.options);
+      [ solution, fitness, exitflag, output, population, score ] = ...
+        gamultiobj(@glsa.evaluate, chromosomeLength, ...
+          [], [], [], [], [], [], glsa.options);
 
       delete(glsa.bar);
     end
@@ -145,45 +139,6 @@ classdef GLSA < handle
       % The second part
       population((half + 1):psize, :) = ...
         glsa.rand(psize - half, chromosomeLength);
-    end
-
-    function expectation = rank(glsa, scores, pcount)
-      psize = length(scores);
-      [ dummy, I ] = sort(scores);
-      expectation = zeros(1, psize);
-      expectation(I) = 1 ./ ((1:psize) .^ 0.5);
-      expectation = pcount * expectation ./ sum(expectation);
-    end
-
-    function expectation = rankTop(glsa, scores, pcount)
-      psize = length(scores);
-      quantity = round(0.25 * psize);
-      [ dummy, I ] = sort(scores);
-      expectation = zeros(1, psize);
-      expectation(I(1:quantity)) = pcount / quantity;
-    end
-
-    function parents = select(glsa, expectation, pcount, options)
-      % High ranked individuals have a high probability to be selected.
-      % +expected+ is the expected number of children for individuals.
-
-      psize = length(expectation);
-
-      % Normalize to have 1 in total
-      expectation = expectation / sum(expectation);
-
-      parents = zeros(1, pcount);
-      for i = 1:pcount
-        point = rand;
-        com = 0;
-        for j = 1:psize
-          com = com + expectation(j);
-          if point < com
-            parents(i) = j;
-            break;
-          end
-        end
-      end
     end
 
     function children = crossover(glsa, parents, options, genomeLength, ...
@@ -290,7 +245,8 @@ classdef GLSA < handle
       LS.schedule(glsa.graph, chromosome);
 
       if glsa.graph.duration > glsa.deadline
-        fitness = 0;
+        % Respect the deadline!
+        fitness = [ Inf, Inf ];
       else
         % The graph is rescheduled now, obtain the dynamic power profile
         dynamicPowerProfile = Power.calculateDynamicProfile(glsa.graph);
@@ -301,7 +257,12 @@ classdef GLSA < handle
             dynamicPowerProfile, glsa.vdd, glsa.ngate, ...
             glsa.leakageTolerance, glsa.maxLeakageIterations);
 
-        fitness = -min(Lifetime.predict(T));
+        % We want to prolong aging
+        aging = -min(Lifetime.predict(T));
+        % ... and we want to keep the energy low
+        energy = sum(sum(totalPowerProfile)) * Constants.samplingInterval;
+
+        fitness = [ aging, energy ];
       end
 
       % Cache it!
@@ -319,15 +280,6 @@ classdef GLSA < handle
 
       if no >= glsa.generationalLimit
         state.StopFlag = 'Exceed the number of generations';
-      elseif no >= glsa.generationalStall
-        left = state.Best(end - glsa.generationalStall + 1);
-        right = state.Best(end);
-
-        improvement = abs((right - left) / left);
-
-        if improvement < glsa.generationalTolerance
-          state.StopFlag = 'Observed a generational stall';
-        end
       end
     end
 
@@ -338,29 +290,30 @@ classdef GLSA < handle
 
     function initializeDrawing(glsa)
       glsa.drawing = figure;
-      title('Lifetime');
-      xlabel('Generation');
-      ylabel('Lifetime, time units');
+      glsa.currentLine = [];
+      title('Energy and Aging');
+      ylabel('Energy consumption, J');
+      xlabel('Lifetime duration, time units');
+      grid on;
     end
 
     function drawGeneration(glsa, state)
-      scores = -state.Score;
+      if state.Generation == 0, return; end
 
-      no = state.Generation;
-      psize = length(scores);
+      index = find(state.Rank == 1);
+      aging = -state.Score(index, 1);
+      energy = state.Score(index, 2);
 
       figure(glsa.drawing);
+      title([ 'Energy and Aging (generation ', num2str(state.Generation), ')' ]);
 
-      currentBest = max(scores);
-
-      if ~isempty(glsa.lastBest)
-        line([ no - 1, no ], [ glsa.lastBest, currentBest ], 'Color', 'b');
+      if ~isempty(glsa.currentLine)
+        set(glsa.currentLine, ...
+          'Color', 'k', 'Line', 'none', 'Marker', 'x');
       end
 
-      glsa.lastBest = currentBest;
-
-      line(ones(1, psize) * state.Generation, scores, ...
-        'Line', 'None', 'Marker', 'x', 'Color', 'r');
+      glsa.currentLine = line(aging, energy, ...
+        'Color', 'r', 'Line', 'none', 'Marker', 'o');
     end
   end
 
