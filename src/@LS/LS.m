@@ -1,16 +1,15 @@
 classdef LS < handle
   methods (Static)
     function schedule = schedule(graph, priority)
+      taskCount = length(graph.tasks);
+
       if nargin < 2
-        tcount = length(graph.tasks);
-        priority = zeros(1, tcount);
-        for i = 1:tcount, priority(i) = graph.tasks{i}.mobility; end
+        priority = zeros(1, taskCount);
+        for i = 1:taskCount, priority(i) = graph.tasks{i}.mobility; end
       end
 
       % Go to the ordinal numbers
       [ dummy, priority ] = sort(priority);
-
-      taskCount = length(graph.tasks);
 
       % Obtain roots and sort them according to their priority
       ids = graph.getRootIds();

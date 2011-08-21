@@ -5,6 +5,10 @@ classdef GLSA < handle
     generationalStall = 20; % generations
     generationalTolerance = 0.01; % percent of fitness
 
+    % How many individuals of the start population are generated
+    % with the same chromosomes based on the initial mobility?
+    mobilityCreationFactor = 0.5;
+
     % Size of the solution pool
     populationSize = 25; % individuals
 
@@ -16,7 +20,7 @@ classdef GLSA < handle
     crossoverFraction = 0.8;
 
     % Minimal probability for mutation
-    minimalMutationProbability = 0.2;
+    minimalMutationProbability = 0.15;
 
     % Maximal number of iterations for the leakage loop
     maxLeakageIterations = 10;
@@ -30,6 +34,7 @@ classdef GLSA < handle
 
     graph
     hotspot
+    deadline
 
     % Leakage
     vdd
@@ -77,7 +82,6 @@ classdef GLSA < handle
 
       if nargin < 4, draw = false; end
 
-      glsa.cache = containers.Map('KeyType', 'char', 'ValueType', 'double');
       glsa.graph = graph;
       glsa.hotspot = hotspot;
 
@@ -91,6 +95,11 @@ classdef GLSA < handle
 
       chromosomeLength = length(graph.tasks);
 
+      % Assume that the initial deadline is the desired one,
+      % and that the current mobility is suitable for the initial
+      % population. We should meet this deadline.
+      glsa.deadline = graph.deadline;
+
       % Collect mobility
       glsa.mobility = zeros(1, chromosomeLength);
       for i = 1:chromosomeLength
@@ -100,6 +109,8 @@ classdef GLSA < handle
       glsa.minMobility = min(glsa.mobility);
 
       if draw, glsa.initializeDrawing(); end
+
+      glsa.cache = containers.Map('KeyType', 'char', 'ValueType', 'double');
 
       % Reset
       glsa.evaluations = 0;
@@ -117,16 +128,16 @@ classdef GLSA < handle
       psize = glsa.populationSize;
 
       population = zeros(psize, chromosomeLength);
-      half = floor(psize / 2);
+      half = floor(glsa.mobilityCreationFactor * psize);
 
-      % Half of the population is generated based on the mobility
+      % One part of the population is generated based on the mobility
       % of the tasks, and the rest is randomly generated with values
       % between the lowest and highest mobility
 
-      % The first half
+      % The first part
       for i = 1:half, population(i, :) = glsa.mobility; end
 
-      % The second half
+      % The second part
       population((half + 1):psize, :) = ...
         glsa.rand(psize - half, chromosomeLength);
     end
@@ -244,15 +255,19 @@ classdef GLSA < handle
       % Make a new schedule
       LS.schedule(glsa.graph, chromosome);
 
-      % The graph is rescheduled now, obtain the dynamic power profile
-      dynamicPowerProfile = Power.calculateDynamicProfile(glsa.graph);
+      if glsa.graph.duration > glsa.deadline
+        fitness = 0;
+      else
+        % The graph is rescheduled now, obtain the dynamic power profile
+        dynamicPowerProfile = Power.calculateDynamicProfile(glsa.graph);
 
-      % Get the temperature curve
-      [ T, it ] = glsa.hotspot.solveCondensedEquationWithLeakage( ...
-        dynamicPowerProfile, glsa.vdd, glsa.ngate, ...
-        glsa.leakageTolerance, glsa.maxLeakageIterations);
+        % Get the temperature curve
+        [ T, it ] = glsa.hotspot.solveCondensedEquationWithLeakage( ...
+          dynamicPowerProfile, glsa.vdd, glsa.ngate, ...
+          glsa.leakageTolerance, glsa.maxLeakageIterations);
 
-      fitness = -min(Lifetime.predict(T));
+        fitness = -min(Lifetime.predict(T));
+      end
 
       % Cache it!
       glsa.cache(key) = fitness;
@@ -305,6 +320,32 @@ classdef GLSA < handle
 
       line(ones(1, psize) * state.Generation, -state.Score, ...
         'Line', 'None', 'Marker', 'x', 'Color', 'r');
+    end
+  end
+
+  methods (Static)
+    function N = calculatePopulationSize(L, P, S)
+      if nargin < 3, S = L; end
+
+      % +L+ is a length of a chromosome, a number of genes
+      % +S+ is a number of different states of a gene
+      % +P+ is a desired probability to ensure diversity
+
+      N = ceil(1 - log(1 - P^(1 / L)) / log(S));
+    end
+
+    function P = calculateMinimalMutationProbability(L, N, S, K)
+      if nargin < 3, S = L; end
+      if nargin < 4, K = 10; end
+
+      % +L+ is a length of a chromosome, a number of genes
+      % +S+ is a number of different states of a gene
+      % +N+ is a population size
+      % +K+ is an order of insurance that a gene will mutate
+      % in case it does not take all possible states in the
+      % given population
+
+      P = L * (1 - (1 - K * S^(1 - N))^(1 / N));
     end
   end
 end

@@ -25,7 +25,7 @@ glsa = GLSA();
 Utils.startTimer('Solve with GLSA');
 [ priority, fitness, output ] = glsa.solve(graph, hotspot, true);
 Utils.stopTimer();
-fprintf('Number of generation is %d\n', output.generations);
+fprintf('Number of generation: %d\n', output.generations);
 
 % Calculate the best one
 LS.schedule(graph, priority);

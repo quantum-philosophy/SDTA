@@ -184,12 +184,11 @@ classdef Graph < handle
         ancestor = [];
         for id = schedule
           successor = graph.tasks{id};
+          successor.resetMapping();
 
           if ~isempty(ancestor)
             ancestor.setSuccessor(successor);
             successor.setAncestor(ancestor);
-          else
-            successor.setAncestor([]);
           end
 
           ancestor = successor;
@@ -199,7 +198,9 @@ classdef Graph < handle
       % Now each task knows its execution time, its dependent tasks,
       % and its successors on the same core. Let us move the task relative
       % to each other starting from the roots.
-      for task = graph.getRoots, task{1}.propagateStartTime(0); end
+      for task = graph.getRoots
+        task{1}.propagateStartTime(0);
+      end
     end
 
     function time = calculateDuration(graph)
