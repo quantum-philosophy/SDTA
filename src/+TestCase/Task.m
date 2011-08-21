@@ -1,37 +1,51 @@
 classdef Task < handle
   properties (SetAccess = private)
+    % General
     id
     name
     type
-    deadline
 
-    % In the graph
+    % Timing
+    duration
+    start     % Actual start time (mapped and scheduled)
+    asap      % ASAP, as soon as possible
+    alap      % ALAP, as late as possible
+    mobility  % ALAP - ASAP
+
+    % Dependencies in the graph
+    isLeaf
+    isRoot
     parents
     children
 
-    % On the same core
+    % Dependencies on the same core
     ancestor
     successor
-
-    duration
-
-    start     % ASAP, as soon as possible
-    alap      % ALAP, as late as possible
-    mobility  % ALAP - ASAP
   end
 
   methods
     function task = Task(id, name, type)
+      % General
       task.id = id;
       task.name = name;
       task.type = type;
 
+      % Timing
+      task.duration = 0;
+      task.start = -Inf;
+      task.asap = -Inf;
+      task.alap = Inf;
+      task.mobility = 0;
+
+      % Dependencies in the graph
+      task.isLeaf = true;
+      task.isRoot = true;
       task.parents = {};
       task.children = {};
 
-      task.duration = 0;
-
-      task.resetMapping();
+      % Dependencies on the same core
+      task.ancestor = [];
+      task.successor = [];
     end
 
     function scale(task, factor)
@@ -39,20 +53,14 @@ classdef Task < handle
       task.duration = task.duration * factor;
     end
 
-    function resetMapping(task)
-      task.ancestor = [];
-      task.successor = [];
-      task.start = 0;
-      task.alap = Inf;
-      task.mobility = 0;
-    end
-
     function addParent(task, parent)
       task.parents{end + 1} = parent;
+      task.isRoot = false;
     end
 
     function addChild(task, child)
       task.children{end + 1} = child;
+      task.isLeaf = false;
     end
 
     function setAncestor(task, ancestor)
@@ -67,68 +75,52 @@ classdef Task < handle
       task.duration = time;
     end
 
-    function assignDeadline(task, time)
-      if ~isempty(task.deadline) && task.deadline <= time, return; end
-      task.deadline = time;
-      for parent = task.parents
-        parent{1}.assignDeadline(max(0, time - 1));
-      end
-    end
-
-    function assignStartTime(task, time)
-      task.start = time;
-    end
-
-    function result = isRoot(task)
-      result = isempty(task.parents);
-    end
-
-    function result = isLeaf(task)
-      result = isempty(task.children);
-    end
-
-    function shiftDependentTasks(task, time)
-      if nargin > 1
-        if task.start >= time, return; end
-      else
-        time = 0;
-      end
+    function propagateStartTime(task, time)
+      % We might already have an assigned start time with larger value
+      if ~(task.start < time), return; end
 
       task.start = time;
-      finish = time + task.duration;
+      time = time + task.duration;
 
       % Shift data dependent tasks
       for child = task.children
-        child{1}.shiftDependentTasks(finish);
+        child{1}.propagateStartTime(time);
       end
 
       % Shift space dependent tasks (the same core)
       if ~isempty(task.successor)
-        task.successor.shiftDependentTasks(finish);
+        task.successor.propagateStartTime(time);
       end
     end
 
-    function propagateMobility(task, time)
-      % As late as possible
-      alap = time - task.duration;
+    function propagateASAP(task, asap)
+      % We might already have an assigned ASAP with larger value
+      if ~(task.asap < asap), return; end
 
-      % We might already have an assigned mobility with
-      % smaller ALAP time
+      task.asap = asap;
+      asap = asap + task.duration;
+
+      % Shift data dependent tasks
+      for child = task.children
+        child{1}.propagateASAP(asap);
+      end
+    end
+
+    function propagateALAP(task, time)
+      % As late as possible
+      alap = max(0, time - task.duration);
+
+      % We might already have an assigned ALAP with smaller value
       if ~(alap < task.alap), return; end
 
       task.alap = alap;
 
       % Mobility = ALAP - ASAP
-      task.mobility = alap - task.start;
+      task.mobility = max(0, alap - task.asap);
 
       % Shift data dependent tasks
       for parent = task.parents
-        parent{1}.propagateMobility(alap);
-      end
-
-      % Shift space dependent tasks (the same core)
-      if ~isempty(task.ancestor)
-        task.ancestor.propagateMobility(alap);
+        parent{1}.propagateALAP(alap);
       end
     end
   end

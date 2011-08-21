@@ -10,6 +10,10 @@ classdef Constants < handle
     graphLabels = { 'TASK_GRAPH' };
     peLabels = { 'PE' };
 
+    % How to determine the deadline? Let us add a time gap after
+    % the actual duration of the task graph.
+    deadlineFactor = 1.05;
+
     % Visualization
     roundRobinColors = { 'r', 'g', 'b', 'm', 'y', 'c' };
 

@@ -62,7 +62,7 @@ classdef TGFF < handle
 
           switch command
           case 'PERIOD'
-            graph.assignPeriod(str2num(attrs));
+            graph.assignHyperPeriod(str2num(attrs));
 
           case 'TASK'
             attrs = regexp(attrs, '(\w+)\s+TYPE\s+(\d+)', 'tokens');
@@ -82,13 +82,6 @@ classdef TGFF < handle
               attrs{4} = str2num(attrs{4}) + 1;
               graph.addLink(attrs{:});
             end
-
-          case 'HARD_DEADLINE'
-            attrs = regexp(attrs, ...
-              '(\w+)\s+ON\s+(\w+)\s+AT\s+(\d+\.?\d*)', 'tokens');
-            attrs = attrs{1};
-            attrs{3} = str2num(attrs{3});
-            if ~isempty(attrs), graph.assignTaskDeadline(attrs{:}); end
           end
         end
 

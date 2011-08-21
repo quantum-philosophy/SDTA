@@ -4,7 +4,7 @@ clear all;
 clc;
 rng(0);
 
-name = 'test_cases/test_case_4_60';
+name = 'simple';
 
 floorplan = Utils.path([ name, '.flp' ]);
 testCase = Utils.path([ name, '.tgff' ]);
@@ -23,7 +23,8 @@ graph.assignMapping(pes, mapping);
 % Scheduling
 LS.schedule(graph, randperm(length(graph.tasks)));
 
+graph.assignDeadline(Constants.deadlineFactor * graph.duration);
+
 graph.inspect();
 
-figure;
-Utils.drawMappingScheduling(graph, true);
+graph.draw();

@@ -2,10 +2,9 @@ classdef LS < handle
   methods (Static)
     function schedule = schedule(graph, priority)
       if nargin < 2
-        priority = zeros(0);
-        for task = graph.tasks
-          priority(end + 1) = task{1}.deadline;
-        end
+        tcount = length(graph.tasks);
+        priority = zeros(1, tcount);
+        for i = 1:tcount, priority(i) = graph.tasks{i}.mobility; end
       end
 
       % Go to the ordinal numbers

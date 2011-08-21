@@ -9,7 +9,7 @@ function drawSimulation(graph, powerProfile, T)
 
   % Mapping and scheduling
   subplot(plots, 1, 1);
-  Utils.drawMappingScheduling(graph);
+  graph.draw(false);
 
   x = ((1:steps) - 1) * Constants.samplingInterval;
 

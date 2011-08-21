@@ -29,7 +29,11 @@ function [ graph, hotspot, powerProfile ] = setup(name, debug)
   LS.schedule(graph);
   Utils.stopTimer();
 
+  graph.assignDeadline(Constants.deadlineFactor * graph.duration);
+
   if debug, graph.inspect(); end
+
+  if nargout < 3, return; end
 
   % Power profile
   Utils.startTimer('Generate a dynamic power profile');
