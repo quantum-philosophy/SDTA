@@ -4,7 +4,7 @@ clear all;
 clc;
 rng(0);
 
-[ graph, hotspot, dynamicPowerProfile ] = setup('test_cases/test_case_4_60');
+[ graph, hotspot, dynamicPowerProfile ] = setup('test_cases/test_case_1_30');
 
 vdd = zeros(0);
 ngate = zeros(0);
@@ -14,11 +14,20 @@ for pe = graph.pes, pe = pe{1};
   ngate(end + 1) = pe.ngate;
 end
 
+tuning = Genetic.LSAgingEnergy.defaultTuning(...
+  'generationLimit', 100, ...
+  'mobilityCreationFactor', 0.5, ...
+  'populationSize', 50, ...
+  'generationalGap', 0.5, ...
+  'crossoverFraction', 0.8, ...
+  'minimalMutationProbability', 0.1 ...
+);
+
 % First, without any efforts
 Utils.startTimer('Solve with the CE');
 [ T, it, totalPowerProfile ] = hotspot.solveCondensedEquationWithLeakage( ...
-  dynamicPowerProfile, vdd, ngate, Genetic.LS.leakageTolerance, ...
-  Genetic.LS.maxLeakageIterations);
+  dynamicPowerProfile, vdd, ngate, tuning.leakageTolerance, ...
+  tuning.maxLeakageIterations);
 Utils.stopTimer();
 
 Utils.drawSimulation(graph, totalPowerProfile, T);
@@ -37,7 +46,7 @@ line(aging0, energy0, 'Marker', '*', 'MarkerSize', 15, ...
   'Color', 'g', 'LineWidth', 1.1);
 
 % Now, try to optimize with the GLSA
-ls = Genetic.LSAgingEnergy(graph, hotspot);
+ls = Genetic.LSAgingEnergy(graph, hotspot, tuning);
 
 Utils.startTimer('Solve with the GLSA');
 [ priority, fitness, output ] = ls.solve(drawing);

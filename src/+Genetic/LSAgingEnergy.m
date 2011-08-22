@@ -11,20 +11,12 @@ classdef LSAgingEnergy < Genetic.LS
       ls.solver = @gamultiobj;
       ls.additionalParams = cell(1, 6);
 
-      % Multiobjective version does not have this
+      % Multi-objective version does not have this
       ls.options.FitnessScalingFcn = [];
       ls.options.SelectionFcn = [];
 
       % Caching
       ls.fitnessType = 'any';
-
-      % Tuning
-      ls.generationLimit = 100;
-      ls.mobilityCreationFactor = 0.5;
-      ls.populationSize = 50; % individuals
-      ls.generationalGap = 0.5;
-      ls.crossoverFraction = 0.8;
-      ls.minimalMutationProbability = 0.1;
     end
   end
 
@@ -46,7 +38,7 @@ classdef LSAgingEnergy < Genetic.LS
       [ T, it, totalPowerProfile ] = ...
         ls.hotspot.solveCondensedEquationWithLeakage( ...
           dynamicPowerProfile, ls.vdd, ls.ngate, ...
-          ls.leakageTolerance, ls.maxLeakageIterations);
+          ls.tuning.leakageTolerance, ls.tuning.maxLeakageIterations);
 
       % We want to prolong aging
       aging = -min(Lifetime.predict(T));
@@ -70,9 +62,9 @@ classdef LSAgingEnergy < Genetic.LS
     function drawGeneration(ls, state)
       if state.Generation == 0, return; end
 
-      index = find(state.Rank == 1);
-      aging = -state.Score(index, 1);
-      energy = state.Score(index, 2);
+      % index = find(state.Rank == 1);
+      aging = -state.Score(:, 1);
+      energy = state.Score(:, 2);
 
       figure(ls.drawing);
       title([ 'Aging vs Energy (generation ', num2str(state.Generation), ')' ]);

@@ -1,12 +1,16 @@
 classdef LSAging < Genetic.LS
   properties (Access = protected)
-    % Stop criteria
-    generationalStall = 20; % generations
-    generationalTolerance = 0.01; % percent of fitness
+    lastBest
   end
 
-  properties (Access = protected)
-    lastBest
+  methods (Static)
+    function t = defaultTuning(varargin)
+      t = Genetic.LS.defaultTuning( ...
+        'generationStall', 20, ...
+        'generationTolerance', 0.01, ...
+        varargin{:} ...
+      );
+    end
   end
 
   methods
@@ -32,20 +36,20 @@ classdef LSAging < Genetic.LS
       [ T, it, totalPowerProfile ] = ...
         ls.hotspot.solveCondensedEquationWithLeakage( ...
           dynamicPowerProfile, ls.vdd, ls.ngate, ...
-          ls.leakageTolerance, ls.maxLeakageIterations);
+          ls.tuning.leakageTolerance, ls.tuning.maxLeakageIterations);
 
       fitness = -min(Lifetime.predict(T));
     end
 
     function state = control(ls, state)
-      if state.Generation < ls.generationalStall, return; end
+      if state.Generation < ls.tuning.generationStall, return; end
 
-      left = state.Best(end - ls.generationalStall + 1);
+      left = state.Best(end - ls.tuning.generationStall + 1);
       right = state.Best(end);
 
       improvement = abs((right - left) / left);
 
-      if improvement < ls.generationalTolerance
+      if improvement < ls.tuning.generationTolerance
         state.StopFlag = 'Observed a generational stall';
       end
     end
@@ -65,13 +69,13 @@ classdef LSAging < Genetic.LS
 
       figure(ls.drawing);
 
-      currentBest = max(scores);
+      score = max(scores);
 
       if ~isempty(ls.lastBest)
-        line([ no - 1, no ], [ ls.lastBest, currentBest ], 'Color', 'b');
+        line([ ls.lastBest(1), no ], [ ls.lastBest(2), score ], 'Color', 'b');
       end
 
-      ls.lastBest = currentBest;
+      ls.lastBest = [ no, score ];
 
       line(ones(1, psize) * state.Generation, scores, ...
         'Line', 'None', 'Marker', 'x', 'Color', 'r');

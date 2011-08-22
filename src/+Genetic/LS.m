@@ -1,39 +1,47 @@
 classdef LS < handle
-  properties (Constant)
-    % Maximal number of iterations for the leakage loop
-    maxLeakageIterations = 10;
+  methods (Static)
+    function t = defaultTuning(varargin)
+      t = struct();
 
-    % Tolerance for the leakage loop
-    leakageTolerance = 0.01; % K
+      % Maximal number of iterations for the leakage loop
+      t.maxLeakageIterations = 10;
+
+      % Tolerance for the leakage loop
+      t.leakageTolerance = 0.01; % K
+
+      % Stop criteria
+      t.generationLimit = 200;
+
+      % How many individuals of the start population are generated
+      % with the same chromosomes based on the initial mobility?
+      t.mobilityCreationFactor = 0.5;
+
+      % Size of the solution pool
+      t.populationSize = 25; % individuals
+
+      % Fraction of individuals who survive
+      t.generationalGap = 0.5;
+
+      % How much to crossover and mutate?
+      % (excluding the elite specified by generationalGap)
+      t.crossoverFraction = 0.8;
+
+      % Minimal probability for mutation
+      t.minimalMutationProbability = 0.15;
+
+      % Update!
+      for i = 1:2:length(varargin)
+        t.(varargin{i}) = varargin{i + 1};
+      end
+    end
   end
 
   properties (SetAccess = protected)
-    % Stop criteria
-    generationLimit = 200;
+    options
+    tuning
 
-    % How many individuals of the start population are generated
-    % with the same chromosomes based on the initial mobility?
-    mobilityCreationFactor = 0.5;
-
-    % Size of the solution pool
-    populationSize = 25; % individuals
-
-    % Fraction of individuals who survive
-    generationalGap = 0.5;
-
-    % How much to crossover and mutate?
-    % (excluding the elite specified by generationalGap)
-    crossoverFraction = 0.8;
-
-    % Minimal probability for mutation
-    minimalMutationProbability = 0.15;
-  end
-
-  properties (SetAccess = protected)
     solver
     additionalParams
-
-    options
 
     graph
     hotspot
@@ -70,31 +78,15 @@ classdef LS < handle
   end
 
   methods
-    function ls = LS(graph, hotspot)
+    function ls = LS(graph, hotspot, tuning)
+      if nargin < 3, tuning = ls.defaultTuning(); end
+
+      % Tunning
+      ls.tune(tuning);
+
       % Solver itself
       ls.solver = @ga;
       ls.additionalParams = cell(1, 7);
-
-      % Configure GA
-      options = gaoptimset;
-
-      % We know when to stop ourselves
-      options.Generations = Inf;
-      options.StallGenLimit = Inf;
-      options.TolFun = 0;
-
-      options.PopulationSize = ls.populationSize;
-      options.EliteCount = floor(ls.generationalGap * ls.populationSize);
-      options.CrossoverFraction = ls.crossoverFraction;
-
-      options.FitnessScalingFcn = @ls.rank;
-      options.SelectionFcn = @ls.select;
-      options.CrossoverFcn = @ls.crossover;
-      options.CreationFcn = @ls.create;
-      options.MutationFcn = @ls.mutate;
-      options.OutputFcns = [ @ls.output ];
-
-      ls.options = options;
 
       ls.graph = graph;
       ls.hotspot = hotspot;
@@ -166,10 +158,10 @@ classdef LS < handle
     end
 
     function population = create(ls, chromosomeLength, fitnessFcn, options)
-      psize = ls.populationSize;
+      psize = ls.tuning.populationSize;
 
       population = zeros(psize, chromosomeLength);
-      half = floor(ls.mobilityCreationFactor * psize);
+      half = floor(ls.tuning.mobilityCreationFactor * psize);
 
       % One part of the population is generated based on the mobility
       % of the tasks, and the rest is randomly generated with values
@@ -291,7 +283,7 @@ classdef LS < handle
 
       % To mutate or not to mutate? That is the question...
       % The probability to mutate should not be less than 15%
-      mprob = max(ls.minimalMutationProbability, ...
+      mprob = max(ls.tuning.minimalMutationProbability, ...
         1 / exp(state.Generation * 0.05));
 
       children = zeros(ccount, chromosomeLength);
@@ -317,7 +309,7 @@ classdef LS < handle
 
       if ls.drawing, ls.drawGeneration(state); end
 
-      if state.Generation >= ls.generationLimit
+      if state.Generation >= ls.tuning.generationLimit
         state.StopFlag = 'Exceed the number of generations';
         return;
       end
@@ -328,6 +320,30 @@ classdef LS < handle
     function mobility = rand(ls, rows, cols)
       mobility = ls.minMobility + ...
         (ls.maxMobility - ls.minMobility) * rand(rows, cols);
+    end
+
+    function tune(ls, t)
+      % Default options
+      o = gaoptimset;
+
+      % We know when to stop ourselves
+      o.Generations = Inf;
+      o.StallGenLimit = Inf;
+      o.TolFun = 0;
+
+      o.PopulationSize = t.populationSize;
+      o.EliteCount = floor(t.generationalGap * t.populationSize);
+      o.CrossoverFraction = t.crossoverFraction;
+
+      o.FitnessScalingFcn = @ls.rank;
+      o.SelectionFcn = @ls.select;
+      o.CrossoverFcn = @ls.crossover;
+      o.CreationFcn = @ls.create;
+      o.MutationFcn = @ls.mutate;
+      o.OutputFcns = [ @ls.output ];
+
+      ls.options = o;
+      ls.tuning = t;
     end
   end
 
