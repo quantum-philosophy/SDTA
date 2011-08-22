@@ -21,6 +21,8 @@ Utils.startTimer('Solve with the CE');
   Genetic.LS.maxLeakageIterations);
 Utils.stopTimer();
 
+Utils.drawSimulation(graph, totalPowerProfile, T);
+
 [ mttf, cycles ] = Lifetime.predict(T);
 
 aging0 = min(mttf);

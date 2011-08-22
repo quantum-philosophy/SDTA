@@ -15,7 +15,7 @@ function drawSimulation(graph, powerProfile, T)
 
   % Power profile
   subplot(plots, 1, 2);
-  Utils.drawLines('Dynamic Power Profile', 'Time, s', 'Power, W', x, powerProfile);
+  Utils.drawLines('Power Profile', 'Time, s', 'Power, W', x, powerProfile);
   line(x, sum(powerProfile, 2), 'Color', 'k', 'Line', '--');
   set(gca, 'XLim', [ 0 graph.deadline ]);
 
