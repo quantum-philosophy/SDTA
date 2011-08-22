@@ -6,90 +6,61 @@ classdef LSAgingEnergy < Genetic.LS
   methods
     function ls = LSAgingEnergy(varargin)
       ls = ls@Genetic.LS(varargin{:});
+
+      % Solver itself
+      ls.solver = @gamultiobj;
+      ls.additionalParams = cell(1, 6);
+
+      % Multiobjective version does not have this
       ls.options.FitnessScalingFcn = [];
       ls.options.SelectionFcn = [];
 
+      % Caching
+      ls.fitnessType = 'any';
+
+      % Tuning
       ls.generationLimit = 50;
-    end
-
-    function [ solution, fitness, output ] = solve(ls, drawing)
-      if nargin > 0, ls.initializeDrawing(drawing); end
-
-      % Reset
-      ls.cache = containers.Map('KeyType', 'char', 'ValueType', 'any');
-      ls.evaluations = 0;
-
-      ls.bar = waitbar(0, 'Genetic List Scheduling Algorithm');
-
-      [ solution, fitness, exitflag, output ] = gamultiobj(@ls.evaluate, ...
-          ls.chromosomeLength, [], [], [], [], [], [], ls.options);
-
-      delete(ls.bar);
+      ls.populationSize = 40;
     end
   end
 
   methods (Access = protected)
-    function fitness = evaluate(ls, chromosome)
-      ls.evaluations = ls.evaluations + 1;
-      waitbar(mod(ls.evaluations, 10) / 10, ls.bar, ...
-        [ 'Evaluation #' num2str(ls.evaluations) ]);
-
-      key = Utils.mMD5(chromosome);
-
-      if ls.cache.isKey(key)
-        fitness = ls.cache(key);
-        return;
-      end
-
+    function fitness = compute(ls, chromosome)
       % Make a new schedule
       LS.schedule(ls.graph, chromosome);
 
       if ls.graph.duration > ls.deadline
         % Respect the deadline!
         fitness = [ Inf, Inf ];
-      else
-        % The graph is rescheduled now, obtain the dynamic power profile
-        dynamicPowerProfile = Power.calculateDynamicProfile(ls.graph);
-
-        % Get the temperature curve
-        [ T, it, totalPowerProfile ] = ...
-          ls.hotspot.solveCondensedEquationWithLeakage( ...
-            dynamicPowerProfile, ls.vdd, ls.ngate, ...
-            ls.leakageTolerance, ls.maxLeakageIterations);
-
-        % We want to prolong aging
-        aging = -min(Lifetime.predict(T));
-        % ... and we want to keep the energy low
-        energy = sum(sum(totalPowerProfile)) * Constants.samplingInterval;
-
-        fitness = [ aging, energy ];
+        return;
       end
 
-      % Cache it!
-      ls.cache(key) = fitness;
+      % The graph is rescheduled now, obtain the dynamic power profile
+      dynamicPowerProfile = Power.calculateDynamicProfile(ls.graph);
+
+      % Get the temperature curve
+      [ T, it, totalPowerProfile ] = ...
+        ls.hotspot.solveCondensedEquationWithLeakage( ...
+          dynamicPowerProfile, ls.vdd, ls.ngate, ...
+          ls.leakageTolerance, ls.maxLeakageIterations);
+
+      % We want to prolong aging
+      aging = -min(Lifetime.predict(T));
+      % ... and we want to keep the energy low
+      energy = sum(sum(totalPowerProfile)) * Constants.samplingInterval;
+
+      fitness = [ aging, energy ];
     end
 
-    function [ state, options, changed ] = control(ls, ...
-      options, state, flag, interval)
-
-      changed = false;
-
-      if ls.drawing, ls.drawGeneration(state); end
-
-      no = state.Generation;
-
-      if no >= ls.generationLimit
-        state.StopFlag = 'Exceed the number of generations';
-      end
+    function state = control(ls, state)
+      % Without any special control
     end
 
-    function initializeDrawing(ls, drawing)
-      ls.drawing = drawing;
+    function initializeDrawing(ls)
+      title('Aging vs Energy');
+      ylabel('Energy, J');
+      xlabel('MTTF, time units');
       ls.currentLine = [];
-      title('Energy and Aging');
-      ylabel('Energy consumption, J');
-      xlabel('Lifetime duration, time units');
-      grid on;
     end
 
     function drawGeneration(ls, state)
@@ -100,7 +71,7 @@ classdef LSAgingEnergy < Genetic.LS
       energy = state.Score(index, 2);
 
       figure(ls.drawing);
-      title([ 'Energy and Aging (generation ', num2str(state.Generation), ')' ]);
+      title([ 'Aging vs Energy (generation ', num2str(state.Generation), ')' ]);
 
       if ~isempty(ls.currentLine)
         set(ls.currentLine, ...

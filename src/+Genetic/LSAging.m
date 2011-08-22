@@ -1,5 +1,11 @@
 classdef LSAging < Genetic.LS
-  properties (Access = private)
+  properties (Access = protected)
+    % Stop criteria
+    generationalStall = 20; % generations
+    generationalTolerance = 0.01; % percent of fitness
+  end
+
+  properties (Access = protected)
     lastBest
   end
 
@@ -7,87 +13,48 @@ classdef LSAging < Genetic.LS
     function ls = LSAging(varargin)
       ls = ls@Genetic.LS(varargin{:});
     end
-
-    function [ solution, fitness, output ] = solve(ls, drawing)
-      if nargin > 0, ls.initializeDrawing(drawing); end
-
-      % Reset
-      ls.cache = containers.Map('KeyType', 'char', 'ValueType', 'double');
-      ls.evaluations = 0;
-
-      ls.bar = waitbar(0, 'Genetic List Scheduling Algorithm');
-
-      [ solution, fitness, exitflag, output ] = ga(@ls.evaluate, ...
-        ls.chromosomeLength, [], [], [], [], [], [], [], ls.options);
-
-      delete(ls.bar);
-    end
   end
 
   methods (Access = protected)
-    function fitness = evaluate(ls, chromosome)
-      ls.evaluations = ls.evaluations + 1;
-      waitbar(mod(ls.evaluations, 10) / 10, ls.bar, ...
-        [ 'Evaluation #' num2str(ls.evaluations) ]);
-
-      key = Utils.mMD5(chromosome);
-
-      if ls.cache.isKey(key)
-        fitness = ls.cache(key);
-        return;
-      end
-
+    function fitness = compute(ls, chromosome)
       % Make a new schedule
       LS.schedule(ls.graph, chromosome);
 
       if ls.graph.duration > ls.deadline
         fitness = 0;
-      else
-        % The graph is rescheduled now, obtain the dynamic power profile
-        dynamicPowerProfile = Power.calculateDynamicProfile(ls.graph);
-
-        % Get the temperature curve
-        [ T, it, totalPowerProfile ] = ...
-          ls.hotspot.solveCondensedEquationWithLeakage( ...
-            dynamicPowerProfile, ls.vdd, ls.ngate, ...
-            ls.leakageTolerance, ls.maxLeakageIterations);
-
-        fitness = -min(Lifetime.predict(T));
+        return;
       end
 
-      % Cache it!
-      ls.cache(key) = fitness;
+      % The graph is rescheduled now, obtain the dynamic power profile
+      dynamicPowerProfile = Power.calculateDynamicProfile(ls.graph);
+
+      % Get the temperature curve
+      [ T, it, totalPowerProfile ] = ...
+        ls.hotspot.solveCondensedEquationWithLeakage( ...
+          dynamicPowerProfile, ls.vdd, ls.ngate, ...
+          ls.leakageTolerance, ls.maxLeakageIterations);
+
+      fitness = -min(Lifetime.predict(T));
     end
 
-    function [ state, options, changed ] = control(ls, ...
-      options, state, flag, interval)
+    function state = control(ls, state)
+      if state.Generation < ls.generationalStall, return; end
 
-      changed = false;
+      left = state.Best(end - ls.generationalStall + 1);
+      right = state.Best(end);
 
-      if ls.drawing, ls.drawGeneration(state); end
+      improvement = abs((right - left) / left);
 
-      no = state.Generation;
-
-      if no >= ls.generationLimit
-        state.StopFlag = 'Exceed the number of generations';
-      elseif no >= ls.generationalStall
-        left = state.Best(end - ls.generationalStall + 1);
-        right = state.Best(end);
-
-        improvement = abs((right - left) / left);
-
-        if improvement < ls.generationalTolerance
-          state.StopFlag = 'Observed a generational stall';
-        end
+      if improvement < ls.generationalTolerance
+        state.StopFlag = 'Observed a generational stall';
       end
     end
 
-    function initializeDrawing(ls, drawing)
-      ls.drawing = drawing;
-      title('Lifetime');
+    function initializeDrawing(ls)
+      title('Aging');
       xlabel('Generation');
-      ylabel('Lifetime, time units');
-      grid on;
+      ylabel('MTTF, time units');
+      ls.lastBest = [];
     end
 
     function drawGeneration(ls, state)

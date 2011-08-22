@@ -10,28 +10,29 @@ classdef LS < handle
   properties (SetAccess = protected)
     % Stop criteria
     generationLimit = 200;
-    generationalStall = 20; % generations
-    generationalTolerance = 0.01; % percent of fitness
 
     % How many individuals of the start population are generated
     % with the same chromosomes based on the initial mobility?
-    mobilityCreationFactor = 0.4;
+    mobilityCreationFactor = 0.5;
 
     % Size of the solution pool
     populationSize = 25; % individuals
 
     % Fraction of individuals who survive
-    generationalGap = 0.4;
+    generationalGap = 0.5;
 
     % How much to crossover and mutate?
     % (excluding the elite specified by generationalGap)
-    crossoverFraction = 0.5;
+    crossoverFraction = 0.8;
 
     % Minimal probability for mutation
-    minimalMutationProbability = 0.5;
+    minimalMutationProbability = 0.15;
   end
 
   properties (SetAccess = protected)
+    solver
+    additionalParams
+
     options
 
     graph
@@ -58,18 +59,22 @@ classdef LS < handle
 
     % Caching
     cache
-  end
-
-  methods (Abstract)
-    [ solution, fitness, output ] = solve()
+    fitnessType
   end
 
   methods (Abstract, Access = protected)
-    [ state, options, changed ] = control(options, state, flag, interval)
+    fitness = compute(chromosome)
+    terminate = control(state)
+    initializeDrawing()
+    drawGeneration(state)
   end
 
   methods
     function ls = LS(graph, hotspot)
+      % Solver itself
+      ls.solver = @ga;
+      ls.additionalParams = cell(1, 7);
+
       % Configure GA
       options = gaoptimset;
 
@@ -87,7 +92,7 @@ classdef LS < handle
       options.CrossoverFcn = @ls.crossover;
       options.CreationFcn = @ls.create;
       options.MutationFcn = @ls.mutate;
-      options.OutputFcns = [ @ls.control ];
+      options.OutputFcns = [ @ls.output ];
 
       ls.options = options;
 
@@ -115,10 +120,51 @@ classdef LS < handle
       end
       ls.maxMobility = max(ls.mobility);
       ls.minMobility = min(ls.mobility);
+
+      % Caching
+      ls.fitnessType = 'double';
+    end
+
+    function [ solution, fitness, output ] = solve(ls, drawing)
+      if nargin > 0
+        figure(drawing);
+        ls.drawing = drawing;
+        ls.initializeDrawing();
+        grid on;
+      end
+
+      % Reset
+      ls.cache = containers.Map('KeyType', 'char', 'ValueType', ls.fitnessType);
+      ls.evaluations = 0;
+
+      ls.bar = waitbar(0, 'Genetic List Scheduling Algorithm');
+
+      [ solution, fitness, exitflag, output ] = ls.solver(@ls.evaluate, ...
+        ls.chromosomeLength, ls.additionalParams{:}, ls.options);
+
+      delete(ls.bar);
     end
   end
 
   methods (Access = protected)
+    function fitness = evaluate(ls, chromosome)
+      ls.evaluations = ls.evaluations + 1;
+      waitbar(mod(ls.evaluations, 10) / 10, ls.bar, ...
+        [ 'Evaluation #' num2str(ls.evaluations) ]);
+
+      key = Utils.mMD5(chromosome);
+
+      if ls.cache.isKey(key)
+        fitness = ls.cache(key);
+        return;
+      end
+
+      fitness = ls.compute(chromosome);
+
+      % Cache it!
+      ls.cache(key) = fitness;
+    end
+
     function population = create(ls, chromosomeLength, fitnessFcn, options)
       psize = ls.populationSize;
 
@@ -262,6 +308,21 @@ classdef LS < handle
       fitnessFunc, state, thisScore, thisPopulation)
 
       children = parents;
+    end
+
+    function [ state, options, changed ] = output(ls, ...
+      options, state, flag, interval)
+
+      changed = false;
+
+      if ls.drawing, ls.drawGeneration(state); end
+
+      if state.Generation >= ls.generationLimit
+        state.StopFlag = 'Exceed the number of generations';
+        return;
+      end
+
+      state = ls.control(state);
     end
 
     function mobility = rand(ls, rows, cols)

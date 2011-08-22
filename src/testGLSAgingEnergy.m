@@ -23,15 +23,15 @@ Utils.stopTimer();
 
 [ mttf, cycles ] = Lifetime.predict(T);
 
-aging = min(mttf);
-energy = sum(sum(totalPowerProfile * Constants.samplingInterval));
+aging0 = min(mttf);
+energy0 = sum(sum(totalPowerProfile * Constants.samplingInterval));
 
-fprintf('MTTF without optimization: %.2f\n', aging);
-fprintf('Energy: %.2f J\n', energy);
+fprintf('MTTF without optimization: %.2f\n', aging0);
+fprintf('Energy: %.2f J\n', energy0);
 
 drawing = figure;
 
-line(aging, energy, 'Marker', '*', 'MarkerSize', 15, ...
+line(aging0, energy0, 'Marker', '*', 'MarkerSize', 15, ...
   'Color', 'g', 'LineWidth', 1.1);
 
 % Now, try to optimize with the GLSA
@@ -46,5 +46,12 @@ energy = fitness(:, 2);
 
 [ dummy, I ] = sort(aging);
 line(aging(I), energy(I), 'Color', 'b');
+
+fprintf('%15s%15s%15s%15s\n', 'MFFT', 'd(MTTF), %', 'Energy', 'd(Energy), %');
+
+for i = 1:length(aging)
+  fprintf('%15.2f%15.2f%15.2f%15.2f\n', ...
+    aging(i), (aging(i)/aging0 - 1) * 100, energy(i), (energy(i)/energy0 - 1) * 100);
+end
 
 fprintf('Number of generation: %d\n', output.generations);
