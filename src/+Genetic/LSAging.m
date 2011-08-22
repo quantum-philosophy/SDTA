@@ -68,6 +68,7 @@ classdef LSAging < Genetic.LS
       psize = length(scores);
 
       figure(ls.drawing);
+      title([ 'Aging (generation ', num2str(state.Generation), ')' ]);
 
       score = max(scores);
 
