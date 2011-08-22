@@ -22,7 +22,7 @@ steps = floor(totalTime / Constants.samplingInterval);
 Utils.generateFloorplan(floorplan, cores, dieSize);
 
 vdd = 0.8 + 0.2 * (rand(1, cores) - 0.5);
-ngate = 1e6 + 0.1e6 * (rand(1, cores) - 0.5);
+ngate = 2e6 + 0.1e6 * (rand(1, cores) - 0.5);
 
 pes = {};
 for i = 1:cores
@@ -61,15 +61,22 @@ for i = 1:maxit
 
   % The Condensed Equation Method
   Utils.startTimer();
-  nextT = hotspot.solveCondensedEquation(dynamicPowerProfile + staticPowerProfile);
+  Tnext = hotspot.solveCondensedEquation(dynamicPowerProfile + staticPowerProfile);
   t = Utils.stopTimer();
 
-  error = max(max(abs(T - nextT)));
+  Tmax = max(max(T));
 
-  fprintf('Iteration %d, solved in %.2f s, error %0.2f C\n', i, t, error);
+  if Tmax > Constants.temperatureRunaway
+    error('Detected a temperature runaway: %.f C\n', ...
+      Tmax - Constants.degreeKelvin);
+  end
 
-  T = nextT;
-  if error < tol, break; end
+  Terror = max(max(abs(T - Tnext)));
+
+  fprintf('Iteration %d, solved in %.2f s, error %0.2f C\n', i, t, Terror);
+
+  T = Tnext;
+  if Terror < tol, break; end
 end
 
 t = toc(startTic);
@@ -86,10 +93,19 @@ fprintf('Solved in MatLab in %.2f s\n', t);
 fprintf('Solved in C++    in %.2f s\n', tcpp);
 fprintf('Error: %f\n', max(max(abs(T - Tcpp))));
 
-fprintf('Energy without leakage: %.2f J\n', ...
+leakagePowerProfile = totalPowerProfile - dynamicPowerProfile;
+leakageInTotal = mean(mean((leakagePowerProfile ./ totalPowerProfile)));
+leakageInDynamic = mean(mean((leakagePowerProfile ./ dynamicPowerProfile)));
+
+fprintf('Leakage part in the total power:   %.2f %%\n', leakageInTotal * 100);
+fprintf('Leakage part in the dynamic power: %.2f %%\n', leakageInDynamic * 100);
+
+fprintf('Energy without leakage:    %.2f J\n', ...
   sum(sum(dynamicPowerProfile * Constants.samplingInterval)));
-fprintf('Energy with leakage:    %.2f J\n', ...
+fprintf('Energy with leakage:       %.2f J\n', ...
   sum(sum(totalPowerProfile * Constants.samplingInterval)));
+fprintf('Energy because of leakage: %.2f J\n', ...
+  sum(sum(leakagePowerProfile * Constants.samplingInterval)));
 
 % Static power profile
 subplot(2, 3, 2);

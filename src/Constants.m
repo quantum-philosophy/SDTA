@@ -25,5 +25,8 @@ classdef Constants < handle
 
     % Sampling interval
     samplingInterval = 1e-4; % s
+
+    % Temperature runaway
+    temperatureRunaway = 120 + Constants.degreeKelvin; % K
   end
 end
