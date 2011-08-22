@@ -19,11 +19,7 @@ classdef LS < handle
       % Size of the solution pool
       t.populationSize = 25; % individuals
 
-      % Fraction of individuals who survive
-      t.generationalGap = 0.5;
-
       % How much to crossover and mutate?
-      % (excluding the elite specified by generationalGap)
       t.crossoverFraction = 0.8;
 
       % Minimal probability for mutation
@@ -82,7 +78,7 @@ classdef LS < handle
       if nargin < 3, tuning = ls.defaultTuning(); end
 
       % Tunning
-      ls.tune(tuning);
+      [ ls.options, ls.tuning ] = ls.tune(tuning);
 
       % Solver itself
       ls.solver = @ga;
@@ -322,7 +318,7 @@ classdef LS < handle
         (ls.maxMobility - ls.minMobility) * rand(rows, cols);
     end
 
-    function tune(ls, t)
+    function [ o, t ] = tune(ls, t)
       % Default options
       o = gaoptimset;
 
@@ -332,7 +328,6 @@ classdef LS < handle
       o.TolFun = 0;
 
       o.PopulationSize = t.populationSize;
-      o.EliteCount = floor(t.generationalGap * t.populationSize);
       o.CrossoverFraction = t.crossoverFraction;
 
       o.FitnessScalingFcn = @ls.rank;
@@ -341,9 +336,6 @@ classdef LS < handle
       o.CreationFcn = @ls.create;
       o.MutationFcn = @ls.mutate;
       o.OutputFcns = [ @ls.output ];
-
-      ls.options = o;
-      ls.tuning = t;
     end
   end
 

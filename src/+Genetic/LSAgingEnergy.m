@@ -7,13 +7,9 @@ classdef LSAgingEnergy < Genetic.LS
     function ls = LSAgingEnergy(varargin)
       ls = ls@Genetic.LS(varargin{:});
 
-      % Solver itself
+      % Another solver
       ls.solver = @gamultiobj;
       ls.additionalParams = cell(1, 6);
-
-      % Multi-objective version does not have this
-      ls.options.FitnessScalingFcn = [];
-      ls.options.SelectionFcn = [];
 
       % Caching
       ls.fitnessType = 'any';
@@ -21,6 +17,14 @@ classdef LSAgingEnergy < Genetic.LS
   end
 
   methods (Access = protected)
+    function [ o, t ] = tune(ls, t)
+      [ o, t ] = ls.tune@Genetic.LS(t);
+
+      % Multi-objective version does not have this
+      o.FitnessScalingFcn = [];
+      o.SelectionFcn = [];
+    end
+
     function fitness = compute(ls, chromosome)
       % Make a new schedule
       LS.schedule(ls.graph, chromosome);

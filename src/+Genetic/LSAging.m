@@ -6,8 +6,11 @@ classdef LSAging < Genetic.LS
   methods (Static)
     function t = defaultTuning(varargin)
       t = Genetic.LS.defaultTuning( ...
+        ... % Additional Stop criteria
         'generationStall', 20, ...
         'generationTolerance', 0.01, ...
+        ... % Fraction of individuals who survive
+        'generationalGap', 0.5, ...
         varargin{:} ...
       );
     end
@@ -20,6 +23,13 @@ classdef LSAging < Genetic.LS
   end
 
   methods (Access = protected)
+    function [ o, t ] = tune(ls, t)
+      [ o, t ] = ls.tune@Genetic.LS(t);
+
+      % These ones will survive for sure
+      o.EliteCount = floor(t.generationalGap * t.populationSize);
+    end
+
     function fitness = compute(ls, chromosome)
       % Make a new schedule
       LS.schedule(ls.graph, chromosome);
