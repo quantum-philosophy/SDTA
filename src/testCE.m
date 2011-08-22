@@ -6,6 +6,8 @@ rng(0);
 
 [ graph, hotspot, powerProfile ] = setup('test_cases/test_case_4_60');
 
+graph.inspect();
+
 Utils.startTimer('Solve with the CE');
 T = hotspot.solveCondensedEquation(powerProfile) ;
 t = Utils.stopTimer();

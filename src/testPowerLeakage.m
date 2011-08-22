@@ -4,42 +4,57 @@ clear all;
 clc;
 rng(0);
 
-name = 'simple';
-
-cores = 4;
-dieSize = 81e-6; % m^2
-maxPower = 100; % W
-totalTime = 1; % s
-
 tol = 0.01; % K
 maxit = 10;
 
-floorplan = Utils.path([ name, '.flp' ]);
-config = Utils.path('hotspot.config');
+if true
+  [ graph, hotspot, dynamicPowerProfile ] = setup('test_cases/test_case_4_60');
+  [ steps, cores ] = size(dynamicPowerProfile);
 
-steps = floor(totalTime / Constants.samplingInterval);
+  maxPower = max(sum(dynamicPowerProfile, 2));
+  totalTime = steps * Constants.samplingInterval;
 
-Utils.generateFloorplan(floorplan, cores, dieSize);
+  vdd = [];
+  ngate = [];
 
-vdd = 0.8 + 0.2 * (rand(1, cores) - 0.5);
-ngate = 2e6 + 0.1e6 * (rand(1, cores) - 0.5);
+  pes = graph.pes;
 
-pes = {};
-for i = 1:cores
-  pes{end + 1} = TestCase.Processor(i, '', i, 2e6, vdd(i), ngate(i));
-  pes{end}.inspect();
+  for i = 1:cores
+    vdd(end + 1) = pes{i}.voltage;
+    ngate(end + 1) = pes{i}.ngate;
+  end
+else
+  name = 'simple';
+
+  cores = 4;
+  dieSize = 81e-6; % m^2
+  maxPower = 100; % W
+  totalTime = 1; % s
+
+  floorplan = Utils.path([ name, '.flp' ]);
+  config = Utils.path('hotspot.config');
+
+  steps = floor(totalTime / Constants.samplingInterval);
+
+  Utils.generateFloorplan(floorplan, cores, dieSize);
+
+  vdd = 0.8 + 0.2 * (rand(1, cores) - 0.5);
+  ngate = 2e6 + 0.1e6 * (rand(1, cores) - 0.5);
+
+  pes = {};
+  for i = 1:cores
+    pes{end + 1} = TestCase.Processor(i, '', i, 2e6, vdd(i), ngate(i));
+    pes{end}.inspect();
+  end
+
+  hotspot = HotSpot(floorplan, config);
+  dynamicPowerProfile = Power.generateRandomProfile(cores, steps, maxPower);
 end
 
 fprintf('Maximal power:   %d W\n', maxPower);
 fprintf('Simulation time: %d s\n', totalTime);
 fprintf('Number of steps: %d\n', steps);
 fprintf('Number of cores: %d\n', cores);
-
-% Thermal model
-hotspot = HotSpot(floorplan, config);
-
-% Random power profile
-dynamicPowerProfile = Power.generateRandomProfile(cores, steps, maxPower);
 
 figure;
 
@@ -94,18 +109,17 @@ fprintf('Solved in C++    in %.2f s\n', tcpp);
 fprintf('Error: %f\n', max(max(abs(T - Tcpp))));
 
 leakagePowerProfile = totalPowerProfile - dynamicPowerProfile;
-leakageInTotal = mean(mean((leakagePowerProfile ./ totalPowerProfile)));
-leakageInDynamic = mean(mean((leakagePowerProfile ./ dynamicPowerProfile)));
 
-fprintf('Leakage part in the total power:   %.2f %%\n', leakageInTotal * 100);
-fprintf('Leakage part in the dynamic power: %.2f %%\n', leakageInDynamic * 100);
+Edynamic = sum(sum(dynamicPowerProfile * Constants.samplingInterval));
+Etotal = sum(sum(totalPowerProfile * Constants.samplingInterval));
+Eleakage = sum(sum(leakagePowerProfile * Constants.samplingInterval));
 
-fprintf('Energy without leakage:    %.2f J\n', ...
-  sum(sum(dynamicPowerProfile * Constants.samplingInterval)));
-fprintf('Energy with leakage:       %.2f J\n', ...
-  sum(sum(totalPowerProfile * Constants.samplingInterval)));
-fprintf('Energy because of leakage: %.2f J\n', ...
-  sum(sum(leakagePowerProfile * Constants.samplingInterval)));
+fprintf('Energy without leakage:    %.2f J\n', Edynamic);
+fprintf('Energy with leakage:       %.2f J\n', Etotal);
+fprintf('Energy because of leakage: %.2f J\n', Eleakage);
+
+fprintf('Leakage part in total:   %.2f %%\n', Eleakage / Etotal * 100);
+fprintf('Leakage part in dynamic: %.2f %%\n', Eleakage / Edynamic * 100);
 
 % Static power profile
 subplot(2, 3, 2);
@@ -118,13 +132,6 @@ subplot(2, 3, 3);
 Utils.drawLines('Total Power Profile', 'Time, s', 'Power, W', ...
   x, totalPowerProfile);
 line(x, sum(totalPowerProfile, 2), 'Color', 'k', 'Line', '--');
-
-% Balance axes
-YLim = get(gca, 'YLim');
-subplot(2, 3, 2);
-set(gca, 'YLim', YLim);
-subplot(2, 3, 1);
-set(gca, 'YLim', YLim);
 
 T = hotspot.solveCondensedEquation(dynamicPowerProfile) - Constants.degreeKelvin;
 
@@ -149,6 +156,25 @@ subplot(2, 3, 6);
 line(x, [ am, am ],  'Color', 'k', 'Line', '--');
 
 % Balance axes
+subplot(2, 3, 3);
+YLim = get(gca, 'YLim');
+subplot(2, 3, 1);
+set(gca, 'YLim', YLim);
+subplot(2, 3, 2);
+set(gca, 'YLim', YLim);
+
+subplot(2, 3, 6);
 YLim = get(gca, 'YLim');
 subplot(2, 3, 4);
 set(gca, 'YLim', YLim);
+
+subplot(2, 3, 1);
+set(gca, 'XLim', [ 0 totalTime ]);
+subplot(2, 3, 2);
+set(gca, 'XLim', [ 0 totalTime ]);
+subplot(2, 3, 3);
+set(gca, 'XLim', [ 0 totalTime ]);
+subplot(2, 3, 4);
+set(gca, 'XLim', [ 0 totalTime ]);
+subplot(2, 3, 6);
+set(gca, 'XLim', [ 0 totalTime ]);
