@@ -19,8 +19,12 @@ classdef LSAgingEnergy < Genetic.LS
       ls.fitnessType = 'any';
 
       % Tuning
-      ls.generationLimit = 50;
-      ls.populationSize = 40;
+      ls.generationLimit = 100;
+      ls.mobilityCreationFactor = 0.5;
+      ls.populationSize = 50; % individuals
+      ls.generationalGap = 0.5;
+      ls.crossoverFraction = 0.8;
+      ls.minimalMutationProbability = 0.1;
     end
   end
 
