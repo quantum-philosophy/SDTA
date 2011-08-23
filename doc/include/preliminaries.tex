@@ -1,3 +1,4 @@
+\subsection{RC Thermal Model}
 We consider a well-known thermal model called HotSpot. HotSpot is a modeling methodology for developing compact thermal models based on the popular stacked-layer packaging scheme in modern very large-scale integration systems \cite{huang2006}. It describes thermal systems with the following widespread differential equation \cite{rao2008}:
 \[
   C \cdot \frac{dT}{dt} + G \cdot T = P
@@ -30,5 +31,3 @@ If we are talking about a power profile, then we have a number of vectors $B$ fo
     \right]
 \]
 where $m$ is the number of time steps, $b_{ij}$ id the power supplied to the $i$-th core on the $j$-th step.
-
-One approach to find SSDTC would be to call HotSpot (the tool) with a very long power profile composed of some repeating chunk, but it would take much time to compute (see the comparison in \secref{sec:comparison}).

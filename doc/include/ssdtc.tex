@@ -1,9 +1,18 @@
+\subsection{Problem Formulation}
+We consider a multiprocessor embedded system that runs a number of periodic tasks. We assume that the power profile of the system is given, and it has periodic nature. Therefore, the overall profile is described with one repeating chunk.
+
+In this case, after the stabilization process, the temperature profile also becomes periodic. This temperature curve is called \ssdtc\ (SSDTC), and our goal is to find it. Furthermore, we want to calculate it quick and accurate enough to be able to use it inside other optimization problems. An example of such problem is given in \secref{sec:results}.
+
+\subsection{Iterative Solution with HotSpot}
+One approach to find SSDTC would be to call HotSpot (the tool) with a very long power profile composed of some repeating chunk, but it would take much time to compute (see the comparison in \secref{sec:results}).
+
+\subsection{Direct Analytical Solution}
 In order to deal with the problem, we use the analytical approach. First of all, we need to be able to solve \equref{eq:initial} efficiently. The direct solution is:
 \begin{equation} \label{eq:solution}
   T(t) = e^{C^{-1}A \cdot t} \cdot T_0 + (C^{-1} \cdot A)^{-1}(e^{C^{-1}A \cdot t} - I)C^{-1} \cdot B
 \end{equation}
 
-Here we need to find the matrix exponential of $C^{-1} At$, but it would be easier to do if the matrix were symmetric, because a real symmetric matrix is diagonalizable and has independent (orthogonal) real eigenvectors:
+Here we need to find the matrix exponential of $C^{-1} \cdot A \cdot t$, but it would be easier to do if the matrix were symmetric, because a real symmetric matrix is diagonalizable and has independent (orthogonal) real eigenvectors:
 \begin{align}
   & A = U \cdot \Lambda \cdot U^T \label{eq:eigenvalue-decomposition} \\
   & e^A = e^{U \cdot \Lambda \cdot U^T} = U \cdot e^{\Lambda} \cdot U^T \nonumber \\
@@ -30,7 +39,7 @@ with the result:
   T(t) & = C^{-\frac{1}{2}} \cdot Y(t) \nonumber
 \end{align}
 
-Now $D$ is a symmetric matrix, hence, it will be easy to find the matrix exponential of $D t$ using the eigenvalue decomposition (\equref{eq:eigenvalue-decomposition}):
+Now $D$ is a symmetric matrix, hence, it will be easy to find the matrix exponential of $D \cdot t$ using the eigenvalue decomposition (\equref{eq:eigenvalue-decomposition}):
 \[
   e^{D \cdot t} = U \cdot e^{t \cdot \Lambda} \cdot U^T = \left[
       \begin{array}{ccc}
@@ -43,7 +52,7 @@ Now $D$ is a symmetric matrix, hence, it will be easy to find the matrix exponen
 
 Each line of the power profile $B$ contains power values for all cores, denoted as $B_i$, at the same period of time $t_i$. Each step of the iterative process we get a vector of temperature values for all cores according to \equref{eq:modified-solution}:
 \begin{align}
-  & Y_{i+1} = K_i \cdot Y_i + G_i \cdot B_i \label{eq:recurrent} \\
+  & Y_{i+1} = K_i \cdot Y_i + G_i \cdot B_i \label{eq:ce-recurrent} \\
   & K_i = e^{D \cdot t_i} \nonumber \\
   & G_i = D^{-1}(e^{D \cdot t_i} - I) C^{-\frac{1}{2}} \nonumber
 \end{align}
@@ -91,7 +100,7 @@ Therefore, in order to find SSDTC, we need to solve the following system of line
     K_{m-1} \cdot Y_{m-1} - Y_{m} & = -Q_{m-1}
   \end{cases}
 \]
-where $Q_i = G_i B_i$.
+where $Q_i = G_i \cdot B_i$.
 
 Also we have one boundary condition that ensures the temperature to be the same on both sides of the curve:
 \begin{equation} \label{eq:boundary-condition}
@@ -142,3 +151,76 @@ In this notation, the system can be written as:
 $AA$ is a square matrix $nm \times nm$. $YY$ and $BB$ are vectors $nm \times 1$. This is the system that can give us desired SSDTC. It should be observed that if the sampling interval is constant, the block diagonal of the matrix $AA$ is composed of the same blocks $K$.
 
 Such systems could be extremely big, therefore, we need to find a fast and accurate way to solve them.
+
+\subsection{Condensed Equation Method}
+The system that we have is described with the following recurrent equation:
+\begin{equation} \label{eq:recurrent}
+  Y_{i + 1} = K_i \cdot Y_i + Q_i, \; i = 0 \dots (m - 1)
+\end{equation}
+
+The iterative repetition of this equation leads us to:
+\begin{align}
+  Y_i & = \prod_{j = 0}^{i - 1} K_j \cdot Y_0 + P_{i - 1}, \; i = 1 \dots m \label{eq:y-recurrent} \\
+  P_0 & = Q_0 \nonumber \\
+  P_i & = \sum_{l = 1}^i \prod_{j = l}^i K_j \cdot Q_{l - 1} + Q_i, \: i = 1 \dots (m - 1) \nonumber
+\end{align}
+The last one can be rewritten as:
+\begin{equation} \label{eq:p-recurrent}
+  P_i = K_i \cdot P_{i - 1} + Q_i, \; i = 1 \dots (m - 1)
+\end{equation}
+
+Therefore, we can calculate the final value $Y_m$ from \equref{eq:y-recurrent}:
+\[
+  Y_m = \prod_{j = 0}^{m - 1} K_j \cdot Y_0 + P_{m - 1}
+\]
+
+Taking into account the boundary condition \equref{eq:boundary-condition} and substituting $Y_m$ with $Y_0$, we get the following system of linear equations:
+\[
+  (I - \prod_{j = 0}^{m - 1} K_j) Y_0 = P_{m - 1}
+\]
+
+To solve it, we need to obtain $P_{m - 1}$ from \eqref{eq:p-recurrent}. Once we get $Y_0$, we can use \eqref{eq:recurrent} to get all other vectors $Y_i$.
+
+Now, we know that in case of the fixed sampling interval $K_i = K$. Therefore, the equations become much simpler:
+\begin{align}
+  & Y_{i + 1} = K \cdot Y_i + Q_i, \; i = 0 \dots (m - 1) \nonumber \\
+  & P_i = K \cdot P_{i - 1} + Q_i, \; i = 1 \dots (m - 1) \nonumber \\
+  & (I - K^m) Y_0 = P_{m - 1} \label{eq:linear-system}
+\end{align}
+
+In this case, $K^m$ can be found very efficiently, since it is a power of the matrix exponential of $D t_s$ (see \equref{eq:ce-recurrent}):
+\begin{align*}
+  & K = U \cdot e^{\Lambda} \cdot U^T = U \cdot diag(\lambda_0, \dots, \lambda_{n - 1}) \cdot U^T \\
+  & K^m = U \cdot e^{\Lambda} \cdot U^T \cdot U e^{\Lambda} \cdot U^T \dots U \cdot e^{\Lambda} \cdot U^T = U \cdot e^{m \Lambda} \cdot U^T
+\end{align*}
+where $U$ is a matrix of the eigenvectors of $D t_s$ (orthogonal), $\Lambda$ is a diagonal matrix of the eigenvalues of $D t_s$.
+
+Substituting $K^m$ from the last equation into \equref{eq:linear-system}, we get:
+\[
+  (I - U \cdot e^{m \cdot \Lambda} \cdot U^T) Y_0 = P_{m - 1}
+\]
+
+The identity matrix $I$ can be split into $U U^T$, therefore:
+\begin{align*}
+  & U (I - e^{m \cdot \Lambda}) U^T \cdot Y_0 = P_{m - 1} \\
+  & Y_0 = U (I - e^{m \cdot \Lambda})^{-1} U^T \cdot P_{m - 1} \\
+  & Y_0 = U \cdot M \cdot U^T \cdot P_{m - 1}
+\end{align*}
+where $M$ is a diagonal matrix with the following structure:
+\[
+  M = \left[
+    \begin{array}{ccc}
+      \frac{1}{1 - e^{m \cdot \lambda_0}} & \cdots & 0 \\
+      \vdots & \ddots & \vdots \\
+      0 & \cdots & \frac{1}{1 - e^{m \cdot \lambda_{n - 1}}}
+    \end{array}
+  \right]
+\]
+
+As we see, in this approach there is no need to inverse any matrix, the solution of the system is obtained by scalar divisions and a similarity transformation with $U$.
+
+We also can benefit from the matrix exponential in the general case where the time intervals could be different:
+\[
+  \prod_{j = i}^l K_j = \prod_{j = i}^l e^{D \cdot t_j} = e^{D \sum_{j = i}^l t_j}
+\]
+since the product of each pair $D \cdot t_j$ and $D \cdot t_k$ is commutative.

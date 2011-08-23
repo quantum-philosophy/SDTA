@@ -1,4 +1,6 @@
-In order to demonstrate the speed and accuracy of the proposed solution, we apply it in the context of temperature-aware mapping and scheduling in order to address the agin effect and optimize the energy consumption. Both mapping and scheduling are based on genetic algorithms described in \cite{schmitz2004}. The genetic scheduling internally relies on the list scheduler. Let us start from the description of the system that we use.
+The proposed solution of the steady-state dynamic temperature analysis can be used in a wide range of optimization procedures. One of them is the space exploration of the reliability charachteristics of embedded systems. We performing the temperature-aware mapping and scheduling in order to address the aging effect while keeping the energy consumption on an appropriate level. Both mapping and scheduling are based on genetic algorithms described in \cite{schmitz2004}. The genetic scheduling internally relies on the list scheduler.
+
+Let us start from the overall description of the system that we use.
 
 \subsection{Architecture Model}
 We consider a multiprocessor system with heterogeneous architecture that is composed of a number of processing elements (PE). Each processing element $PE_i$ is characterized by its supply voltage $V_i$, frequency $f_i$, and the number of gates:
@@ -7,7 +9,7 @@ We consider a multiprocessor system with heterogeneous architecture that is comp
   & PE_i \rightarrow (V_i, f_i, N_{gate i})
 \end{align*}
 
-\subsection{Task Model}
+\subsection{Application Model}
 The system runs a periodic application $A$ which contains a number of tasks. The period of the application $T$ can be thought as a shared deadline for all the tasks. The tasks themselves and the data dependencies between them are described with a task graph:
 \begin{align*}
   & A \rightarrow (G, T) \\
@@ -42,32 +44,46 @@ In should be noted that the dynamic power consumption does not depend on tempera
 
 \subsection{Temperature-Aware Reliability Optimization}
 We address the thermal cycling (TC) component of the common packaging/interfacial failure mechanisms \cite{jedec2010}. The reliability model, presented in \cite{xiang2010}, is used. The number of cycles to failure ($N_{TC}$) can be estimated using a modified version of the well-known Coffin-Manson equation with the Arrhenius term \cite{jedec2010}, \cite{xiang2010}, \cite{ciappa2003}:
-\begin{equation} \label{eq:number_of_cycles_to_failure}
+\begin{equation} \label{eq:cycles-to-failure}
   N = A_{TC} (\triangle T - \triangle T_0)^{-b} e^{\frac{E_{a_{TC}}}{k T_{max}}}
 \end{equation}
 where $A_{TC}$ is an empirically determined constant, $\triangle T$ is the thermal cycle amplitude, $\triangle T_0$ is the portion of the temperature range in the elastic region which does not cause damage, $b$ is the Coffin-Manson exponent which also empirically determined, $E_{a_{TC}}$ is the activation energy, $k$ is the Boltzmann constant, and $T_{max}$ is the maximal temperature during the thermal cycle.
 
-\equref{eq:number_of_cycles_to_failure} is suitable for one repeating thermal cycle with constant parameters. If we have a range of $m$ different thermal cycles in a given time interval, the following equation should be used instead to estimate the number of such sets of thermal cycles to failure \cite{xiang2010}:
-\begin{equation} \label{eq:number_of_periods_to_failure}
-  N_{TC} = \frac{m}{\sum_{i=0}^m \frac{1}{N_i}}
+The failure rate is modeled with the Weibull distribution:
+\[
+  R(t) = e^{(\frac{t}{\eta})^\beta}
+\]
+where $\eta$ is the scaling parameter, $\beta$ is the shape parameter. The last one is assumed to be constant with temperature variation, which is not the case with the scaling parameter $\eta$. Therefore, the distribution can vary from one set of conditions to another. Suppose, the overall period of the application is split into $m$ time intervals with durations $\triangle t_i = t_{i+1} - t_i$, so that on each interval the scaling parameter is constant and equal to $\eta_i$. In this case, the cumulative distribution function for the end of the first execution of the application is the following \cite{xiang2010}:
+\[
+  R = e^{(\sum_{i=0}^{m-1} \frac{\triangle t_i}{\eta_i})^\beta}
+\]
+
+If the period of the application is $T$, then the formula takes the following continuous form for any point of time $t$:
+\[
+  R(t) = e^{(\frac{t}{T} \sum_{i=0}^{m-1} \frac{\triangle t_i}{\eta_i})^\beta}
+\]
+where $T / \sum_{i=0}^{m-1} \frac{\triangle t_i}{\eta_i}$ and be thought as a new scaling parameter $\eta$. The mean time to failure in case of the Weibull distribution is the following:
+\begin{equation} \label{eq:general-mttf}
+  MTTF = \eta \cdot \Gamma(1 + \frac{1}{\beta})
 \end{equation}
+where $\Gamma$ is the gamma function. Now, we need to determine the scaling parameters $\eta_i$ for all time intervals. These parameters can be derived using the same \equref{eq:general-mttf}:
+\[
+  \eta_i = \frac{MTTF_i}{\Gamma(1 + \frac{1}{\beta})}
+\]
+where $MTTF_i$ is the mean time to failure for each interval (if we had the same distribution all the time), which can be modeled as a product of the average number of cycles to failure \equref{eq:cycles-to-failure} and the duration of a cycle:
+\[
+  MTTF_i = N_i \cdot \triangle t_i
+\]
 
-The mean time to failure (MTTF) is calculated using the following equation:
-\begin{equation} \label{eq:mttf}
-  MTTF_{TC} = \frac{N_{TC} \sum_{i=1}^m t_i}{m}
-\end{equation}
-where $m$ is the number of cycles in a given time interval, and $\sum_{k=1}^m t_k$ is the total duration of the given time period.
+Taking everything together, we get:
+\begin{align}
+  MTTF & = \frac{T}{\sum_{i=0}^{m-1} \frac{\triangle t_i}{\eta_i}} \cdot \Gamma(1 + \frac{1}{\beta}) \nonumber \\
+  & = \frac{T}{\Gamma(1 + \frac{1}{\beta}) \cdot \sum_{i=0}^{m-1} \frac{\triangle t_i}{\triangle t_i \cdot N_i}} \cdot \Gamma(1 + \frac{1}{\beta}) \nonumber \\
+  & = \frac{T}{\sum_{i=0}^{m-1} \frac{1}{N_i}} \nonumber \\
+  & = \frac{A_{TC} \cdot T}{\sum_{i=0}^{m-1} (\triangle T_i - \triangle T_0)^b e^{- \frac{E_{a_{TC}}}{k T_{max i}}}} \label{eq:one-mttf}
+\end{align}
 
-Taking \equref{eq:number_of_cycles_to_failure}, \equref{eq:number_of_periods_to_failure}, and \equref{eq:mttf} together yields:
-\begin{equation}
-  MTTF_{TC} = \frac{A_{TC} \cdot T}{\sum_{i=1}^m (\triangle T_i - \triangle T_0)^b e^{- \frac{E_{a_{TC}}}{k T_{max i}}}}
-\end{equation}
-
-\subsection{Experimental Setup}
-Each processing element is described with a supply voltage in the diapason 0.6--1.0 V, a frequency in 2--4 GHz, and a number of gates in $5^5$--$15^5$. The application, that is being run on this multiprocessor system, consists of a number of tasks in the range 5--100. The effective switched capacitance and the number of clock cycles of each task are in the ranges $2^{-8}$--$4^{-8}$ and $5^9$--$15^9$ respectively. In \equref{eq:number_of_cycles_to_failure} the constant $b$ for brittle fracture (Si and its dielectrics) is found to be 6--9 \cite{jedec2010}, $E_{a_{TC}}$ for TC lies between 0.5--0.7 eV \cite{vigrass}.
-
-\subsection{Performance Comparison} \label{sec:comparison}
-TODO.
-
-\subsection{Obtained Results}
-TODO.
+\equref{eq:one-mttf} describes the mean time to failure of one processing element. We assume that each processing element is essential for the proper work of the system, therefore, one failure of one core leads to the total failure of the whole system. Hence, the MTTF of a system with $k$ processing elements is the following:
+\[
+  MTTF_{total} = min_{i=0}^{k-1}(MTTF_i)
+\]
