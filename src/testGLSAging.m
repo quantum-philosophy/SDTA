@@ -4,6 +4,8 @@ clear all;
 clc;
 rng(0);
 
+runTimes = 9;
+
 [ graph, hotspot, dynamicPowerProfile ] = setup('test_cases/test_case_4_60');
 
 vdd = zeros(0);
@@ -19,7 +21,7 @@ tuning = Genetic.LSAging.defaultTuning( ...
   'generationTolerance', 0.01, ...
   'generationLimit', 500, ...
   'mobilityCreationFactor', 0.5, ...
-  'populationSize', 100, ...
+  'populationSize', 50, ...
   'generationalGap', 0.4, ...
   'crossoverFraction', 0.6, ...
   'mutationProbability', 'max(0.2, 1 / exp(state.Generation * 0.05))' ...
@@ -40,32 +42,55 @@ energy0 = sum(sum(totalPowerProfile * Constants.samplingInterval));
 fprintf('MTTF without optimization: %.2f\n', aging0);
 fprintf('Energy: %.2f J\n', energy0);
 
-drawing = figure;
+rows = floor(sqrt(runTimes));
+cols = ceil(runTimes / rows);
 
-line(0, aging0, 'Marker', '*', 'MarkerSize', 15, ...
-  'Color', 'g', 'LineWidth', 1.1);
+figure;
 
-% Now, try to optimize with the GLSA
-ls = Genetic.LSAging(graph, hotspot, tuning);
+fprintf('\n');
+fprintf('%5s%15s%15s%15s%15s%15s%15s\n', ...
+  'No', 'Generations', 'Time, s', ...
+  'Aging, TU', '+ %', ...
+  'Energy, J', '+ %');
 
-Utils.startTimer('Solve with the GLSA');
-[ priority, fitness, output ] = ls.solve(drawing);
-Utils.stopTimer();
+generation = [];
+time = [];
+aging = [];
+energy = [];
 
-% Calculate the best one
-LS.schedule(graph, priority);
-dynamicPowerProfile = Power.calculateDynamicProfile(graph);
-[ T, it, totalPowerProfile ] = hotspot.solveCondensedEquationWithLeakage( ...
-  dynamicPowerProfile, vdd, ngate, tuning.leakageTolerance, ...
-  tuning.maxLeakageIterations);
+for i = 1:runTimes
+  drawing = subplot(rows, cols, i);
 
-[ mttf, cycles ] = Lifetime.predict(T);
+  line(0, aging0, 'Marker', '*', 'MarkerSize', 15, ...
+    'Color', 'g', 'LineWidth', 1.1);
 
-aging = min(mttf);
-energy = sum(sum(totalPowerProfile * Constants.samplingInterval));
+  % Now, try to optimize with the GLSA
+  ls = Genetic.LSAging(graph, hotspot, tuning);
 
-fprintf('MTTF with optimization: %.2f\n', aging);
-fprintf('Energy: %.2f J\n', energy);
+  Utils.startTimer();
+  [ priority, fitness, output ] = ls.solve(drawing);
+  time(end + 1) = Utils.stopTimer();
 
-% Compare
-fprintf('MTTF improvement: %.2f %%\n', (aging / aging0 - 1) * 100);
+  % Calculate the best one
+  LS.schedule(graph, priority);
+  dynamicPowerProfile = Power.calculateDynamicProfile(graph);
+  [ T, it, totalPowerProfile ] = hotspot.solveCondensedEquationWithLeakage( ...
+    dynamicPowerProfile, vdd, ngate, tuning.leakageTolerance, ...
+    tuning.maxLeakageIterations);
+
+  [ mttf, cycles ] = Lifetime.predict(T);
+
+  generation(end + 1) = output.generations;
+  aging(end + 1) = min(mttf);
+  energy(end + 1) = sum(sum(totalPowerProfile * Constants.samplingInterval));
+
+  fprintf('%5d%15d%15.2f%15.2f%15.2f%15.2f%15.2f\n', ...
+    i, generation(end), time(end), ...
+    aging(end), (aging(end) / aging0 - 1) * 100, ...
+    energy(end), (energy(end) / energy0 - 1) * 100);
+end
+
+fprintf('%5s%15d%15.2f%15.2f%15.2f%15.2f%15.2f\n', ...
+  '~', round(mean(generation)), mean(time), ...
+  mean(aging), mean((aging / aging0 - 1) * 100), ...
+  mean(energy), mean((energy / energy0 - 1) * 100));

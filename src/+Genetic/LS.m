@@ -115,10 +115,9 @@ classdef LS < handle
 
     function [ solution, fitness, output ] = solve(ls, drawing)
       if nargin > 0
-        figure(drawing);
+        grid(drawing, 'on');
         ls.drawing = drawing;
         ls.initializeDrawing();
-        grid on;
       end
 
       % Reset
@@ -334,6 +333,8 @@ classdef LS < handle
       o.CreationFcn = @ls.create;
       o.MutationFcn = @ls.mutate;
       o.OutputFcns = [ @ls.output ];
+
+      o.Display = 'off';
     end
   end
 

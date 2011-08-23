@@ -65,6 +65,7 @@ classdef LSAging < Genetic.LS
     end
 
     function initializeDrawing(ls)
+      axes(ls.drawing);
       title('Aging');
       xlabel('Generation');
       ylabel('MTTF, time units');
@@ -77,7 +78,7 @@ classdef LSAging < Genetic.LS
       no = state.Generation;
       psize = length(scores);
 
-      figure(ls.drawing);
+      axes(ls.drawing);
       title([ 'Aging (generations ', num2str(state.Generation), ')' ]);
 
       score = max(scores);

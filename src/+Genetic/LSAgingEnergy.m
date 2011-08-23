@@ -57,6 +57,7 @@ classdef LSAgingEnergy < Genetic.LS
     end
 
     function initializeDrawing(ls)
+      axes(ls.drawing);
       title('Aging vs Energy');
       ylabel('Energy, J');
       xlabel('MTTF, time units');
@@ -70,7 +71,7 @@ classdef LSAgingEnergy < Genetic.LS
       aging = -state.Score(:, 1);
       energy = state.Score(:, 2);
 
-      figure(ls.drawing);
+      axes(ls.drawing);
       title([ 'Aging vs Energy (generations ', num2str(state.Generation), ')' ]);
 
       if ~isempty(ls.currentLine)
