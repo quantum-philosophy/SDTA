@@ -4,7 +4,9 @@ clear all;
 clc;
 rng(0);
 
-[ graph, hotspot, dynamicPowerProfile ] = setup('test_cases/test_case_1_30');
+runTimes = 4;
+
+[ graph, hotspot, dynamicPowerProfile ] = setup('test_cases/test_case_4_60');
 
 vdd = zeros(0);
 ngate = zeros(0);
@@ -38,31 +40,44 @@ aging0 = min(mttf);
 energy0 = sum(sum(totalPowerProfile * Constants.samplingInterval));
 
 fprintf('MTTF without optimization: %.2f\n', aging0);
-fprintf('Energy: %.2f J\n', energy0);
+fprintf('Energy without optimization: %.2f J\n', energy0);
+fprintf('\n');
 
-drawing = figure;
+rows = floor(sqrt(runTimes));
+cols = ceil(runTimes / rows);
 
-line(aging0, energy0, 'Marker', '*', 'MarkerSize', 15, ...
-  'Color', 'g', 'LineWidth', 1.1);
+figure;
 
-% Now, try to optimize with the GLSA
-ls = Genetic.LSAgingEnergy(graph, hotspot, tuning);
+for i = 1:runTimes
+  fprintf('Evaluation #%d\n', i);
 
-Utils.startTimer('Solve with the GLSA');
-[ priority, fitness, output ] = ls.solve(drawing);
-Utils.stopTimer();
+  drawing = subplot(rows, cols, i);
 
-aging = -fitness(:, 1);
-energy = fitness(:, 2);
+  line(aging0, energy0, 'Marker', '*', 'MarkerSize', 15, ...
+    'Color', 'g', 'LineWidth', 1.1);
 
-[ dummy, I ] = sort(aging);
-line(aging(I), energy(I), 'Color', 'b');
+  % Now, try to optimize with the GLSA
+  ls = Genetic.LSAgingEnergy(graph, hotspot, tuning);
 
-fprintf('%15s%15s%15s%15s\n', 'MFFT', 'd(MTTF), %', 'Energy', 'd(Energy), %');
+  Utils.startTimer();
+  [ priority, fitness, output ] = ls.solve(drawing);
+  t = Utils.stopTimer();
 
-for i = 1:length(aging)
-  fprintf('%15.2f%15.2f%15.2f%15.2f\n', ...
-    aging(i), (aging(i)/aging0 - 1) * 100, energy(i), (energy(i)/energy0 - 1) * 100);
+  aging = -fitness(:, 1);
+  energy = fitness(:, 2);
+
+  [ dummy, I ] = sort(aging);
+  line(aging(I), energy(I), 'Color', 'b');
+
+  fprintf('Generations: %d\n', output.generations);
+  fprintf('Time: %.2 s\n', t);
+  fprintf('\n');
+  fprintf('%15s%15s%15s%15s\n', 'Aging, TU', '+ %', 'Energy, J', '+ %');
+
+  for i = 1:length(aging)
+    fprintf('%15.2f%15.2f%15.2f%15.2f\n', ...
+      aging(i), (aging(i)/aging0 - 1) * 100, energy(i), (energy(i)/energy0 - 1) * 100);
+  end
+
+  fprintf('\n\n');
 end
-
-fprintf('Number of generation: %d\n', output.generations);

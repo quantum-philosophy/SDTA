@@ -40,7 +40,7 @@ aging0 = min(mttf);
 energy0 = sum(sum(totalPowerProfile * Constants.samplingInterval));
 
 fprintf('MTTF without optimization: %.2f\n', aging0);
-fprintf('Energy: %.2f J\n', energy0);
+fprintf('Energy without optimization: %.2f J\n', energy0);
 
 rows = floor(sqrt(runTimes));
 cols = ceil(runTimes / rows);
