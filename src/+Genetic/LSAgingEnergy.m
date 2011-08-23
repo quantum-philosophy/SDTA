@@ -71,7 +71,7 @@ classdef LSAgingEnergy < Genetic.LS
       energy = state.Score(:, 2);
 
       figure(ls.drawing);
-      title([ 'Aging vs Energy (generation ', num2str(state.Generation), ')' ]);
+      title([ 'Aging vs Energy (generations ', num2str(state.Generation), ')' ]);
 
       if ~isempty(ls.currentLine)
         set(ls.currentLine, ...

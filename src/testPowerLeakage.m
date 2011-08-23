@@ -51,8 +51,8 @@ else
   dynamicPowerProfile = Power.generateRandomProfile(cores, steps, maxPower);
 end
 
-fprintf('Maximal power:   %d W\n', maxPower);
-fprintf('Simulation time: %d s\n', totalTime);
+fprintf('Maximal power:   %.2f W\n', maxPower);
+fprintf('Simulation time: %.2f s\n', totalTime);
 fprintf('Number of steps: %d\n', steps);
 fprintf('Number of cores: %d\n', cores);
 
@@ -124,8 +124,8 @@ fprintf('Leakage part in dynamic: %.2f %%\n', Eleakage / Edynamic * 100);
 % Static power profile
 subplot(2, 3, 2);
 Utils.drawLines('Static Power Profile', 'Time, s', 'Power, W', ...
-  x, staticPowerProfile);
-line(x, sum(staticPowerProfile, 2), 'Color', 'k', 'Line', '--');
+  x, leakagePowerProfile);
+line(x, sum(leakagePowerProfile, 2), 'Color', 'k', 'Line', '--');
 
 % Total power profile
 subplot(2, 3, 3);

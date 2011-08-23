@@ -23,7 +23,7 @@ classdef LS < handle
       t.crossoverFraction = 0.8;
 
       % Minimal probability for mutation
-      t.minimalMutationProbability = 0.15;
+      t.mutationProbability = 'max(0.15, 1 / exp(state.Generation * 0.05))';
 
       % Update!
       for i = 1:2:length(varargin)
@@ -277,10 +277,8 @@ classdef LS < handle
 
       ccount = length(parents);
 
-      % To mutate or not to mutate? That is the question...
-      % The probability to mutate should not be less than 15%
-      mprob = max(ls.tuning.minimalMutationProbability, ...
-        1 / exp(state.Generation * 0.05));
+      mprob = ls.tuning.mutationProbability;
+      if ischar(mprob), mprob = eval(mprob); end
 
       children = zeros(ccount, chromosomeLength);
 

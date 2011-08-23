@@ -15,32 +15,42 @@ for pe = graph.pes, pe = pe{1};
 end
 
 tuning = Genetic.LSAging.defaultTuning( ...
-  'generationStall', 20, ...
+  'generationStall', 50, ...
   'generationTolerance', 0.01, ...
-  'generationLimit', 100, ...
+  'generationLimit', 500, ...
   'mobilityCreationFactor', 0.5, ...
-  'populationSize', 50, ...
-  'generationalGap', 0.5, ...
-  'crossoverFraction', 0.8, ...
-  'minimalMutationProbability', 0.1 ...
+  'populationSize', 100, ...
+  'generationalGap', 0.4, ...
+  'crossoverFraction', 0.6, ...
+  'mutationProbability', 'max(0.2, 1 / exp(state.Generation * 0.05))' ...
 );
 
 % First, without any efforts
+Utils.startTimer('Solve with the CE');
 [ T, it, totalPowerProfile ] = hotspot.solveCondensedEquationWithLeakage( ...
   dynamicPowerProfile, vdd, ngate, tuning.leakageTolerance, ...
   tuning.maxLeakageIterations);
-[ mttf1, cycles1 ] = Lifetime.predict(T);
-fprintf('MTTF without optimization: %.2f\n', min(mttf1));
-fprintf('Energy: %.2f J\n', sum(sum(totalPowerProfile * Constants.samplingInterval)));
+Utils.stopTimer();
+
+[ mttf, cycles ] = Lifetime.predict(T);
+
+aging0 = min(mttf);
+energy0 = sum(sum(totalPowerProfile * Constants.samplingInterval));
+
+fprintf('MTTF without optimization: %.2f\n', aging0);
+fprintf('Energy: %.2f J\n', energy0);
 
 drawing = figure;
 
-% Now try to optimize with GLSA
+line(0, aging0, 'Marker', '*', 'MarkerSize', 15, ...
+  'Color', 'g', 'LineWidth', 1.1);
+
+% Now, try to optimize with the GLSA
 ls = Genetic.LSAging(graph, hotspot, tuning);
+
 Utils.startTimer('Solve with the GLSA');
 [ priority, fitness, output ] = ls.solve(drawing);
 Utils.stopTimer();
-fprintf('Number of generation: %d\n', output.generations);
 
 % Calculate the best one
 LS.schedule(graph, priority);
@@ -48,9 +58,14 @@ dynamicPowerProfile = Power.calculateDynamicProfile(graph);
 [ T, it, totalPowerProfile ] = hotspot.solveCondensedEquationWithLeakage( ...
   dynamicPowerProfile, vdd, ngate, tuning.leakageTolerance, ...
   tuning.maxLeakageIterations);
-[ mttf2, cycles2 ] = Lifetime.predict(T);
-fprintf('MTTF with optimization: %.2f\n', -fitness);
-fprintf('Energy: %.2f J\n', sum(sum(totalPowerProfile * Constants.samplingInterval)));
+
+[ mttf, cycles ] = Lifetime.predict(T);
+
+aging = min(mttf);
+energy = sum(sum(totalPowerProfile * Constants.samplingInterval));
+
+fprintf('MTTF with optimization: %.2f\n', aging);
+fprintf('Energy: %.2f J\n', energy);
 
 % Compare
-fprintf('MTTF improved by %.2f %%\n', (min(mttf2)/min(mttf1) - 1) * 100);
+fprintf('MTTF improvement: %.2f %%\n', (aging / aging0 - 1) * 100);
