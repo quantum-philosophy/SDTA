@@ -34,6 +34,10 @@ classdef Lifetime < handle
   end
 
   methods (Static)
+    function mttf = predict(T)
+      mttf = Lifetime.predictCombined(T);
+    end
+
     function [ mttf, maxp, minp, cycles ] = predictSingle(T)
       time = size(T, 1) * Constants.samplingInterval;
 
