@@ -34,7 +34,7 @@ Utils.startTimer('Solve with the CE');
   tuning.maxLeakageIterations);
 Utils.stopTimer();
 
-[ mttf, cycles ] = Lifetime.predict(T);
+[ mttf, cycles ] = Lifetime.predictMultiple(T);
 
 aging0 = min(mttf);
 energy0 = sum(sum(totalPowerProfile * Constants.samplingInterval));
@@ -78,7 +78,7 @@ for i = 1:runTimes
     dynamicPowerProfile, vdd, ngate, tuning.leakageTolerance, ...
     tuning.maxLeakageIterations);
 
-  [ mttf, cycles ] = Lifetime.predict(T);
+  [ mttf, cycles ] = Lifetime.predictMultiple(T);
 
   generation(end + 1) = output.generations;
   aging(end + 1) = min(mttf);

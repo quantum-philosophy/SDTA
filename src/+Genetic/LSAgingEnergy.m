@@ -45,7 +45,7 @@ classdef LSAgingEnergy < Genetic.LS
           ls.tuning.leakageTolerance, ls.tuning.maxLeakageIterations);
 
       % We want to prolong aging
-      aging = -min(Lifetime.predict(T));
+      aging = -min(Lifetime.predictMultiple(T));
       % ... and we want to keep the energy low
       energy = sum(sum(totalPowerProfile)) * Constants.samplingInterval;
 

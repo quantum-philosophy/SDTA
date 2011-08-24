@@ -48,7 +48,7 @@ classdef LSAging < Genetic.LS
           dynamicPowerProfile, ls.vdd, ls.ngate, ...
           ls.tuning.leakageTolerance, ls.tuning.maxLeakageIterations);
 
-      fitness = -min(Lifetime.predict(T));
+      fitness = -min(Lifetime.predictMultiple(T));
     end
 
     function state = control(ls, state)

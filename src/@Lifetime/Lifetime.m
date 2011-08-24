@@ -26,60 +26,86 @@ classdef Lifetime < handle
     % Boltzmann constant [6]
     k = 8.61733248e-5; % eV/K
 
-    % Shortcut for Eatc / k
-    beta =  Lifetime.Eatc / Lifetime.k;
-
     % Empirically determined constant
     Atc = 1; % Lifetime.calculateAtc;
+
+    % Shape parameter for the Weibull distribution
+    beta = 2;
   end
 
   methods (Static)
-    function [ mttf, maxp, minp, cycles ] = predictSingle(T, totalTime)
-      if nargin < 2, totalTime = size(T, 1) * Constants.samplingInterval; end
+    function [ mttf, maxp, minp, cycles ] = predictSingle(T)
+      time = size(T, 1) * Constants.samplingInterval;
 
-      % Get extremum
-      [ maxp, minp ] = Utils.peakdet(T, Lifetime.peakThreshold);
+      [ damage, maxp, minp, cycles ] = Lifetime.calculateDamage(T);
 
-      % Combine maxima and minima indexes
-      I = sort([ maxp(:, 1); minp(:, 1) ]);
-
-      % Get the actual temperature values
-      T = T(I);
-
-      % Rainflow it!
-      rainflow = Rainflow.rainflow(T);
-
-      % Amplitudes
-      dT = rainflow(1, :);
-
-      % Maximal temperatures during each cycle
-      Tmax = rainflow(2, :) + dT ./ 2;
-
-      % Contains full cycles (1.0) and half cycles (0.5)
-      cycles = rainflow(3, :);
-
-      % Number of cycles to failure for each stress level [3]
-      N = Lifetime.Atc .* (dT - Lifetime.dT0).^(-Lifetime.q) .* ...
-        exp(Lifetime.beta ./ Tmax);
-
-      % Count all detected cycles (even 0.5) as completed,
-      % since we have cycling temperature fluctuations
-      % (1 instead of cycles here)
-      totalDamage = sum(1 ./ N);
-      mttf = totalTime * Lifetime.C / totalDamage;
+      mttf = time * Lifetime.C / damage;
     end
 
-    function [ mttf, cycles ] = predict(T, varargin)
+    function mttf = predictCombined(T)
+      time = size(T, 1) * Constants.samplingInterval;
+
+      factor = 0;
+      for i = 1:size(T, 2)
+        damage = Lifetime.calculateDamage(T(:, i));
+        factor = factor + damage ^ Lifetime.beta;
+      end
+
+      damage = factor ^ (1 / Lifetime.beta);
+      mttf = time / damage;
+    end
+
+    function mttf = predictCombinedAndDraw(T)
+      time = size(T, 1) * Constants.samplingInterval;
+
+      G = gamma(1 + 1 / Lifetime.beta);
+
+      figure;
+
+      colors = Constants.roundRobinColors;
+      title = {};
+
+      factor = 0;
+      for i = 1:size(T, 2)
+        damage = Lifetime.calculateDamage(T(:, i));
+        factor = factor + damage ^ Lifetime.beta;
+
+        mttf = time / damage;
+        eta = time / (G * damage);
+
+        color = colors{mod(i - 1, length(colors)) + 1};
+        s = mttf / 100;
+        t = ((1:100) - 1) * s;
+        r = exp(-(t ./ eta).^Lifetime.beta);
+        line(t, r, 'Color', color);
+        title{end + 1} = [ 'Core ', num2str(i) ];
+      end
+
+      damage = factor ^ (1 / Lifetime.beta);
+
+      mttf = time / damage;
+      eta = time / (G * damage);
+
+      s = mttf / 100;
+      t = ((1:100) - 1) * s;
+      r = exp(-(t ./ eta).^Lifetime.beta);
+      line(t, r, 'Color', 'k', 'Line', '--');
+      title{end + 1} = 'Total';
+
+      legend(title{:});
+    end
+
+    function [ mttf, cycles ] = predictMultiple(T)
       mttf = zeros(0);
       cycles = zeros(0);
       for i = 1:size(T, 2)
         [ mttf(end + 1), dummy, dummy, discreteCycle ] = ...
-          Lifetime.predictSingle(T(:, i), varargin{:});
+          Lifetime.predictSingle(T(:, i));
         cycles(end + 1) = sum(discreteCycle);
       end
     end
 
-    function [ mttf, cycles ] = predictAndDraw(T, varargin)
+    function [ mttf, cycles ] = predictMultipleAndDraw(T)
       mttf = zeros(0);
       cycles = zeros(0);
 
@@ -93,7 +119,7 @@ classdef Lifetime < handle
 
       for i = 1:size(T, 2)
         [ mttf(end + 1), maxp, minp, discreteCycle ] = ...
-          Lifetime.predictSingle(T(:, i), varargin{:});
+          Lifetime.predictSingle(T(:, i));
         cycles(end + 1) = sum(discreteCycle);
 
         cycleLegend{end + 1} = sprintf('%.2f cycles', cycles(end));
@@ -141,6 +167,40 @@ classdef Lifetime < handle
         exp(-Lifetime.Eatc / (Lifetime.k * Tmax));
 
       Atc = mttf * factor / totalTime;
+    end
+  end
+
+  methods (Static, Access = private)
+    function [ damage, maxp, minp, cycles ] = calculateDamage(T)
+      % Get extremum
+      [ maxp, minp ] = Utils.peakdet(T, Lifetime.peakThreshold);
+
+      % Combine maxima and minima indexes
+      I = sort([ maxp(:, 1); minp(:, 1) ]);
+
+      % Get the actual temperature values
+      T = T(I);
+
+      % Rainflow it!
+      rainflow = Rainflow.rainflow(T);
+
+      % Amplitudes
+      dT = rainflow(1, :);
+
+      % Maximal temperatures during each cycle
+      Tmax = rainflow(2, :) + dT ./ 2;
+
+      % Contains full cycles (1.0) and half cycles (0.5)
+      cycles = rainflow(3, :);
+
+      % Number of cycles to failure for each stress level [3]
+      N = Lifetime.Atc .* (dT - Lifetime.dT0).^(-Lifetime.q) .* ...
+        exp(Lifetime.Eatc ./ (Lifetime.k * Tmax));
+
+      % Count all detected cycles (even 0.5) as completed,
+      % since we have cycling temperature fluctuations
+      % (1 instead of cycles here)
+      damage = sum(1 ./ N);
     end
   end
 end
