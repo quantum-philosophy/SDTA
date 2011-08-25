@@ -4,6 +4,7 @@ clear all;
 clc;
 rng(0);
 
+silent = true;
 runTimes = 9;
 
 [ graph, hotspot, dynamicPowerProfile ] = setup('test_cases/test_case_4_60');
@@ -43,7 +44,7 @@ fprintf('Energy without optimization: %.2f J\n', energy0);
 rows = floor(sqrt(runTimes));
 cols = ceil(runTimes / rows);
 
-figure;
+if ~silent, figure; end
 
 fprintf('\n');
 fprintf('%5s%15s%15s%15s%15s%15s%15s\n', ...
@@ -57,17 +58,23 @@ aging = [];
 energy = [];
 
 for i = 1:runTimes
-  drawing = subplot(rows, cols, i);
-
-  line(0, aging0, 'Marker', '*', 'MarkerSize', 15, ...
-    'Color', 'g', 'LineWidth', 1.1);
-
   % Now, try to optimize with the GLSA
   ls = Genetic.LSAging(graph, hotspot, tuning);
 
-  Utils.startTimer();
-  [ priority, fitness, output ] = ls.solve(drawing);
-  time(end + 1) = Utils.stopTimer();
+  if ~silent
+    drawing = subplot(rows, cols, i);
+
+    line(0, aging0, 'Marker', '*', 'MarkerSize', 15, ...
+      'Color', 'g', 'LineWidth', 1.1);
+
+    Utils.startTimer();
+    [ priority, fitness, output ] = ls.solve(drawing);
+    time(end + 1) = Utils.stopTimer();
+  else
+    Utils.startTimer();
+    [ priority, fitness, output ] = ls.solve();
+    time(end + 1) = Utils.stopTimer();
+  end
 
   % Calculate the best one
   LS.schedule(graph, priority);

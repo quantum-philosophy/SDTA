@@ -114,7 +114,7 @@ classdef LS < handle
     end
 
     function [ solution, fitness, output ] = solve(ls, drawing)
-      if nargin > 0
+      if nargin > 1
         grid(drawing, 'on');
         ls.drawing = drawing;
         ls.initializeDrawing();
@@ -124,20 +124,27 @@ classdef LS < handle
       ls.cache = containers.Map('KeyType', 'char', 'ValueType', ls.fitnessType);
       ls.evaluations = 0;
 
-      ls.bar = waitbar(0, 'Genetic List Scheduling Algorithm');
+      if ls.drawing
+        ls.bar = waitbar(0, 'Genetic List Scheduling Algorithm');
+      end
 
       [ solution, fitness, exitflag, output ] = ls.solver(@ls.evaluate, ...
         ls.chromosomeLength, ls.additionalParams{:}, ls.options);
 
-      delete(ls.bar);
+      if ls.drawing
+        delete(ls.bar);
+      end
     end
   end
 
   methods (Access = protected)
     function fitness = evaluate(ls, chromosome)
       ls.evaluations = ls.evaluations + 1;
-      waitbar(mod(ls.evaluations, 10) / 10, ls.bar, ...
-        [ 'Evaluation #' num2str(ls.evaluations) ]);
+
+      if ls.drawing
+        waitbar(mod(ls.evaluations, 10) / 10, ls.bar, ...
+          [ 'Evaluation #' num2str(ls.evaluations) ]);
+      end
 
       key = Utils.mMD5(chromosome);
 
