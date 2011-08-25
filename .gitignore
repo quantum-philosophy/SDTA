@@ -25,9 +25,17 @@ build/vendor
 
 src/@HotSpot/hotspot
 
-vendor/tgff/tgff
+vendor/tgff*/tgff
+vendor/tgff
 
 vendor/hotspot*/hotfloorplan
 vendor/hotspot*/hotspot
 vendor/hotspot*/libhotspot.a
+vendor/hotspot
+
+vendor/paradiseo*/paradiseo-eo/build
+vendor/paradiseo*/paradiseo-mo/build
+vendor/paradiseo*/paradiseo-moeo/build
+vendor/paradiseo
+
 tags

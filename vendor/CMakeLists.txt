@@ -18,8 +18,15 @@ foreach (version ${HOTSPOT_VERSIONS})
   add_dependencies (hotspot hotspot-${version})
 endforeach (version)
 
+add_custom_command (
+  TARGET hotspot-${HOTSPOT_DEFAULT_VERSION}
+  POST_BUILD
+  COMMAND ln -sfn ${CMAKE_CURRENT_SOURCE_DIR}/hotspot-${HOTSPOT_DEFAULT_VERSION} ${CMAKE_CURRENT_SOURCE_DIR}/hotspot
+)
+
 # TGFF
-set (tgff_dir ${CMAKE_CURRENT_SOURCE_DIR}/tgff)
+set (TGFF_VERSION 3.5)
+set (tgff_dir ${CMAKE_CURRENT_SOURCE_DIR}/tgff-${TGFF_VERSION})
 add_custom_target (tgff
   COMMAND ${CMAKE_BUILD_TOOL} -C ${tgff_dir}
 )
@@ -27,4 +34,17 @@ add_custom_command (
   TARGET tgff
   POST_BUILD
   COMMAND ln -fs ${tgff_dir}/tgff ${PROJECT_BINARY_DIR}/tgff
+  COMMAND ln -sfn ${tgff_dir} ${CMAKE_CURRENT_SOURCE_DIR}/tgff
+)
+
+# Paradiseo
+set (PARADISEO_VERSION 1.2.1)
+set (paradiseo_dir ${CMAKE_CURRENT_SOURCE_DIR}/paradiseo-${PARADISEO_VERSION})
+add_custom_target (paradiseo
+  COMMAND cd ${paradiseo_dir} && source ./installParadiseo.sh
+)
+add_custom_command (
+  TARGET paradiseo
+  POST_BUILD
+  COMMAND ln -sfn ${paradiseo_dir} ${CMAKE_CURRENT_SOURCE_DIR}/paradiseo
 )
