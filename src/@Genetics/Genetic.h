@@ -1,5 +1,5 @@
-#ifndef __GA_COMMON_H__
-#define __GA_COMMON_H__
+#ifndef __GENETIC_H__
+#define __GENETIC_H__
 
 typedef double gene_t;
 typedef eoReal<gene_t> chromosome_t;

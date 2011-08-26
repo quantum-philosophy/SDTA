@@ -37,7 +37,8 @@ class Hotspot
 
 	public:
 
-	Hotspot(char *floorplan, char *config, str_pair *extra_table, int rows);
+	Hotspot(char *floorplan, char *config,
+		str_pair *extra_table = NULL, int rows = 0);
 	~Hotspot();
 
 	unsigned int solve(double *dynamic_power, int steps, const double *vdd,

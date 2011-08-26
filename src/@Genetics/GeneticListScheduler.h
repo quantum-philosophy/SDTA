@@ -1,5 +1,5 @@
-#ifndef __GA_LIST_SCHEDULER_H__
-#define __GA_LIST_SCHEDULER_H__
+#ifndef __GENETIC_LIST_SCHEDULER_H__
+#define __GENETIC_LIST_SCHEDULER_H__
 
 #include <stdexcept>
 #include <iostream>
@@ -9,13 +9,20 @@
 #include <es.h>
 #include <ga/eoBitOp.h>
 
-#include "gaCommon.h"
+#include "TaskGraph.h"
+#include "Hotspot.h"
+#include "Genetic.h"
 
-struct gaListSchedulerEvalFuncPtr;
+struct GeneticListSchedulerEvalFuncPtr;
 
-class gaListScheduler
+class GeneticListScheduler
 {
-	friend struct gaListSchedulerEvalFuncPtr;
+	friend struct GeneticListSchedulerEvalFuncPtr;
+
+	Graph *graph;
+	Hotspot *hotspot;
+
+	double evaluate(const chromosome_t &chromosome) const;
 
 	public:
 
@@ -69,21 +76,21 @@ class gaListScheduler
 		return o;
 	}
 
-	gaListScheduler() : options(gaListScheduler::defaultOptions()) {}
-	gaListScheduler(options_t _options) : options(_options) {}
+	GeneticListScheduler(Graph *_graph, Hotspot *_hotspot) :
+		graph(_graph), hotspot(_hotspot),
+		options(GeneticListScheduler::defaultOptions()) {}
+	GeneticListScheduler(options_t _options) : options(_options) {}
 
 	void solve(void);
 
-	protected:
+	private:
 
 	options_t options;
-
-	double evaluate(const chromosome_t &chromosome) const;
 };
 
-struct gaListSchedulerEvalFuncPtr: public eoEvalFunc<chromosome_t>
+struct GeneticListSchedulerEvalFuncPtr: public eoEvalFunc<chromosome_t>
 {
-	gaListSchedulerEvalFuncPtr(const gaListScheduler *_ls)
+	GeneticListSchedulerEvalFuncPtr(const GeneticListScheduler *_ls)
 		: eoEvalFunc<chromosome_t>(), ls(_ls) {}
 
 	virtual void operator() (chromosome_t &chromosome)
@@ -94,9 +101,9 @@ struct gaListSchedulerEvalFuncPtr: public eoEvalFunc<chromosome_t>
 
 	private:
 
-	const gaListScheduler *ls;
+	const GeneticListScheduler *ls;
 };
 
-#include "gaListScheduler.hpp"
+#include "GeneticListScheduler.hpp"
 
 #endif

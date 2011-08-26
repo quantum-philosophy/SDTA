@@ -1,6 +1,6 @@
 using namespace std;
 
-void gaListScheduler::solve(void)
+void GeneticListScheduler::solve(void)
 {
 	rng.reseed(options.seed);
 
@@ -11,7 +11,7 @@ void gaListScheduler::solve(void)
 	eoCombinedContinue<chromosome_t> continuator(gen_cont, steady_cont);
 
 	/* Evaluate */
-	gaListSchedulerEvalFuncPtr evaluate(this);
+	GeneticListSchedulerEvalFuncPtr evaluate(this);
 
 	eoPop<chromosome_t> population;
 
@@ -66,7 +66,7 @@ void gaListScheduler::solve(void)
 	cout << "Final population" << endl << population << endl;
 }
 
-double gaListScheduler::evaluate(const chromosome_t &chromosome) const
+double GeneticListScheduler::evaluate(const chromosome_t &chromosome) const
 {
 	unsigned length = chromosome.size();
 	double sum = 0;

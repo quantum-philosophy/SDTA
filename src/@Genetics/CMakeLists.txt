@@ -4,9 +4,11 @@ set (PARADISEO_EO_DIR ${PARADISEO_DIR}/paradiseo-eo)
 set (PARADISEO_EO_LIBRARY_DIR ${PARADISEO_EO_DIR}/build/lib)
 set (PARADISEO_EO_INCLUDE_DIR ${PARADISEO_EO_DIR}/src)
 
-set (HS_SRCS
-	${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
+set (COMMON_SRCS
+	${CMAKE_CURRENT_SOURCE_DIR}/Task.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Graph.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Hotspot.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
 )
 
 set (EO_LIBS
@@ -26,5 +28,5 @@ set (EO_FLAGS
 add_custom_target (genetics
 	COMMAND mex
 		${CMAKE_CURRENT_SOURCE_DIR}/optimizeAging.cpp
-		${HS_SRCS} ${EO_LIBS} ${EO_FLAGS}
+		${COMMON_SRCS} ${EO_LIBS} ${EO_FLAGS}
 )
