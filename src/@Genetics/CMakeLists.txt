@@ -1,0 +1,30 @@
+set (PARADISEO_DIR ${VENDOR_DIR}/paradiseo)
+
+set (PARADISEO_EO_DIR ${PARADISEO_DIR}/paradiseo-eo)
+set (PARADISEO_EO_LIBRARY_DIR ${PARADISEO_EO_DIR}/build/lib)
+set (PARADISEO_EO_INCLUDE_DIR ${PARADISEO_EO_DIR}/src)
+
+set (HS_SRCS
+	${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Hotspot.cpp
+)
+
+set (EO_LIBS
+	${PARADISEO_EO_LIBRARY_DIR}/libeoutils.a
+	${PARADISEO_EO_LIBRARY_DIR}/libeo.a
+	${VENDOR_DIR}/hotspot/libhotspot.a
+)
+
+set (EO_FLAGS
+	-outdir ${CMAKE_CURRENT_SOURCE_DIR}
+	-I${CMAKE_CURRENT_SOURCE_DIR}
+	-I${PARADISEO_EO_INCLUDE_DIR}
+	-I${VENDOR_DIR}/numerical_recipes
+	-I${VENDOR_DIR}
+)
+
+add_custom_target (genetics
+	COMMAND mex
+		${CMAKE_CURRENT_SOURCE_DIR}/optimizeAging.cpp
+		${HS_SRCS} ${EO_LIBS} ${EO_FLAGS}
+)
