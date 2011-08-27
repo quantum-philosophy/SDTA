@@ -9,6 +9,7 @@ class Task
 	friend class ListScheduler;
 
 	tid_t id;
+	unsigned int type;
 	unsigned long int nc; /* Number of clock cycles */
 	double ceff; /* Effective switched capacitance */
 
@@ -29,9 +30,12 @@ class Task
 
 	public:
 
-	Task(unsigned long int _nc, double _ceff) :
-		id(-1), nc(_nc), ceff(_ceff), ancestor(NULL), successor(NULL),
-		duration(0), start(-1), asap(-1), alap(0), mobility(0) {}
+	Task(unsigned int _type) :
+		id(-1), type(_type), nc(0), ceff(0), ancestor(NULL),
+		successor(NULL), duration(0), start(-1), asap(-1), alap(0),
+		mobility(0) {}
+
+	void assign_processor(const Processor *processor);
 
 	/* In the graph */
 	void add_parent(Task *task) { parents.push_back(task); }
@@ -40,8 +44,6 @@ class Task
 	/* On the same core */
 	void set_ancestor(Task *task) { ancestor = task; }
 	void set_successor(Task *task) { successor = task; }
-
-	void map(const Processor *pe);
 
 	bool is_leaf() const { return children.empty(); }
 	bool is_root() const { return parents.empty(); }

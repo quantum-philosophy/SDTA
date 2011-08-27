@@ -1,8 +1,6 @@
 classdef Genetics < handle
   methods (Static)
-    optimizeAging
-
-    function optimizeLSAging
-    end
+    optimizeAging(floorplan, config, type, link, frequency, ...
+      voltage, ngate, nc, ceff);
   end
 end

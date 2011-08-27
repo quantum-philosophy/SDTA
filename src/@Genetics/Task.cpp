@@ -1,10 +1,12 @@
 #include "Task.h"
 #include "Processor.h"
 
-void Task::map(const Processor *pe)
+void Task::assign_processor(const Processor *processor)
 {
-	processor = pe;
-	duration = nc * pe->frequency;
+	this->processor = processor;
+	nc = processor->nc[type];
+	ceff = processor->ceff[type];
+	duration = nc * processor->frequency;
 }
 
 void Task::propagate_start(double time)

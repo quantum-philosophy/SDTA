@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <stdexcept>
+#include <iostream>
 
 #include "Graph.h"
 #include "Hotspot.h"
@@ -24,19 +25,20 @@ using namespace std;
 #define ARG (prhs[no])
 
 void fetch_configuration(int nrhs, const mxArray *prhs[],
-	char **floorplan, char **config, vector<unsigned long int> &nc,
-	vector<double> &ceff, vector<vector<bool> > &link,
-	vector<double> &frequency, vector<double> &voltage,
-	vector<unsigned long int> &ngate)
+	char **floorplan, char **config, vector<unsigned int> &type,
+	vector<vector<bool> > &link, vector<double> &frequency,
+	vector<double> &voltage, vector<unsigned long int> &ngate,
+	vector<vector<unsigned long int> > &nc, vector<vector<double> > &ceff)
 {
 	*floorplan = NULL;
 	*config = NULL;
 
 	try {
-		if (nrhs < 8)
+		if (nrhs < 9)
 			throw runtime_error("Not enough input arguments.");
 
-		int i, j, k, no, size;
+		int no;
+		size_t i, j, k, task_count, processor_count, type_count;
 		double *data;
 
 		no = 0;
@@ -51,62 +53,85 @@ void fetch_configuration(int nrhs, const mxArray *prhs[],
 
 		no++;
 
-		nc.clear();
-		data = mxGetPr(ARG);
-		size = mxGetM(ARG) * mxGetN(ARG);
-		for (i = 0; i < size; i++) nc.push_back((unsigned long int)data[i]);
-
-		no++;
-
-		ceff.clear();
-		data = mxGetPr(ARG);
-		size = mxGetM(ARG) * mxGetN(ARG);
-		for (i = 0; i < size; i++) ceff.push_back(data[i]);
+		type.clear();
+		task_count = mxGetM(ARG) * mxGetN(ARG);
+		if (!(data = mxGetPr(ARG)))
+			throw runtime_error("The type vector is bad.");
+		for (i = 0; i < task_count; i++)
+			type.push_back((unsigned int)data[i]);
 
 		no++;
 
 		link.clear();
-		data = mxGetPr(ARG);
-		size = mxGetM(ARG);
-		if (mxGetN(ARG) != size)
+		if (!(data = mxGetPr(ARG)) ||
+			task_count != mxGetM(ARG) ||
+			task_count != mxGetN(ARG))
 			throw runtime_error("The link matrix is bad.");
 		k = 0;
-		link.resize(size);
+		link.resize(task_count);
 		/* NOTE: We are moving column my column here */
-		for (i = 0; i < size; i++)
-			for (j = 0; j < size; j++, k++)
+		for (i = 0; i < task_count; i++)
+			for (j = 0; j < task_count; j++, k++)
 				link[j].push_back((bool)data[k]);
-
-		if (nc.size() != ceff.size() || nc.size() != link.size())
-			throw runtime_error("The task properties do not agree.");
 
 		no++;
 
 		frequency.clear();
-		data = mxGetPr(ARG);
-		size = mxGetM(ARG) * mxGetN(ARG);
-		for (i = 0; i < size; i++) frequency.push_back(data[i]);
+		processor_count = mxGetM(ARG) * mxGetN(ARG);
+		if (!(data = mxGetPr(ARG)))
+			throw runtime_error("The frequency vector is bad.");
+		for (i = 0; i < processor_count; i++)
+			frequency.push_back(data[i]);
 
 		no++;
 
 		voltage.clear();
-		data = mxGetPr(ARG);
-		size = mxGetM(ARG) * mxGetN(ARG);
-		for (i = 0; i < size; i++) voltage.push_back(data[i]);
+		if (!(data = mxGetPr(ARG)) ||
+			processor_count != mxGetM(ARG) * mxGetN(ARG))
+			throw runtime_error("The voltage vector is bad.");
+		for (i = 0; i < processor_count; i++)
+			voltage.push_back(data[i]);
 
 		no++;
 
 		ngate.clear();
-		data = mxGetPr(ARG);
-		size = mxGetM(ARG) * mxGetN(ARG);
-		for (i = 0; i < size; i++) ngate.push_back((unsigned long int)data[i]);
+		if (!(data = mxGetPr(ARG)) ||
+			processor_count != mxGetM(ARG) * mxGetN(ARG))
+			throw runtime_error("The NGATE vector is bad.");
+		for (i = 0; i < processor_count; i++)
+			ngate.push_back((unsigned long int)data[i]);
 
-		if (frequency.size() != voltage.size() || frequency.size() != ngate.size())
-			throw runtime_error("The processor properties do not agree.");
+		no++;
+
+		nc.clear();
+		type_count = mxGetM(ARG);
+		if (!(data = mxGetPr(ARG)) ||
+			processor_count != mxGetN(ARG))
+			throw runtime_error("The NC vector is bad.");
+		k = 0;
+		nc.resize(processor_count);
+		/* NOTE: We are moving column my column here */
+		for (i = 0; i < processor_count; i++)
+			for (j = 0; j < type_count; j++, k++)
+				nc[i].push_back((unsigned int)data[k]);
+
+		no++;
+
+		ceff.clear();
+		if (!(data = mxGetPr(ARG)) ||
+			type_count != mxGetM(ARG) ||
+			processor_count != mxGetN(ARG))
+			throw runtime_error("The Ceff vector is bad.");
+		k = 0;
+		ceff.resize(processor_count);
+		/* NOTE: We are moving column my column here */
+		for (i = 0; i < processor_count; i++)
+			for (j = 0; j < type_count; j++, k++)
+				ceff[i].push_back((unsigned int)data[k]);
 	}
 	catch (...) {
-		if (*floorplan) mxFree(*floorplan);
-		if (*config) mxFree(*config);
+		__MX_FREE(*floorplan);
+		__MX_FREE(*config);
 		throw;
 	}
 }
@@ -119,18 +144,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	Hotspot *hotspot = NULL;
 	GeneticListScheduler *scheduler = NULL;
 
-	vector<unsigned long int> nc;
-	vector<double> ceff;
+	vector<unsigned int> type;
 	vector<vector<bool> > link;
 	vector<double> frequency;
 	vector<double> voltage;
 	vector<unsigned long int> ngate;
+	vector<vector<unsigned long int> > nc;
+	vector<vector<double> > ceff;
 
 	try {
 		fetch_configuration(nrhs, prhs, &floorplan, &config,
-			nc, ceff, link, frequency, voltage, ngate);
+			type, link, frequency, voltage, ngate, nc, ceff);
 
-		graph = Graph::build(nc, ceff, link, frequency, voltage, ngate);
+		graph = Graph::build(type, link, frequency, voltage, ngate, nc, ceff);
 		hotspot = new Hotspot(floorplan, config);
 		scheduler = new GeneticListScheduler(graph, hotspot);
 

@@ -25,6 +25,8 @@ class Graph
 		task_count(0), processor_count(0),
 		scheduled(false), mapped(false) {}
 
+	~Graph();
+
 	void add_task(Task *task);
 	void add_link(Task *parent, Task *child);
 	void add_processor(Processor *processor);
@@ -36,10 +38,14 @@ class Graph
 	task_vector_t get_leaves() const;
 
 	/* Build the whole graph with tasks and processors */
-	static Graph *build(std::vector<unsigned long int> &nc,
-		std::vector<double> &ceff, std::vector<std::vector<bool> > &link,
-		std::vector<double> &frequency, std::vector<double> &voltage,
-		std::vector<unsigned long int> &ngate);
+	static Graph *build(
+		std::vector<unsigned int> &type,
+		std::vector<std::vector<bool> > &link,
+		std::vector<double> &frequency,
+		std::vector<double> &voltage,
+		std::vector<unsigned long int> &ngate,
+		std::vector<std::vector<unsigned long int> > &nc,
+		std::vector<std::vector<double> > &ceff);
 
 	private:
 

@@ -4,6 +4,15 @@
 #include "Task.h"
 #include "Processor.h"
 
+Graph::~Graph()
+{
+	for (size_t i = 0; i < task_count; i++)
+		delete tasks[i];
+
+	for (size_t i = 0; i < processor_count; i++)
+		delete processors[i];
+}
+
 void Graph::add_task(Task *task)
 {
 	tasks.push_back(task);
@@ -35,7 +44,7 @@ void Graph::assign_mapping(const mapping_t &mapping)
 	for (tid_t id = 0; id < task_count; id++) {
 		task = tasks[id];
 		processor = processors[mapping[id]];
-		task->map(processor);
+		task->assign_processor(processor);
 	}
 
 	calc_asap();
@@ -60,8 +69,6 @@ void Graph::assign_schedule(const schedule_t &schedule)
 			successor = tasks[schedule[id]];
 
 			if (successor->processor != processor) continue;
-
-			successor->map(processor);
 
 			if (ancestor) {
 				ancestor->set_successor(successor);
@@ -146,10 +153,14 @@ void Graph::calc_alap() const
 			tasks[id]->propagate_alap(duration);
 }
 
-Graph *Graph::build(std::vector<unsigned long int> &nc,
-	std::vector<double> &ceff, std::vector<std::vector<bool> > &link,
-	std::vector<double> &frequency, std::vector<double> &voltage,
-	std::vector<unsigned long int> &ngate)
+Graph *Graph::build(
+	std::vector<unsigned int> &type,
+	std::vector<std::vector<bool> > &link,
+	std::vector<double> &frequency,
+	std::vector<double> &voltage,
+	std::vector<unsigned long int> &ngate,
+	std::vector<std::vector<unsigned long int> > &nc,
+	std::vector<std::vector<double> > &ceff)
 {
 	Graph *graph = new Graph;
 
@@ -158,21 +169,28 @@ Graph *Graph::build(std::vector<unsigned long int> &nc,
 	task_vector_t tasks;
 
 	for (tid_t id = 0; id < task_count; id++) {
-		task = new Task(nc[id], ceff[id]);
+		task = new Task(type[id]);
 		tasks.push_back(task);
 		graph->add_task(task);
 	}
 
 	for (tid_t pid = 0; pid < task_count; pid++)
 		for (tid_t cid = 0; cid < task_count; cid++)
-			if (link[pid][cid]) graph->add_link(tasks[pid], tasks[cid]);
+			if (link[pid][cid])
+				graph->add_link(tasks[pid], tasks[cid]);
 
 	Processor *processor;
 	size_t processor_count = frequency.size();
+	processor_vector_t processors;
 
 	for (pid_t id = 0; id < processor_count; id++) {
 		processor = new Processor(frequency[id], voltage[id], ngate[id]);
+		processors.push_back(processor);
 		graph->add_processor(processor);
+
+		size_t type_count = nc[id].size();
+		for (size_t i = 0; i < type_count; i++)
+			processor->add_type(nc[id][i], ceff[id][i]);
 	}
 
 	return graph;
