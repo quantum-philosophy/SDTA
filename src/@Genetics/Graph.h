@@ -1,10 +1,12 @@
 #ifndef __GRAPH_H__
 #define __GRAPH_H__
 
-#include "TaskGraph.h"
+#include "Common.h"
 
 class Graph
 {
+	friend class ListScheduler;
+
 	task_vector_t tasks;
 	processor_vector_t processors;
 

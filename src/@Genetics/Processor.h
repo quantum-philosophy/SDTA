@@ -1,14 +1,14 @@
 #ifndef __PROCESSOR_H__
 #define __PROCESSOR_H__
 
-#include "TaskGraph.h"
+#include "Common.h"
 
 class Processor
 {
 	friend class Graph;
 	friend class Task;
 
-	int id;
+	pid_t id;
 	double frequency;
 	double voltage;
 	unsigned long int ngate;

@@ -54,4 +54,5 @@ class Hotspot
 	static void inject_leakage(const double *dynamic_power, const double *vdd,
 		const double *ngate, int cores, int steps, double T, double *total_power);
 };
+
 #endif

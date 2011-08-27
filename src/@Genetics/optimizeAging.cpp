@@ -1,7 +1,9 @@
-#include <stdexcept>
 #include <mex.h>
 
-#include "TaskGraph.h"
+#include <vector>
+#include <stdexcept>
+
+#include "Graph.h"
 #include "Hotspot.h"
 #include "GeneticListScheduler.h"
 
@@ -131,6 +133,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		graph = Graph::build(nc, ceff, link, frequency, voltage, ngate);
 		hotspot = new Hotspot(floorplan, config);
 		scheduler = new GeneticListScheduler(graph, hotspot);
+
+		scheduler->solve();
 	}
 	catch (exception &e) {
 		__DELETE(graph);

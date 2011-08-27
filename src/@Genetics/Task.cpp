@@ -1,4 +1,5 @@
 #include "Task.h"
+#include "Processor.h"
 
 void Task::map(const Processor *pe)
 {
@@ -15,8 +16,9 @@ void Task::propagate_start(double time)
 	time = time + duration;
 
 	/* Shift data dependent tasks */
-	for (task_vector_t::iterator it = children.begin();
-		it < children.end(); it++) (*it)->propagate_start(time);
+	size_t size = children.size();
+	for (size_t i = 0; i < size; i++)
+		children[i]->propagate_start(time);
 
 	/* Shift space dependent tasks (the same core) */
 	if (successor) successor->propagate_start(time);
@@ -31,8 +33,9 @@ void Task::propagate_asap(double time)
 	time = time + duration;
 
 	/* Shift data dependent tasks */
-	for (task_vector_t::iterator it = children.begin();
-		it < children.end(); it++) (*it)->propagate_asap(time);
+	size_t size = children.size();
+	for (size_t i = 0; i < size; i++)
+		children[i]->propagate_asap(time);
 }
 
 void Task::propagate_alap(double time)
@@ -48,6 +51,7 @@ void Task::propagate_alap(double time)
 	time = time + duration;
 
 	/* Shift data dependent tasks */
-	for (task_vector_t::iterator it = parents.begin();
-		it < parents.end(); it++) (*it)->propagate_alap(time);
+	size_t size = parents.size();
+	for (size_t i = 0; i < size; i++)
+		parents[i]->propagate_alap(time);
 }

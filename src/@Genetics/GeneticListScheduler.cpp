@@ -1,4 +1,7 @@
-using namespace std;
+#include <iostream>
+
+#include "GeneticListScheduler.h"
+#include "Graph.h"
 
 void GeneticListScheduler::solve(void)
 {
@@ -29,7 +32,7 @@ void GeneticListScheduler::solve(void)
 
 	population.sort();
 
-	cout << "Initial population" << endl << population << endl;
+	std::cout << "Initial population" << std::endl << population << std::endl;
 
 	/* Select */
 	eoDetTournamentSelect<chromosome_t> selectOne(options.tournament_size);
@@ -63,7 +66,7 @@ void GeneticListScheduler::solve(void)
 	gga(population);
 
 	population.sort();
-	cout << "Final population" << endl << population << endl;
+	std::cout << "Final population" << std::endl << population << std::endl;
 }
 
 double GeneticListScheduler::evaluate(const chromosome_t &chromosome) const

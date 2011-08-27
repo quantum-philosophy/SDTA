@@ -1,5 +1,8 @@
 #include <stdexcept>
+
 #include "Graph.h"
+#include "Task.h"
+#include "Processor.h"
 
 void Graph::add_task(Task *task)
 {
@@ -29,9 +32,9 @@ void Graph::assign_mapping(const mapping_t &mapping)
 	Processor *processor;
 	Task *task;
 
-	for (size_t i = 0; i < task_count; i++) {
-		task = tasks[i];
-		processor = processors[mapping[i]];
+	for (tid_t id = 0; id < task_count; id++) {
+		task = tasks[id];
+		processor = processors[mapping[id]];
 		task->map(processor);
 	}
 
@@ -48,13 +51,13 @@ void Graph::assign_schedule(const schedule_t &schedule)
 
 	Processor *processor;
 
-	for (size_t i = 0; i < processor_count; i++) {
-		processor = processors[i];
+	for (pid_t pid = 0; pid < processor_count; pid++) {
+		processor = processors[pid];
 
 		Task *ancestor = NULL, *successor;
 
-		for (size_t j = 0; j < task_count; j++) {
-			successor = tasks[schedule[j]];
+		for (tid_t id = 0; id < task_count; id++) {
+			successor = tasks[schedule[id]];
 
 			if (successor->processor != processor) continue;
 
@@ -72,20 +75,22 @@ void Graph::assign_schedule(const schedule_t &schedule)
 
 task_vector_t Graph::get_roots() const
 {
-	std::vector<Task *> roots;
+	task_vector_t roots;
 
-	for (size_t i = 0; i < task_count; i++)
-		if (tasks[i]->is_root()) roots.push_back(tasks[i]);
+	for (tid_t id = 0; id < task_count; id++)
+		if (tasks[id]->is_root())
+			roots.push_back(tasks[id]);
 
 	return roots;
 }
 
 task_vector_t Graph::get_leaves() const
 {
-	std::vector<Task *> leaves;
+	task_vector_t leaves;
 
-	for (size_t i = 0; i < task_count; i++)
-		if (tasks[i]->is_leaf()) leaves.push_back(tasks[i]);
+	for (tid_t id = 0; id < task_count; id++)
+		if (tasks[id]->is_leaf())
+			leaves.push_back(tasks[id]);
 
 	return leaves;
 }
@@ -95,8 +100,8 @@ double Graph::calc_duration() const
 	double duration = 0;
 	Task *task;
 
-	for (size_t i = 0; i < task_count; i++) {
-		task = tasks[i];
+	for (tid_t id = 0; id < task_count; id++) {
+		task = tasks[id];
 		if (task->is_leaf())
 			duration = std::max(duration, task->start + task->duration);
 	}
@@ -109,8 +114,8 @@ double Graph::calc_asap_duration() const
 	double duration = 0;
 	Task *task;
 
-	for (size_t i = 0; i < task_count; i++) {
-		task = tasks[i];
+	for (tid_t id = 0; id < task_count; id++) {
+		task = tasks[id];
 		if (task->is_leaf())
 			duration = std::max(duration, task->asap + task->duration);
 	}
@@ -120,22 +125,25 @@ double Graph::calc_asap_duration() const
 
 void Graph::calc_start() const
 {
-	for (size_t i = 0; i < task_count; i++)
-		if (tasks[i]->is_root()) tasks[i]->propagate_start(0);
+	for (tid_t id = 0; id < task_count; id++)
+		if (tasks[id]->is_root())
+			tasks[id]->propagate_start(0);
 }
 
 void Graph::calc_asap() const
 {
-	for (size_t i = 0; i < task_count; i++)
-		if (tasks[i]->is_root()) tasks[i]->propagate_asap(0);
+	for (tid_t id = 0; id < task_count; id++)
+		if (tasks[id]->is_root())
+			tasks[id]->propagate_asap(0);
 }
 
 void Graph::calc_alap() const
 {
 	double duration = calc_asap_duration();
 
-	for (size_t i = 0; i < task_count; i++)
-		if (tasks[i]->is_leaf()) tasks[i]->propagate_alap(duration);
+	for (tid_t id = 0; id < task_count; id++)
+		if (tasks[id]->is_leaf())
+			tasks[id]->propagate_alap(duration);
 }
 
 Graph *Graph::build(std::vector<unsigned long int> &nc,
@@ -149,21 +157,21 @@ Graph *Graph::build(std::vector<unsigned long int> &nc,
 	size_t task_count = nc.size();
 	task_vector_t tasks;
 
-	for (size_t i = 0; i < task_count; i++) {
-		task = new Task(nc[i], ceff[i]);
+	for (tid_t id = 0; id < task_count; id++) {
+		task = new Task(nc[id], ceff[id]);
 		tasks.push_back(task);
 		graph->add_task(task);
 	}
 
-	for (size_t i = 0; i < task_count; i++)
-		for (size_t j = 0; j < task_count; j++)
-			if (link[i][j]) graph->add_link(tasks[i], tasks[j]);
+	for (tid_t pid = 0; pid < task_count; pid++)
+		for (tid_t cid = 0; cid < task_count; cid++)
+			if (link[pid][cid]) graph->add_link(tasks[pid], tasks[cid]);
 
 	Processor *processor;
 	size_t processor_count = frequency.size();
 
-	for (size_t i = 0; i < processor_count; i++) {
-		processor = new Processor(frequency[i], voltage[i], ngate[i]);
+	for (pid_t id = 0; id < processor_count; id++) {
+		processor = new Processor(frequency[id], voltage[id], ngate[id]);
 		graph->add_processor(processor);
 	}
 

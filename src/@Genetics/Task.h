@@ -1,13 +1,14 @@
 #ifndef __TASK_H__
 #define __TASK_H__
 
-#include "TaskGraph.h"
+#include "Common.h"
 
 class Task
 {
 	friend class Graph;
+	friend class ListScheduler;
 
-	int id;
+	tid_t id;
 	unsigned long int nc; /* Number of clock cycles */
 	double ceff; /* Effective switched capacitance */
 

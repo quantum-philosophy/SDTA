@@ -1,17 +1,15 @@
 #ifndef __GENETIC_LIST_SCHEDULER_H__
 #define __GENETIC_LIST_SCHEDULER_H__
 
-#include <stdexcept>
-#include <iostream>
-#include <sstream>
-
 #include <eo>
 #include <es.h>
 #include <ga/eoBitOp.h>
 
-#include "TaskGraph.h"
+#include "Common.h"
 #include "Hotspot.h"
-#include "Genetic.h"
+
+typedef double gene_t;
+typedef eoReal<gene_t> chromosome_t;
 
 struct GeneticListSchedulerEvalFuncPtr;
 
@@ -104,6 +102,54 @@ struct GeneticListSchedulerEvalFuncPtr: public eoEvalFunc<chromosome_t>
 	const GeneticListScheduler *ls;
 };
 
-#include "GeneticListScheduler.hpp"
+class eoUniformRangeMutation: public eoMonOp<chromosome_t>
+{
+	gene_t max;
+	gene_t min;
+	unsigned int points;
+
+	public:
+
+	eoUniformRangeMutation(gene_t _min, gene_t _max, unsigned _points)
+		: max(_max), min(_min), points(_points) {}
+
+	eoUniformRangeMutation(gene_t _min, gene_t _max)
+		: max(_max), min(_min), points(1) {}
+
+	virtual std::string className() const { return "eoUniformRangeMutation"; }
+
+	bool operator()(chromosome_t& chromosome) {
+
+		unsigned int length = chromosome.size();
+		unsigned int point;
+		bool hasChanged = false;
+		gene_t last;
+
+		for (unsigned int i = 0; i < points; i++) {
+			point = rng.random(length);
+			last = chromosome[point];
+			chromosome[point] = eo::random(min, max);
+			if (last != chromosome[point]) hasChanged = true;
+		}
+
+		return hasChanged;
+	}
+};
+
+class eoMatlabMonitor: public eoMonitor
+{
+	eoPop<chromosome_t> &population;
+
+	public:
+
+	eoMatlabMonitor(eoPop<chromosome_t> &_population) : population(_population) {}
+
+	virtual std::string className() const { return "eoMatlabMonotor"; }
+
+	virtual eoMonitor& operator()(void)
+	{
+		return *this;
+	}
+};
 
 #endif

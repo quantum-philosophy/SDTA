@@ -1,5 +1,4 @@
 #include <stdexcept>
-
 #include <nr3.h>
 #include <eigen_sym.h>
 
