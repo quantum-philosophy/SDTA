@@ -8,6 +8,8 @@ set (COMMON_SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Task.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Graph.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Processor.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Architecture.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/GeneticListScheduler.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Hotspot.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/ListScheduler.cpp

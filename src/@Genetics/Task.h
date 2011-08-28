@@ -1,12 +1,15 @@
 #ifndef __TASK_H__
 #define __TASK_H__
 
+#include <iostream>
 #include "Common.h"
 
 class Task
 {
 	friend class Graph;
+	friend class Architecture;
 	friend class ListScheduler;
+	friend std::ostream &operator<< (std::ostream &, const Task *);
 
 	tid_t id;
 	unsigned int type;

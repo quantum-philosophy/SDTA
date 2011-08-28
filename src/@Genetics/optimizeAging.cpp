@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "Graph.h"
+#include "Architecture.h"
 #include "Hotspot.h"
 #include "GeneticListScheduler.h"
 
@@ -141,6 +142,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	char *floorplan = NULL;
 	char *config = NULL;
 	Graph *graph = NULL;
+	Architecture *architecture = NULL;
 	Hotspot *hotspot = NULL;
 	GeneticListScheduler *scheduler = NULL;
 
@@ -156,14 +158,28 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		fetch_configuration(nrhs, prhs, &floorplan, &config,
 			type, link, frequency, voltage, ngate, nc, ceff);
 
-		graph = Graph::build(type, link, frequency, voltage, ngate, nc, ceff);
+		graph = new GraphBuilder(type, link);
+		architecture = new ArchitectureBuilder(frequency, voltage, ngate, nc, ceff);
+
+		size_t task_count = graph->size();
+		size_t processor_count = architecture->size();
+
+		mapping_t mapping(task_count);
+
+		for (size_t i = 0; i < task_count; i++)
+			mapping[i] = i % processor_count;
+
+		graph->assign_mapping(architecture, mapping);
+
 		hotspot = new Hotspot(floorplan, config);
 		scheduler = new GeneticListScheduler(graph, hotspot);
 
-		scheduler->solve();
+		std::cout << graph;
+		std::cout << architecture;
 	}
 	catch (exception &e) {
 		__DELETE(graph);
+		__DELETE(architecture);
 		__DELETE(hotspot);
 		__DELETE(scheduler);
 		__MX_FREE(floorplan);
@@ -172,6 +188,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	}
 
 	__DELETE(graph);
+	__DELETE(architecture);
 	__DELETE(hotspot);
 	__DELETE(scheduler);
 	__MX_FREE(floorplan);

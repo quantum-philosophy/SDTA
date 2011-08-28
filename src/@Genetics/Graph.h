@@ -1,53 +1,42 @@
 #ifndef __GRAPH_H__
 #define __GRAPH_H__
 
+#include <iostream>
 #include "Common.h"
 
 class Graph
 {
 	friend class ListScheduler;
+	friend std::ostream &operator<< (std::ostream &, const Graph *);
+
+	protected:
 
 	task_vector_t tasks;
-	processor_vector_t processors;
-
 	size_t task_count;
-	size_t processor_count;
 
-	bool mapped;
-	bool scheduled;
-
+	const Architecture *architecture;
 	mapping_t mapping;
 	schedule_t schedule;
 
 	public:
 
-	Graph() :
-		task_count(0), processor_count(0),
-		scheduled(false), mapped(false) {}
-
-	~Graph();
+	Graph() : task_count(0), architecture(NULL) {}
 
 	void add_task(Task *task);
 	void add_link(Task *parent, Task *child);
-	void add_processor(Processor *processor);
 
-	void assign_mapping(const mapping_t &mapping);
+	void assign_mapping(const Architecture *architecture,
+		const mapping_t &mapping);
 	void assign_schedule(const schedule_t &mapping);
 
 	task_vector_t get_roots() const;
 	task_vector_t get_leaves() const;
 
-	/* Build the whole graph with tasks and processors */
-	static Graph *build(
-		std::vector<unsigned int> &type,
-		std::vector<std::vector<bool> > &link,
-		std::vector<double> &frequency,
-		std::vector<double> &voltage,
-		std::vector<unsigned long int> &ngate,
-		std::vector<std::vector<unsigned long int> > &nc,
-		std::vector<std::vector<double> > &ceff);
+	size_t size() const { return task_count; }
 
-	private:
+	const Task *operator[] (tid_t id) const { return tasks[id]; }
+
+	protected:
 
 	/* The duration of the graph based on the actual start times */
 	double calc_duration() const;
@@ -60,6 +49,15 @@ class Graph
 	void calc_asap() const;
 	/* Trigger the propagation of the ALAP time */
 	void calc_alap() const;
+};
+
+class GraphBuilder : public Graph
+{
+	public:
+
+	GraphBuilder(std::vector<unsigned int> &type,
+		std::vector<std::vector<bool> > &link);
+	~GraphBuilder();
 };
 
 #endif

@@ -1,17 +1,10 @@
 #include <stdexcept>
+#include <iomanip>
 
-#include "Graph.h"
 #include "Task.h"
+#include "Graph.h"
 #include "Processor.h"
-
-Graph::~Graph()
-{
-	for (size_t i = 0; i < task_count; i++)
-		delete tasks[i];
-
-	for (size_t i = 0; i < processor_count; i++)
-		delete processors[i];
-}
+#include "Architecture.h"
 
 void Graph::add_task(Task *task)
 {
@@ -26,26 +19,16 @@ void Graph::add_link(Task *parent, Task *child)
 	child->add_parent(parent);
 }
 
-void Graph::add_processor(Processor *processor)
+void Graph::assign_mapping(const Architecture *architecture,
+	const mapping_t &mapping)
 {
-	processors.push_back(processor);
-	processor_count = processors.size();
-	processor->id = processor_count - 1;
-}
+	if (mapping.size() != task_count)
+		throw std::runtime_error("The given mapping is not sufficient.");
 
-void Graph::assign_mapping(const mapping_t &mapping)
-{
+	this->architecture = architecture;
 	this->mapping = mapping;
-	mapped = true;
 
-	Processor *processor;
-	Task *task;
-
-	for (tid_t id = 0; id < task_count; id++) {
-		task = tasks[id];
-		processor = processors[mapping[id]];
-		task->assign_processor(processor);
-	}
+	architecture->map(tasks, mapping);
 
 	calc_asap();
 	calc_alap();
@@ -53,31 +36,14 @@ void Graph::assign_mapping(const mapping_t &mapping)
 
 void Graph::assign_schedule(const schedule_t &schedule)
 {
-	if (!mapped) std::runtime_error("The graph should be mapped.");
+	if (!architecture) std::runtime_error("The graph should be mapped.");
+
+	if (schedule.size() != task_count)
+		throw std::runtime_error("The given schedule is not sufficient.");
 
 	this->schedule = schedule;
-	scheduled = true;
 
-	Processor *processor;
-
-	for (pid_t pid = 0; pid < processor_count; pid++) {
-		processor = processors[pid];
-
-		Task *ancestor = NULL, *successor;
-
-		for (tid_t id = 0; id < task_count; id++) {
-			successor = tasks[schedule[id]];
-
-			if (successor->processor != processor) continue;
-
-			if (ancestor) {
-				ancestor->set_successor(successor);
-				successor->set_ancestor(ancestor);
-			}
-
-			ancestor = successor;
-		}
-	}
+	architecture->distribute(tasks, schedule);
 }
 
 task_vector_t Graph::get_roots() const
@@ -153,45 +119,61 @@ void Graph::calc_alap() const
 			tasks[id]->propagate_alap(duration);
 }
 
-Graph *Graph::build(
-	std::vector<unsigned int> &type,
-	std::vector<std::vector<bool> > &link,
-	std::vector<double> &frequency,
-	std::vector<double> &voltage,
-	std::vector<unsigned long int> &ngate,
-	std::vector<std::vector<unsigned long int> > &nc,
-	std::vector<std::vector<double> > &ceff)
+std::ostream &operator<< (std::ostream &o, const Graph *graph)
 {
-	Graph *graph = new Graph;
+	o	<< "Task Graph: " << std::endl
+		<< "  Number of tasks: " << graph->task_count << std::endl;
 
+	o	<< "  "
+		<< std::setw(4) << "id" << " ( "
+		<< std::setw(4) << "proc" << " : "
+		<< std::setw(4) << "type" << " : "
+		<< std::setw(8) << "start" << " : "
+		<< std::setw(8) << "duration" << " : "
+		<< std::setw(8) << "asap" << " : "
+		<< std::setw(8) << "mobility" << " : "
+		<< std::setw(8) << "alap" << " ) -> [ "
+		<< "children" << " ] " << std::endl;
+
+	for (tid_t id = 0; id < graph->task_count; id++)
+		o << "  " << graph->tasks[id];
+
+	return o;
+}
+
+GraphBuilder::GraphBuilder(std::vector<unsigned int> &type,
+	std::vector<std::vector<bool> > &link) : Graph()
+{
 	Task *task;
-	size_t task_count = nc.size();
 	task_vector_t tasks;
+
+	size_t task_count = type.size();
+
+	if (task_count == 0)
+		throw std::runtime_error("There are no tasks specified.");
+
+	if (link.size() != task_count)
+		throw std::runtime_error("The link matrix is not consistent.");
+
+	for (size_t i = 0; i < task_count; i++)
+		if (link[i].size() != task_count)
+			throw std::runtime_error("The link matrix is not consistent.");
 
 	for (tid_t id = 0; id < task_count; id++) {
 		task = new Task(type[id]);
 		tasks.push_back(task);
-		graph->add_task(task);
+		add_task(task);
 	}
 
-	for (tid_t pid = 0; pid < task_count; pid++)
+	for (tid_t pid = 0; pid < task_count; pid++) {
 		for (tid_t cid = 0; cid < task_count; cid++)
 			if (link[pid][cid])
-				graph->add_link(tasks[pid], tasks[cid]);
-
-	Processor *processor;
-	size_t processor_count = frequency.size();
-	processor_vector_t processors;
-
-	for (pid_t id = 0; id < processor_count; id++) {
-		processor = new Processor(frequency[id], voltage[id], ngate[id]);
-		processors.push_back(processor);
-		graph->add_processor(processor);
-
-		size_t type_count = nc[id].size();
-		for (size_t i = 0; i < type_count; i++)
-			processor->add_type(nc[id][i], ceff[id][i]);
+				add_link(tasks[pid], tasks[cid]);
 	}
+}
 
-	return graph;
+GraphBuilder::~GraphBuilder()
+{
+	for (size_t i = 0; i < task_count; i++)
+		delete tasks[i];
 }

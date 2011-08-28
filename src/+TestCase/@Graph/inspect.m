@@ -24,14 +24,19 @@ function inspect(graph)
     end
   end
 
+  mapping = graph.mapping;
+  if isempty(mapping), mapping = -1 * ones(1, length(graph.tasks)); end
+
   % Graph itself
   fprintf('Data dependencies:\n');
-  fprintf('  %4s (%8s : %8s : %8s : %8s : %8s) -> [ %s ]\n', ...
-    'id', 'start', 'time', 'asap', 'mobility', 'alap', 'children');
+  fprintf('  %4s ( %4s : %4s : %8s : %8s : %8s : %8s : %8s ) -> [ %s ]\n', ...
+    'id', 'proc', 'type', 'start', 'duration', 'asap', 'mobility', ...
+    'alap', 'children');
   for task = graph.tasks
     task = task{1};
-    fprintf('  %4d (%8.2f : %8.2f : %8.2f : %8.2f : %8.2f) -> [ ', ...
-      task.id, task.start, task.duration, task.asap, task.mobility, task.alap);
+    fprintf('  %4d ( %4d : %4d : %8.2f : %8.2f : %8.2f : %8.2f : %8.2f ) -> [ ', ...
+      task.id, mapping(task.id), task.type, task.start, task.duration, ...
+      task.asap, task.mobility, task.alap);
     first = true;
     for child = task.children
       child = child{1};

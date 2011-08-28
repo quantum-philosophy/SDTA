@@ -2,15 +2,22 @@
 
 #include "GeneticListScheduler.h"
 #include "Graph.h"
+#include "ListScheduler.h"
+
+GeneticListScheduler::GeneticListScheduler(Graph *_graph, Hotspot *_hotspot,
+	const tunning_t &_tunning): graph(_graph), hotspot(_hotspot),
+	tunning(_tunning)
+{
+}
 
 void GeneticListScheduler::solve(void)
 {
-	rng.reseed(options.seed);
+	rng.reseed(tunning.seed);
 
 	/* Continuator */
-	eoGenContinue<chromosome_t> gen_cont(options.max_generations);
-	eoSteadyFitContinue<chromosome_t> steady_cont(options.min_generations,
-		options.stall_generations);
+	eoGenContinue<chromosome_t> gen_cont(tunning.max_generations);
+	eoSteadyFitContinue<chromosome_t> steady_cont(tunning.min_generations,
+		tunning.stall_generations);
 	eoCombinedContinue<chromosome_t> continuator(gen_cont, steady_cont);
 
 	/* Evaluate */
@@ -18,10 +25,10 @@ void GeneticListScheduler::solve(void)
 
 	eoPop<chromosome_t> population;
 
-	for (unsigned int i = 0; i < options.population_size; i++) {
+	for (unsigned int i = 0; i < tunning.population_size; i++) {
 		chromosome_t chromosome;
 
-		for (unsigned int j = 0; j < options.chromosome_length; j++) {
+		for (unsigned int j = 0; j < tunning.chromosome_length; j++) {
 			gene_t gene = rng.uniform();
 			chromosome.push_back(gene);
 		}
@@ -35,26 +42,26 @@ void GeneticListScheduler::solve(void)
 	std::cout << "Initial population" << std::endl << population << std::endl;
 
 	/* Select */
-	eoDetTournamentSelect<chromosome_t> selectOne(options.tournament_size);
+	eoDetTournamentSelect<chromosome_t> selectOne(tunning.tournament_size);
 	eoSelectPerc<chromosome_t> select(selectOne);
 
 	/* Crossover */
-	eoNPtsBitXover<chromosome_t> crossover(options.crossover_points);
+	eoNPtsBitXover<chromosome_t> crossover(tunning.crossover_points);
 
 	/* Mutate */
 	gene_t min_gene = 0.0;
 	gene_t max_gene = 1.0;
 	eoUniformRangeMutation mutation(min_gene, max_gene,
-		options.mutation_points);
+		tunning.mutation_points);
 
 	/* Evolve */
-	eoElitism<chromosome_t> merge(options.generation_gap);
+	eoElitism<chromosome_t> merge(tunning.generation_gap);
 	eoTruncate<chromosome_t> reduce;
 	eoMergeReduce<chromosome_t> replace(merge, reduce);
 
 	/* Transform */
-	eoSGATransform<chromosome_t> transform(crossover, options.crossover_rate,
-		mutation, options.mutation_rate);
+	eoSGATransform<chromosome_t> transform(crossover, tunning.crossover_rate,
+		mutation, tunning.mutation_rate);
 
 	/* Monitor */
 	eoCheckPoint<chromosome_t> checkpoint(continuator);
@@ -78,4 +85,21 @@ double GeneticListScheduler::evaluate(const chromosome_t &chromosome) const
 		sum += chromosome[i] * chromosome[i];
 
 	return -sum;
+}
+
+eoPop<chromosome_t> GeneticListScheduler::create_population() const
+{
+	eoPop<chromosome_t> population;
+
+	for (size_t i = 0; i < tunning.population_size; i++) {
+		chromosome_t chromosome;
+
+		for (size_t j = 0; j < tunning.chromosome_length; j++) {
+			gene_t gene = rng.uniform();
+			chromosome.push_back(gene);
+		}
+
+		evaluate(chromosome);
+		population.push_back(chromosome);
+	}
 }

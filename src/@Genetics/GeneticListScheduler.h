@@ -24,7 +24,7 @@ class GeneticListScheduler
 
 	public:
 
-	typedef struct _options_t {
+	struct tunning_t {
 		int seed;
 
 		unsigned int population_size;
@@ -42,48 +42,42 @@ class GeneticListScheduler
 		unsigned int mutation_points;
 
 		double generation_gap;
-	} options_t;
 
-	static options_t defaultOptions(void)
-	{
-		options_t o;
+		tunning_t() :
+			seed(0),
 
-		o.seed = 0;
+			/* Continuator */
+			population_size(100),
+			chromosome_length(10),
+			min_generations(10),
+			max_generations(1000),
+			stall_generations(20),
 
-		/* Continuator */
-		o.population_size = 100;
-		o.chromosome_length = 10;
-		o.min_generations = 10;
-		o.max_generations = 1000;
-		o.stall_generations = 20;
+			/* Select */
+			tournament_size(3),
 
-		/* Select */
-		o.tournament_size = 3;
+			/* Crossover */
+			crossover_rate(0.8),
+			crossover_points(2),
 
-		/* Crossover */
-		o.crossover_rate = 0.8;
-		o.crossover_points = 2;
+			/* Mutate */
+			mutation_rate(0.1),
+			mutation_points(2),
 
-		/* Mutate */
-		o.mutation_rate = 0.1;
-		o.mutation_points = 2;
+			/* Evolve */
+			generation_gap(0.5) {}
+	};
 
-		/* Evolve */
-		o.generation_gap = 0.5;
-
-		return o;
-	}
-
-	GeneticListScheduler(Graph *_graph, Hotspot *_hotspot) :
-		graph(_graph), hotspot(_hotspot),
-		options(GeneticListScheduler::defaultOptions()) {}
-	GeneticListScheduler(options_t _options) : options(_options) {}
+	GeneticListScheduler(Graph *_graph, Hotspot *_hotspot,
+		const tunning_t &_tunning = tunning_t());
 
 	void solve(void);
 
 	private:
 
-	options_t options;
+	eoPop<chromosome_t> create_population() const;
+
+	tunning_t tunning;
 };
 
 struct GeneticListSchedulerEvalFuncPtr: public eoEvalFunc<chromosome_t>
