@@ -171,11 +171,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 		graph->assign_mapping(architecture, mapping);
 
-		hotspot = new Hotspot(floorplan, config);
-		scheduler = new GeneticListScheduler(graph, hotspot);
-
 		std::cout << graph;
 		std::cout << architecture;
+
+		hotspot = new Hotspot(floorplan, config);
+		scheduler = new GeneticListScheduler();
+
+		scheduler->solve(graph, hotspot);
 	}
 	catch (exception &e) {
 		__DELETE(graph);

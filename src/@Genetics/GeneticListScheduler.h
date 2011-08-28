@@ -27,24 +27,29 @@ class GeneticListScheduler
 	struct tunning_t {
 		int seed;
 
-		unsigned int population_size;
-		unsigned int chromosome_length;
-		unsigned int min_generations;
-		unsigned int max_generations;
-		unsigned int stall_generations;
+		double mobility_ratio;
 
-		unsigned tournament_size;
+		size_t population_size;
+		size_t chromosome_length;
+		size_t min_generations;
+		size_t max_generations;
+		size_t stall_generations;
+
+		size_t tournament_size;
 
 		double crossover_rate;
-		unsigned int crossover_points;
+		size_t crossover_points;
 
 		double mutation_rate;
-		unsigned int mutation_points;
+		size_t mutation_points;
 
 		double generation_gap;
 
 		tunning_t() :
 			seed(0),
+
+			/* Create */
+			mobility_ratio(0.5),
 
 			/* Continuator */
 			population_size(100),
@@ -68,10 +73,10 @@ class GeneticListScheduler
 			generation_gap(0.5) {}
 	};
 
-	GeneticListScheduler(Graph *_graph, Hotspot *_hotspot,
-		const tunning_t &_tunning = tunning_t());
+	GeneticListScheduler(const tunning_t &_tunning = tunning_t()) :
+		tunning(_tunning) {}
 
-	void solve(void);
+	void solve(Graph *_graph, Hotspot *_hotspot);
 
 	private:
 

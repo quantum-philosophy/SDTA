@@ -56,8 +56,6 @@ void Task::propagate_alap(double time)
 	alap = time;
 	mobility = std::max(0.0, alap - asap);
 
-	time = time + duration;
-
 	/* Shift data dependent tasks */
 	size_t size = parents.size();
 	for (size_t i = 0; i < size; i++)

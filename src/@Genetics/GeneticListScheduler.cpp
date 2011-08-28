@@ -1,17 +1,22 @@
+#include <stdexcept>
 #include <iostream>
 
 #include "GeneticListScheduler.h"
 #include "Graph.h"
+#include "Task.h"
 #include "ListScheduler.h"
 
-GeneticListScheduler::GeneticListScheduler(Graph *_graph, Hotspot *_hotspot,
-	const tunning_t &_tunning): graph(_graph), hotspot(_hotspot),
-	tunning(_tunning)
+void GeneticListScheduler::solve(Graph *graph, Hotspot *hotspot)
 {
-}
+	size_t task_count = graph->task_count;
 
-void GeneticListScheduler::solve(void)
-{
+	if (task_count == 0) throw std::runtime_error("The graph is empty.");
+
+	task_vector_t &tasks = graph->tasks;
+
+	this->graph = graph;
+	this->hotspot = hotspot;
+
 	rng.reseed(tunning.seed);
 
 	/* Continuator */
@@ -23,23 +28,45 @@ void GeneticListScheduler::solve(void)
 	/* Evaluate */
 	GeneticListSchedulerEvalFuncPtr evaluate(this);
 
+	/* Create */
 	eoPop<chromosome_t> population;
 
-	for (unsigned int i = 0; i < tunning.population_size; i++) {
-		chromosome_t chromosome;
+	chromosome_t chromosome(task_count);
 
-		for (unsigned int j = 0; j < tunning.chromosome_length; j++) {
-			gene_t gene = rng.uniform();
-			chromosome.push_back(gene);
-		}
+	/* ... first, collect mobility */
+	gene_t current_mobility;
+	gene_t min_mobility;
+	gene_t max_mobility;
+	chromosome[0] = min_mobility = max_mobility = tasks[0]->mobility;
 
-		evaluate(chromosome);
+	for (size_t i = 1; i < task_count; i++) {
+		current_mobility = tasks[i]->mobility;
+		if (min_mobility > current_mobility) min_mobility = current_mobility;
+		if (max_mobility < current_mobility) max_mobility = current_mobility;
+		chromosome[i] = current_mobility;
+	}
+
+	/* ... evaluate it */
+	evaluate(chromosome);
+
+	/* ... fill the first part with pure mobility chromosomes */
+	size_t create_count = tunning.mobility_ratio * tunning.population_size;
+	for (size_t i = 0; i < create_count; i++)
+		population.push_back(chromosome);
+
+	/* ... others are randomly generated */
+	create_count = tunning.population_size - create_count;
+	for (size_t i = 0; i < create_count; i++) {
+		for (size_t j = 0; j < task_count; j++)
+			chromosome[j] = eo::random(min_mobility, max_mobility);
 		population.push_back(chromosome);
 	}
 
 	population.sort();
 
 	std::cout << "Initial population" << std::endl << population << std::endl;
+
+	return;
 
 	/* Select */
 	eoDetTournamentSelect<chromosome_t> selectOne(tunning.tournament_size);
@@ -85,21 +112,4 @@ double GeneticListScheduler::evaluate(const chromosome_t &chromosome) const
 		sum += chromosome[i] * chromosome[i];
 
 	return -sum;
-}
-
-eoPop<chromosome_t> GeneticListScheduler::create_population() const
-{
-	eoPop<chromosome_t> population;
-
-	for (size_t i = 0; i < tunning.population_size; i++) {
-		chromosome_t chromosome;
-
-		for (size_t j = 0; j < tunning.chromosome_length; j++) {
-			gene_t gene = rng.uniform();
-			chromosome.push_back(gene);
-		}
-
-		evaluate(chromosome);
-		population.push_back(chromosome);
-	}
 }

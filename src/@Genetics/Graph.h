@@ -7,6 +7,7 @@
 class Graph
 {
 	friend class ListScheduler;
+	friend class GeneticListScheduler;
 	friend std::ostream &operator<< (std::ostream &, const Graph *);
 
 	protected:

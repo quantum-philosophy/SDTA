@@ -2,6 +2,7 @@
 #define __TASK_H__
 
 #include <iostream>
+#include <limits>
 #include "Common.h"
 
 class Task
@@ -9,6 +10,7 @@ class Task
 	friend class Graph;
 	friend class Architecture;
 	friend class ListScheduler;
+	friend class GeneticListScheduler;
 	friend std::ostream &operator<< (std::ostream &, const Task *);
 
 	tid_t id;
@@ -35,8 +37,8 @@ class Task
 
 	Task(unsigned int _type) :
 		id(-1), type(_type), nc(0), ceff(0), ancestor(NULL),
-		successor(NULL), duration(0), start(-1), asap(-1), alap(0),
-		mobility(0) {}
+		successor(NULL), duration(0), start(-1), asap(-1),
+		alap(std::numeric_limits<double>::max()), mobility(0) {}
 
 	void assign_processor(const Processor *processor);
 
