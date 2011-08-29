@@ -8,9 +8,6 @@ classdef LS < handle
         for i = 1:taskCount, priority(i) = graph.tasks{i}.mobility; end
       end
 
-      % Go to the ordinal numbers
-      [ dummy, priority ] = sort(priority);
-
       % Obtain roots and sort them according to their priority
       ids = graph.getRootIds();
       [ dummy, I ] = sort(priority(ids));
