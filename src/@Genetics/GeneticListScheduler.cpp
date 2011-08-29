@@ -1,21 +1,20 @@
 #include <stdexcept>
 #include <iostream>
+#include <limits>
 
 #include "GeneticListScheduler.h"
 #include "Graph.h"
 #include "Task.h"
 #include "ListScheduler.h"
+#include "DynamicPower.h"
 
-void GeneticListScheduler::solve(Graph *graph, Hotspot *hotspot)
+schedule_t GeneticListScheduler::solve()
 {
 	size_t task_count = graph->task_count;
 
 	if (task_count == 0) throw std::runtime_error("The graph is empty.");
 
 	task_vector_t &tasks = graph->tasks;
-
-	this->graph = graph;
-	this->hotspot = hotspot;
 
 	rng.reseed(tunning.seed);
 
@@ -49,6 +48,8 @@ void GeneticListScheduler::solve(Graph *graph, Hotspot *hotspot)
 	/* ... evaluate it */
 	evaluate(chromosome);
 
+	return ListScheduler::process(graph, chromosome);
+
 	/* ... fill the first part with pure mobility chromosomes */
 	size_t create_count = tunning.mobility_ratio * tunning.population_size;
 	for (size_t i = 0; i < create_count; i++)
@@ -62,12 +63,6 @@ void GeneticListScheduler::solve(Graph *graph, Hotspot *hotspot)
 		population.push_back(chromosome);
 	}
 
-	population.sort();
-
-	std::cout << "Initial population" << std::endl << population << std::endl;
-
-	return;
-
 	/* Select */
 	eoDetTournamentSelect<chromosome_t> selectOne(tunning.tournament_size);
 	eoSelectPerc<chromosome_t> select(selectOne);
@@ -76,9 +71,7 @@ void GeneticListScheduler::solve(Graph *graph, Hotspot *hotspot)
 	eoNPtsBitXover<chromosome_t> crossover(tunning.crossover_points);
 
 	/* Mutate */
-	gene_t min_gene = 0.0;
-	gene_t max_gene = 1.0;
-	eoUniformRangeMutation mutation(min_gene, max_gene,
+	eoUniformRangeMutation mutation(min_mobility, max_mobility,
 		tunning.mutation_points);
 
 	/* Evolve */
@@ -99,17 +92,41 @@ void GeneticListScheduler::solve(Graph *graph, Hotspot *hotspot)
 
 	gga(population);
 
-	population.sort();
-	std::cout << "Final population" << std::endl << population << std::endl;
+	return ListScheduler::process(graph, population.best_element());
 }
 
 double GeneticListScheduler::evaluate(const chromosome_t &chromosome) const
 {
-	unsigned length = chromosome.size();
-	double sum = 0;
+	/* Make a new schedule */
+	schedule_t schedule = ListScheduler::process(graph);
 
-	for (unsigned i = 0; i < length; i++)
-		sum += chromosome[i] * chromosome[i];
+	graph->assign_schedule(schedule);
 
-	return -sum;
+	if (graph->duration > graph->deadline)
+		return std::numeric_limits<double>::min();
+
+	matrix_t dynamic_power, temperature, total_power;
+
+	/* The graph is rescheduled now, obtain the dynamic power profile */
+	DynamicPower::compute(graph, tunning.sampling_interval, dynamic_power);
+
+	/* Now, we can get the temperature profile, and the total power profile
+	 * including the leakage part.
+	 */
+	unsigned int it = hotspot->solve(graph->architecture,
+		dynamic_power, temperature, total_power);
+
+	dump_into_matlab("dynamic_power.mat", "dynamic_power", dynamic_power);
+	dump_into_matlab("temperature.mat", "temperature", temperature);
+	dump_into_matlab("total_power.mat", "total_power", total_power);
+
+	std::cout << "Iterations: " << it << std::endl;
+	std::cout << "Cores: " << temperature.cols() << std::endl;
+	std::cout << "Steps: " << temperature.rows() << std::endl;
+
+	// double mttf = Lifetime::predict(temperature, tunning.sampling_interval);
+
+	// std::cout << "MTTF: " << mttf << std::endl;
+
+	return 0;
 }

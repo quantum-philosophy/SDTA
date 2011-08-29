@@ -5,6 +5,8 @@
 
 class Architecture
 {
+	friend class DynamicPower;
+	friend class Hotspot;
 	friend std::ostream &operator<< (std::ostream &, const Architecture *);
 
 	protected:

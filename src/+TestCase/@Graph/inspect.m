@@ -18,9 +18,8 @@ function inspect(graph)
     % Scheduling
     if graph.isScheduled
       Utils.inspectVector('Schedule', graph.schedule);
-      fprintf('Actual total time: %f s\n', graph.duration);
-      fprintf('Total time with deadline: %f s\n', graph.deadline);
-      fprintf('Available slack: %f s\n', graph.deadline - graph.duration);
+      fprintf('Duration: %.2f s\n', graph.duration);
+      fprintf('Deadline: %.2f s\n', graph.deadline);
     end
   end
 

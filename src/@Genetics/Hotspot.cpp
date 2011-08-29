@@ -3,12 +3,15 @@
 #include <eigen_sym.h>
 
 #include "Hotspot.h"
+#include "Processor.h"
+#include "Architecture.h"
 #include "utils.h"
 
-Hotspot::Hotspot(char *floorplan, char *config, str_pair *extra_table, int rows)
+Hotspot::Hotspot(char *floorplan, char *config,
+	str_pair *extra_table, size_t tsize)
 {
 	if (!fexist(floorplan) || !fexist(config))
-		throw std::runtime_error("The configuration files do not exist");
+		throw std::runtime_error("The configuration files do not exist.");
 
 	cfg = default_thermal_config();
 
@@ -18,8 +21,8 @@ Hotspot::Hotspot(char *floorplan, char *config, str_pair *extra_table, int rows)
 		thermal_config_add_from_strs(&cfg, table, i);
 	}
 
-	if (extra_table && rows)
-		thermal_config_add_from_strs(&cfg, extra_table, rows);
+	if (extra_table && tsize)
+		thermal_config_add_from_strs(&cfg, extra_table, tsize);
 
 	flp = read_flp(floorplan, FALSE);
 }
@@ -29,15 +32,22 @@ Hotspot::~Hotspot()
 	free_flp(flp, FALSE);
 }
 
-unsigned int Hotspot::solve(double *dynamic_power, int steps, const double *vdd,
-	const double *ngate, double *T, double tol, int maxit)
+unsigned int Hotspot::solve(const Architecture *architecture,
+	const matrix_t &dynamic_power, matrix_t &temperature, matrix_t &total_power)
 {
-	int i, j, k, it, total, cores, nodes;
+	size_t i, j, it;
+	size_t cores, nodes, steps, total;
 	double ts, am, tmp, error, max_error;
-	double *power;
 
 	RC_model_t *model;
 	block_model_t *block;
+
+	cores = flp->n_units;
+	steps = dynamic_power.rows();
+	total = cores * steps;
+
+	if (cores != dynamic_power.cols())
+		throw std::runtime_error("The floorplan does not match the given power.");
 
 	model = alloc_RC_model(&cfg, flp);
 	block = model->block;
@@ -45,9 +55,10 @@ unsigned int Hotspot::solve(double *dynamic_power, int steps, const double *vdd,
 	populate_R_model(model, flp);
 	populate_C_model(model, flp);
 
-	cores = flp->n_units;
 	nodes = model->block->n_nodes;
-	total = cores * steps;
+
+	temperature.resize(dynamic_power);
+	total_power.resize(dynamic_power);
 
 	ts = model->config->sampling_intvl;
 	am = model->config->ambient;
@@ -124,20 +135,19 @@ unsigned int Hotspot::solve(double *dynamic_power, int steps, const double *vdd,
 	for (i = 0; i < nodes; i++)
 		v_temp[i] = 1.0 / (1.0 - exp(ts * steps * L[i]));
 
-	power = (double *)malloc(sizeof(double) * steps * cores);
-
-	Hotspot::inject_leakage(dynamic_power, vdd, ngate, cores, steps, am, power);
+	Hotspot::inject_leakage(architecture, dynamic_power, am, total_power);
 
 	/* We come to the iterative part */
 	for (it = 0;;) {
 		/* Q(0) = G * B(0) */
-		multiply_matrix_incomplete_vector(G, &power[0], cores, Q[0]);
+		multiply_matrix_incomplete_vector(G, total_power[0], cores, Q[0]);
 		/* P(0) = Q(0) */
 		copy_vector(P[0], Q[0], nodes);
 
 		for (i = 1; i < steps; i++) {
 			/* Q(i) = G * B(i) */
-			multiply_matrix_incomplete_vector(G, &power[i * cores], cores, Q[i]);
+			multiply_matrix_incomplete_vector(G, total_power[i],
+				cores, Q[i]);
 			/* P(i) = K * P(i-1) + Q(i) */
 			multiply_matrix_vector_plus_vector(K, P[i - 1], Q[i], P[i]);
 		}
@@ -156,39 +166,32 @@ unsigned int Hotspot::solve(double *dynamic_power, int steps, const double *vdd,
 		 * And do not forget about the ambient temperature. Also perform
 		 * the error control.
 		 */
-		k = 0;
 		max_error = 0;
 		for (i = 0; i < steps; i++)
-			for (j = 0; j < cores; j++, k++) {
+			for (j = 0; j < cores; j++) {
 				tmp = Y[i][j] * sinvC[j] + am;
 
-				error = abs(T[k] - tmp);
+				error = abs(temperature[i][j] - tmp);
 				if (max_error < error) max_error = error;
 
-				T[k] = tmp;
+				temperature[i][j] = tmp;
 			}
 
 		it++;
 
 		if (max_error < tol || it >= maxit) break;
 
-		Hotspot::inject_leakage(dynamic_power, vdd, ngate, cores, steps, T, power);
+		Hotspot::inject_leakage(architecture,
+			dynamic_power, temperature, total_power);
 	}
-
-	/* Return the power back with the leakage part */
-	copy_vector(dynamic_power, power, steps * cores);
-
-	free(power);
 
 	return it;
 }
 
-void Hotspot::inject_leakage(const double *dynamic_power, const double *vdd,
-	const double *ngate, int cores, int steps, const double *T, double *total_power)
+void Hotspot::inject_leakage(const Architecture *architecture,
+	const matrix_t &dynamic_power, const matrix_t &temperature,
+	matrix_t &total_power)
 {
-	int i, j, k;
-	double favg;
-
 	/* Pleak = Ngate * Iavg * Vdd
 	 * Iavg(T, Vdd) = Is(T0, V0) * favg(T, Vdd)
 	 *
@@ -201,32 +204,55 @@ void Hotspot::inject_leakage(const double *dynamic_power, const double *vdd,
 	 * Power Modeling at Microarchitecture Level"
 	 */
 
-	k = 0;
-	for (i = 0; i < steps; i++)
-		for (j = 0; j < cores; j++, k++) {
-			favg = __A * T[k] * T[k] *
-				exp((__alpha * vdd[j] + __beta) / T[k]) +
-				__B * exp(__gamma * vdd[j] + __delta);
+	size_t i, j;
+	size_t steps = dynamic_power.rows();
+	size_t cores = dynamic_power.cols();
 
-			total_power[k] = dynamic_power[k] +
-				ngate[j] * __Is * favg * vdd[j];
+	double temp, favg, voltage;
+	unsigned long int ngate;
+
+	const processor_vector_t &processors = architecture->processors;
+
+	for (i = 0; i < steps; i++) {
+		for (j = 0; j < cores; j++) {
+			temp = temperature[i][j];
+			voltage = processors[j]->voltage;
+			ngate = processors[j]->ngate;
+
+			favg = __A * temp * temp *
+				exp((__alpha * voltage + __beta) / temp) +
+				__B * exp(__gamma * voltage + __delta);
+
+			total_power[i][j] = dynamic_power[i][j] +
+				ngate * __Is * favg * voltage;
 		}
+	}
 }
 
-void Hotspot::inject_leakage(const double *dynamic_power, const double *vdd,
-	const double *ngate, int cores, int steps, double T, double *total_power)
+void Hotspot::inject_leakage(const Architecture *architecture,
+	const matrix_t &dynamic_power, double temperature,
+	matrix_t &total_power)
 {
-	int i, j, k;
-	double favg;
+	size_t i, j;
+	size_t steps = dynamic_power.rows();
+	size_t cores = dynamic_power.cols();
 
-	k = 0;
-	for (i = 0; i < steps; i++)
-		for (j = 0; j < cores; j++, k++) {
-			favg = __A * T * T *
-				exp((__alpha * vdd[j] + __beta) / T) +
-				__B * exp(__gamma * vdd[j] + __delta);
+	double favg, voltage;
+	unsigned long int ngate;
 
-			total_power[k] = dynamic_power[k] +
-				ngate[j] * __Is * favg * vdd[j];
+	const processor_vector_t &processors = architecture->processors;
+
+	for (i = 0; i < steps; i++) {
+		for (j = 0; j < cores; j++) {
+			voltage = processors[j]->voltage;
+			ngate = processors[j]->ngate;
+
+			favg = __A * temperature * temperature *
+				exp((__alpha * voltage + __beta) / temperature) +
+				__B * exp(__gamma * voltage + __delta);
+
+			total_power[i][j] = dynamic_power[i][j] +
+				ngate * __Is * favg * voltage;
 		}
+	}
 }

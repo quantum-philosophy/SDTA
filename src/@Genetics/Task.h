@@ -11,12 +11,11 @@ class Task
 	friend class Architecture;
 	friend class ListScheduler;
 	friend class GeneticListScheduler;
+	friend class DynamicPower;
 	friend std::ostream &operator<< (std::ostream &, const Task *);
 
 	tid_t id;
 	unsigned int type;
-	unsigned long int nc; /* Number of clock cycles */
-	double ceff; /* Effective switched capacitance */
 
 	/* In the graph */
 	task_vector_t parents;
@@ -27,7 +26,10 @@ class Task
 	Task *ancestor;
 	Task *successor;
 
-    double duration;
+	/* Assigned on mapping */
+    double duration;	/* Execution time */
+	double power; 		/* Consuming power */
+
     double start;		/* Actual start time (mapped and scheduled) */
     double asap; 		/* ASAP, as soon as possible */
     double alap;		/* ALAP, as late as possible */
@@ -36,8 +38,8 @@ class Task
 	public:
 
 	Task(unsigned int _type) :
-		id(-1), type(_type), nc(0), ceff(0), ancestor(NULL),
-		successor(NULL), duration(0), start(-1), asap(-1),
+		id(-1), type(_type), ancestor(NULL), successor(NULL),
+		duration(0), power(0), start(-1), asap(-1),
 		alap(std::numeric_limits<double>::max()), mobility(0) {}
 
 	void assign_processor(const Processor *processor);

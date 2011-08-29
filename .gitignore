@@ -39,3 +39,4 @@ vendor/paradiseo*/paradiseo-moeo/build
 vendor/paradiseo
 
 tags
+*.mat

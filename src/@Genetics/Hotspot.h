@@ -8,6 +8,8 @@ extern "C" {
 #include <hotspot/temperature_block.h>
 }
 
+#include "Common.h"
+
 #define __A			1.1432e-12
 #define __B			1.0126e-14
 #define __alpha		466.4029
@@ -35,24 +37,29 @@ class Hotspot
 	thermal_config_t cfg;
 	flp_t *flp;
 
+	static const double tol = 0.01;
+	static const size_t maxit = 10;
+
 	public:
 
 	Hotspot(char *floorplan, char *config,
-		str_pair *extra_table = NULL, int rows = 0);
+		str_pair *extra_table = NULL, size_t tsize = 0);
 	~Hotspot();
 
-	unsigned int solve(double *dynamic_power, int steps, const double *vdd,
-		const double *ngate, double *T, double tol, int maxit);
+	unsigned int solve(const Architecture *architecture,
+		const matrix_t &dynamic_power, matrix_t &temperature,
+		matrix_t &total_power);
 
 	private:
 
-	static void inject_leakage(const double *dynamic_power, const double *vdd,
-		const double *ngate, int cores, int steps, const double *T,
-		double *total_power);
+	static void inject_leakage(const Architecture *architecture,
+		const matrix_t &dynamic_power, const matrix_t &temperature,
+		matrix_t &total_power);
 
-	/* Initial leakage with the same ambient temperature */
-	static void inject_leakage(const double *dynamic_power, const double *vdd,
-		const double *ngate, int cores, int steps, double T, double *total_power);
+	/* Initial leakage with the ambient temperature */
+	static void inject_leakage(const Architecture *architecture,
+		const matrix_t &dynamic_power, double temperature,
+		matrix_t &total_power);
 };
 
 #endif

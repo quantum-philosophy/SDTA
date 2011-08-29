@@ -25,6 +25,8 @@ class GeneticListScheduler
 	public:
 
 	struct tunning_t {
+		double sampling_interval;
+
 		int seed;
 
 		double mobility_ratio;
@@ -46,6 +48,9 @@ class GeneticListScheduler
 		double generation_gap;
 
 		tunning_t() :
+			sampling_interval(1e-4),
+
+			/* Randomness */
 			seed(0),
 
 			/* Create */
@@ -73,14 +78,13 @@ class GeneticListScheduler
 			generation_gap(0.5) {}
 	};
 
-	GeneticListScheduler(const tunning_t &_tunning = tunning_t()) :
-		tunning(_tunning) {}
+	GeneticListScheduler(Graph *_graph, Hotspot *_hotspot,
+		const tunning_t &_tunning = tunning_t()) :
+		graph(_graph), hotspot(_hotspot), tunning(_tunning) {}
 
-	void solve(Graph *_graph, Hotspot *_hotspot);
+	schedule_t solve();
 
 	private:
-
-	eoPop<chromosome_t> create_population() const;
 
 	tunning_t tunning;
 };

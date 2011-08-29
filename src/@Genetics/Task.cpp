@@ -10,9 +10,13 @@ void Task::assign_processor(const Processor *processor)
 		throw std::runtime_error("The processor does not have such type.");
 
 	this->processor = processor;
-	nc = processor->nc[type];
-	ceff = processor->ceff[type];
-	duration = nc / processor->frequency;
+
+	/* t = NC / f */
+	duration = processor->nc[type] / processor->frequency;
+
+	/* P = Ceff * f * V^2 */
+	power = processor->ceff[type] * processor->frequency *
+		processor->voltage * processor->voltage;
 }
 
 void Task::propagate_start(double time)

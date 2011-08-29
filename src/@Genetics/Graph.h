@@ -8,6 +8,7 @@ class Graph
 {
 	friend class ListScheduler;
 	friend class GeneticListScheduler;
+	friend class DynamicPower;
 	friend std::ostream &operator<< (std::ostream &, const Graph *);
 
 	protected:
@@ -19,9 +20,12 @@ class Graph
 	mapping_t mapping;
 	schedule_t schedule;
 
+	double duration;
+	double deadline;
+
 	public:
 
-	Graph() : task_count(0), architecture(NULL) {}
+	Graph() : task_count(0), architecture(NULL), duration(0), deadline(0) {}
 
 	void add_task(Task *task);
 	void add_link(Task *parent, Task *child);
@@ -29,6 +33,7 @@ class Graph
 	void assign_mapping(const Architecture *architecture,
 		const mapping_t &mapping);
 	void assign_schedule(const schedule_t &mapping);
+	void assign_deadline(double time) { deadline = time; }
 
 	task_vector_t get_roots() const;
 	task_vector_t get_leaves() const;
@@ -37,12 +42,12 @@ class Graph
 
 	const Task *operator[] (tid_t id) const { return tasks[id]; }
 
-	protected:
-
 	/* The duration of the graph based on the actual start times */
 	double calc_duration() const;
 	/* The duration of the graph based on the ASAP times */
 	double calc_asap_duration() const;
+
+	protected:
 
 	/* Trigger the propagation of the start time */
 	void calc_start() const;

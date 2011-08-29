@@ -44,6 +44,9 @@ void Graph::assign_schedule(const schedule_t &schedule)
 	this->schedule = schedule;
 
 	architecture->distribute(tasks, schedule);
+
+	calc_start();
+	duration = calc_duration();
 }
 
 task_vector_t Graph::get_roots() const
@@ -122,7 +125,10 @@ void Graph::calc_alap() const
 std::ostream &operator<< (std::ostream &o, const Graph *graph)
 {
 	o	<< "Task Graph: " << std::endl
-		<< "  Number of tasks: " << graph->task_count << std::endl;
+		<< "  Number of tasks: " << graph->task_count << std::endl
+		<< std::setprecision(2) << std::setiosflags(std::ios::fixed)
+		<< "  Duration: " << graph->duration << std::endl
+		<< "  Deadline: " << graph->deadline << std::endl;
 
 	o	<< "  "
 		<< std::setw(4) << "id" << " ( "
@@ -137,6 +143,9 @@ std::ostream &operator<< (std::ostream &o, const Graph *graph)
 
 	for (tid_t id = 0; id < graph->task_count; id++)
 		o << "  " << graph->tasks[id];
+
+	if (!graph->schedule.empty())
+		o << "  Schedule: " << graph->schedule;
 
 	return o;
 }
