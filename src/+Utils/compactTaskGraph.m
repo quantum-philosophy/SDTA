@@ -1,10 +1,8 @@
-function pack = compactTaskGraph(graph, processors)
+function systemConfig = compactTaskGraph(graph, processors)
   tasks = graph.tasks;
 
   taskCount = length(tasks);
   processorCount = length(processors);
-
-  pack = struct();
 
   type = zeros(1, taskCount);
   link = zeros(taskCount, taskCount);
@@ -32,11 +30,6 @@ function pack = compactTaskGraph(graph, processors)
     ceff(1:length(processor.ceff), i) = processor.ceff;
   end
 
-  pack.type = type;
-  pack.link = link;
-  pack.frequency = frequency;
-  pack.voltage = voltage;
-  pack.ngate = ngate;
-  pack.nc = nc;
-  pack.ceff = ceff;
+  systemConfig = struct('type', type, 'link', link, 'frequency', frequency, ...
+    'voltage', voltage, 'ngate', ngate, 'nc', nc, 'ceff', ceff);
 end

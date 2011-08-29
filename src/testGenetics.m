@@ -25,21 +25,21 @@ dynamicPowerProfile = Power.calculateDynamicProfile(graph);
 
 fprintf('Steps: %d\n', steps);
 
-pack = Utils.compactTaskGraph(graph, processors);
+systemConfig = Utils.compactTaskGraph(graph, processors);
+systemConfig.type = systemConfig.type - 1;
 
-table = struct(...
+hotspotConfig = struct('floorplan', floorplan, 'config', config, ...
   'ambient', Constants.ambientTemperature, ...
   'init_temp', Constants.ambientTemperature, ...
   'sampling_intvl', Constants.samplingInterval);
 
-Genetics.optimizeAging(floorplan, config, table, pack.type - 1, pack.link, ...
-  pack.frequency, pack.voltage, pack.ngate, pack.nc, pack.ceff);
+Genetics.optimizeAging(hotspotConfig, systemConfig);
 
 hotspot = HotSpot(floorplan, config);
 
 Utils.startTimer('Solve with the CE');
 [ T, it, totalPowerProfile ] = hotspot.solveCondensedEquationWithLeakage(...
-  dynamicPowerProfile, pack.voltage, pack.ngate, 0.01, 10);
+  dynamicPowerProfile, systemConfig.voltage, systemConfig.ngate, 0.01, 10);
 Utils.stopTimer();
 
 fprintf('Iterations in Matlab: %d\n', it);
