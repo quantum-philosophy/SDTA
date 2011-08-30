@@ -25,14 +25,11 @@ class GeneticListScheduler
 	public:
 
 	struct tunning_t {
-		double sampling_interval;
-
 		int seed;
 
 		double mobility_ratio;
 
 		size_t population_size;
-		size_t chromosome_length;
 		size_t min_generations;
 		size_t max_generations;
 		size_t stall_generations;
@@ -48,8 +45,6 @@ class GeneticListScheduler
 		double generation_gap;
 
 		tunning_t() :
-			sampling_interval(1e-4),
-
 			/* Randomness */
 			seed(0),
 
@@ -57,10 +52,9 @@ class GeneticListScheduler
 			mobility_ratio(0.5),
 
 			/* Continuator */
-			population_size(100),
-			chromosome_length(10),
+			population_size(50),
 			min_generations(10),
-			max_generations(1000),
+			max_generations(100),
 			stall_generations(20),
 
 			/* Select */
@@ -71,7 +65,7 @@ class GeneticListScheduler
 			crossover_points(2),
 
 			/* Mutate */
-			mutation_rate(0.1),
+			mutation_rate(0.05),
 			mutation_points(2),
 
 			/* Evolve */
@@ -79,14 +73,14 @@ class GeneticListScheduler
 	};
 
 	GeneticListScheduler(Graph *_graph, Hotspot *_hotspot,
-		const tunning_t &_tunning = tunning_t()) :
-		graph(_graph), hotspot(_hotspot), tunning(_tunning) {}
+		const tunning_t &_tunning = tunning_t());
 
 	schedule_t solve();
 
 	private:
 
 	tunning_t tunning;
+	double sampling_interval;
 };
 
 struct GeneticListSchedulerEvalFuncPtr: public eoEvalFunc<chromosome_t>

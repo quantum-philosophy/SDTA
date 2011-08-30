@@ -8,6 +8,14 @@
 #include "DynamicPower.h"
 #include "Lifetime.h"
 
+GeneticListScheduler::GeneticListScheduler(Graph *_graph, Hotspot *_hotspot,
+	const tunning_t &_tunning) :
+	graph(_graph), hotspot(_hotspot), tunning(_tunning)
+{
+	rng.reseed(tunning.seed);
+	sampling_interval = hotspot->sampling_interval();
+}
+
 schedule_t GeneticListScheduler::solve()
 {
 	size_t task_count = graph->task_count;
@@ -15,8 +23,6 @@ schedule_t GeneticListScheduler::solve()
 	if (task_count == 0) throw std::runtime_error("The graph is empty.");
 
 	task_vector_t &tasks = graph->tasks;
-
-	rng.reseed(tunning.seed);
 
 	/* Continuator */
 	eoGenContinue<chromosome_t> gen_cont(tunning.max_generations);
@@ -47,8 +53,6 @@ schedule_t GeneticListScheduler::solve()
 
 	/* ... evaluate it */
 	evaluate(chromosome);
-
-	return ListScheduler::process(graph, chromosome);
 
 	/* ... fill the first part with pure mobility chromosomes */
 	size_t create_count = tunning.mobility_ratio * tunning.population_size;
@@ -92,7 +96,11 @@ schedule_t GeneticListScheduler::solve()
 
 	gga(population);
 
-	return ListScheduler::process(graph, population.best_element());
+	chromosome = population.best_element();
+
+	std::cout << "Best lifetime: " << chromosome.fitness() << std::endl;
+
+	return ListScheduler::process(graph, chromosome);
 }
 
 double GeneticListScheduler::evaluate(const chromosome_t &chromosome) const
@@ -108,7 +116,7 @@ double GeneticListScheduler::evaluate(const chromosome_t &chromosome) const
 	matrix_t dynamic_power, temperature, total_power;
 
 	/* The graph is rescheduled now, obtain the dynamic power profile */
-	DynamicPower::compute(graph, tunning.sampling_interval, dynamic_power);
+	DynamicPower::compute(graph, sampling_interval, dynamic_power);
 
 	/* Now, we can get the temperature profile, and the total power profile
 	 * including the leakage part.
@@ -116,5 +124,5 @@ double GeneticListScheduler::evaluate(const chromosome_t &chromosome) const
 	unsigned int it = hotspot->solve(graph->architecture,
 		dynamic_power, temperature, total_power);
 
-	return Lifetime::predict(temperature, tunning.sampling_interval);
+	return Lifetime::predict(temperature, sampling_interval);
 }

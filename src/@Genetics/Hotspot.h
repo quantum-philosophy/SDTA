@@ -50,6 +50,8 @@ class Hotspot
 		const matrix_t &dynamic_power, matrix_t &temperature,
 		matrix_t &total_power);
 
+	double sampling_interval() const { return cfg.sampling_intvl; }
+
 	private:
 
 	static void inject_leakage(const Architecture *architecture,
