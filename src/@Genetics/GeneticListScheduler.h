@@ -4,12 +4,15 @@
 #include <eo>
 #include <es.h>
 #include <ga/eoBitOp.h>
+#include <map>
 
 #include "Common.h"
 #include "Hotspot.h"
+#include "MD5Digest.h"
 
 typedef double gene_t;
 typedef eoReal<gene_t> chromosome_t;
+typedef std::map<MD5Digest, double, MD5DigestComparator> cache_t;
 
 struct GeneticListSchedulerEvalFuncPtr;
 
@@ -19,8 +22,12 @@ class GeneticListScheduler
 
 	Graph *graph;
 	Hotspot *hotspot;
+	cache_t cache;
+	size_t evaluation_count;
+	size_t cache_hit_count;
+	size_t deadline_miss_count;
 
-	double evaluate(const chromosome_t &chromosome) const;
+	double evaluate(const chromosome_t &chromosome);
 
 	public:
 
@@ -85,7 +92,7 @@ class GeneticListScheduler
 
 struct GeneticListSchedulerEvalFuncPtr: public eoEvalFunc<chromosome_t>
 {
-	GeneticListSchedulerEvalFuncPtr(const GeneticListScheduler *_ls)
+	GeneticListSchedulerEvalFuncPtr(GeneticListScheduler *_ls)
 		: eoEvalFunc<chromosome_t>(), ls(_ls) {}
 
 	virtual void operator() (chromosome_t &chromosome)
@@ -96,7 +103,7 @@ struct GeneticListSchedulerEvalFuncPtr: public eoEvalFunc<chromosome_t>
 
 	private:
 
-	const GeneticListScheduler *ls;
+	GeneticListScheduler *ls;
 };
 
 class eoUniformRangeMutation: public eoMonOp<chromosome_t>
@@ -145,8 +152,6 @@ class eoMatlabMonitor: public eoMonitor
 
 	virtual eoMonitor& operator()(void)
 	{
-		chromosome_t chromosome = population.best_element();
-		std::cout << "Best: " << chromosome.fitness() << std::endl;
 		return *this;
 	}
 };

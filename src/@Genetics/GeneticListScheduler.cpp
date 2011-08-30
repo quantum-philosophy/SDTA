@@ -22,6 +22,12 @@ schedule_t GeneticListScheduler::solve()
 
 	if (task_count == 0) throw std::runtime_error("The graph is empty.");
 
+	/* Reset */
+	evaluation_count = 0;
+	cache_hit_count = 0;
+	deadline_miss_count = 0;
+	cache.clear();
+
 	task_vector_t &tasks = graph->tasks;
 
 	/* Continuator */
@@ -90,41 +96,68 @@ schedule_t GeneticListScheduler::solve()
 		mutation, tunning.mutation_rate);
 
 	/* Monitor */
+	/*
 	eoCheckPoint<chromosome_t> checkpoint(continuator);
 	eoMatlabMonitor monitor(population);
 	checkpoint.add(monitor);
 
 	eoEasyEA<chromosome_t> gga(checkpoint, evaluate, select, transform, replace);
+	*/
+
+	eoEasyEA<chromosome_t> gga(continuator, evaluate, select, transform, replace);
 
 	gga(population);
 
 	chromosome = population.best_element();
+
+	std::cout << "Evaluations: " << evaluation_count << std::endl;
+	std::cout << "Cache hits: " << cache_hit_count << std::endl;
+	std::cout << "Deadline misses: " << deadline_miss_count << std::endl;
 
 	std::cout << "Best lifetime: " << chromosome.fitness() << std::endl;
 
 	return ListScheduler::process(graph, chromosome);
 }
 
-double GeneticListScheduler::evaluate(const chromosome_t &chromosome) const
+double GeneticListScheduler::evaluate(const chromosome_t &chromosome)
 {
+	evaluation_count++;
+
 	/* Make a new schedule */
 	schedule_t schedule = ListScheduler::process(graph, chromosome);
 
+	MD5Digest key(schedule);
+	cache_t::const_iterator it = cache.find(key);
+
+	if (it != cache.end()) {
+		cache_hit_count++;
+		return it->second;
+	}
+
 	graph->assign_schedule(schedule);
 
-	if (graph->duration > graph->deadline)
-		return std::numeric_limits<double>::min();
+	double fitness;
 
-	matrix_t dynamic_power, temperature, total_power;
+	if (graph->duration > graph->deadline) {
+		deadline_miss_count++;
+		fitness = std::numeric_limits<double>::min();
+	}
+	else {
+		matrix_t dynamic_power, temperature, total_power;
 
-	/* The graph is rescheduled now, obtain the dynamic power profile */
-	DynamicPower::compute(graph, sampling_interval, dynamic_power);
+		/* The graph is rescheduled now, obtain the dynamic power profile */
+		DynamicPower::compute(graph, sampling_interval, dynamic_power);
 
-	/* Now, we can get the temperature profile, and the total power profile
-	 * including the leakage part.
-	 */
-	unsigned int it = hotspot->solve(graph->architecture,
-		dynamic_power, temperature, total_power);
+		/* Now, we can get the temperature profile, and the total power profile
+		 * including the leakage part.
+		 */
+		unsigned int iterations = hotspot->solve(graph->architecture,
+			dynamic_power, temperature, total_power);
 
-	return Lifetime::predict(temperature, sampling_interval);
+		fitness = Lifetime::predict(temperature, sampling_interval);
+	}
+
+	cache[key] = fitness;
+
+	return fitness;
 }
