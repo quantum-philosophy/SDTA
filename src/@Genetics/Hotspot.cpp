@@ -219,12 +219,12 @@ void Hotspot::inject_leakage(const Architecture *architecture,
 			voltage = processors[j]->voltage;
 			ngate = processors[j]->ngate;
 
-			favg = __A * temp * temp *
-				exp((__alpha * voltage + __beta) / temp) +
-				__B * exp(__gamma * voltage + __delta);
+			favg = A * temp * temp *
+				exp((alpha * voltage + beta) / temp) +
+				B * exp(gamma * voltage + delta);
 
 			total_power[i][j] = dynamic_power[i][j] +
-				ngate * __Is * favg * voltage;
+				ngate * Is * favg * voltage;
 		}
 	}
 }
@@ -247,12 +247,12 @@ void Hotspot::inject_leakage(const Architecture *architecture,
 			voltage = processors[j]->voltage;
 			ngate = processors[j]->ngate;
 
-			favg = __A * temperature * temperature *
-				exp((__alpha * voltage + __beta) / temperature) +
-				__B * exp(__gamma * voltage + __delta);
+			favg = A * temperature * temperature *
+				exp((alpha * voltage + beta) / temperature) +
+				B * exp(gamma * voltage + delta);
 
 			total_power[i][j] = dynamic_power[i][j] +
-				ngate * __Is * favg * voltage;
+				ngate * Is * favg * voltage;
 		}
 	}
 }

@@ -10,28 +10,6 @@ extern "C" {
 
 #include "Common.h"
 
-#define __A			1.1432e-12
-#define __B			1.0126e-14
-#define __alpha		466.4029
-#define __beta		-1224.74083
-#define __gamma		6.28153
-#define __delta		6.9094
-#define __Is		995.7996
-
-/* How to calculate Is?
- *
- * Take a look at (all coefficients above are from this paper):
- * "Temperature and Supply Voltage Aware Performance and Power
- * Modeling at Microarchitecture Level" (July 2005)
- *
- * T = [ 100, 100, 80, 80, 60, 60 ] + 273.15
- * V = [ 0.95, 1.05, 0.95, 1.05, 0.95, 1.05 ]
- * Iavg = [ 23.44, 29.56, 19.44, 25.14, 16.00, 21.33 ] * 1e-6
- * Is = mean(Iavg(i) / favg(T(i), V(i)))
- *
- * Where favg is the scaling factor (see calc_scaling).
- */
-
 class Hotspot
 {
 	thermal_config_t cfg;
@@ -39,6 +17,28 @@ class Hotspot
 
 	static const double tol = 0.01;
 	static const size_t maxit = 10;
+
+	static const double A = 1.1432e-12;
+	static const double B = 1.0126e-14;
+	static const double alpha = 466.4029;
+	static const double beta = -1224.74083;
+	static const double gamma = 6.28153;
+	static const double delta = 6.9094;
+
+	/* How to calculate Is?
+	 *
+	 * Take a look at (all coefficients above are from this paper):
+	 * "Temperature and Supply Voltage Aware Performance and Power
+	 * Modeling at Microarchitecture Level" (July 2005)
+	 *
+	 * T = [ 100, 100, 80, 80, 60, 60 ] + 273.15
+	 * V = [ 0.95, 1.05, 0.95, 1.05, 0.95, 1.05 ]
+	 * Iavg = [ 23.44, 29.56, 19.44, 25.14, 16.00, 21.33 ] * 1e-6
+	 * Is = mean(Iavg(i) / favg(T(i), V(i)))
+	 *
+	 * Where favg is the scaling factor (see calc_scaling).
+	 */
+	static const double Is = 995.7996;
 
 	public:
 

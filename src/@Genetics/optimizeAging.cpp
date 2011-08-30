@@ -10,6 +10,8 @@
 #include "ListScheduler.h"
 #include "GeneticListScheduler.h"
 
+#include <string.h>
+
 using namespace std;
 
 #define __DELETE(some) \

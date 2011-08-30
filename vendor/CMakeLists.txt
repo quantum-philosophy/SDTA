@@ -41,7 +41,8 @@ add_custom_command (
 set (PARADISEO_VERSION 1.2.1)
 set (paradiseo_dir ${CMAKE_CURRENT_SOURCE_DIR}/paradiseo-${PARADISEO_VERSION})
 add_custom_target (paradiseo
-  COMMAND cd ${paradiseo_dir} && source ./installParadiseo.sh
+  COMMAND cd ${paradiseo_dir}/paradiseo-eo/build && cmake ..
+  -DCMAKE_CXX_FLAGS_RELEASE='-O3 -DNDEBUG -fPIC' && make
 )
 add_custom_command (
   TARGET paradiseo
