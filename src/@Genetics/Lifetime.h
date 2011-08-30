@@ -2,12 +2,13 @@
 #define __LIFETIME_H__
 
 #include <vector>
+#include <list>
 #include <utility>
 
 #include "Common.h"
 
 typedef std::pair<unsigned int, double> peak_t;
-typedef std::vector<peak_t > extrema_t;
+typedef std::list<peak_t > extrema_t;
 
 class Lifetime
 {

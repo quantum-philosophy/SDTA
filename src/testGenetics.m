@@ -18,12 +18,8 @@ graph.assignMapping(processors, mapping);
 LS.schedule(graph);
 graph.assignDeadline(Constants.deadlineFactor * graph.duration);
 
-graph.inspect();
-
 dynamicPowerProfile = Power.calculateDynamicProfile(graph);
 [ steps, cores ] = size(dynamicPowerProfile);
-
-fprintf('Steps: %d\n', steps);
 
 systemConfig = Utils.compactTaskGraph(graph, processors);
 systemConfig.type = systemConfig.type - 1;
@@ -33,54 +29,94 @@ hotspotConfig = struct('floorplan', floorplan, 'config', config, ...
   'init_temp', Constants.ambientTemperature, ...
   'sampling_intvl', Constants.samplingInterval);
 
+Utils.startTimer('Solve with the GLSA');
 Genetics.optimizeAging(hotspotConfig, systemConfig);
-
-hotspot = HotSpot(floorplan, config);
-
-Utils.startTimer('Solve with the CE');
-[ T, it, totalPowerProfile ] = hotspot.solveCondensedEquationWithLeakage(...
-  dynamicPowerProfile, systemConfig.voltage, systemConfig.ngate, 0.01, 10);
 Utils.stopTimer();
 
-fprintf('Iterations in Matlab: %d\n', it);
+switch 2
+case 0 % Power, leakage, and temperature
+  hotspot = HotSpot(floorplan, config);
 
-load('dynamic_power.mat');
-load('temperature.mat');
-load('total_power.mat');
+  Utils.startTimer('Solve with the CE');
+  [ T, it, totalPowerProfile ] = hotspot.solveCondensedEquationWithLeakage(...
+    dynamicPowerProfile, systemConfig.voltage, systemConfig.ngate, 0.01, 10);
+  Utils.stopTimer();
 
-T = T - Constants.degreeKelvin;
-temperature = temperature - Constants.degreeKelvin;
+  load('dynamic_power.mat');
+  load('temperature.mat');
+  load('total_power.mat');
 
-figure;
+  T = T - Constants.degreeKelvin;
+  temperature = temperature - Constants.degreeKelvin;
 
-x = ((1:steps) - 1) * Constants.samplingInterval;
+  figure;
 
-subplot(3, 3, 1);
-Utils.drawLines('Pdyn1', 'Time, s', 'P, W', x, dynamicPowerProfile);
+  x = ((1:steps) - 1) * Constants.samplingInterval;
 
-subplot(3, 3, 2);
-Utils.drawLines('Pdyn2', 'Time, s', 'P, W', x, dynamic_power);
+  subplot(3, 3, 1);
+  Utils.drawLines('Pdyn1', 'Time, s', 'P, W', x, dynamicPowerProfile);
 
-subplot(3, 3, 3);
-error = abs(dynamicPowerProfile - dynamic_power);
-Utils.drawLines('dPdyn', 'Time, s', 'dP, W', x, error);
+  subplot(3, 3, 2);
+  Utils.drawLines('Pdyn2', 'Time, s', 'P, W', x, dynamic_power);
 
-subplot(3, 3, 4);
-Utils.drawLines('T1', 'Time, s', 'T, C', x, T);
+  subplot(3, 3, 3);
+  error = abs(dynamicPowerProfile - dynamic_power);
+  Utils.drawLines('dPdyn', 'Time, s', 'dP, W', x, error);
 
-subplot(3, 3, 5);
-Utils.drawLines('T2', 'Time, s', 'T, C', x, temperature);
+  subplot(3, 3, 4);
+  Utils.drawLines('T1', 'Time, s', 'T, C', x, T);
 
-subplot(3, 3, 6);
-error = abs(T - temperature);
-Utils.drawLines('dT', 'Time, s', 'dT, C', x, error);
+  subplot(3, 3, 5);
+  Utils.drawLines('T2', 'Time, s', 'T, C', x, temperature);
 
-subplot(3, 3, 7);
-Utils.drawLines('Ptot1', 'Time, s', 'P, W', x, totalPowerProfile);
+  subplot(3, 3, 6);
+  error = abs(T - temperature);
+  Utils.drawLines('dT', 'Time, s', 'dT, C', x, error);
 
-subplot(3, 3, 8);
-Utils.drawLines('Ptot2', 'Time, s', 'P, W', x, total_power);
+  subplot(3, 3, 7);
+  Utils.drawLines('Ptot1', 'Time, s', 'P, W', x, totalPowerProfile);
 
-subplot(3, 3, 9);
-error = abs(totalPowerProfile - total_power);
-Utils.drawLines('dPtot', 'Time, s', 'dP, W', x, error);
+  subplot(3, 3, 8);
+  Utils.drawLines('Ptot2', 'Time, s', 'P, W', x, total_power);
+
+  subplot(3, 3, 9);
+  error = abs(totalPowerProfile - total_power);
+  Utils.drawLines('dPtot', 'Time, s', 'dP, W', x, error);
+
+case 1 % Reliability
+  hotspot = HotSpot(floorplan, config);
+
+  Utils.startTimer('Solve with the CE');
+  [ T, it, totalPowerProfile ] = hotspot.solveCondensedEquationWithLeakage(...
+    dynamicPowerProfile, systemConfig.voltage, systemConfig.ngate, 0.01, 10);
+  Utils.stopTimer();
+
+  % figure;
+  % x = ((1:steps) - 1) * Constants.samplingInterval;
+  % Utils.drawLines('T', 'Time, s', 'T, C', x, T);
+
+  for i = 1:cores
+    T0 = T(:, i);
+
+    fprintf('Core #%d\n', i);
+    [ damage, maxp, minp, cycles ] = Lifetime.calculateDamage(T0);
+
+    I = sort([ maxp(:, 1); minp(:, 1) ]);
+    T0 = T0(I);
+
+    fprintf('  Peaks: %d\n', length(I));
+    fprintf('    ');
+
+    for j = 1:length(I)
+      fprintf('[ %d %.2f ] ', I(j), T0(j));
+    end
+
+    fprintf('\n');
+
+    fprintf(' Cycles: %d\n', length(cycles));
+    fprintf(' Damage: %f\n', damage);
+  end
+
+  mttf = Lifetime.predict(T);
+  fprintf('Lifetime: %.2f\n', min(mttf));
+end

@@ -1,5 +1,4 @@
 #include <stdexcept>
-#include <iostream>
 #include <limits>
 
 #include "GeneticListScheduler.h"
@@ -7,6 +6,7 @@
 #include "Task.h"
 #include "ListScheduler.h"
 #include "DynamicPower.h"
+#include "Lifetime.h"
 
 schedule_t GeneticListScheduler::solve()
 {
@@ -116,17 +116,5 @@ double GeneticListScheduler::evaluate(const chromosome_t &chromosome) const
 	unsigned int it = hotspot->solve(graph->architecture,
 		dynamic_power, temperature, total_power);
 
-	dump_into_matlab("dynamic_power.mat", "dynamic_power", dynamic_power);
-	dump_into_matlab("temperature.mat", "temperature", temperature);
-	dump_into_matlab("total_power.mat", "total_power", total_power);
-
-	std::cout << "Iterations: " << it << std::endl;
-	std::cout << "Cores: " << temperature.cols() << std::endl;
-	std::cout << "Steps: " << temperature.rows() << std::endl;
-
-	// double mttf = Lifetime::predict(temperature, tunning.sampling_interval);
-
-	// std::cout << "MTTF: " << mttf << std::endl;
-
-	return 0;
+	return Lifetime::predict(temperature, tunning.sampling_interval);
 }

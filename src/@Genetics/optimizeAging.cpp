@@ -280,9 +280,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		graph->assign_schedule(schedule);
 		graph->assign_deadline(deadline_ratio * graph->calc_duration());
 
-		std::cout << graph;
-		std::cout << architecture;
-
 		hotspot = new Hotspot(floorplan, config, table, tsize);
 		scheduler = new GeneticListScheduler(graph, hotspot);
 

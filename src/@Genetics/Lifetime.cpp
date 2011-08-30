@@ -1,4 +1,3 @@
-#include <iostream>
 #include <stdexcept>
 #include <math.h>
 
@@ -7,12 +6,7 @@
 double Lifetime::predict(const matrix_t &temperature, double sampling_interval)
 {
 	double time = sampling_interval * temperature.rows();
-
-	std::cout << "Total time: " << time << std::endl;
-
 	double damage = calc_damage(temperature);
-
-	std::cout << "Total damage: " << damage << std::endl;
 
 	return time / damage;
 }
@@ -33,12 +27,7 @@ double Lifetime::calc_damage(const matrix_t &temperature)
 	/* For each temperature curve */
 	size_t cols = temperature.cols();
 	for (i = 0; i < cols; i++) {
-		std::cout << "Core #" << i << std::endl
-			<< "  Peaks: " << peaks[i].size() << std::endl;
-
 		rainflow(peaks[i], amplitudes, means);
-
-		std::cout << "  Cycles: " << amplitudes.size() << std::endl;
 
 		damage = 0;
 
@@ -119,40 +108,23 @@ void Lifetime::detect_peaks(const matrix_t &data, std::vector<extrema_t> &peaks)
 			}
 		}
 
-		/* Go around through the first extremum to the second one */
-		if (peaks[col].empty()) continue;
+		if (look_for_max || peaks[col].empty()) continue;
 
-		firstpos = peaks[col][0].first;
+		/* Go around through to capture a minimum that we must have missed */
+		firstpos = peaks[col].begin()->first;
 
 		for (row = 0; row < firstpos; row++) {
 			current = data[row][col];
 
-			if (current > mx) {
-				mx = current;
-				mxpos = row;
-			}
 			if (current < mn) {
 				mn = current;
 				mnpos = row;
 			}
 
-			if (look_for_max) {
-				if (current < (mx - delta)) {
-					/* The first one is always a maximum, cannot have two
-					 * maxima next to each other, remove!
-					 */
-					size_t i, peak_count = peaks[col].size();
-					for (i = 1; i < peak_count; i++)
-						peaks[col][i - 1] = peaks[col][i];
-					peaks[col][peak_count - 1] = peak_t(mxpos, mx);
-					break;
-				}
-			}
-			else {
-				if (current > (mn + delta)) {
-					peaks[col].push_back(peak_t(mnpos, mn));
-					break;
-				}
+			if (current > (mn + delta)) {
+				if (mnpos > row) peaks[col].push_back(peak_t(mnpos, mn));
+				else peaks[col].push_front(peak_t(mnpos, mn));
+				break;
 			}
 		}
 	}
@@ -167,11 +139,14 @@ void Lifetime::rainflow(const extrema_t &extrema,
 	size_t extremum_count = extrema.size();
 	std::vector<double> a(extremum_count);
 
+	extrema_t::const_iterator it, itend;
+
 	amplitudes.clear();
 	means.clear();
 
-	for (i = 0, j = -1; i < extremum_count; i++) {
-		a[++j] = extrema[i].second;
+	itend = extrema.end();
+	for (it = extrema.begin(), j = -1; it != itend; it++) {
+		a[++j] = it->second;
 
 		while ((j >= 2) && (fabs(a[j-1] - a[j-2]) <= fabs(a[j] - a[j-1]))) {
 			amplitude = fabs((a[j-1] - a[j-2]) / 2);
