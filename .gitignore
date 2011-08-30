@@ -1,8 +1,8 @@
 *.swp
 .DS_Store
 
+doc/*.log
 *.out
-*.log
 *.aux
 *.pdf
 
