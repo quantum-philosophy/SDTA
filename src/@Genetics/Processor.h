@@ -22,7 +22,7 @@ class Processor
 	std::vector<double> ceff;
 	size_t type_count;
 
-	size_t size() const { return type_count; }
+	inline size_t size() const { return type_count; }
 
 	public:
 

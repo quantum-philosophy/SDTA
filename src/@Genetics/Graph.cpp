@@ -28,7 +28,7 @@ void Graph::assign_mapping(const Architecture *architecture,
 	this->architecture = architecture;
 	this->mapping = mapping;
 
-	architecture->map(tasks, mapping);
+	architecture->assign_tasks(tasks, mapping);
 
 	calc_asap();
 	calc_alap();
@@ -43,9 +43,13 @@ void Graph::assign_schedule(const schedule_t &schedule)
 
 	this->schedule = schedule;
 
-	architecture->distribute(tasks, schedule);
+	/* Should reset the start times of the tasks */
+	architecture->order_tasks(tasks, schedule);
 
+	/* ... so that we can calculate new start times */
 	calc_start();
+
+	/* ... and the duration of the whole graph */
 	duration = calc_duration();
 }
 

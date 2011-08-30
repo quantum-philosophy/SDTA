@@ -12,35 +12,29 @@ void Architecture::add_processor(Processor *processor)
 	processor->id = processor_count - 1;
 }
 
-void Architecture::map(task_vector_t &tasks, const mapping_t &mapping) const
+void Architecture::assign_tasks(task_vector_t &tasks, const mapping_t &mapping) const
 {
 	size_t task_count = tasks.size();
 	for (tid_t id = 0; id < task_count; id++)
 		tasks[id]->assign_processor(processors[mapping[id]]);
 }
 
-void Architecture::distribute(task_vector_t &tasks, const schedule_t &schedule) const
+void Architecture::order_tasks(task_vector_t &tasks, const schedule_t &schedule) const
 {
-	Processor *processor;
+	pid_t pid;
+	Task *successor, *ancestor;
+	task_vector_t last_ones(processor_count, NULL);
+
 	size_t task_count = tasks.size();
+	for (size_t i = 0; i < task_count; i++) {
+		successor = tasks[schedule[i]];
+		pid = successor->processor->id;
+		ancestor = last_ones[pid];
 
-	for (pid_t pid = 0; pid < processor_count; pid++) {
-		processor = processors[pid];
+		successor->set_order(ancestor);
+		if (ancestor) ancestor->set_successor(successor);
 
-		Task *ancestor = NULL, *successor;
-
-		for (tid_t id = 0; id < task_count; id++) {
-			successor = tasks[schedule[id]];
-
-			if (successor->processor != processor) continue;
-
-			if (ancestor) {
-				ancestor->set_successor(successor);
-				successor->set_ancestor(ancestor);
-			}
-
-			ancestor = successor;
-		}
+		last_ones[pid] = successor;
 	}
 }
 

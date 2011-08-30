@@ -64,6 +64,8 @@ schedule_t GeneticListScheduler::solve()
 	for (size_t i = 0; i < create_count; i++) {
 		for (size_t j = 0; j < task_count; j++)
 			chromosome[j] = eo::random(min_mobility, max_mobility);
+		chromosome.invalidate();
+		evaluate(chromosome);
 		population.push_back(chromosome);
 	}
 
@@ -106,7 +108,7 @@ schedule_t GeneticListScheduler::solve()
 double GeneticListScheduler::evaluate(const chromosome_t &chromosome) const
 {
 	/* Make a new schedule */
-	schedule_t schedule = ListScheduler::process(graph);
+	schedule_t schedule = ListScheduler::process(graph, chromosome);
 
 	graph->assign_schedule(schedule);
 

@@ -33,12 +33,12 @@ class Graph
 	void assign_mapping(const Architecture *architecture,
 		const mapping_t &mapping);
 	void assign_schedule(const schedule_t &mapping);
-	void assign_deadline(double time) { deadline = time; }
+	inline void assign_deadline(double time) { deadline = time; }
 
 	task_vector_t get_roots() const;
 	task_vector_t get_leaves() const;
 
-	size_t size() const { return task_count; }
+	inline size_t size() const { return task_count; }
 
 	const Task *operator[] (tid_t id) const { return tasks[id]; }
 

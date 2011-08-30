@@ -52,8 +52,8 @@ class GeneticListScheduler
 			mobility_ratio(0.5),
 
 			/* Continuator */
-			population_size(50),
-			min_generations(10),
+			population_size(25),
+			min_generations(0),
 			max_generations(100),
 			stall_generations(20),
 
@@ -145,6 +145,8 @@ class eoMatlabMonitor: public eoMonitor
 
 	virtual eoMonitor& operator()(void)
 	{
+		chromosome_t chromosome = population.best_element();
+		std::cout << "Best: " << chromosome.fitness() << std::endl;
 		return *this;
 	}
 };

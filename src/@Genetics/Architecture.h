@@ -19,8 +19,8 @@ class Architecture
 	Architecture() : processor_count(0) {}
 
 	void add_processor(Processor *processor);
-	void map(task_vector_t &tasks, const mapping_t &mapping) const;
-	void distribute(task_vector_t &tasks, const schedule_t &schedule) const;
+	void assign_tasks(task_vector_t &tasks, const mapping_t &mapping) const;
+	void order_tasks(task_vector_t &tasks, const schedule_t &schedule) const;
 
 	size_t size() const { return processor_count; }
 

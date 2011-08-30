@@ -45,15 +45,21 @@ class Task
 	void assign_processor(const Processor *processor);
 
 	/* In the graph */
-	void add_parent(Task *task) { parents.push_back(task); }
-	void add_child(Task *task) { children.push_back(task); }
+	inline void add_parent(Task *task) { parents.push_back(task); }
+	inline void add_child(Task *task) { children.push_back(task); }
 
 	/* On the same core */
-	void set_ancestor(Task *task) { ancestor = task; }
-	void set_successor(Task *task) { successor = task; }
+	inline void set_ancestor(Task *task) { ancestor = task; }
+	inline void set_successor(Task *task) { successor = task; }
+	inline void set_order(Task *_ancestor = NULL, Task *_successor = NULL)
+	{
+		ancestor = _ancestor;
+		successor = _successor;
+		start = -1;
+	}
 
-	bool is_leaf() const { return children.empty(); }
-	bool is_root() const { return parents.empty(); }
+	inline bool is_leaf() const { return children.empty(); }
+	inline bool is_root() const { return parents.empty(); }
 
 	void propagate_start(double time);
 	void propagate_asap(double time);
