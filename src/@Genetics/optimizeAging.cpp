@@ -3,12 +3,15 @@
 #include <vector>
 #include <stdexcept>
 #include <iostream>
+#include <iomanip>
 
 #include "Graph.h"
 #include "Architecture.h"
 #include "Hotspot.h"
 #include "ListScheduler.h"
 #include "GeneticListScheduler.h"
+#include "DynamicPower.h"
+#include "Lifetime.h"
 
 #include <string.h>
 
@@ -284,6 +287,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 		hotspot = new Hotspot(floorplan, config, table, tsize);
 		scheduler = new GeneticListScheduler(graph, hotspot);
+
+		double sampling_interval = hotspot->sampling_interval();
+		matrix_t dynamic_power, temperature, total_power;
+		DynamicPower::compute(graph, sampling_interval, dynamic_power);
+		unsigned int iterations = hotspot->solve(architecture,
+			dynamic_power, temperature, total_power);
+		double fitness = Lifetime::predict(temperature, sampling_interval);
+
+		std::cout << "Initial lifetime: "
+			<< std::setiosflags(std::ios::fixed)
+			<< std::setprecision(2)
+			<< fitness << std::endl;
 
 		schedule = scheduler->solve();
 	}
