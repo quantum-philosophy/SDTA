@@ -15,12 +15,12 @@ typedef eoReal<gene_t> chromosome_t;
 typedef std::map<MD5Digest, double, MD5DigestComparator> cache_t;
 
 struct GeneticListSchedulerEvalFuncPtr;
-class eoGenerationalMonitor;
+class eslabGenerationalMonitor;
 
 class GeneticListScheduler
 {
 	friend struct GeneticListSchedulerEvalFuncPtr;
-	friend class eoGenerationalMonitor;
+	friend class eslabGenerationalMonitor;
 
 	Graph *graph;
 	Hotspot *hotspot;
@@ -56,6 +56,7 @@ class GeneticListScheduler
 		size_t max_generations;
 		size_t stall_generations;
 
+		double elitism_rate;
 		size_t tournament_size;
 
 		double crossover_rate;
@@ -63,8 +64,6 @@ class GeneticListScheduler
 
 		double mutation_rate;
 		size_t mutation_points;
-
-		double generation_gap;
 
 		bool verbose;
 		bool cache;
@@ -92,6 +91,105 @@ class GeneticListScheduler
 	double sampling_interval;
 };
 
+/******************************************************************************/
+
+class eslabFastforwardEA: public eoAlgo<chromosome_t>
+{
+	public:
+
+	eslabFastforwardEA(eoContinue<chromosome_t> &_continuator,
+		eoEvalFunc<chromosome_t> &_evaluate,
+		eoSelect<chromosome_t> &_select_elite,
+		eoSelect<chromosome_t> &_select_parents,
+		eoQuadOp<chromosome_t> &_crossover,
+		eoMonOp<chromosome_t> &_mutate);
+
+	virtual void operator()(eoPop<chromosome_t> &population);
+
+	private:
+
+	void transform(eoPop<chromosome_t> &population) const;
+
+	eoContinue<chromosome_t> &continuator;
+	eoEvalFunc<chromosome_t> &evaluate;
+	eoSelect<chromosome_t> &select_elite;
+	eoSelect<chromosome_t> &select_parents;
+	eoQuadOp<chromosome_t> &crossover;
+	eoMonOp<chromosome_t> &mutate;
+};
+
+/******************************************************************************/
+
+class eslabElitismSelect: public eoSelect<chromosome_t>
+{
+	public:
+
+	eslabElitismSelect(size_t _count);
+
+	virtual void operator()(const eoPop<chromosome_t> &source,
+		eoPop<chromosome_t> &destination);
+
+	private:
+
+	size_t count;
+};
+
+/******************************************************************************/
+
+class eslabNPtsBitCrossover : public eoQuadOp<chromosome_t>
+{
+	public:
+
+	eslabNPtsBitCrossover(size_t _points);
+
+	bool operator()(chromosome_t &one, chromosome_t &another);
+
+	private:
+
+	size_t points;
+};
+
+/******************************************************************************/
+
+class eslabUniformRangeMutation: public eoMonOp<chromosome_t>
+{
+	gene_t max;
+	gene_t min;
+	size_t points;
+	double rate;
+
+	public:
+
+	eslabUniformRangeMutation(gene_t _min, gene_t _max,
+		size_t _points, double _rate);
+
+	bool operator()(chromosome_t& chromosome);
+};
+
+/******************************************************************************/
+
+class eslabGenerationalMonitor: public eoMonitor
+{
+	eoPop<chromosome_t> &population;
+	GeneticListScheduler *scheduler;
+
+	GeneticListScheduler::tunning_t &tunning;
+	GeneticListScheduler::stats_t &stats;
+
+	size_t last_evaluations;
+
+	public:
+
+	eslabGenerationalMonitor(GeneticListScheduler *_scheduler,
+		eoPop<chromosome_t> &_population);
+
+	inline void start();
+	inline void finish();
+	virtual eoMonitor& operator()(void);
+};
+
+/******************************************************************************/
+
 struct GeneticListSchedulerEvalFuncPtr: public eoEvalFunc<chromosome_t>
 {
 	GeneticListSchedulerEvalFuncPtr(GeneticListScheduler *_ls)
@@ -108,46 +206,7 @@ struct GeneticListSchedulerEvalFuncPtr: public eoEvalFunc<chromosome_t>
 	GeneticListScheduler *ls;
 };
 
-class eoUniformRangeMutation: public eoMonOp<chromosome_t>
-{
-	gene_t max;
-	gene_t min;
-	unsigned int points;
-
-	public:
-
-	eoUniformRangeMutation(gene_t _min, gene_t _max, unsigned _points)
-		: max(_max), min(_min), points(_points) {}
-
-	eoUniformRangeMutation(gene_t _min, gene_t _max)
-		: max(_max), min(_min), points(1) {}
-
-	virtual std::string className() const { return "eoUniformRangeMutation"; }
-
-	bool operator()(chromosome_t& chromosome);
-};
-
-class eoGenerationalMonitor: public eoMonitor
-{
-	eoPop<chromosome_t> &population;
-	GeneticListScheduler *scheduler;
-
-	GeneticListScheduler::tunning_t &tunning;
-	GeneticListScheduler::stats_t &stats;
-
-	size_t last_evaluations;
-
-	public:
-
-	eoGenerationalMonitor(GeneticListScheduler *_scheduler,
-		eoPop<chromosome_t> &_population);
-
-	virtual std::string className() const { return "eoGenerationalMonitor"; }
-
-	inline void start();
-	inline void finish();
-	virtual eoMonitor& operator()(void);
-};
+/******************************************************************************/
 
 std::ostream &operator<< (std::ostream &o,
 	const GeneticListScheduler::tunning_t &tunning);
