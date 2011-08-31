@@ -20,8 +20,9 @@ GeneticListScheduler::GeneticListScheduler(Graph *_graph, Hotspot *_hotspot,
 	sampling_interval = hotspot->sampling_interval();
 }
 
-schedule_t GeneticListScheduler::solve()
+schedule_t GeneticListScheduler::solve(const priority_t &start_priority)
 {
+	size_t i, j;
 	size_t task_count = graph->task_count;
 
 	if (task_count == 0) throw std::runtime_error("The graph is empty.");
@@ -45,19 +46,29 @@ schedule_t GeneticListScheduler::solve()
 	/* Create */
 	eoPop<chromosome_t> population;
 
+	priority_t priority = start_priority;
+
+	if (priority.empty()) {
+		/* Fill in with mobility by default */
+		priority.resize(task_count);
+		for (i = 0; i < task_count; i++)
+			priority[i] = tasks[i]->mobility;
+	}
+
+	if (priority.size() != task_count)
+		throw std::runtime_error("The priority vector has bad dimensions.");
+
 	chromosome_t chromosome(task_count);
+	gene_t min_gene;
+	gene_t max_gene;
 
-	/* ... first, collect mobility */
-	gene_t current_mobility;
-	gene_t min_mobility;
-	gene_t max_mobility;
-	chromosome[0] = min_mobility = max_mobility = tasks[0]->mobility;
+	chromosome[0] = min_gene = max_gene = priority[0];
 
-	for (size_t i = 1; i < task_count; i++) {
-		current_mobility = tasks[i]->mobility;
-		if (min_mobility > current_mobility) min_mobility = current_mobility;
-		if (max_mobility < current_mobility) max_mobility = current_mobility;
-		chromosome[i] = current_mobility;
+	gene_t gene;
+	for (i = 1; i < task_count; i++) {
+		chromosome[i] = gene = priority[i];
+		if (min_gene > gene) min_gene = gene;
+		if (max_gene < gene) max_gene = gene;
 	}
 
 	/* Monitor */
@@ -72,14 +83,14 @@ schedule_t GeneticListScheduler::solve()
 
 	/* ... fill the first part with pure mobility chromosomes */
 	size_t create_count = tunning.mobility_ratio * tunning.population_size;
-	for (size_t i = 0; i < create_count; i++)
+	for (i = 0; i < create_count; i++)
 		population.push_back(chromosome);
 
 	/* ... others are randomly generated */
 	create_count = tunning.population_size - create_count;
-	for (size_t i = 0; i < create_count; i++) {
-		for (size_t j = 0; j < task_count; j++)
-			chromosome[j] = eo::random(min_mobility, max_mobility);
+	for (i = 0; i < create_count; i++) {
+		for (j = 0; j < task_count; j++)
+			chromosome[j] = eo::random(min_gene, max_gene);
 		chromosome.invalidate();
 		evaluate(chromosome);
 		population.push_back(chromosome);
@@ -98,7 +109,7 @@ schedule_t GeneticListScheduler::solve()
 	eslabNPtsBitCrossover crossover(tunning.crossover_points);
 
 	/* Mutate */
-	eslabUniformRangeMutation mutate(min_mobility, max_mobility,
+	eslabUniformRangeMutation mutate(min_gene, max_gene,
 		tunning.mutation_points, tunning.mutation_rate);
 
 	eslabFastforwardEA ga(checkpoint, evaluate, select_elite,
@@ -429,31 +440,31 @@ GeneticListScheduler::tunning_t::tunning_t(const char *filename)
 		stream >> name;
 		stream >> value;
 
-		if (name.compare("seed") == 0)
+		if (name == "seed")
 			seed = value;
-		else if (name.compare("mobility_ratio") == 0)
+		else if (name == "mobility_ratio")
 			mobility_ratio = value;
-		else if (name.compare("population_size") == 0)
+		else if (name == "population_size")
 			population_size = value;
-		else if (name.compare("min_generations") == 0)
+		else if (name == "min_generations")
 			min_generations = value;
-		else if (name.compare("max_generations") == 0)
+		else if (name == "max_generations")
 			max_generations = value;
-		else if (name.compare("stall_generations") == 0)
+		else if (name == "stall_generations")
 			stall_generations = value;
-		else if (name.compare("elitism_rate") == 0)
+		else if (name == "elitism_rate")
 			elitism_rate = value;
-		else if (name.compare("tournament_size") == 0)
+		else if (name == "tournament_size")
 			tournament_size = value;
-		else if (name.compare("crossover_points") == 0)
+		else if (name == "crossover_points")
 			crossover_points = value;
-		else if (name.compare("mutation_rate") == 0)
+		else if (name == "mutation_rate")
 			mutation_rate = value;
-		else if (name.compare("mutation_points") == 0)
+		else if (name == "mutation_points")
 			mutation_points = value;
-		else if (name.compare("verbose") == 0)
+		else if (name == "verbose")
 			verbose = value;
-		else if (name.compare("cache") == 0)
+		else if (name == "cache")
 			cache = value;
 		else
 			throw std::runtime_error("An unknown tunning parameter.");

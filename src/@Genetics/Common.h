@@ -27,6 +27,33 @@ typedef int pid_t;
 typedef std::vector<pid_t> mapping_t;
 typedef std::vector<Processor *> processor_vector_t;
 
+struct system_t
+{
+	std::vector<unsigned int> type;
+	std::vector<std::vector<bool> > link;
+
+	std::vector<double> frequency;
+	std::vector<double> voltage;
+	std::vector<unsigned long int> ngate;
+	std::vector<std::vector<unsigned long int> > nc;
+	std::vector<std::vector<double> > ceff;
+
+	mapping_t mapping;
+	schedule_t schedule;
+	priority_t priority;
+
+	system_t(const char *filename);
+};
+
+struct price_t {
+	double lifetime;
+	double energy;
+
+	price_t() : lifetime(0), energy(0) {}
+	price_t(double _lifetime, double _energy) :
+		lifetime(_lifetime), energy(_energy) {}
+};
+
 typedef std::vector<double> vector_t;
 
 class matrix_t : public std::vector<double>

@@ -42,7 +42,6 @@ class Lifetime
 	public:
 
 	static double predict(const matrix_t &temperature, double sampling_interval);
-	static double predict(const Graph *graph, Hotspot *hotspot);
 
 	private:
 

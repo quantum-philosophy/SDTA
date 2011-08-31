@@ -79,7 +79,7 @@ class GeneticListScheduler
 	GeneticListScheduler(Graph *_graph, Hotspot *_hotspot,
 		const tunning_t &_tunning = tunning_t());
 
-	schedule_t solve();
+	schedule_t solve(const priority_t &priority = priority_t());
 
 	inline stats_t get_stats() const { return stats; }
 

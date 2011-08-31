@@ -101,6 +101,7 @@ ArchitectureBuilder::ArchitectureBuilder(std::vector<double> &frequency,
 
 ArchitectureBuilder::~ArchitectureBuilder()
 {
+	size_t processor_count = processors.size();
 	for (size_t i = 0; i < processor_count; i++)
 		delete processors[i];
 }

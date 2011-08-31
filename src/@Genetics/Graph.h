@@ -43,6 +43,8 @@ class Graph
 
 	const Task *operator[] (tid_t id) const { return tasks[id]; }
 
+	price_t evaluate(Hotspot *hotspot) const;
+
 	protected:
 
 	/* The duration of the graph based on the actual start times */

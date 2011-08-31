@@ -15,20 +15,6 @@ double Lifetime::predict(const matrix_t &temperature, double sampling_interval)
 	return time / damage;
 }
 
-double Lifetime::predict(const Graph *graph, Hotspot *hotspot)
-{
-	double sampling_interval = hotspot->sampling_interval();
-
-	matrix_t dynamic_power, temperature, total_power;
-
-	DynamicPower::compute(graph, sampling_interval, dynamic_power);
-
-	unsigned int iterations = hotspot->solve(graph->architecture,
-		dynamic_power, temperature, total_power);
-
-	return predict(temperature, sampling_interval);
-}
-
 double Lifetime::calc_damage(const matrix_t &temperature)
 {
 	size_t i, j;

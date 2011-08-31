@@ -5,6 +5,9 @@
 #include "Graph.h"
 #include "Processor.h"
 #include "Architecture.h"
+#include "Hotspot.h"
+#include "Lifetime.h"
+#include "DynamicPower.h"
 
 void Graph::add_task(Task *task)
 {
@@ -126,6 +129,29 @@ void Graph::calc_alap() const
 			tasks[id]->propagate_alap(duration);
 }
 
+price_t Graph::evaluate(Hotspot *hotspot) const
+{
+	double sampling_interval = hotspot->sampling_interval();
+
+	matrix_t dynamic_power, temperature, total_power;
+
+	DynamicPower::compute(this, sampling_interval, dynamic_power);
+
+	unsigned int iterations = hotspot->solve(architecture,
+		dynamic_power, temperature, total_power);
+
+	double lifetime = Lifetime::predict(temperature, sampling_interval);
+
+	size_t total_count = total_power.cols() * total_power.rows();
+	const double *ptr = total_power.pointer();
+
+	double energy = 0;
+	for (int i = 0; i < total_count; i++, ptr++) energy += *ptr;
+	energy *= sampling_interval;
+
+	return price_t(lifetime, energy);
+}
+
 std::ostream &operator<< (std::ostream &o, const Graph *graph)
 {
 	o	<< "Task Graph: " << std::endl
@@ -187,6 +213,7 @@ GraphBuilder::GraphBuilder(std::vector<unsigned int> &type,
 
 GraphBuilder::~GraphBuilder()
 {
+	size_t task_count = tasks.size();
 	for (size_t i = 0; i < task_count; i++)
 		delete tasks[i];
 }
