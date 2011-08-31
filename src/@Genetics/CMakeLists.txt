@@ -48,6 +48,8 @@ include_directories (
 	${VENDOR_DIR}
 )
 
+set(CMAKE_CXX_FLAGS "-O3")
+
 add_library(libeo STATIC IMPORTED)
 set_property(
 	TARGET libeo PROPERTY

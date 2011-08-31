@@ -47,21 +47,21 @@ class Hotspot
 	~Hotspot();
 
 	unsigned int solve(const Architecture *architecture,
-		const matrix_t &dynamic_power, matrix_t &temperature,
-		matrix_t &total_power);
+		const matrix_t &m_dynamic_power, matrix_t &m_temperature,
+		matrix_t &m_total_power);
 
 	double sampling_interval() const { return cfg.sampling_intvl; }
 
 	private:
 
 	static void inject_leakage(const Architecture *architecture,
-		const matrix_t &dynamic_power, const matrix_t &temperature,
-		matrix_t &total_power);
+		size_t processor_count, size_t step_count, const double *dynamic_power,
+		const double *temperature, double *total_power);
 
 	/* Initial leakage with the ambient temperature */
 	static void inject_leakage(const Architecture *architecture,
-		const matrix_t &dynamic_power, double temperature,
-		matrix_t &total_power);
+		size_t processor_count, size_t step_count, const double *dynamic_power,
+		double temperature, double *total_power);
 };
 
 #endif

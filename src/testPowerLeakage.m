@@ -8,7 +8,7 @@ tol = 0.01; % K
 maxit = 10;
 
 if true
-  [ graph, hotspot, dynamicPowerProfile ] = setup('test_cases/test_case_4_60');
+  [ graph, hotspot, dynamicPowerProfile ] = setup('test_cases/004_060');
   [ steps, cores ] = size(dynamicPowerProfile);
 
   maxPower = max(sum(dynamicPowerProfile, 2));
@@ -105,7 +105,7 @@ tcpp = Utils.stopTimer();
 Tcpp = Tcpp - Constants.degreeKelvin;
 
 fprintf('Solved in MatLab in %.2f s\n', t);
-fprintf('Solved in C++    in %.2f s\n', tcpp);
+fprintf('Solved in C++    in %.2f s (%d iterations)\n', tcpp, icpp);
 fprintf('Error: %f\n', max(max(abs(T - Tcpp))));
 
 leakagePowerProfile = totalPowerProfile - dynamicPowerProfile;

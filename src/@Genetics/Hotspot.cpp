@@ -33,20 +33,21 @@ Hotspot::~Hotspot()
 }
 
 unsigned int Hotspot::solve(const Architecture *architecture,
-	const matrix_t &dynamic_power, matrix_t &temperature, matrix_t &total_power)
+	const matrix_t &m_dynamic_power, matrix_t &m_temperature,
+	matrix_t &m_total_power)
 {
-	size_t i, j, it;
-	size_t cores, nodes, steps, total;
+	size_t i, j, k, it;
+	size_t processor_count, node_count, step_count, total;
 	double ts, am, tmp, error, max_error;
 
 	RC_model_t *model;
 	block_model_t *block;
 
-	cores = flp->n_units;
-	steps = dynamic_power.rows();
-	total = cores * steps;
+	processor_count = flp->n_units;
+	step_count = m_dynamic_power.rows();
+	total = processor_count * step_count;
 
-	if (cores != dynamic_power.cols())
+	if (processor_count != m_dynamic_power.cols())
 		throw std::runtime_error("The floorplan does not match the given power.");
 
 	model = alloc_RC_model(&cfg, flp);
@@ -55,10 +56,14 @@ unsigned int Hotspot::solve(const Architecture *architecture,
 	populate_R_model(model, flp);
 	populate_C_model(model, flp);
 
-	nodes = model->block->n_nodes;
+	node_count = model->block->n_nodes;
 
-	temperature.resize(dynamic_power);
-	total_power.resize(dynamic_power);
+	m_temperature.resize(m_dynamic_power);
+	m_total_power.resize(m_dynamic_power);
+
+	const double *dynamic_power = m_dynamic_power.pointer();
+	double *temperature = m_temperature.pointer();
+	double *total_power = m_total_power.pointer();
 
 	ts = model->config->sampling_intvl;
 	am = model->config->ambient;
@@ -66,11 +71,11 @@ unsigned int Hotspot::solve(const Architecture *architecture,
 	/* We have:
 	 * C * dT/dt = A * T + B
 	 */
-	MatDoub A(nodes, nodes);
-	VecDoub sinvC(nodes);
+	MatDoub A(node_count, node_count);
+	VecDoub sinvC(node_count);
 
-	for (i = 0; i < nodes; i++) {
-		for (j = 0; j < nodes; j++)
+	for (i = 0; i < node_count; i++) {
+		for (j = 0; j < node_count; j++)
 			A[i][j] = -block->b[i][j];
 		sinvC[i] = sqrt(block->inva[i]);
 	}
@@ -78,7 +83,7 @@ unsigned int Hotspot::solve(const Architecture *architecture,
 	delete_RC_model(model);
 
 	MatDoub &D = A;
-	MatDoub m_temp(nodes, nodes);
+	MatDoub m_temp(node_count, node_count);
 
 	/* We want to get rid of everything in front of dX/dt,
 	 * but at the same time we want to keep the matrix in front of X
@@ -103,7 +108,7 @@ unsigned int Hotspot::solve(const Architecture *architecture,
 
 	VecDoub &L = S.d;
 	MatDoub &U = S.z;
-	MatDoub UT(nodes, nodes);
+	MatDoub UT(node_count, node_count);
 
 	transpose_matrix(U, UT);
 
@@ -111,9 +116,9 @@ unsigned int Hotspot::solve(const Architecture *architecture,
 	 * K = exp(D * t) = U * exp(L * t) UT
 	 */
 	MatDoub &K = A;
-	VecDoub v_temp(nodes);
+	VecDoub v_temp(node_count);
 
-	for (i = 0; i < nodes; i++) v_temp[i] = exp(ts * L[i]);
+	for (i = 0; i < node_count; i++) v_temp[i] = exp(ts * L[i]);
 	multiply_matrix_diagonal_matrix(U, v_temp, m_temp);
 	multiply_matrix_matrix(m_temp, UT, K);
 
@@ -121,43 +126,44 @@ unsigned int Hotspot::solve(const Architecture *architecture,
 	 * G = D^(-1) * (exp(D * t) - I) * C^(-1/2) =
 	 * = U * diag((exp(t * l0) - 1) / l0, ...) * UT * C^(-1/2)
 	 */
-	MatDoub G(nodes, nodes);
+	MatDoub G(node_count, node_count);
 
-	for (i = 0; i < nodes; i++) v_temp[i] = (v_temp[i] - 1) / L[i];
+	for (i = 0; i < node_count; i++) v_temp[i] = (v_temp[i] - 1) / L[i];
 	multiply_matrix_diagonal_matrix(U, v_temp, m_temp);
 	multiply_matrix_matrix_diagonal_matrix(m_temp, UT, sinvC, G);
 
-	MatDoub P(steps, nodes);
-	MatDoub Q(steps, nodes);
-	MatDoub Y(steps, nodes);
+	MatDoub P(step_count, node_count);
+	MatDoub Q(step_count, node_count);
+	MatDoub Y(step_count, node_count);
 
 	/* M = diag(1/(1 - exp(m * l0)), ....) */
-	for (i = 0; i < nodes; i++)
-		v_temp[i] = 1.0 / (1.0 - exp(ts * steps * L[i]));
+	for (i = 0; i < node_count; i++)
+		v_temp[i] = 1.0 / (1.0 - exp(ts * step_count * L[i]));
 
-	Hotspot::inject_leakage(architecture, dynamic_power, am, total_power);
+	Hotspot::inject_leakage(architecture, processor_count,
+		step_count, dynamic_power, am, total_power);
 
 	/* We come to the iterative part */
 	for (it = 0;;) {
 		/* Q(0) = G * B(0) */
-		multiply_matrix_incomplete_vector(G, total_power[0], cores, Q[0]);
+		multiply_matrix_incomplete_vector(G, m_total_power[0], processor_count, Q[0]);
 		/* P(0) = Q(0) */
-		copy_vector(P[0], Q[0], nodes);
+		copy_vector(P[0], Q[0], node_count);
 
-		for (i = 1; i < steps; i++) {
+		for (i = 1; i < step_count; i++) {
 			/* Q(i) = G * B(i) */
-			multiply_matrix_incomplete_vector(G, total_power[i],
-				cores, Q[i]);
+			multiply_matrix_incomplete_vector(G, m_total_power[i],
+				processor_count, Q[i]);
 			/* P(i) = K * P(i-1) + Q(i) */
 			multiply_matrix_vector_plus_vector(K, P[i - 1], Q[i], P[i]);
 		}
 
 		/* Y(0) = U * M * UT * P(m-1), for M see above ^ */
 		multiply_matrix_diagonal_matrix(U, v_temp, m_temp);
-		multiply_matrix_matrix_vector(m_temp, UT, P[steps - 1], Y[0]);
+		multiply_matrix_matrix_vector(m_temp, UT, P[step_count - 1], Y[0]);
 
 		/* Y(i+1) = K * Y(i) + Q(i) */
-		for (i = 1; i < steps; i++)
+		for (i = 1; i < step_count; i++)
 			multiply_matrix_vector_plus_vector(K, Y[i - 1], Q[i - 1], Y[i]);
 
 		/* Return back to T from Y:
@@ -167,21 +173,21 @@ unsigned int Hotspot::solve(const Architecture *architecture,
 		 * the error control.
 		 */
 		max_error = 0;
-		for (i = 0; i < steps; i++)
-			for (j = 0; j < cores; j++) {
+		for (i = 0, k = 0; i < step_count; i++)
+			for (j = 0; j < processor_count; j++, k++) {
 				tmp = Y[i][j] * sinvC[j] + am;
 
-				error = abs(temperature[i][j] - tmp);
+				error = abs(temperature[k] - tmp);
 				if (max_error < error) max_error = error;
 
-				temperature[i][j] = tmp;
+				temperature[k] = tmp;
 			}
 
 		it++;
 
 		if (max_error < tol || it >= maxit) break;
 
-		Hotspot::inject_leakage(architecture,
+		Hotspot::inject_leakage(architecture, processor_count, step_count,
 			dynamic_power, temperature, total_power);
 	}
 
@@ -189,8 +195,8 @@ unsigned int Hotspot::solve(const Architecture *architecture,
 }
 
 void Hotspot::inject_leakage(const Architecture *architecture,
-	const matrix_t &dynamic_power, const matrix_t &temperature,
-	matrix_t &total_power)
+	size_t processor_count, size_t step_count, const double *dynamic_power,
+	const double *temperature, double *total_power)
 {
 	/* Pleak = Ngate * Iavg * Vdd
 	 * Iavg(T, Vdd) = Is(T0, V0) * favg(T, Vdd)
@@ -204,18 +210,15 @@ void Hotspot::inject_leakage(const Architecture *architecture,
 	 * Power Modeling at Microarchitecture Level"
 	 */
 
-	size_t i, j;
-	size_t steps = dynamic_power.rows();
-	size_t cores = dynamic_power.cols();
-
+	size_t i, j, k;
 	double temp, favg, voltage;
 	unsigned long int ngate;
 
 	const processor_vector_t &processors = architecture->processors;
 
-	for (i = 0; i < steps; i++) {
-		for (j = 0; j < cores; j++) {
-			temp = temperature[i][j];
+	for (i = 0, k = 0; i < step_count; i++) {
+		for (j = 0; j < processor_count; j++, k++) {
+			temp = temperature[k];
 			voltage = processors[j]->voltage;
 			ngate = processors[j]->ngate;
 
@@ -223,27 +226,23 @@ void Hotspot::inject_leakage(const Architecture *architecture,
 				exp((alpha * voltage + beta) / temp) +
 				B * exp(gamma * voltage + delta);
 
-			total_power[i][j] = dynamic_power[i][j] +
-				ngate * Is * favg * voltage;
+			total_power[k] = dynamic_power[k] + ngate * Is * favg * voltage;
 		}
 	}
 }
 
 void Hotspot::inject_leakage(const Architecture *architecture,
-	const matrix_t &dynamic_power, double temperature,
-	matrix_t &total_power)
+	size_t processor_count, size_t step_count, const double *dynamic_power,
+	double temperature, double *total_power)
 {
-	size_t i, j;
-	size_t steps = dynamic_power.rows();
-	size_t cores = dynamic_power.cols();
-
+	size_t i, j, k;
 	double favg, voltage;
 	unsigned long int ngate;
 
 	const processor_vector_t &processors = architecture->processors;
 
-	for (i = 0; i < steps; i++) {
-		for (j = 0; j < cores; j++) {
+	for (i = 0, k = 0; i < step_count; i++) {
+		for (j = 0; j < processor_count; j++, k++) {
 			voltage = processors[j]->voltage;
 			ngate = processors[j]->ngate;
 
@@ -251,8 +250,7 @@ void Hotspot::inject_leakage(const Architecture *architecture,
 				exp((alpha * voltage + beta) / temperature) +
 				B * exp(gamma * voltage + delta);
 
-			total_power[i][j] = dynamic_power[i][j] +
-				ngate * Is * favg * voltage;
+			total_power[k] = dynamic_power[k] + ngate * Is * favg * voltage;
 		}
 	}
 }
