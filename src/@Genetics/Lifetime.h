@@ -8,8 +8,6 @@
 typedef std::pair<unsigned int, double> peak_t;
 typedef std::list<peak_t > extrema_t;
 
-#define __q 6
-
 class Lifetime
 {
     /* Peak threshold of local minima and maxima (for the cycle counting) */

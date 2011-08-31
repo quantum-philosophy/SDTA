@@ -65,32 +65,12 @@ class GeneticListScheduler
 
 		double generation_gap;
 
-		tunning_t() :
-			/* Randomness */
-			seed(0),
+		tunning_t();
+		tunning_t(const char *filename);
 
-			/* Create */
-			mobility_ratio(0.5),
+		private:
 
-			/* Continuator */
-			population_size(25),
-			min_generations(0),
-			max_generations(100),
-			stall_generations(20),
-
-			/* Select */
-			tournament_size(3),
-
-			/* Crossover */
-			crossover_rate(0.8),
-			crossover_points(2),
-
-			/* Mutate */
-			mutation_rate(0.05),
-			mutation_points(2),
-
-			/* Evolve */
-			generation_gap(0.5) {}
+		void defaults();
 	};
 
 	GeneticListScheduler(Graph *_graph, Hotspot *_hotspot,

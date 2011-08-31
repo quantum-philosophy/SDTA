@@ -36,6 +36,7 @@ double Lifetime::calc_damage(const matrix_t &temperature)
 	vector_t amplitudes, means;
 
 	double damage, factor, tmax, n;
+	double Q = q; /* Some stupid joke */
 
 	/* Get extrema */
 	detect_peaks(temperature, peaks);
@@ -55,7 +56,7 @@ double Lifetime::calc_damage(const matrix_t &temperature)
 			tmax = means[j] + amplitudes[j] / 2.0;
 
 			/* Number of cycles to failure for each stress level [3] */
-			n = Atc * pow(amplitudes[j] - dT0, -__q) * exp(Eatc / (k * tmax));
+			n = Atc * pow(amplitudes[j] - dT0, -Q) * exp(Eatc / (k * tmax));
 
 			/* Count all detected cycles (even 0.5) as completed,
 			 * since we have cycling temperature fluctuations

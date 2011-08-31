@@ -1,6 +1,8 @@
 #include <stdexcept>
 #include <limits>
 #include <iomanip>
+#include <sstream>
+#include <fstream>
 
 #include "GeneticListScheduler.h"
 #include "Graph.h"
@@ -150,6 +152,99 @@ double GeneticListScheduler::evaluate(const chromosome_t &chromosome)
 	cache[key] = fitness;
 
 	return fitness;
+}
+
+void GeneticListScheduler::tunning_t::defaults()
+{
+	/* Randomness */
+	seed = 0;
+
+	/* Create */
+	mobility_ratio = 0.5;
+
+	/* Continuator */
+	population_size = 25;
+	min_generations = 0;
+	max_generations = 100;
+	stall_generations = 20;
+
+	/* Select */
+	tournament_size = 3;
+
+	/* Crossover */
+	crossover_rate = 0.8;
+	crossover_points = 2;
+
+	/* Mutate */
+	mutation_rate = 0.05;
+	mutation_points = 2;
+
+	/* Evolve */
+	generation_gap = 0.5;
+}
+
+GeneticListScheduler::tunning_t::tunning_t()
+{
+	defaults();
+}
+
+GeneticListScheduler::tunning_t::tunning_t(const char *filename)
+{
+	defaults();
+
+	std::ifstream file(filename);
+	file.exceptions(std::fstream::failbit | std::fstream::badbit);
+
+	if (!file.is_open())
+		throw std::runtime_error("Cannot open the tunning file.");
+
+	std::string line, name;
+	double value;
+
+	while (true) {
+		try {
+			std::getline(file, line);
+		}
+		catch (...) {
+			break;
+		}
+
+		/* Skip empty lines and comments */
+		if (line.empty() || line[0] == '#') continue;
+
+		std::stringstream stream(line);
+		stream.exceptions(std::ios::failbit | std::ios::badbit);
+
+		stream >> name;
+		stream >> value;
+
+		if (name.compare("seed") == 0)
+			seed = value;
+		else if (name.compare("mobility_ratio") == 0)
+			mobility_ratio = value;
+		else if (name.compare("population_size") == 0)
+			population_size = value;
+		else if (name.compare("min_generations") == 0)
+			min_generations = value;
+		else if (name.compare("max_generations") == 0)
+			max_generations = value;
+		else if (name.compare("stall_generations") == 0)
+			stall_generations = value;
+		else if (name.compare("tournament_size") == 0)
+			tournament_size = value;
+		else if (name.compare("crossover_rate") == 0)
+			crossover_rate = value;
+		else if (name.compare("crossover_points") == 0)
+			crossover_points = value;
+		else if (name.compare("mutation_rate") == 0)
+			mutation_rate = value;
+		else if (name.compare("mutation_points") == 0)
+			mutation_points = value;
+		else if (name.compare("generation_gap") == 0)
+			generation_gap = value;
+		else
+			throw std::runtime_error("An unknown tunning parameter.");
+	}
 }
 
 std::ostream &operator<< (std::ostream &o,

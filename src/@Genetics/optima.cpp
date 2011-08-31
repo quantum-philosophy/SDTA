@@ -28,8 +28,9 @@ using namespace std;
 		some = NULL;			\
 	} while(0)
 
+void usage();
 bool file_exist(const char *filename);
-void optimize(const char *system, char *floorplan, char *config);
+void optimize(const char *system, const char *genetic, char *floorplan, char *thermal);
 void parse_system(const char *filename, vector<unsigned int> &type,
 	vector<vector<bool> > &link, vector<double> &frequency,
 	vector<double> &voltage, vector<unsigned long int> &ngate,
@@ -37,22 +38,27 @@ void parse_system(const char *filename, vector<unsigned int> &type,
 
 int main(int argc, char **argv)
 {
-	char *system, *floorplan, *config;
+	char *system, *genetic, *floorplan, *thermal;
 
 	try {
-		if (argc != 4)
+		if (argc != 5) {
+			usage();
 			throw runtime_error("Wrong number of arguments.");
+		}
 
 		if (!file_exist(system = argv[1]))
-			throw runtime_error("The system file does not exist.");
+			throw runtime_error("The system configuration file does not exist.");
 
-		if (!file_exist(floorplan = argv[2]))
-			throw runtime_error("The floorplan file does not exist.");
+		if (!file_exist(genetic = argv[2]))
+			throw runtime_error("The genetic configuration file does not exist.");
 
-		if (!file_exist(config = argv[3]))
-			throw runtime_error("The config file does not exist.");
+		if (!file_exist(floorplan = argv[3]))
+			throw runtime_error("The floorplan configuration file does not exist.");
 
-		optimize(system, floorplan, config);
+		if (!file_exist(thermal = argv[4]))
+			throw runtime_error("The thermal configuration file does not exist.");
+
+		optimize(system, genetic, floorplan, thermal);
 	}
 	catch (exception &e) {
 		cerr << e.what() << endl;
@@ -62,12 +68,21 @@ int main(int argc, char **argv)
 	return EXIT_SUCCESS;
 }
 
+void usage()
+{
+	cout << "Usage: optima <system config> <genetic config> <floorplan> <thermal config>" << endl
+		<< "  * <system config>    - a task graph with a set of PEs (architecture)" << endl
+		<< "  * <genetic config>   - the configuration of the GLSA" << endl
+		<< "  * <floorplan config> - the floorplan of the architecture" << endl
+		<< "  * <thermal config>   - the configuration of Hotspot" << endl;
+}
+
 bool file_exist(const char *filename)
 {
 	return ifstream(filename).is_open();
 }
 
-void optimize(const char *system, char *floorplan, char *config)
+void optimize(const char *system, const char *genetic, char *floorplan, char *thermal)
 {
 	const double deadline_ratio = 1.1;
 
@@ -102,7 +117,7 @@ void optimize(const char *system, char *floorplan, char *config)
 
 		graph->assign_mapping(architecture, mapping);
 
-		hotspot = new Hotspot(floorplan, config);
+		hotspot = new Hotspot(floorplan, thermal);
 
 		schedule_t schedule = ListScheduler::process(graph);
 		graph->assign_schedule(schedule);
@@ -118,18 +133,7 @@ void optimize(const char *system, char *floorplan, char *config)
 			<< setiosflags(ios::fixed) << setprecision(2)
 			<< initial_lifetime << endl;
 
-		GeneticListScheduler::tunning_t tunning;
-		tunning.mobility_ratio 		= 0.5;
-		tunning.population_size 	= 10;
-		tunning.min_generations 	= 0;
-		tunning.max_generations 	= 2;
-		tunning.stall_generations 	= 2;
-		tunning.tournament_size 	= 3;
-		tunning.crossover_rate 		= 0.8;
-		tunning.crossover_points 	= 2;
-		tunning.mutation_rate 		= 0.05;
-		tunning.mutation_points 	= 2;
-		tunning.generation_gap 		= 0.5;
+		GeneticListScheduler::tunning_t tunning(genetic);
 
 		cout << tunning << endl;
 
