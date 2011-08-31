@@ -27,6 +27,7 @@ class GeneticListScheduler
 	cache_t cache;
 
 	double evaluate(const chromosome_t &chromosome);
+	inline double evaluate_schedule(const schedule_t &schedule);
 
 	public:
 
@@ -66,6 +67,7 @@ class GeneticListScheduler
 		double generation_gap;
 
 		bool verbose;
+		bool cache;
 
 		tunning_t();
 		tunning_t(const char *filename);

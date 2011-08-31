@@ -28,7 +28,7 @@ schedule_t GeneticListScheduler::solve()
 
 	/* Reset */
 	stats = stats_t();
-	cache.clear();
+	if (tunning.cache) cache.clear();
 
 	task_vector_t &tasks = graph->tasks;
 
@@ -123,6 +123,9 @@ double GeneticListScheduler::evaluate(const chromosome_t &chromosome)
 	/* Make a new schedule */
 	schedule_t schedule = ListScheduler::process(graph, chromosome);
 
+	if (!tunning.cache)
+		return evaluate_schedule(schedule);
+
 	MD5Digest key(schedule);
 	cache_t::const_iterator it = cache.find(key);
 
@@ -138,38 +141,46 @@ double GeneticListScheduler::evaluate(const chromosome_t &chromosome)
 		}
 	}
 	else {
-		graph->assign_schedule(schedule);
-
-		if (graph->duration > graph->deadline) {
-			stats.deadline_misses++;
-			fitness = std::numeric_limits<double>::min();
-
-			if (tunning.verbose) {
-				std::cout << "!";
-				std::cout.flush();
-			}
-		}
-		else {
-			matrix_t dynamic_power, temperature, total_power;
-
-			/* The graph is rescheduled now, obtain the dynamic power profile */
-			DynamicPower::compute(graph, sampling_interval, dynamic_power);
-
-			/* Now, we can get the temperature profile, and the total power profile
-			 * including the leakage part.
-			 */
-			unsigned int iterations = hotspot->solve(graph->architecture,
-				dynamic_power, temperature, total_power);
-
-			fitness = Lifetime::predict(temperature, sampling_interval);
-
-			if (tunning.verbose) {
-				std::cout << ".";
-				std::cout.flush();
-			}
-		}
-
+		fitness = evaluate_schedule(schedule);
 		cache[key] = fitness;
+	}
+
+	return fitness;
+}
+
+double GeneticListScheduler::evaluate_schedule(const schedule_t &schedule)
+{
+	double fitness;
+
+	graph->assign_schedule(schedule);
+
+	if (graph->duration > graph->deadline) {
+		stats.deadline_misses++;
+		fitness = std::numeric_limits<double>::min();
+
+		if (tunning.verbose) {
+			std::cout << "!";
+			std::cout.flush();
+		}
+	}
+	else {
+		matrix_t dynamic_power, temperature, total_power;
+
+		/* The graph is rescheduled now, obtain the dynamic power profile */
+		DynamicPower::compute(graph, sampling_interval, dynamic_power);
+
+		/* Now, we can get the temperature profile, and the total power profile
+		 * including the leakage part.
+		 */
+		unsigned int iterations = hotspot->solve(graph->architecture,
+			dynamic_power, temperature, total_power);
+
+		fitness = Lifetime::predict(temperature, sampling_interval);
+
+		if (tunning.verbose) {
+			std::cout << ".";
+			std::cout.flush();
+		}
 	}
 
 	return fitness;
@@ -260,6 +271,7 @@ void GeneticListScheduler::tunning_t::defaults()
 	generation_gap = 0.5;
 
 	verbose = false;
+	cache = true;
 }
 
 GeneticListScheduler::tunning_t::tunning_t()
@@ -323,6 +335,8 @@ GeneticListScheduler::tunning_t::tunning_t(const char *filename)
 			generation_gap = value;
 		else if (name.compare("verbose") == 0)
 			verbose = value;
+		else if (name.compare("cache") == 0)
+			cache = value;
 		else
 			throw std::runtime_error("An unknown tunning parameter.");
 	}
