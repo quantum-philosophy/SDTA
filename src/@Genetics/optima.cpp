@@ -140,7 +140,7 @@ void optimize(const char *system, const char *genetic, char *floorplan, char *th
 
 		cout << "Initial lifetime: "
 			<< setiosflags(ios::fixed) << setprecision(2)
-			<< initial_lifetime << endl << endl;
+			<< initial_lifetime << endl;
 
 		scheduler = new GeneticListScheduler(graph, hotspot, tunning);
 
@@ -155,7 +155,7 @@ void optimize(const char *system, const char *genetic, char *floorplan, char *th
 		GeneticListScheduler::stats_t stats = scheduler->get_stats();
 
 		if (tunning.verbose)
-			cout << endl << stats << endl << endl;
+			cout << endl << stats << endl;
 
 		cout << "Improvement: "
 			<< setiosflags(ios::fixed) << setprecision(2)
@@ -205,6 +205,7 @@ void parse_system(const char *filename, vector<unsigned int> &type,
 
 	while (true) {
 		try {
+
 			getline(file, line);
 		}
 		catch (...) {

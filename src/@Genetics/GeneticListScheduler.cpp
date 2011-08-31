@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <sstream>
 #include <fstream>
+#include <iomanip>
 
 #include "GeneticListScheduler.h"
 #include "Graph.h"
@@ -59,6 +60,13 @@ schedule_t GeneticListScheduler::solve()
 		chromosome[i] = current_mobility;
 	}
 
+	/* Monitor */
+	eoCheckPoint<chromosome_t> checkpoint(continuator);
+	eoGenerationalMonitor monitor(this, population);
+	checkpoint.add(monitor);
+
+	monitor.start();
+
 	/* ... evaluate it */
 	evaluate(chromosome);
 
@@ -76,6 +84,8 @@ schedule_t GeneticListScheduler::solve()
 		evaluate(chromosome);
 		population.push_back(chromosome);
 	}
+
+	monitor();
 
 	/* Select */
 	eoDetTournamentSelect<chromosome_t> selectOne(tunning.tournament_size);
@@ -97,31 +107,17 @@ schedule_t GeneticListScheduler::solve()
 	eoSGATransform<chromosome_t> transform(crossover, tunning.crossover_rate,
 		mutation, tunning.mutation_rate);
 
-	/* Monitor */
-	eoCheckPoint<chromosome_t> checkpoint(continuator);
-	eoGenerationalMonitor monitor(this, population);
-	checkpoint.add(monitor);
-
 	eoEasyEA<chromosome_t> gga(checkpoint, evaluate, select, transform, replace);
-
-	if (tunning.verbose) std::cout << "[";
 
 	gga(population);
 
-	if (tunning.verbose) std::cout << "]";
-
-	stats.best_fitness = population.best_element().fitness();
+	monitor.finish();
 
 	return ListScheduler::process(graph, chromosome);
 }
 
 double GeneticListScheduler::evaluate(const chromosome_t &chromosome)
 {
-	if (tunning.verbose) {
-		std::cout << "<";
-		std::cout.flush();
-	}
-
 	stats.evaluations++;
 
 	/* Make a new schedule */
@@ -176,13 +172,13 @@ double GeneticListScheduler::evaluate(const chromosome_t &chromosome)
 		cache[key] = fitness;
 	}
 
-	if (tunning.verbose) {
-		std::cout << ">";
-		std::cout.flush();
-	}
-
 	return fitness;
 }
+
+eoGenerationalMonitor::eoGenerationalMonitor(GeneticListScheduler *_scheduler,
+	eoPop<chromosome_t> &_population) :
+	scheduler(_scheduler), population(_population),
+	tunning(scheduler->tunning), stats(scheduler->stats), last_evaluations(0) {}
 
 bool eoUniformRangeMutation::operator()(chromosome_t& chromosome)
 {
@@ -201,13 +197,35 @@ bool eoUniformRangeMutation::operator()(chromosome_t& chromosome)
 	return hasChanged;
 }
 
+void eoGenerationalMonitor::start()
+{
+	if (tunning.verbose) {
+		std::cout << "   0: ";
+		std::cout.flush();
+	}
+}
+
+void eoGenerationalMonitor::finish()
+{
+	if (tunning.verbose)
+		std::cout << "end" << std::endl;
+}
+
 eoMonitor& eoGenerationalMonitor::operator()(void)
 {
-	scheduler->stats.generations++;
+	stats.best_fitness = population.best_element().fitness();
+	stats.generations++;
 
-	if (scheduler->tunning.verbose) {
-		std::cout << "@";
+	if (tunning.verbose) {
+		size_t width = tunning.population_size -
+			(stats.evaluations - last_evaluations) + 1;
+
+		std::cout << std::setw(width) << " " << stats.best_fitness;
+		std::cout << std::endl << std::setw(4)
+			<< stats.generations << ": ";
 		std::cout.flush();
+
+		last_evaluations = stats.evaluations;
 	}
 
 	return *this;

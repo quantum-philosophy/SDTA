@@ -130,14 +130,20 @@ class eoGenerationalMonitor: public eoMonitor
 	eoPop<chromosome_t> &population;
 	GeneticListScheduler *scheduler;
 
+	GeneticListScheduler::tunning_t &tunning;
+	GeneticListScheduler::stats_t &stats;
+
+	size_t last_evaluations;
+
 	public:
 
 	eoGenerationalMonitor(GeneticListScheduler *_scheduler,
-		eoPop<chromosome_t> &_population) :
-		scheduler(_scheduler), population(_population) {}
+		eoPop<chromosome_t> &_population);
 
 	virtual std::string className() const { return "eoGenerationalMonitor"; }
 
+	inline void start();
+	inline void finish();
 	virtual eoMonitor& operator()(void);
 };
 
