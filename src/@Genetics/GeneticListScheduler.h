@@ -15,21 +15,35 @@ typedef eoReal<gene_t> chromosome_t;
 typedef std::map<MD5Digest, double, MD5DigestComparator> cache_t;
 
 struct GeneticListSchedulerEvalFuncPtr;
+class eoGenerationalMonitor;
 
 class GeneticListScheduler
 {
 	friend struct GeneticListSchedulerEvalFuncPtr;
+	friend class eoGenerationalMonitor;
 
 	Graph *graph;
 	Hotspot *hotspot;
 	cache_t cache;
-	size_t evaluation_count;
-	size_t cache_hit_count;
-	size_t deadline_miss_count;
 
 	double evaluate(const chromosome_t &chromosome);
 
 	public:
+
+	struct stats_t {
+		size_t generations;
+		size_t evaluations;
+		size_t cache_hits;
+		size_t deadline_misses;
+		double best_fitness;
+
+		stats_t() :
+			generations(0),
+			evaluations(0),
+			cache_hits(0),
+			deadline_misses(0),
+			best_fitness(0) {}
+	};
 
 	struct tunning_t {
 		int seed;
@@ -84,9 +98,13 @@ class GeneticListScheduler
 
 	schedule_t solve();
 
+	inline stats_t get_stats() const { return stats; }
+
 	private:
 
 	tunning_t tunning;
+	stats_t stats;
+
 	double sampling_interval;
 };
 
@@ -140,20 +158,30 @@ class eoUniformRangeMutation: public eoMonOp<chromosome_t>
 	}
 };
 
-class eoMatlabMonitor: public eoMonitor
+class eoGenerationalMonitor: public eoMonitor
 {
 	eoPop<chromosome_t> &population;
+	GeneticListScheduler *scheduler;
 
 	public:
 
-	eoMatlabMonitor(eoPop<chromosome_t> &_population) : population(_population) {}
+	eoGenerationalMonitor(GeneticListScheduler *_scheduler,
+		eoPop<chromosome_t> &_population) :
+		scheduler(_scheduler), population(_population) {}
 
-	virtual std::string className() const { return "eoMatlabMonotor"; }
+	virtual std::string className() const { return "eoGenerationalMonitor"; }
 
 	virtual eoMonitor& operator()(void)
 	{
+		scheduler->stats.generations++;
 		return *this;
 	}
 };
+
+std::ostream &operator<< (std::ostream &o,
+	const GeneticListScheduler::tunning_t &tunning);
+
+std::ostream &operator<< (std::ostream &o,
+	const GeneticListScheduler::stats_t &stats);
 
 #endif

@@ -1,7 +1,6 @@
 #ifndef __PROCESSOR_H__
 #define __PROCESSOR_H__
 
-#include <iostream>
 #include "Common.h"
 
 class Processor

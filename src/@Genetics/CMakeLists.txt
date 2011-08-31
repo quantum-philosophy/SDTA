@@ -38,3 +38,30 @@ add_custom_target (genetics
 		${CMAKE_CURRENT_SOURCE_DIR}/optimizeAging.cpp
 		${COMMON_SRCS} ${EO_LIBS} ${EO_FLAGS}
 )
+
+# A stand alone executable
+add_executable (optima optima.cpp ${COMMON_SRCS})
+target_link_libraries (optima libeo libeoutils libhotspot)
+include_directories (
+	${PARADISEO_EO_INCLUDE_DIR}
+	${VENDOR_DIR}/numerical_recipes
+	${VENDOR_DIR}
+)
+
+add_library(libeo STATIC IMPORTED)
+set_property(
+	TARGET libeo PROPERTY
+	IMPORTED_LOCATION ${PARADISEO_EO_LIBRARY_DIR}/libeo.a
+)
+
+add_library(libeoutils STATIC IMPORTED)
+set_property(
+	TARGET libeoutils PROPERTY
+	IMPORTED_LOCATION ${PARADISEO_EO_LIBRARY_DIR}/libeoutils.a
+)
+
+add_library(libhotspot STATIC IMPORTED)
+set_property(
+	TARGET libhotspot PROPERTY
+	IMPORTED_LOCATION ${VENDOR_DIR}/hotspot/libhotspot.a
+)

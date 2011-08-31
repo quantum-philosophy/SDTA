@@ -1,5 +1,6 @@
 #include <stdexcept>
 #include <limits>
+#include <iomanip>
 
 #include "GeneticListScheduler.h"
 #include "Graph.h"
@@ -23,9 +24,7 @@ schedule_t GeneticListScheduler::solve()
 	if (task_count == 0) throw std::runtime_error("The graph is empty.");
 
 	/* Reset */
-	evaluation_count = 0;
-	cache_hit_count = 0;
-	deadline_miss_count = 0;
+	stats = stats_t();
 	cache.clear();
 
 	task_vector_t &tasks = graph->tasks;
@@ -35,6 +34,7 @@ schedule_t GeneticListScheduler::solve()
 	eoSteadyFitContinue<chromosome_t> steady_cont(tunning.min_generations,
 		tunning.stall_generations);
 	eoCombinedContinue<chromosome_t> continuator(gen_cont, steady_cont);
+	gen_cont.verbose = false;
 
 	/* Evaluate */
 	GeneticListSchedulerEvalFuncPtr evaluate(this);
@@ -96,32 +96,22 @@ schedule_t GeneticListScheduler::solve()
 		mutation, tunning.mutation_rate);
 
 	/* Monitor */
-	/*
 	eoCheckPoint<chromosome_t> checkpoint(continuator);
-	eoMatlabMonitor monitor(population);
+	eoGenerationalMonitor monitor(this, population);
 	checkpoint.add(monitor);
 
 	eoEasyEA<chromosome_t> gga(checkpoint, evaluate, select, transform, replace);
-	*/
-
-	eoEasyEA<chromosome_t> gga(continuator, evaluate, select, transform, replace);
 
 	gga(population);
 
-	chromosome = population.best_element();
-
-	std::cout << "Evaluations: " << evaluation_count << std::endl;
-	std::cout << "Cache hits: " << cache_hit_count << std::endl;
-	std::cout << "Deadline misses: " << deadline_miss_count << std::endl;
-
-	std::cout << "Best lifetime: " << chromosome.fitness() << std::endl;
+	stats.best_fitness = population.best_element().fitness();
 
 	return ListScheduler::process(graph, chromosome);
 }
 
 double GeneticListScheduler::evaluate(const chromosome_t &chromosome)
 {
-	evaluation_count++;
+	stats.evaluations++;
 
 	/* Make a new schedule */
 	schedule_t schedule = ListScheduler::process(graph, chromosome);
@@ -130,7 +120,7 @@ double GeneticListScheduler::evaluate(const chromosome_t &chromosome)
 	cache_t::const_iterator it = cache.find(key);
 
 	if (it != cache.end()) {
-		cache_hit_count++;
+		stats.cache_hits++;
 		return it->second;
 	}
 
@@ -139,7 +129,7 @@ double GeneticListScheduler::evaluate(const chromosome_t &chromosome)
 	double fitness;
 
 	if (graph->duration > graph->deadline) {
-		deadline_miss_count++;
+		stats.deadline_misses++;
 		fitness = std::numeric_limits<double>::min();
 	}
 	else {
@@ -160,4 +150,58 @@ double GeneticListScheduler::evaluate(const chromosome_t &chromosome)
 	cache[key] = fitness;
 
 	return fitness;
+}
+
+std::ostream &operator<< (std::ostream &o,
+	const GeneticListScheduler::tunning_t &tunning)
+{
+	o
+		<< std::setiosflags(std::ios::fixed)
+
+		<< "Tunning:" << std::endl
+
+		<< std::setprecision(0)
+		<< "  Seed:                " << tunning.seed << std::endl
+
+		<< std::setprecision(2)
+		<< "  Mobility ratio:      " << tunning.mobility_ratio << std::endl
+
+		<< std::setprecision(0)
+		<< "  Population size:     " << tunning.population_size << std::endl
+		<< "  Minimum generations: " << tunning.min_generations << std::endl
+		<< "  Maximum generations: " << tunning.max_generations << std::endl
+		<< "  Stall generations:   " << tunning.stall_generations << std::endl
+
+		<< "  Tournament size:     " << tunning.tournament_size << std::endl
+
+		<< std::setprecision(2)
+		<< "  Crossover rate:      " << tunning.crossover_rate << std::endl
+		<< std::setprecision(0)
+		<< "  Crossover points:    " << tunning.crossover_points << std::endl
+
+		<< std::setprecision(2)
+		<< "  Mutation rate:       " << tunning.mutation_rate << std::endl
+		<< std::setprecision(0)
+		<< "  Mutation points:     " << tunning.mutation_points << std::endl
+
+		<< std::setprecision(2)
+		<< "  Generational gap:    " << tunning.generation_gap << std::endl;
+}
+
+std::ostream &operator<< (std::ostream &o,
+	const GeneticListScheduler::stats_t &stats)
+{
+	o
+		<< std::setiosflags(std::ios::fixed)
+
+		<< "Stats:" << std::endl
+
+		<< std::setprecision(0)
+		<< "  Generations:         " << stats.generations << std::endl
+		<< "  Evaluations:         " << stats.evaluations << std::endl
+		<< "  Cache hits:          " << stats.cache_hits << std::endl
+		<< "  Deadline misses:     " << stats.deadline_misses << std::endl
+
+		<< std::setprecision(2)
+		<< "  Best fitness:        " << stats.best_fitness << std::endl;
 }

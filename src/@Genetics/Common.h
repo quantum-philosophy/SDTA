@@ -1,7 +1,7 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
-#include <mex.h>
+#include <iostream>
 #include <vector>
 #include <list>
 
@@ -15,8 +15,8 @@ class ListScheduler;
 class GeneticListScheduler;
 
 class DynamicPower;
-
 class Hotspot;
+class Lifetime;
 
 typedef int tid_t;
 typedef std::vector<tid_t> schedule_t;
@@ -75,8 +75,5 @@ class matrix_t : public std::vector<double>
 };
 
 std::ostream &operator<< (std::ostream &o, const std::vector<int> &v);
-
-void dump_into_matlab(const char *filename, const char *name,
-	const matrix_t &matrix);
 
 #endif

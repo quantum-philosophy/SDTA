@@ -15,6 +15,9 @@ function systemConfig = compactTaskGraph(graph, processors)
     end
   end
 
+  type = uint32(type);
+  link = logical(link);
+
   frequency = zeros(1, processorCount);
   voltage = zeros(1, processorCount);
   ngate = zeros(1, processorCount);
@@ -29,6 +32,10 @@ function systemConfig = compactTaskGraph(graph, processors)
     nc(1:length(processor.nc), i) = processor.nc;
     ceff(1:length(processor.ceff), i) = processor.ceff;
   end
+
+  frequency = uint32(frequency);
+  ngate = uint32(ngate);
+  nc = uint32(nc);
 
   systemConfig = struct('type', type, 'link', link, 'frequency', frequency, ...
     'voltage', voltage, 'ngate', ngate, 'nc', nc, 'ceff', ceff);

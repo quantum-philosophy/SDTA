@@ -1,14 +1,14 @@
 #ifndef __LIFETIME_H__
 #define __LIFETIME_H__
 
-#include <vector>
-#include <list>
 #include <utility>
 
 #include "Common.h"
 
 typedef std::pair<unsigned int, double> peak_t;
 typedef std::list<peak_t > extrema_t;
+
+#define __q 6
 
 class Lifetime
 {
@@ -44,6 +44,7 @@ class Lifetime
 	public:
 
 	static double predict(const matrix_t &temperature, double sampling_interval);
+	static double predict(const Graph *graph, Hotspot *hotspot);
 
 	private:
 

@@ -35,6 +35,7 @@ classdef LSAging < Genetic.LS
       LS.schedule(ls.graph, chromosome);
 
       if ls.graph.duration > ls.deadline
+        ls.deadlineMisses = ls.deadlineMisses + 1;
         fitness = 0;
         return;
       end

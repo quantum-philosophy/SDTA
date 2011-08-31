@@ -1,7 +1,6 @@
 #ifndef __TASK_H__
 #define __TASK_H__
 
-#include <iostream>
 #include <limits>
 #include "Common.h"
 

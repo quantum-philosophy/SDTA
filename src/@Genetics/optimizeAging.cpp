@@ -283,7 +283,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		/* Just to assign a deadline */
 		schedule_t schedule = ListScheduler::process(graph);
 		graph->assign_schedule(schedule);
-		graph->assign_deadline(deadline_ratio * graph->calc_duration());
+		graph->assign_deadline(deadline_ratio * graph->get_duration());
 
 		hotspot = new Hotspot(floorplan, config, table, tsize);
 		scheduler = new GeneticListScheduler(graph, hotspot);

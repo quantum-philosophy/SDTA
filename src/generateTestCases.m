@@ -25,9 +25,17 @@ function generate(varargin)
     if result ~= 0, error('Cannot run TGFF'); end
 
     tgff = TestCase.TGFF([ config, '.tgff' ]);
-    cores = length(tgff.pes);
+
+    if length(tgff.graphs) ~= 1
+      error('Wrong number of task graphs.');
+    end
 
     % Generate a floorplan
-    Utils.generateFloorplan(floorplan, cores);
+    Utils.generateFloorplan(floorplan, length(tgff.pes));
+
+    systemConfig = Utils.compactTaskGraph(tgff.graphs{1}, tgff.pes);
+    systemConfig.type = systemConfig.type - 1;
+
+    Utils.dumpObject(systemConfig, [ config, '.txt' ]);
   end
 end

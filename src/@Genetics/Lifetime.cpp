@@ -2,6 +2,10 @@
 #include <math.h>
 
 #include "Lifetime.h"
+#include "Architecture.h"
+#include "Hotspot.h"
+#include "DynamicPower.h"
+#include "Graph.h"
 
 double Lifetime::predict(const matrix_t &temperature, double sampling_interval)
 {
@@ -9,6 +13,20 @@ double Lifetime::predict(const matrix_t &temperature, double sampling_interval)
 	double damage = calc_damage(temperature);
 
 	return time / damage;
+}
+
+double Lifetime::predict(const Graph *graph, Hotspot *hotspot)
+{
+	double sampling_interval = hotspot->sampling_interval();
+
+	matrix_t dynamic_power, temperature, total_power;
+
+	DynamicPower::compute(graph, sampling_interval, dynamic_power);
+
+	unsigned int iterations = hotspot->solve(graph->architecture,
+		dynamic_power, temperature, total_power);
+
+	return predict(temperature, sampling_interval);
 }
 
 double Lifetime::calc_damage(const matrix_t &temperature)
@@ -37,7 +55,7 @@ double Lifetime::calc_damage(const matrix_t &temperature)
 			tmax = means[j] + amplitudes[j] / 2.0;
 
 			/* Number of cycles to failure for each stress level [3] */
-			n = Atc * pow(amplitudes[j] - dT0, -q) * exp(Eatc / (k * tmax));
+			n = Atc * pow(amplitudes[j] - dT0, -__q) * exp(Eatc / (k * tmax));
 
 			/* Count all detected cycles (even 0.5) as completed,
 			 * since we have cycling temperature fluctuations

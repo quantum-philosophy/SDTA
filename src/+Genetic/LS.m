@@ -56,6 +56,8 @@ classdef LS < handle
 
     % Stats
     evaluations
+    cacheHits
+    deadlineMisses
 
     % Drawing and progress
     drawing
@@ -123,6 +125,8 @@ classdef LS < handle
       % Reset
       ls.cache = containers.Map('KeyType', 'char', 'ValueType', ls.fitnessType);
       ls.evaluations = 0;
+      ls.cacheHits = 0;
+      ls.deadlineMisses = 0;
 
       if ls.drawing
         ls.bar = waitbar(0, 'Genetic List Scheduling Algorithm');
@@ -149,6 +153,7 @@ classdef LS < handle
       key = Utils.mMD5(chromosome);
 
       if ls.cache.isKey(key)
+        ls.cacheHits = ls.cacheHits + 1;
         fitness = ls.cache(key);
         return;
       end

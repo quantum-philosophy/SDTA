@@ -1,7 +1,6 @@
 #ifndef __GRAPH_H__
 #define __GRAPH_H__
 
-#include <iostream>
 #include "Common.h"
 
 class Graph
@@ -9,6 +8,7 @@ class Graph
 	friend class ListScheduler;
 	friend class GeneticListScheduler;
 	friend class DynamicPower;
+	friend class Lifetime;
 	friend std::ostream &operator<< (std::ostream &, const Graph *);
 
 	protected:
@@ -39,15 +39,16 @@ class Graph
 	task_vector_t get_leaves() const;
 
 	inline size_t size() const { return task_count; }
+	inline double get_duration() const { return duration; }
 
 	const Task *operator[] (tid_t id) const { return tasks[id]; }
+
+	protected:
 
 	/* The duration of the graph based on the actual start times */
 	double calc_duration() const;
 	/* The duration of the graph based on the ASAP times */
 	double calc_asap_duration() const;
-
-	protected:
 
 	/* Trigger the propagation of the start time */
 	void calc_start() const;
