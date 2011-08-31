@@ -15,6 +15,7 @@
 *.flp
 *.ptrace*
 *.ttrace*
+build/test_cases/*.config
 
 build/*Make*
 build/*make*
@@ -22,6 +23,7 @@ build/hotspot*
 build/src
 build/tgff
 build/vendor
+build/optima
 
 src/@HotSpot/hotspot
 
@@ -39,6 +41,3 @@ vendor/paradiseo*/paradiseo-moeo/build
 vendor/paradiseo
 
 tags
-*.mat
-build/test_cases/*.txt
-build/optima

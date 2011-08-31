@@ -65,6 +65,8 @@ class GeneticListScheduler
 
 		double generation_gap;
 
+		bool verbose;
+
 		tunning_t();
 		tunning_t(const char *filename);
 
@@ -120,22 +122,7 @@ class eoUniformRangeMutation: public eoMonOp<chromosome_t>
 
 	virtual std::string className() const { return "eoUniformRangeMutation"; }
 
-	bool operator()(chromosome_t& chromosome) {
-
-		unsigned int length = chromosome.size();
-		unsigned int point;
-		bool hasChanged = false;
-		gene_t last;
-
-		for (unsigned int i = 0; i < points; i++) {
-			point = rng.random(length);
-			last = chromosome[point];
-			chromosome[point] = eo::random(min, max);
-			if (last != chromosome[point]) hasChanged = true;
-		}
-
-		return hasChanged;
-	}
+	bool operator()(chromosome_t& chromosome);
 };
 
 class eoGenerationalMonitor: public eoMonitor
@@ -151,11 +138,7 @@ class eoGenerationalMonitor: public eoMonitor
 
 	virtual std::string className() const { return "eoGenerationalMonitor"; }
 
-	virtual eoMonitor& operator()(void)
-	{
-		scheduler->stats.generations++;
-		return *this;
-	}
+	virtual eoMonitor& operator()(void);
 };
 
 std::ostream &operator<< (std::ostream &o,

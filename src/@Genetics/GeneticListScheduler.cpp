@@ -104,7 +104,11 @@ schedule_t GeneticListScheduler::solve()
 
 	eoEasyEA<chromosome_t> gga(checkpoint, evaluate, select, transform, replace);
 
+	if (tunning.verbose) std::cout << "[";
+
 	gga(population);
+
+	if (tunning.verbose) std::cout << "]";
 
 	stats.best_fitness = population.best_element().fitness();
 
@@ -113,6 +117,11 @@ schedule_t GeneticListScheduler::solve()
 
 double GeneticListScheduler::evaluate(const chromosome_t &chromosome)
 {
+	if (tunning.verbose) {
+		std::cout << "<";
+		std::cout.flush();
+	}
+
 	stats.evaluations++;
 
 	/* Make a new schedule */
@@ -121,37 +130,87 @@ double GeneticListScheduler::evaluate(const chromosome_t &chromosome)
 	MD5Digest key(schedule);
 	cache_t::const_iterator it = cache.find(key);
 
-	if (it != cache.end()) {
-		stats.cache_hits++;
-		return it->second;
-	}
-
-	graph->assign_schedule(schedule);
-
 	double fitness;
 
-	if (graph->duration > graph->deadline) {
-		stats.deadline_misses++;
-		fitness = std::numeric_limits<double>::min();
+	if (it != cache.end()) {
+		stats.cache_hits++;
+		fitness = it->second;
+
+		if (tunning.verbose) {
+			std::cout << "#";
+			std::cout.flush();
+		}
 	}
 	else {
-		matrix_t dynamic_power, temperature, total_power;
+		graph->assign_schedule(schedule);
 
-		/* The graph is rescheduled now, obtain the dynamic power profile */
-		DynamicPower::compute(graph, sampling_interval, dynamic_power);
+		if (graph->duration > graph->deadline) {
+			stats.deadline_misses++;
+			fitness = std::numeric_limits<double>::min();
 
-		/* Now, we can get the temperature profile, and the total power profile
-		 * including the leakage part.
-		 */
-		unsigned int iterations = hotspot->solve(graph->architecture,
-			dynamic_power, temperature, total_power);
+			if (tunning.verbose) {
+				std::cout << "!";
+				std::cout.flush();
+			}
+		}
+		else {
+			matrix_t dynamic_power, temperature, total_power;
 
-		fitness = Lifetime::predict(temperature, sampling_interval);
+			/* The graph is rescheduled now, obtain the dynamic power profile */
+			DynamicPower::compute(graph, sampling_interval, dynamic_power);
+
+			/* Now, we can get the temperature profile, and the total power profile
+			 * including the leakage part.
+			 */
+			unsigned int iterations = hotspot->solve(graph->architecture,
+				dynamic_power, temperature, total_power);
+
+			fitness = Lifetime::predict(temperature, sampling_interval);
+
+			if (tunning.verbose) {
+				std::cout << ".";
+				std::cout.flush();
+			}
+		}
+
+		cache[key] = fitness;
 	}
 
-	cache[key] = fitness;
+	if (tunning.verbose) {
+		std::cout << ">";
+		std::cout.flush();
+	}
 
 	return fitness;
+}
+
+bool eoUniformRangeMutation::operator()(chromosome_t& chromosome)
+{
+	unsigned int length = chromosome.size();
+	unsigned int point;
+	bool hasChanged = false;
+	gene_t last;
+
+	for (unsigned int i = 0; i < points; i++) {
+		point = rng.random(length);
+		last = chromosome[point];
+		chromosome[point] = eo::random(min, max);
+		if (last != chromosome[point]) hasChanged = true;
+	}
+
+	return hasChanged;
+}
+
+eoMonitor& eoGenerationalMonitor::operator()(void)
+{
+	scheduler->stats.generations++;
+
+	if (scheduler->tunning.verbose) {
+		std::cout << "@";
+		std::cout.flush();
+	}
+
+	return *this;
 }
 
 void GeneticListScheduler::tunning_t::defaults()
@@ -181,6 +240,8 @@ void GeneticListScheduler::tunning_t::defaults()
 
 	/* Evolve */
 	generation_gap = 0.5;
+
+	verbose = false;
 }
 
 GeneticListScheduler::tunning_t::tunning_t()
@@ -242,6 +303,8 @@ GeneticListScheduler::tunning_t::tunning_t(const char *filename)
 			mutation_points = value;
 		else if (name.compare("generation_gap") == 0)
 			generation_gap = value;
+		else if (name.compare("verbose") == 0)
+			verbose = value;
 		else
 			throw std::runtime_error("An unknown tunning parameter.");
 	}

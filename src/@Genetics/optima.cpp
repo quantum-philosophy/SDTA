@@ -5,6 +5,7 @@
 #include <string>
 #include <iomanip>
 #include <vector>
+#include <time.h>
 
 #include "Graph.h"
 #include "Architecture.h"
@@ -104,8 +105,16 @@ void optimize(const char *system, const char *genetic, char *floorplan, char *th
 	parse_system(system, type, link, frequency, voltage, ngate, nc, ceff);
 
 	try {
+		GeneticListScheduler::tunning_t tunning(genetic);
+
+		if (tunning.verbose)
+			cout << tunning << endl;
+
 		graph = new GraphBuilder(type, link);
 		architecture = new ArchitectureBuilder(frequency, voltage, ngate, nc, ceff);
+
+		if (tunning.verbose)
+			cout << architecture << endl;
 
 		size_t task_count = graph->size();
 		size_t processor_count = architecture->size();
@@ -124,29 +133,36 @@ void optimize(const char *system, const char *genetic, char *floorplan, char *th
 
 		graph->assign_deadline(deadline_ratio * graph->get_duration());
 
-		cout << graph;
-		cout << architecture;
+		if (tunning.verbose)
+			cout << graph << endl;
 
 		initial_lifetime = Lifetime::predict(graph, hotspot);
 
 		cout << "Initial lifetime: "
 			<< setiosflags(ios::fixed) << setprecision(2)
-			<< initial_lifetime << endl;
-
-		GeneticListScheduler::tunning_t tunning(genetic);
-
-		cout << tunning << endl;
+			<< initial_lifetime << endl << endl;
 
 		scheduler = new GeneticListScheduler(graph, hotspot, tunning);
 
+		clock_t begin, end;
+		double elapsed;
+
+		begin = clock();
 		schedule = scheduler->solve();
+		end = clock();
+		elapsed = (double)(end - begin) / CLOCKS_PER_SEC;
 
 		GeneticListScheduler::stats_t stats = scheduler->get_stats();
 
-		cout << stats << endl;
+		if (tunning.verbose)
+			cout << endl << stats << endl << endl;
 
 		cout << "Improvement: "
+			<< setiosflags(ios::fixed) << setprecision(2)
 			<< (stats.best_fitness / initial_lifetime - 1.0) * 100 << " %" << endl;
+
+		if (tunning.verbose)
+			cout << "Time elapsed: " << elapsed << endl;
 	}
 	catch (exception &e) {
 		__DELETE(graph);

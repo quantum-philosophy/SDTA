@@ -36,6 +36,6 @@ function generate(varargin)
     systemConfig = Utils.compactTaskGraph(tgff.graphs{1}, tgff.pes);
     systemConfig.type = systemConfig.type - 1;
 
-    Utils.dumpObject(systemConfig, [ config, '.txt' ]);
+    Utils.dumpObject(systemConfig, [ config, '.config' ]);
   end
 end
