@@ -19,11 +19,13 @@ class Processor;
 class Architecture;
 
 class ListScheduler;
-class GeneticListScheduler;
 
 class DynamicPower;
 class Hotspot;
 class Lifetime;
+
+template<class chromosome_t>
+class GeneticListScheduler;
 
 typedef int tid_t;
 typedef std::vector<tid_t> schedule_t;

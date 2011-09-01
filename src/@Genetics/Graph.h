@@ -6,7 +6,11 @@
 class Graph
 {
 	friend class ListScheduler;
+
+	template<class chromosome_t>
 	friend class GeneticListScheduler;
+	friend class SingleGLS;
+
 	friend class DynamicPower;
 	friend class Lifetime;
 	friend std::ostream &operator<< (std::ostream &, const Graph *);

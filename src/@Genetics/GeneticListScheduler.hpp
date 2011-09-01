@@ -5,15 +5,13 @@
 #include <fstream>
 #include <iomanip>
 
-#include "GeneticListScheduler.h"
 #include "Graph.h"
 #include "Task.h"
 #include "ListScheduler.h"
-#include "DynamicPower.h"
-#include "Lifetime.h"
 
-GeneticListScheduler::GeneticListScheduler(Graph *_graph, Hotspot *_hotspot,
-	const tunning_t &_tunning) :
+template<class chromosome_t>
+GeneticListScheduler<chromosome_t>::GeneticListScheduler(
+	Graph *_graph, Hotspot *_hotspot, const tunning_t &_tunning) :
 	graph(_graph), hotspot(_hotspot), tunning(_tunning)
 {
 	if (tunning.seed >= 0) rng.reseed(tunning.seed);
@@ -21,7 +19,9 @@ GeneticListScheduler::GeneticListScheduler(Graph *_graph, Hotspot *_hotspot,
 	sampling_interval = hotspot->sampling_interval();
 }
 
-schedule_t &GeneticListScheduler::solve(const priority_t &start_priority)
+template<class chromosome_t>
+schedule_t &GeneticListScheduler<chromosome_t>::solve(
+	const priority_t &start_priority)
 {
 	size_t i, j;
 	size_t task_count = graph->task_count;
@@ -41,7 +41,7 @@ schedule_t &GeneticListScheduler::solve(const priority_t &start_priority)
 	eoCombinedContinue<chromosome_t> continuator(gen_cont, steady_cont);
 
 	/* Create */
-	population_t population;
+	eoPop<chromosome_t> population;
 	priority_t priority = start_priority;
 
 	if (priority.empty())
@@ -65,7 +65,7 @@ schedule_t &GeneticListScheduler::solve(const priority_t &start_priority)
 
 	/* Monitor */
 	eoCheckPoint<chromosome_t> checkpoint(continuator);
-	eslabGenerationalMonitor monitor(this, population);
+	eslabGenerationalMonitor<chromosome_t> monitor(this, population);
 	checkpoint.add(monitor);
 
 	/* Fill the first part with uniform chromosomes */
@@ -82,14 +82,14 @@ schedule_t &GeneticListScheduler::solve(const priority_t &start_priority)
 	}
 
 	/* Transform = Crossover + Mutate */
-	eslabNPtsBitCrossover crossover(tunning.crossover_points);
-	eslabUniformRangeMutation mutate(min, max, tunning.mutation_points);
-	eslabTransform transform(crossover, tunning.crossover_rate,
+	eslabNPtsBitCrossover<chromosome_t> crossover(tunning.crossover_points);
+	eslabUniformRangeMutation<chromosome_t> mutate(min, max, tunning.mutation_points);
+	eslabTransform<chromosome_t> transform(crossover, tunning.crossover_rate,
 		mutate, tunning.mutation_rate);
 
 	monitor.start();
 
-	evolve(population, checkpoint, transform);
+	process(population, checkpoint, transform);
 
 	monitor.finish();
 
@@ -101,7 +101,9 @@ schedule_t &GeneticListScheduler::solve(const priority_t &start_priority)
 	return stats.schedule;
 }
 
-double SingleGLS::evaluate(const chromosome_t &chromosome)
+template<class chromosome_t>
+typename GeneticListScheduler<chromosome_t>::fitness_t
+	GeneticListScheduler<chromosome_t>::evaluate(const chromosome_t &chromosome)
 {
 	stats.evaluations++;
 
@@ -112,7 +114,7 @@ double SingleGLS::evaluate(const chromosome_t &chromosome)
 		return evaluate_schedule(schedule);
 
 	MD5Digest key(schedule);
-	cache_t::const_iterator it = cache.find(key);
+	typename cache_t::const_iterator it = cache.find(key);
 
 	double fitness;
 
@@ -133,9 +135,8 @@ double SingleGLS::evaluate(const chromosome_t &chromosome)
 	return fitness;
 }
 
-/******************************************************************************/
-
-eslabTransform::eslabTransform(
+template<class chromosome_t>
+eslabTransform<chromosome_t>::eslabTransform(
 	eoQuadOp<chromosome_t> &_crossover, double _crossover_rate,
 	eoMonOp<chromosome_t> &_mutate, double _mutation_rate) :
 	crossover(_crossover), crossover_rate(_crossover_rate),
@@ -148,7 +149,8 @@ eslabTransform::eslabTransform(
 		std::runtime_error("The mutation rate is wrong.");
 }
 
-void eslabTransform::operator()(population_t &population)
+template<class chromosome_t>
+void eslabTransform<chromosome_t>::operator()(eoPop<chromosome_t> &population)
 {
 	size_t i;
 	size_t population_size = population.size();
@@ -176,15 +178,17 @@ void eslabTransform::operator()(population_t &population)
 		if (changes[i]) population[i].invalidate();
 }
 
-/******************************************************************************/
-
-eslabNPtsBitCrossover::eslabNPtsBitCrossover(size_t _points) : points(_points)
+template<class chromosome_t>
+eslabNPtsBitCrossover<chromosome_t>::eslabNPtsBitCrossover(
+	size_t _points) : points(_points)
 {
 	if (points < 1)
 		std::runtime_error("The number of crossover points is invalid.");
 }
 
-bool eslabNPtsBitCrossover::operator()(chromosome_t &one, chromosome_t &another)
+template<class chromosome_t>
+bool eslabNPtsBitCrossover<chromosome_t>::operator()(
+	chromosome_t &one, chromosome_t &another)
 {
 	size_t i;
 	size_t size = one.size();
@@ -198,26 +202,6 @@ bool eslabNPtsBitCrossover::operator()(chromosome_t &one, chromosome_t &another)
 	do {
 		i = eo::rng.random(size);
 
-
-/******************************************************************************/
-
-eslabElitismMerge::eslabElitismMerge(double _rate) : rate(_rate)
-{
-	if (rate < 0 || rate > 1)
-		std::runtime_error("The elitism rate is invalid.");
-}
-
-void eslabElitismMerge::operator()(const population_t &population,
-	population_t &offspring)
-{
-	size_t count = rate * population.size();
-
-	std::vector<const chromosome_t *> elite;
-	population.nth_element(count, elite);
-
-	for (size_t i = 0; i < count; i++)
-		offspring.push_back(*elite[i]);
-}
 		if (turn_points[i]) continue;
 		else {
 			turn_points[i] = true;
@@ -237,39 +221,20 @@ void eslabElitismMerge::operator()(const population_t &population,
 		}
 	}
 
-
-/******************************************************************************/
-
-eslabElitismMerge::eslabElitismMerge(double _rate) : rate(_rate)
-{
-	if (rate < 0 || rate > 1)
-		std::runtime_error("The elitism rate is invalid.");
-}
-
-void eslabElitismMerge::operator()(const population_t &population,
-	population_t &offspring)
-{
-	size_t count = rate * population.size();
-
-	std::vector<const chromosome_t *> elite;
-	population.nth_element(count, elite);
-
-	for (size_t i = 0; i < count; i++)
-		offspring.push_back(*elite[i]);
-}
 	return true;
 }
 
-/******************************************************************************/
-
-eslabUniformRangeMutation::eslabUniformRangeMutation(rank_t _min, rank_t _max,
-	size_t _points) : max(_max), min(_min), points(_points)
+template<class chromosome_t>
+eslabUniformRangeMutation<chromosome_t>::eslabUniformRangeMutation(
+	rank_t _min, rank_t _max, size_t _points) :
+	max(_max), min(_min), points(_points)
 {
 	if (points < 1)
 		std::runtime_error("The number of mutation points is invalid.");
 }
 
-bool eslabUniformRangeMutation::operator()(chromosome_t &chromosome)
+template<class chromosome_t>
+bool eslabUniformRangeMutation<chromosome_t>::operator()(chromosome_t &chromosome)
 {
 	size_t size = chromosome.size();
 
@@ -279,9 +244,8 @@ bool eslabUniformRangeMutation::operator()(chromosome_t &chromosome)
 	return true;
 }
 
-/******************************************************************************/
-
-void eslabGenerationalMonitor::start()
+template<class chromosome_t>
+void eslabGenerationalMonitor<chromosome_t>::start()
 {
 	if (tunning.verbose) {
 		std::cout << "   0: ";
@@ -289,13 +253,15 @@ void eslabGenerationalMonitor::start()
 	}
 }
 
-void eslabGenerationalMonitor::finish()
+template<class chromosome_t>
+void eslabGenerationalMonitor<chromosome_t>::finish()
 {
 	if (tunning.verbose)
 		std::cout << "end" << std::endl;
 }
 
-eoMonitor& eslabGenerationalMonitor::operator()(void)
+template<class chromosome_t>
+eoMonitor& eslabGenerationalMonitor<chromosome_t>::operator()(void)
 {
 	stats.fitness = population.best_element().fitness();
 	stats.generations++;
@@ -315,9 +281,8 @@ eoMonitor& eslabGenerationalMonitor::operator()(void)
 	return *this;
 }
 
-/******************************************************************************/
-
-void GeneticListScheduler::tunning_t::defaults()
+template<class chromosome_t>
+void GeneticListScheduler<chromosome_t>::tunning_t::defaults()
 {
 	/* Randomness */
 	seed = 0;
@@ -346,12 +311,8 @@ void GeneticListScheduler::tunning_t::defaults()
 	cache = true;
 }
 
-GeneticListScheduler::tunning_t::tunning_t()
-{
-	defaults();
-}
-
-GeneticListScheduler::tunning_t::tunning_t(const char *filename)
+template<class chromosome_t>
+GeneticListScheduler<chromosome_t>::tunning_t::tunning_t(const char *filename)
 {
 	defaults();
 
@@ -384,27 +345,6 @@ GeneticListScheduler::tunning_t::tunning_t(const char *filename)
 		if (name == "seed")
 			seed = value;
 
-		/* Create */
-
-/******************************************************************************/
-
-eslabElitismMerge::eslabElitismMerge(double _rate) : rate(_rate)
-{
-	if (rate < 0 || rate > 1)
-		std::runtime_error("The elitism rate is invalid.");
-}
-
-void eslabElitismMerge::operator()(const population_t &population,
-	population_t &offspring)
-{
-	size_t count = rate * population.size();
-
-	std::vector<const chromosome_t *> elite;
-	population.nth_element(count, elite);
-
-	for (size_t i = 0; i < count; i++)
-		offspring.push_back(*elite[i]);
-}
 		else if (name == "uniform_ratio")
 			uniform_ratio = value;
 		else if (name == "population_size")
@@ -444,71 +384,4 @@ void eslabElitismMerge::operator()(const population_t &population,
 		else
 			throw std::runtime_error("An unknown tunning parameter.");
 	}
-}
-
-/******************************************************************************/
-
-std::ostream &operator<< (std::ostream &o,
-	const GeneticListScheduler::tunning_t &tunning)
-{
-	o
-		<< std::setiosflags(std::ios::fixed)
-
-		<< "Tunning:" << std::endl
-
-		<< std::setprecision(0)
-		<< "  Seed:                " << tunning.seed << std::endl
-
-		/* Create */
-		<< std::setprecision(2)
-		<< "  Uniform ratio:       " << tunning.uniform_ratio << std::endl
-		<< std::setprecision(0)
-		<< "  Population size:     " << tunning.population_size << std::endl
-
-		/* Continue */
-		<< "  Minimum generations: " << tunning.min_generations << std::endl
-		<< "  Maximum generations: " << tunning.max_generations << std::endl
-		<< "  Stall generations:   " << tunning.stall_generations << std::endl
-
-		/* Select */
-		<< std::setprecision(2)
-		<< "  Elitism rate:        " << tunning.elitism_rate << std::endl
-		<< std::setprecision(0)
-		<< "  Tournament size:     " << tunning.tournament_size << std::endl
-
-		/* Crossover */
-		<< std::setprecision(2)
-		<< "  Crossover rate:      " << tunning.crossover_rate << std::endl
-		<< std::setprecision(0)
-		<< "  Crossover points:    " << tunning.crossover_points << std::endl
-
-		/* Mutate */
-		<< std::setprecision(2)
-		<< "  Mutation rate:       " << tunning.mutation_rate << std::endl
-		<< std::setprecision(0)
-		<< "  Mutation points:     " << tunning.mutation_points << std::endl;
-}
-
-std::ostream &operator<< (std::ostream &o,
-	const GeneticListScheduler::stats_t &stats)
-{
-	o
-		<< std::setiosflags(std::ios::fixed)
-
-		<< "Stats:" << std::endl
-
-		<< std::setprecision(0)
-		<< "  Generations:         " << stats.generations << std::endl
-		<< "  Evaluations:         " << stats.evaluations << std::endl
-		<< "  Cache hits:          " << stats.cache_hits << std::endl
-		<< "  Deadline misses:     " << stats.deadline_misses << std::endl
-
-		<< std::setiosflags(std::ios::scientific)
-		<< std::setprecision(2)
-		<< "  Best priority:       " << print_t<rank_t>(stats.priority) << std::endl
-		<< std::setiosflags(std::ios::fixed)
-		<< std::setprecision(0)
-		<< "  Best schedule:       " << print_t<tid_t>(stats.schedule) << std::endl
-		<< std::setprecision(2)
-		<< "  Best fitness:        " << stats.fitness << std::endl;
 }

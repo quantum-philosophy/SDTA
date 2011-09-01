@@ -9,7 +9,7 @@ set (COMMON_SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/Graph.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Processor.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Architecture.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/GeneticListScheduler.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/SingleGLS.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Hotspot.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/ListScheduler.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/DynamicPower.cpp
@@ -50,7 +50,7 @@ include_directories (
 	${VENDOR_DIR}
 )
 
-set(CMAKE_CXX_FLAGS "-O3 -DINT_RANK")
+set(CMAKE_CXX_FLAGS "-DREAL_RANK -O3")
 
 add_library(libeo STATIC IMPORTED)
 set_property(
