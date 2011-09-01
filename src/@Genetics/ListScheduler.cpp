@@ -6,13 +6,7 @@
 
 schedule_t ListScheduler::process(const Graph *graph)
 {
-	priority_t priority;
-
-	size_t task_count = graph->task_count;
-	for (tid_t id = 0; id < task_count; id++)
-		priority.push_back(graph->tasks[id]->mobility);
-
-	return process(graph, priority);
+	return process(graph, graph->calc_priority());
 }
 
 schedule_t ListScheduler::process(const Graph *graph, const priority_t &priority)

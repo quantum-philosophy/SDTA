@@ -45,6 +45,8 @@ class Graph
 
 	price_t evaluate(Hotspot *hotspot) const;
 
+	priority_t calc_priority() const;
+
 	protected:
 
 	/* The duration of the graph based on the actual start times */

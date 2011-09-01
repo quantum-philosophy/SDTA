@@ -60,6 +60,13 @@ class Task
 	inline bool is_leaf() const { return children.empty(); }
 	inline bool is_root() const { return parents.empty(); }
 
+	static bool compare_mobility(const Task *one, const Task *another)
+	{
+		return one->mobility < another->mobility;
+	}
+
+	private:
+
 	void propagate_start(double time);
 	void propagate_asap(double time);
 	void propagate_alap(double time);

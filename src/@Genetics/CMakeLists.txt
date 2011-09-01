@@ -50,7 +50,7 @@ include_directories (
 	${VENDOR_DIR}
 )
 
-set(CMAKE_CXX_FLAGS "-O3")
+set(CMAKE_CXX_FLAGS "-O3 -DINT_RANK")
 
 add_library(libeo STATIC IMPORTED)
 set_property(

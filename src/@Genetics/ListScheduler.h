@@ -3,7 +3,7 @@
 
 #include "Common.h"
 
-typedef std::list<unsigned int> pool_t;
+typedef std::list<tid_t> pool_t;
 
 class ListScheduler
 {

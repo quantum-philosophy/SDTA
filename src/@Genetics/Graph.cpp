@@ -1,5 +1,6 @@
 #include <stdexcept>
 #include <iomanip>
+#include <algorithm>
 
 #include "Task.h"
 #include "Graph.h"
@@ -150,6 +151,23 @@ price_t Graph::evaluate(Hotspot *hotspot) const
 	energy *= sampling_interval;
 
 	return price_t(lifetime, energy);
+}
+
+priority_t Graph::calc_priority() const
+{
+	std::vector<const Task *> twins(task_count);
+
+	for (size_t i = 0; i < task_count; i++)
+		twins[i] = tasks[i];
+
+	std::sort(twins.begin(), twins.end(), Task::compare_mobility);
+
+	priority_t priority(task_count);
+
+	for (size_t i = 0; i < task_count; i++)
+		priority[twins[i]->id] = i;
+
+	return priority;
 }
 
 std::ostream &operator<< (std::ostream &o, const Graph *graph)

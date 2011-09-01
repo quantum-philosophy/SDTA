@@ -5,6 +5,13 @@
 #include <vector>
 #include <list>
 
+#ifdef REAL_RANK
+typedef double rank_t;
+#else
+typedef int rank_t;
+#endif
+
+
 class Task;
 class Graph;
 
@@ -21,7 +28,7 @@ class Lifetime;
 typedef int tid_t;
 typedef std::vector<tid_t> schedule_t;
 typedef std::vector<Task *> task_vector_t;
-typedef std::vector<double> priority_t;
+typedef std::vector<rank_t> priority_t;
 
 typedef int pid_t;
 typedef std::vector<pid_t> mapping_t;

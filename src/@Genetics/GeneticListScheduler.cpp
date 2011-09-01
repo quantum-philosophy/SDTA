@@ -49,27 +49,23 @@ schedule_t &GeneticListScheduler::solve(const priority_t &start_priority)
 	population_t population;
 	priority_t priority = start_priority;
 
-	if (priority.empty()) {
-		/* Fill in with mobility by default */
-		priority.resize(task_count);
-		for (i = 0; i < task_count; i++)
-			priority[i] = tasks[i]->mobility;
-	}
+	if (priority.empty())
+		priority = graph->calc_priority();
 
 	if (priority.size() != task_count)
 		throw std::runtime_error("The priority vector has bad dimensions.");
 
 	chromosome_t chromosome(task_count);
-	gene_t min_gene;
-	gene_t max_gene;
+	rank_t min;
+	rank_t max;
 
-	chromosome[0] = min_gene = max_gene = priority[0];
+	chromosome[0] = min = max = priority[0];
 
-	gene_t gene;
+	rank_t rank;
 	for (i = 1; i < task_count; i++) {
-		chromosome[i] = gene = priority[i];
-		if (min_gene > gene) min_gene = gene;
-		if (max_gene < gene) max_gene = gene;
+		chromosome[i] = rank = priority[i];
+		if (min > rank) min = rank;
+		if (max < rank) max = rank;
 	}
 
 	/* Monitor */
@@ -90,7 +86,7 @@ schedule_t &GeneticListScheduler::solve(const priority_t &start_priority)
 	create_count = tunning.population_size - create_count;
 	for (i = 0; i < create_count; i++) {
 		for (j = 0; j < task_count; j++)
-			chromosome[j] = eo::random(min_gene, max_gene);
+			chromosome[j] = eo::random(min, max);
 		chromosome.invalidate();
 		evaluate(chromosome);
 		population.push_back(chromosome);
@@ -104,7 +100,7 @@ schedule_t &GeneticListScheduler::solve(const priority_t &start_priority)
 
 	/* Transform = Crossover + Mutate */
 	eslabNPtsBitCrossover crossover(tunning.crossover_points);
-	eslabUniformRangeMutation mutate(min_gene, max_gene, tunning.mutation_points);
+	eslabUniformRangeMutation mutate(min, max, tunning.mutation_points);
 	eslabTransform transform(crossover, tunning.crossover_rate,
 		mutate, tunning.mutation_rate);
 
@@ -329,7 +325,7 @@ bool eslabNPtsBitCrossover::operator()(chromosome_t &one, chromosome_t &another)
 	for (i = 0; i < size; i++) {
 		if (turn_points[i]) change = !change;
 		if (change) {
-			double tmp = one[i];
+			rank_t tmp = one[i];
 			one[i] = another[i];
 			another[i] = tmp;
 		}
@@ -340,7 +336,7 @@ bool eslabNPtsBitCrossover::operator()(chromosome_t &one, chromosome_t &another)
 
 /******************************************************************************/
 
-eslabUniformRangeMutation::eslabUniformRangeMutation(gene_t _min, gene_t _max,
+eslabUniformRangeMutation::eslabUniformRangeMutation(rank_t _min, rank_t _max,
 	size_t _points) : max(_max), min(_min), points(_points)
 {
 	if (points < 1)
@@ -563,10 +559,10 @@ std::ostream &operator<< (std::ostream &o,
 
 		<< std::setiosflags(std::ios::scientific)
 		<< std::setprecision(2)
-		<< "  Best priority:       " << print_t<double>(stats.priority) << std::endl
+		<< "  Best priority:       " << print_t<rank_t>(stats.priority) << std::endl
 		<< std::setiosflags(std::ios::fixed)
 		<< std::setprecision(0)
-		<< "  Best schedule:       " << print_t<int>(stats.schedule) << std::endl
+		<< "  Best schedule:       " << print_t<tid_t>(stats.schedule) << std::endl
 		<< std::setprecision(2)
 		<< "  Best fitness:        " << stats.fitness << std::endl;
 }

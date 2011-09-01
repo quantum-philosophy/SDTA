@@ -2,7 +2,13 @@
 #define __GENETIC_LIST_SCHEDULER_H__
 
 #include <eo>
+
+#ifdef REAL_RANK
 #include <es.h>
+#else
+#include <eoInt.h>
+#endif
+
 #include <ga/eoBitOp.h>
 #include <map>
 
@@ -10,8 +16,12 @@
 #include "Hotspot.h"
 #include "MD5Digest.h"
 
-typedef double gene_t;
-typedef eoReal<gene_t> chromosome_t;
+#ifdef REAL_RANK
+typedef eoReal<double> chromosome_t;
+#else
+typedef eoInt<double> chromosome_t;
+#endif
+
 typedef	eoPop<chromosome_t> population_t;
 typedef std::map<MD5Digest, double, MD5DigestComparator> cache_t;
 
@@ -180,13 +190,13 @@ class eslabNPtsBitCrossover : public eoQuadOp<chromosome_t>
 
 class eslabUniformRangeMutation: public eoMonOp<chromosome_t>
 {
-	gene_t max;
-	gene_t min;
+	rank_t max;
+	rank_t min;
 	size_t points;
 
 	public:
 
-	eslabUniformRangeMutation(gene_t _min, gene_t _max, size_t _points);
+	eslabUniformRangeMutation(rank_t _min, rank_t _max, size_t _points);
 
 	bool operator()(chromosome_t& chromosome);
 };
