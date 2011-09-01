@@ -17,11 +17,13 @@ GeneticListScheduler::GeneticListScheduler(Graph *_graph, Hotspot *_hotspot,
 	graph(_graph), hotspot(_hotspot), tunning(_tunning)
 {
 	eo::log << eo::setlevel(eo::quiet);
-	rng.reseed(tunning.seed);
+
+	if (tunning.seed >= 0) rng.reseed(tunning.seed);
+
 	sampling_interval = hotspot->sampling_interval();
 }
 
-schedule_t GeneticListScheduler::solve(const priority_t &start_priority)
+schedule_t &GeneticListScheduler::solve(const priority_t &start_priority)
 {
 	size_t i, j;
 	size_t task_count = graph->task_count;
@@ -117,7 +119,12 @@ schedule_t GeneticListScheduler::solve(const priority_t &start_priority)
 
 	monitor.finish();
 
-	return ListScheduler::process(graph, chromosome);
+	chromosome = population.best_element();
+
+	stats.priority = chromosome;
+	stats.schedule = ListScheduler::process(graph, chromosome);
+
+	return stats.schedule;
 }
 
 double GeneticListScheduler::evaluate(const chromosome_t &chromosome)
@@ -368,14 +375,14 @@ void eslabGenerationalMonitor::finish()
 
 eoMonitor& eslabGenerationalMonitor::operator()(void)
 {
-	stats.best_fitness = population.best_element().fitness();
+	stats.fitness = population.best_element().fitness();
 	stats.generations++;
 
 	if (tunning.verbose) {
 		size_t width = tunning.population_size -
 			(stats.evaluations - last_evaluations) + 1;
 
-		std::cout << std::setw(width) << " " << stats.best_fitness;
+		std::cout << std::setw(width) << " " << stats.fitness;
 		std::cout << std::endl << std::setw(4)
 			<< stats.generations << ": ";
 		std::cout.flush();
@@ -554,6 +561,12 @@ std::ostream &operator<< (std::ostream &o,
 		<< "  Cache hits:          " << stats.cache_hits << std::endl
 		<< "  Deadline misses:     " << stats.deadline_misses << std::endl
 
+		<< std::setiosflags(std::ios::scientific)
 		<< std::setprecision(2)
-		<< "  Best fitness:        " << stats.best_fitness << std::endl;
+		<< "  Best priority:       " << print_t<double>(stats.priority) << std::endl
+		<< std::setiosflags(std::ios::fixed)
+		<< std::setprecision(0)
+		<< "  Best schedule:       " << print_t<int>(stats.schedule) << std::endl
+		<< std::setprecision(2)
+		<< "  Best fitness:        " << stats.fitness << std::endl;
 }

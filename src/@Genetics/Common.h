@@ -102,6 +102,27 @@ class matrix_t : public std::vector<double>
 	inline size_t cols() const { return m_cols; }
 };
 
-std::ostream &operator<< (std::ostream &o, const std::vector<int> &v);
+template<class T>
+struct print_t
+{
+	const std::vector<T> &vector;
+
+	print_t(const std::vector<T> &_vector) : vector(_vector) {}
+};
+
+template<class T>
+std::ostream &operator<< (std::ostream &o, const print_t<T> &print)
+{
+	size_t size = print.vector.size();
+
+	o << "[ ";
+	for (size_t i = 0; i < size; i++) {
+		o << print.vector[i];
+		if (i < size - 1) o << ", ";
+	}
+	o << " ]";
+
+	return o;
+}
 
 #endif

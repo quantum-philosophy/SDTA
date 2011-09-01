@@ -175,7 +175,7 @@ std::ostream &operator<< (std::ostream &o, const Graph *graph)
 		o << "  " << graph->tasks[id];
 
 	if (!graph->schedule.empty())
-		o << "  Schedule: " << graph->schedule;
+		o << "  Schedule: " << print_t<int>(graph->schedule);
 
 	return o;
 }

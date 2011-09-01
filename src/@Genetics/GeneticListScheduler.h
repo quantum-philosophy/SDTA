@@ -37,14 +37,17 @@ class GeneticListScheduler
 		size_t evaluations;
 		size_t cache_hits;
 		size_t deadline_misses;
-		double best_fitness;
+
+		priority_t priority;
+		schedule_t schedule;
+		double fitness;
 
 		stats_t() :
 			generations(0),
 			evaluations(0),
 			cache_hits(0),
 			deadline_misses(0),
-			best_fitness(0) {}
+			fitness(0) {}
 	};
 
 	struct tunning_t {
@@ -85,7 +88,7 @@ class GeneticListScheduler
 	GeneticListScheduler(Graph *_graph, Hotspot *_hotspot,
 		const tunning_t &_tunning = tunning_t());
 
-	schedule_t solve(const priority_t &priority = priority_t());
+	schedule_t &solve(const priority_t &priority = priority_t());
 
 	inline stats_t get_stats() const { return stats; }
 
