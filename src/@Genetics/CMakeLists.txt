@@ -1,8 +1,6 @@
-set (PARADISEO_DIR ${VENDOR_DIR}/paradiseo)
-
-set (PARADISEO_EO_DIR ${PARADISEO_DIR}/paradiseo-eo)
-set (PARADISEO_EO_LIBRARY_DIR ${PARADISEO_EO_DIR}/build/lib)
-set (PARADISEO_EO_INCLUDE_DIR ${PARADISEO_EO_DIR}/src)
+set (EO_DIR ${VENDOR_DIR}/eo)
+set (EO_LIBRARY_DIR ${EO_DIR}/release/lib)
+set (EO_INCLUDE_DIR ${EO_DIR}/src)
 
 set (COMMON_SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
@@ -20,15 +18,15 @@ set (COMMON_SRCS
 )
 
 set (EO_LIBS
-	${PARADISEO_EO_LIBRARY_DIR}/libeoutils.a
-	${PARADISEO_EO_LIBRARY_DIR}/libeo.a
+	${EO_LIBRARY_DIR}/libeoutils.a
+	${EO_LIBRARY_DIR}/libeo.a
 	${VENDOR_DIR}/hotspot/libhotspot.a
 )
 
 set (EO_FLAGS
 	-outdir ${CMAKE_CURRENT_SOURCE_DIR}
 	-I${CMAKE_CURRENT_SOURCE_DIR}
-	-I${PARADISEO_EO_INCLUDE_DIR}
+	-I${EO_INCLUDE_DIR}
 	-I${VENDOR_DIR}/numerical_recipes
 	-I${VENDOR_DIR}
 )
@@ -41,9 +39,13 @@ add_custom_target (genetics
 
 # A stand alone executable
 add_executable (optima optima.cpp ${COMMON_SRCS})
+
+add_dependencies (optima hotspot eo)
+
 target_link_libraries (optima libeo libeoutils libhotspot)
+
 include_directories (
-	${PARADISEO_EO_INCLUDE_DIR}
+	${EO_INCLUDE_DIR}
 	${VENDOR_DIR}/numerical_recipes
 	${VENDOR_DIR}
 )
@@ -53,13 +55,13 @@ set(CMAKE_CXX_FLAGS "-O3")
 add_library(libeo STATIC IMPORTED)
 set_property(
 	TARGET libeo PROPERTY
-	IMPORTED_LOCATION ${PARADISEO_EO_LIBRARY_DIR}/libeo.a
+	IMPORTED_LOCATION ${EO_LIBRARY_DIR}/libeo.a
 )
 
 add_library(libeoutils STATIC IMPORTED)
 set_property(
 	TARGET libeoutils PROPERTY
-	IMPORTED_LOCATION ${PARADISEO_EO_LIBRARY_DIR}/libeoutils.a
+	IMPORTED_LOCATION ${EO_LIBRARY_DIR}/libeoutils.a
 )
 
 add_library(libhotspot STATIC IMPORTED)

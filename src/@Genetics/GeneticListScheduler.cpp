@@ -16,6 +16,7 @@ GeneticListScheduler::GeneticListScheduler(Graph *_graph, Hotspot *_hotspot,
 	const tunning_t &_tunning) :
 	graph(_graph), hotspot(_hotspot), tunning(_tunning)
 {
+	eo::log << eo::quiet;
 	rng.reseed(tunning.seed);
 	sampling_interval = hotspot->sampling_interval();
 }
@@ -38,7 +39,6 @@ schedule_t GeneticListScheduler::solve(const priority_t &start_priority)
 	eoSteadyFitContinue<chromosome_t> steady_cont(tunning.min_generations,
 		tunning.stall_generations);
 	eoCombinedContinue<chromosome_t> continuator(gen_cont, steady_cont);
-	gen_cont.verbose = false;
 
 	/* Evaluate */
 	GeneticListSchedulerEvalFuncPtr evaluate(this);

@@ -1,51 +1,39 @@
 # HotSpot
-add_custom_target (hotspot)
-
-foreach (version ${HOTSPOT_VERSIONS})
-  set (dir ${CMAKE_CURRENT_SOURCE_DIR}/hotspot-${version})
-  add_custom_target (hotspot-${version}
-    COMMAND ${CMAKE_BUILD_TOOL} -C ${dir}
-  )
-  add_custom_target (patch-${version}
-    COMMAND perl -pi -e 's/^EXTRAFLAGS.*/EXTRAFLAGS=-fPIC/' ${dir}/Makefile
-  )
-  add_custom_command (
-    TARGET hotspot-${version}
-    POST_BUILD
-    COMMAND ln -fs ${dir}/hotspot ${PROJECT_BINARY_DIR}/hotspot-${version}
-  )
-  add_dependencies (hotspot-${version} patch-${version})
-  add_dependencies (hotspot hotspot-${version})
-endforeach (version)
-
-add_custom_command (
-  TARGET hotspot-${HOTSPOT_DEFAULT_VERSION}
-  POST_BUILD
-  COMMAND ln -sfn ${CMAKE_CURRENT_SOURCE_DIR}/hotspot-${HOTSPOT_DEFAULT_VERSION} ${CMAKE_CURRENT_SOURCE_DIR}/hotspot
+set (HOTSPOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/hotspot-${HOTSPOT_VERSION})
+add_custom_target (hotspot
+  COMMAND ${CMAKE_BUILD_TOOL} -C ${HOTSPOT_DIR}
 )
+add_custom_command (
+  TARGET hotspot
+  POST_BUILD
+  COMMAND ln -fs ${HOTSPOT_DIR}/hotspot ${PROJECT_BINARY_DIR}/hotspot
+  COMMAND ln -sfn ${CMAKE_CURRENT_SOURCE_DIR}/hotspot-${HOTSPOT_VERSION} ${CMAKE_CURRENT_SOURCE_DIR}/hotspot
+)
+add_custom_target (hotspot-patch
+  COMMAND perl -pi -e 's/^EXTRAFLAGS.*/EXTRAFLAGS=-fPIC/' ${HOTSPOT_DIR}/Makefile
+)
+add_dependencies (hotspot hotspot-patch)
 
 # TGFF
-set (TGFF_VERSION 3.5)
-set (tgff_dir ${CMAKE_CURRENT_SOURCE_DIR}/tgff-${TGFF_VERSION})
+set (TGFF_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tgff-${TGFF_VERSION})
 add_custom_target (tgff
-  COMMAND ${CMAKE_BUILD_TOOL} -C ${tgff_dir}
+  COMMAND ${CMAKE_BUILD_TOOL} -C ${TGFF_DIR}
 )
 add_custom_command (
   TARGET tgff
   POST_BUILD
-  COMMAND ln -fs ${tgff_dir}/tgff ${PROJECT_BINARY_DIR}/tgff
-  COMMAND ln -sfn ${tgff_dir} ${CMAKE_CURRENT_SOURCE_DIR}/tgff
+  COMMAND ln -fs ${TGFF_DIR}/tgff ${PROJECT_BINARY_DIR}/tgff
+  COMMAND ln -sfn ${TGFF_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/tgff
 )
 
-# Paradiseo
-set (PARADISEO_VERSION 1.2.1)
-set (paradiseo_dir ${CMAKE_CURRENT_SOURCE_DIR}/paradiseo-${PARADISEO_VERSION})
-add_custom_target (paradiseo
-  COMMAND cd ${paradiseo_dir}/paradiseo-eo/build && cmake ..
+# Evolving Objects
+set (EO_DIR ${CMAKE_CURRENT_SOURCE_DIR}/eo-${EO_VERSION})
+add_custom_target (eo
+  COMMAND cd ${EO_DIR}/release && cmake ..
   -DCMAKE_CXX_FLAGS_RELEASE='-O3 -DNDEBUG -fPIC' && make
 )
 add_custom_command (
-  TARGET paradiseo
+  TARGET eo
   POST_BUILD
-  COMMAND ln -sfn ${paradiseo_dir} ${CMAKE_CURRENT_SOURCE_DIR}/paradiseo
+  COMMAND ln -sfn ${EO_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/eo
 )
