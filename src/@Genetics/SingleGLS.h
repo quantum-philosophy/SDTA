@@ -14,7 +14,7 @@ class SingleGLS: public GeneticListScheduler<eoInt<double> >
 	typedef eoInt<double> chromosome_t;
 #endif
 
-	public:
+	protected:
 
 	class evaluate_t: public eoEvalFunc<chromosome_t>
 	{
@@ -34,13 +34,19 @@ class SingleGLS: public GeneticListScheduler<eoInt<double> >
 		SingleGLS *ls;
 	};
 
+	evaluate_t evaluator;
+
+	public:
+
 	SingleGLS(Graph *_graph, Hotspot *_hotspot,
 		const tunning_t &_tunning = tunning_t()) :
-		GeneticListScheduler<chromosome_t>(_graph, _hotspot, _tunning) {}
+		GeneticListScheduler<chromosome_t>(_graph, _hotspot, _tunning),
+		evaluator(this) {}
 
 	protected:
 
 	fitness_t evaluate_schedule(const schedule_t &schedule);
+	void evaluate_chromosome(chromosome_t &chromosome);
 
 	void process(eoPop<chromosome_t> &population,
 		eoContinue<chromosome_t> &continuator,

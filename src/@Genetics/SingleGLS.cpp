@@ -7,9 +7,6 @@ void SingleGLS::process(eoPop<chromosome_t> &population,
 	eoContinue<chromosome_t> &continuator,
 	eoTransform<chromosome_t> &transform)
 {
-	/* Evaluate */
-	evaluate_t evaluate(this);
-
 	/* Select */
 	eoDetTournamentSelect<chromosome_t> select_one(tunning.tournament_size);
 	eoSelectPerc<chromosome_t> select(select_one);
@@ -19,7 +16,15 @@ void SingleGLS::process(eoPop<chromosome_t> &population,
 	eoLinearTruncate<chromosome_t> reduce;
 	eoMergeReduce<chromosome_t> replace(merge, reduce);
 
-	eslabEvolution<chromosome_t> ga(continuator, evaluate, select, transform, replace);
+	eslabEvolution<chromosome_t> ga(continuator, evaluator, select,
+		transform, replace);
+
+	ga(population);
+}
+
+void SingleGLS::evaluate_chromosome(chromosome_t &chromosome)
+{
+	evaluator(chromosome);
 }
 
 SingleGLS::fitness_t SingleGLS::evaluate_schedule(const schedule_t &schedule)

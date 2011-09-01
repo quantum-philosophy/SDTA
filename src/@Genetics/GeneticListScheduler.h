@@ -98,6 +98,7 @@ class GeneticListScheduler
 	fitness_t evaluate(const chromosome_t &chromosome);
 
 	virtual fitness_t evaluate_schedule(const schedule_t &schedule) = 0;
+	virtual void evaluate_chromosome(chromosome_t &chromosome) = 0;
 	virtual void process(eoPop<chromosome_t> &population,
 		eoContinue<chromosome_t> &continuator,
 		eoTransform<chromosome_t> &transform) = 0;

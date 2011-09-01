@@ -14,6 +14,8 @@ GeneticListScheduler<chromosome_t>::GeneticListScheduler(
 	Graph *_graph, Hotspot *_hotspot, const tunning_t &_tunning) :
 	graph(_graph), hotspot(_hotspot), tunning(_tunning)
 {
+	eo::log << eo::setlevel(eo::quiet);
+
 	if (tunning.seed >= 0) rng.reseed(tunning.seed);
 
 	sampling_interval = hotspot->sampling_interval();
@@ -68,6 +70,10 @@ schedule_t &GeneticListScheduler<chromosome_t>::solve(
 	eslabGenerationalMonitor<chromosome_t> monitor(this, population);
 	checkpoint.add(monitor);
 
+	monitor.start();
+
+	evaluate_chromosome(chromosome);
+
 	/* Fill the first part with uniform chromosomes */
 	size_t create_count = tunning.uniform_ratio * tunning.population_size;
 	for (i = 0; i < create_count; i++)
@@ -78,6 +84,8 @@ schedule_t &GeneticListScheduler<chromosome_t>::solve(
 	for (i = 0; i < create_count; i++) {
 		for (j = 0; j < task_count; j++)
 			chromosome[j] = eo::random(min, max);
+		chromosome.invalidate();
+		evaluate_chromosome(chromosome);
 		population.push_back(chromosome);
 	}
 
@@ -87,7 +95,7 @@ schedule_t &GeneticListScheduler<chromosome_t>::solve(
 	eslabTransform<chromosome_t> transform(crossover, tunning.crossover_rate,
 		mutate, tunning.mutation_rate);
 
-	monitor.start();
+	monitor();
 
 	process(population, checkpoint, transform);
 
