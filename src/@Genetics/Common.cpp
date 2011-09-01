@@ -47,6 +47,7 @@ system_t::system_t(const char *filename)
 	mapping.clear();
 	schedule.clear();
 	priority.clear();
+	deadline = 0;
 
 	while (true) {
 		try {
@@ -173,6 +174,12 @@ system_t::system_t(const char *filename)
 			for (i = 0; i < cols; i++)
 				file >> priority[i];
 		}
+		else if (name == "deadline") {
+			if (rows != 1 && cols != 1)
+				throw std::runtime_error("The deadline should be a scalar.");
+
+			file >> deadline;
+		}
 		else
 			throw std::runtime_error("An unknown variable.");
 	}
@@ -212,4 +219,7 @@ system_t::system_t(const char *filename)
 
 	if (!priority.empty() && priority.size() != task_count)
 		throw std::runtime_error("The size of the priority vector is wrong.");
+
+	if (deadline < 0)
+		throw std::runtime_error("The deadline should not be negative.");
 }

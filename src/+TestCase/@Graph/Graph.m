@@ -25,6 +25,7 @@ classdef Graph < handle
     isScheduled
     schedule
     ordinalSchedule
+    priority
   end
 
   methods
@@ -109,11 +110,13 @@ classdef Graph < handle
       tasks = graph.tasks(ids);
     end
 
-    function assignSchedule(graph, schedule)
+    function assignSchedule(graph, schedule, priority)
       if ~graph.isMapped, error('Should be mapped'); end
+      if nargin < 3, [ dummy, priority ] = sort(schedule); end
 
       % Order of the tasks, one id by another id
       graph.schedule = schedule;
+      graph.priority = priority;
       graph.isScheduled = true;
 
       % Ordinal numbers of the tasks in the schedule

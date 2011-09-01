@@ -7,7 +7,7 @@ rng(0);
 silent = true;
 runTimes = 9;
 
-[ graph, hotspot, dynamicPowerProfile ] = setup('test_cases/test_case_4_60');
+[ graph, hotspot, dynamicPowerProfile ] = setup('test_cases/004_060');
 
 vdd = zeros(0);
 ngate = zeros(0);
@@ -78,6 +78,7 @@ for i = 1:runTimes
 
   % Calculate the best one
   LS.schedule(graph, priority);
+
   dynamicPowerProfile = Power.calculateDynamicProfile(graph);
   [ T, it, totalPowerProfile ] = hotspot.solveCondensedEquationWithLeakage( ...
     dynamicPowerProfile, vdd, ngate, tuning.leakageTolerance, ...

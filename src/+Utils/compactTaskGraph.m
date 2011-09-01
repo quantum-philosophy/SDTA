@@ -1,4 +1,6 @@
 function systemConfig = compactTaskGraph(graph, processors)
+  if nargin < 2, processors = graph.pes; end
+
   tasks = graph.tasks;
 
   taskCount = length(tasks);
@@ -39,4 +41,15 @@ function systemConfig = compactTaskGraph(graph, processors)
 
   systemConfig = struct('type', type, 'link', link, 'frequency', frequency, ...
     'voltage', voltage, 'ngate', ngate, 'nc', nc, 'ceff', ceff);
+
+  if ~isempty(graph.mapping)
+    systemConfig.mapping = uint32(graph.mapping);
+  end
+
+  if ~isempty(graph.schedule)
+    systemConfig.schedule = uint32(graph.schedule);
+    [ dummy, systemConfig.priority ] = sort(graph.priority);
+    systemConfig.priority = uint32(systemConfig.priority);
+    systemConfig.deadline = graph.deadline;
+  end
 end

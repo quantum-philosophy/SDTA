@@ -75,7 +75,7 @@ classdef LS < handle
         end
       end
 
-      graph.assignSchedule(schedule);
+      graph.assignSchedule(schedule, priority);
     end
   end
 end

@@ -41,6 +41,7 @@ struct system_t
 	mapping_t mapping;
 	schedule_t schedule;
 	priority_t priority;
+	double deadline;
 
 	system_t(const char *filename);
 };

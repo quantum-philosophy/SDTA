@@ -30,12 +30,12 @@ function generate(varargin)
       error('Wrong number of task graphs.');
     end
 
+    graph = tgff.graphs{1};
+    processors = tgff.pes;
+
     % Generate a floorplan
-    Utils.generateFloorplan(floorplan, length(tgff.pes));
+    Utils.generateFloorplan(floorplan, length(processors));
 
-    systemConfig = Utils.compactTaskGraph(tgff.graphs{1}, tgff.pes);
-    systemConfig.type = systemConfig.type - 1;
-
-    Utils.dumpObject(systemConfig, [ config, '.config' ]);
+    Utils.saveTestCase(graph, processors, [ config, '.config' ]);
   end
 end

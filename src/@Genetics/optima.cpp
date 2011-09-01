@@ -96,6 +96,8 @@ void optimize(const char *system_config, const char *genetic_config,
 	try {
 		system_t system(system_config);
 
+		GeneticListScheduler::tunning_t tunning(genetic_config);
+
 		graph = new GraphBuilder(system.type, system.link);
 		architecture = new ArchitectureBuilder(system.frequency,
 			system.voltage, system.ngate, system.nc, system.ceff);
@@ -111,19 +113,30 @@ void optimize(const char *system_config, const char *genetic_config,
 			for (size_t i = 0; i < task_count; i++)
 				mapping[i] = i % processor_count;
 		}
+		else if (tunning.verbose)
+			cout << "Using external mapping." << endl;
 
 		graph->assign_mapping(architecture, mapping);
 
 		schedule_t schedule = system.schedule;
 
-		if (schedule.empty())
+		if (schedule.empty()) {
 			schedule = ListScheduler::process(graph);
+		}
+		else if (tunning.verbose)
+			cout << "Using external schedule." << endl;
 
 		graph->assign_schedule(schedule);
 
-		graph->assign_deadline(deadline_ratio * graph->get_duration());
+		double deadline = system.deadline;
 
-		GeneticListScheduler::tunning_t tunning(genetic_config);
+		if (deadline == 0) {
+			deadline = deadline_ratio * graph->get_duration();
+		}
+		else if (tunning.verbose)
+			cout << "Using external deadline." << endl;
+
+		graph->assign_deadline(deadline);
 
 		if (tunning.verbose)
 			cout << tunning << endl << graph << endl << architecture << endl;
@@ -140,11 +153,16 @@ void optimize(const char *system_config, const char *genetic_config,
 
 		scheduler = new GeneticListScheduler(graph, hotspot, tunning);
 
+		if (tunning.verbose && !system.priority.empty())
+			cout << "Using external priority." << endl;
+
 		clock_t begin, end;
 		double elapsed;
 
 		begin = clock();
+
 		schedule = scheduler->solve(system.priority);
+
 		end = clock();
 		elapsed = (double)(end - begin) / CLOCKS_PER_SEC;
 
