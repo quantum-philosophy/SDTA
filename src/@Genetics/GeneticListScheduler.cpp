@@ -16,7 +16,7 @@ GeneticListScheduler::GeneticListScheduler(Graph *_graph, Hotspot *_hotspot,
 	const tunning_t &_tunning) :
 	graph(_graph), hotspot(_hotspot), tunning(_tunning)
 {
-	eo::log << eo::quiet;
+	eo::log << eo::setlevel(eo::quiet);
 	rng.reseed(tunning.seed);
 	sampling_interval = hotspot->sampling_interval();
 }

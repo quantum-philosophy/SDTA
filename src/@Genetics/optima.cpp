@@ -171,6 +171,8 @@ void optimize(const char *system_config, const char *genetic_config,
 		if (tunning.verbose)
 			cout << endl << stats << endl;
 
+		cout << "Best schedule: " << schedule << endl;
+
 		cout << "Improvement: "
 			<< setiosflags(ios::fixed) << setprecision(2)
 			<< (stats.best_fitness / price.lifetime - 1.0) * 100 << " %" << endl;

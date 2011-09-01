@@ -14,11 +14,15 @@ add_subdirectory (src)
 add_subdirectory (vendor)
 
 add_custom_target (cleanup
-  COMMAND rm -f ${PROJECT_BINARY_DIR}/test_cases/*.tgff
-  COMMAND rm -f ${PROJECT_BINARY_DIR}/test_cases/*.vcg
-  COMMAND rm -f ${PROJECT_BINARY_DIR}/test_cases/*.eps
-  COMMAND rm -f ${PROJECT_BINARY_DIR}/test_cases/*.config
-  COMMAND rm -f ${PROJECT_BINARY_DIR}/test_cases/*.flp
-  COMMAND rm -f ${PROJECT_BINARY_DIR}/*/*.ptrace*
-  COMMAND rm -f ${PROJECT_BINARY_DIR}/*/*.ttrace*
+	COMMAND rm -f ${PROJECT_BINARY_DIR}/test_cases/*.tgff
+	COMMAND rm -f ${PROJECT_BINARY_DIR}/test_cases/*.vcg
+	COMMAND rm -f ${PROJECT_BINARY_DIR}/test_cases/*.eps
+	COMMAND rm -f ${PROJECT_BINARY_DIR}/test_cases/*.config
+	COMMAND rm -f ${PROJECT_BINARY_DIR}/test_cases/*.flp
+	COMMAND rm -f ${PROJECT_BINARY_DIR}/*/*.ptrace*
+	COMMAND rm -f ${PROJECT_BINARY_DIR}/*/*.ttrace*
+)
+
+add_custom_target (tags
+	COMMAND cd ${PROJECT_BINARY_DIR} && ctags -R ../*
 )
