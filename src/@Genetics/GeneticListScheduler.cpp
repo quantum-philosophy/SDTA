@@ -16,8 +16,6 @@ GeneticListScheduler::GeneticListScheduler(Graph *_graph, Hotspot *_hotspot,
 	const tunning_t &_tunning) :
 	graph(_graph), hotspot(_hotspot), tunning(_tunning)
 {
-	eo::log << eo::setlevel(eo::quiet);
-
 	if (tunning.seed >= 0) rng.reseed(tunning.seed);
 
 	sampling_interval = hotspot->sampling_interval();
@@ -41,9 +39,6 @@ schedule_t &GeneticListScheduler::solve(const priority_t &start_priority)
 	eoSteadyFitContinue<chromosome_t> steady_cont(tunning.min_generations,
 		tunning.stall_generations);
 	eoCombinedContinue<chromosome_t> continuator(gen_cont, steady_cont);
-
-	/* Evaluate */
-	GeneticListSchedulerEvalFuncPtr evaluate(this);
 
 	/* Create */
 	population_t population;
@@ -73,10 +68,6 @@ schedule_t &GeneticListScheduler::solve(const priority_t &start_priority)
 	eslabGenerationalMonitor monitor(this, population);
 	checkpoint.add(monitor);
 
-	monitor.start();
-
-	evaluate(chromosome);
-
 	/* Fill the first part with uniform chromosomes */
 	size_t create_count = tunning.uniform_ratio * tunning.population_size;
 	for (i = 0; i < create_count; i++)
@@ -87,16 +78,8 @@ schedule_t &GeneticListScheduler::solve(const priority_t &start_priority)
 	for (i = 0; i < create_count; i++) {
 		for (j = 0; j < task_count; j++)
 			chromosome[j] = eo::random(min, max);
-		chromosome.invalidate();
-		evaluate(chromosome);
 		population.push_back(chromosome);
 	}
-
-	monitor();
-
-	/* Select */
-	eoDetTournamentSelect<chromosome_t> select_one(tunning.tournament_size);
-	eoSelectPerc<chromosome_t> select(select_one);
 
 	/* Transform = Crossover + Mutate */
 	eslabNPtsBitCrossover crossover(tunning.crossover_points);
@@ -104,14 +87,9 @@ schedule_t &GeneticListScheduler::solve(const priority_t &start_priority)
 	eslabTransform transform(crossover, tunning.crossover_rate,
 		mutate, tunning.mutation_rate);
 
-	/* Replace = Merge + Reduce */
-	eslabElitismMerge merge(tunning.elitism_rate);
-	eoLinearTruncate<chromosome_t> reduce;
-	eoMergeReduce<chromosome_t> replace(merge, reduce);
+	monitor.start();
 
-	eslabEvolution ga(checkpoint, evaluate, select, transform, replace);
-
-	ga(population);
+	evolve(population, checkpoint, transform);
 
 	monitor.finish();
 
@@ -123,7 +101,7 @@ schedule_t &GeneticListScheduler::solve(const priority_t &start_priority)
 	return stats.schedule;
 }
 
-double GeneticListScheduler::evaluate(const chromosome_t &chromosome)
+double SingleGLS::evaluate(const chromosome_t &chromosome)
 {
 	stats.evaluations++;
 
@@ -153,78 +131,6 @@ double GeneticListScheduler::evaluate(const chromosome_t &chromosome)
 	}
 
 	return fitness;
-}
-
-double GeneticListScheduler::evaluate_schedule(const schedule_t &schedule)
-{
-	double fitness;
-
-	graph->assign_schedule(schedule);
-
-	if (graph->duration > graph->deadline) {
-		stats.deadline_misses++;
-		fitness = std::numeric_limits<double>::min();
-
-		if (tunning.verbose) {
-			std::cout << "!";
-			std::cout.flush();
-		}
-	}
-	else {
-		matrix_t dynamic_power, temperature, total_power;
-
-		/* The graph is rescheduled now, obtain the dynamic power profile */
-		DynamicPower::compute(graph, sampling_interval, dynamic_power);
-
-		/* Now, we can get the temperature profile, and the total power profile
-		 * including the leakage part.
-		 */
-		unsigned int iterations = hotspot->solve(graph->architecture,
-			dynamic_power, temperature, total_power);
-
-		fitness = Lifetime::predict(temperature, sampling_interval);
-
-		if (tunning.verbose) {
-			std::cout << ".";
-			std::cout.flush();
-		}
-	}
-
-	return fitness;
-}
-
-/******************************************************************************/
-
-void eslabEvolution::operator()(population_t &population)
-{
-	size_t population_size = population.size();;
-	population_t offspring;
-
-	/* Initial evaluation */
-	evaluate(population);
-
-	do {
-		/* Select */
-		select(population, offspring);
-
-		/* Transform = Crossover + Mutate */
-		transform(offspring);
-
-		/* Evaluate newcomers */
-		evaluate(offspring);
-
-		/* Evolve */
-		replace(population, offspring);
-
-		if (population.size() != population_size)
-			throw std::runtime_error("The size of the population changes.");
-	}
-	while (continuator(population));
-}
-
-void eslabEvolution::evaluate(population_t &population) const
-{
-	apply<chromosome_t>(evaluate_one, population);
 }
 
 /******************************************************************************/
@@ -272,26 +178,6 @@ void eslabTransform::operator()(population_t &population)
 
 /******************************************************************************/
 
-eslabElitismMerge::eslabElitismMerge(double _rate) : rate(_rate)
-{
-	if (rate < 0 || rate > 1)
-		std::runtime_error("The elitism rate is invalid.");
-}
-
-void eslabElitismMerge::operator()(const population_t &population,
-	population_t &offspring)
-{
-	size_t count = rate * population.size();
-
-	std::vector<const chromosome_t *> elite;
-	population.nth_element(count, elite);
-
-	for (size_t i = 0; i < count; i++)
-		offspring.push_back(*elite[i]);
-}
-
-/******************************************************************************/
-
 eslabNPtsBitCrossover::eslabNPtsBitCrossover(size_t _points) : points(_points)
 {
 	if (points < 1)
@@ -312,6 +198,26 @@ bool eslabNPtsBitCrossover::operator()(chromosome_t &one, chromosome_t &another)
 	do {
 		i = eo::rng.random(size);
 
+
+/******************************************************************************/
+
+eslabElitismMerge::eslabElitismMerge(double _rate) : rate(_rate)
+{
+	if (rate < 0 || rate > 1)
+		std::runtime_error("The elitism rate is invalid.");
+}
+
+void eslabElitismMerge::operator()(const population_t &population,
+	population_t &offspring)
+{
+	size_t count = rate * population.size();
+
+	std::vector<const chromosome_t *> elite;
+	population.nth_element(count, elite);
+
+	for (size_t i = 0; i < count; i++)
+		offspring.push_back(*elite[i]);
+}
 		if (turn_points[i]) continue;
 		else {
 			turn_points[i] = true;
@@ -331,6 +237,26 @@ bool eslabNPtsBitCrossover::operator()(chromosome_t &one, chromosome_t &another)
 		}
 	}
 
+
+/******************************************************************************/
+
+eslabElitismMerge::eslabElitismMerge(double _rate) : rate(_rate)
+{
+	if (rate < 0 || rate > 1)
+		std::runtime_error("The elitism rate is invalid.");
+}
+
+void eslabElitismMerge::operator()(const population_t &population,
+	population_t &offspring)
+{
+	size_t count = rate * population.size();
+
+	std::vector<const chromosome_t *> elite;
+	population.nth_element(count, elite);
+
+	for (size_t i = 0; i < count; i++)
+		offspring.push_back(*elite[i]);
+}
 	return true;
 }
 
@@ -459,6 +385,26 @@ GeneticListScheduler::tunning_t::tunning_t(const char *filename)
 			seed = value;
 
 		/* Create */
+
+/******************************************************************************/
+
+eslabElitismMerge::eslabElitismMerge(double _rate) : rate(_rate)
+{
+	if (rate < 0 || rate > 1)
+		std::runtime_error("The elitism rate is invalid.");
+}
+
+void eslabElitismMerge::operator()(const population_t &population,
+	population_t &offspring)
+{
+	size_t count = rate * population.size();
+
+	std::vector<const chromosome_t *> elite;
+	population.nth_element(count, elite);
+
+	for (size_t i = 0; i < count; i++)
+		offspring.push_back(*elite[i]);
+}
 		else if (name == "uniform_ratio")
 			uniform_ratio = value;
 		else if (name == "population_size")

@@ -2,13 +2,6 @@
 #define __GENETIC_LIST_SCHEDULER_H__
 
 #include <eo>
-
-#ifdef REAL_RANK
-#include <es.h>
-#else
-#include <eoInt.h>
-#endif
-
 #include <ga/eoBitOp.h>
 #include <map>
 
@@ -25,20 +18,19 @@ typedef eoInt<double> chromosome_t;
 typedef	eoPop<chromosome_t> population_t;
 typedef std::map<MD5Digest, double, MD5DigestComparator> cache_t;
 
-struct GeneticListSchedulerEvalFuncPtr;
 class eslabGenerationalMonitor;
 
+template<class CHROMOSOME_T, class FITNESS_T>
 class GeneticListScheduler
 {
-	friend struct GeneticListSchedulerEvalFuncPtr;
 	friend class eslabGenerationalMonitor;
 
 	Graph *graph;
 	Hotspot *hotspot;
 	cache_t cache;
 
-	double evaluate(const chromosome_t &chromosome);
-	inline double evaluate_schedule(const schedule_t &schedule);
+	FITNESS_T evaluate(const CHROMOSOME_T &chromosome);
+	FITNESS_T evaluate_schedule(const schedule_t &schedule) = 0;
 
 	public:
 
@@ -112,31 +104,6 @@ class GeneticListScheduler
 
 /******************************************************************************/
 
-class eslabEvolution: public eoAlgo<chromosome_t>
-{
-	public:
-
-	eslabEvolution(eoContinue<chromosome_t> &_continuator,
-		eoEvalFunc<chromosome_t> &_evaluate_one, eoSelect<chromosome_t> &_select,
-		eoTransform<chromosome_t> &_transform, eoReplacement<chromosome_t> &_replace) :
-		continuator(_continuator), evaluate_one(_evaluate_one), select(_select),
-		transform(_transform), replace(_replace) {}
-
-	void operator()(population_t &population);
-
-	private:
-
-	inline void evaluate(population_t &population) const;
-
-	eoContinue<chromosome_t> &continuator;
-	eoEvalFunc<chromosome_t> &evaluate_one;
-	eoSelect<chromosome_t> &select;
-	eoTransform<chromosome_t> &transform;
-	eoReplacement<chromosome_t> &replace;
-};
-
-/******************************************************************************/
-
 class eslabTransform: public eoTransform<chromosome_t>
 {
 	public:
@@ -154,21 +121,6 @@ class eslabTransform: public eoTransform<chromosome_t>
 
 	eoMonOp<chromosome_t> &mutate;
 	double mutation_rate;
-};
-
-/******************************************************************************/
-
-class eslabElitismMerge: public eoMerge<chromosome_t>
-{
-	public:
-
-	eslabElitismMerge(double _rate);
-
-	void operator()(const population_t &source, population_t &destination);
-
-	private:
-
-	double rate;
 };
 
 /******************************************************************************/
@@ -223,24 +175,6 @@ class eslabGenerationalMonitor: public eoMonitor
 	inline void start();
 	inline void finish();
 	virtual eoMonitor& operator()(void);
-};
-
-/******************************************************************************/
-
-struct GeneticListSchedulerEvalFuncPtr: public eoEvalFunc<chromosome_t>
-{
-	GeneticListSchedulerEvalFuncPtr(GeneticListScheduler *_ls)
-		: eoEvalFunc<chromosome_t>(), ls(_ls) {}
-
-	virtual void operator() (chromosome_t &chromosome)
-	{
-		if (chromosome.invalid())
-			chromosome.fitness(ls->evaluate(chromosome));
-	}
-
-	private:
-
-	GeneticListScheduler *ls;
 };
 
 /******************************************************************************/
