@@ -199,7 +199,7 @@ class GLSStats: public eoMonitor
 
 			std::cout
 				<< std::setw(width) << " "
-				<< worst_fitness << " " << best_fitness
+				<< best_fitness << " " << worst_fitness
 				<< std::endl
 				<< std::setw(4) << generations + 1 << ": ";
 
