@@ -1,4 +1,3 @@
-add_subdirectory (@Genetics)
 add_subdirectory (@HotSpot)
 add_subdirectory (+Rainflow)
 add_subdirectory (+Utils)

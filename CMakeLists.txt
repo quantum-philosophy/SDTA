@@ -10,7 +10,8 @@ set (EO_VERSION 1.2.0)
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
-add_subdirectory (src)
+add_subdirectory (msrc)
+add_subdirectory (csrc)
 add_subdirectory (vendor)
 
 add_custom_target (cleanup

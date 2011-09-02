@@ -20,12 +20,13 @@ build/test_cases/*.config
 build/*Make*
 build/*make*
 build/hotspot*
-build/src
+build/csrc
+build/msrc
 build/tgff
 build/vendor
 build/optima
 
-src/@HotSpot/hotspot
+msrc/@HotSpot/hotspot
 
 vendor/tgff*/tgff
 vendor/tgff
