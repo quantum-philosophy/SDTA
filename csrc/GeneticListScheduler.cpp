@@ -29,8 +29,8 @@ void GLSTunning::defaults()
 	crossover_points = 2;
 
 	/* Mutate */
-	mutation_rate = 0.05;
-	mutation_points = 2;
+	chromosome_mutation_rate = 1.0;
+	gene_mutation_rate = 0.05;
 
 	verbose = false;
 	cache = true;
@@ -47,7 +47,6 @@ GLSTunning::GLSTunning(const char *filename)
 		throw std::runtime_error("Cannot open the tunning file.");
 
 	std::string line, name;
-	double value;
 
 	while (true) {
 		try {
@@ -64,46 +63,48 @@ GLSTunning::GLSTunning(const char *filename)
 		stream.exceptions(std::ios::failbit | std::ios::badbit);
 
 		stream >> name;
-		stream >> value;
 
 		if (name == "seed")
-			seed = value;
+			stream >> seed;
 
 		else if (name == "uniform_ratio")
-			uniform_ratio = value;
+			stream >> uniform_ratio;
 		else if (name == "population_size")
-			population_size = value;
+			stream >> population_size;
 
 		/* Continue */
 		else if (name == "min_generations")
-			min_generations = value;
+			stream >> min_generations;
 		else if (name == "max_generations")
-			max_generations = value;
+			stream >> max_generations;
 		else if (name == "stall_generations")
-			stall_generations = value;
+			stream >> stall_generations;
 
 		/* Select */
 		else if (name == "elitism_rate")
-			elitism_rate = value;
+			stream >> elitism_rate;
 		else if (name == "tournament_size")
-			tournament_size = value;
+			stream >> tournament_size;
 
 		/* Crossover */
 		else if (name == "crossover_rate")
-			crossover_rate = value;
+			stream >> crossover_rate;
 		else if (name == "crossover_points")
-			crossover_points = value;
+			stream >> crossover_points;
 
 		/* Mutate */
-		else if (name == "mutation_rate")
-			mutation_rate = value;
-		else if (name == "mutation_points")
-			mutation_points = value;
+		else if (name == "chromosome_mutation_rate")
+			stream >> chromosome_mutation_rate;
+		else if (name == "gene_mutation_rate")
+			stream >> gene_mutation_rate;
 
 		else if (name == "verbose")
-			verbose = value;
+			stream >> verbose;
 		else if (name == "cache")
-			cache = value;
+			stream >> cache;
+
+		else if (name == "dump_evolution")
+			stream >> dump_evolution;
 
 		else
 			throw std::runtime_error("An unknown tunning parameter.");
@@ -145,9 +146,8 @@ std::ostream &operator<< (std::ostream &o, const GLSTunning &tunning)
 
 		/* Mutate */
 		<< std::setprecision(2)
-		<< "  Mutation rate:       " << tunning.mutation_rate << std::endl
-		<< std::setprecision(0)
-		<< "  Mutation points:     " << tunning.mutation_points << std::endl;
+		<< "  Chromosome mutation: " << tunning.chromosome_mutation_rate << std::endl
+		<< "  Gene mutation rate:  " << tunning.gene_mutation_rate << std::endl;
 }
 
 std::ostream &operator<< (std::ostream &o, const GLSStats &stats)

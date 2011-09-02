@@ -1,5 +1,5 @@
-#ifndef __MULTI_GLS_H__
-#define __MULTI_GLS_H__
+#ifndef __MULTI_OBJECTIVE_GLS_H__
+#define __MULTI_OBJECTIVE_GLS_H__
 
 #include <moeo>
 

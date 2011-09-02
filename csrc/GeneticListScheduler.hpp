@@ -71,10 +71,18 @@ schedule_t &GeneticListScheduler<chromosome_t>::solve(
 
 	/* Monitor */
 	eoCheckPoint<chromosome_t> checkpoint(continuator);
-	eslabGenerationalMonitor<chromosome_t> monitor(this, population);
-	checkpoint.add(monitor);
 
-	monitor.start();
+	eslabStatsMonitor<chromosome_t> stats_monitor(this, population);
+	checkpoint.add(stats_monitor);
+
+	eslabEvolutionMonitor<chromosome_t> evolution_monitor(population);
+
+	if (!tunning.dump_evolution.empty()) {
+		evolution_monitor.assign(tunning.dump_evolution);
+		checkpoint.add(evolution_monitor);
+	}
+
+	stats_monitor.start();
 
 	evaluate_chromosome(chromosome);
 
@@ -95,15 +103,16 @@ schedule_t &GeneticListScheduler<chromosome_t>::solve(
 
 	/* Transform = Crossover + Mutate */
 	eslabNPtsBitCrossover<chromosome_t> crossover(tunning.crossover_points);
-	eslabUniformRangeMutation<chromosome_t> mutate(min, max, tunning.mutation_points);
+	eslabUniformRangeMutation<chromosome_t> mutate(min, max,
+		tunning.gene_mutation_rate);
 	eslabTransform<chromosome_t> transform(crossover, tunning.crossover_rate,
-		mutate, tunning.mutation_rate);
+		mutate, tunning.chromosome_mutation_rate);
 
-	monitor();
+	stats_monitor();
 
 	process(population, checkpoint, transform);
 
-	monitor.finish();
+	stats_monitor.finish();
 
 	chromosome = population.best_element();
 
@@ -250,30 +259,34 @@ bool eslabNPtsBitCrossover<chromosome_t>::operator()(
 
 template<class chromosome_t>
 eslabUniformRangeMutation<chromosome_t>::eslabUniformRangeMutation(
-	rank_t _min, rank_t _max, size_t _points) :
-	max(_max), min(_min), points(_points)
+	rank_t _min, rank_t _max, double _rate) :
+	max(_max), min(_min), rate(_rate)
 {
-	if (points < 1)
-		std::runtime_error("The number of mutation points is invalid.");
+	if (rate < 0 || rate > 1)
+		std::runtime_error("The gene mutation rate is invalid.");
 }
 
 template<class chromosome_t>
 bool eslabUniformRangeMutation<chromosome_t>::operator()(chromosome_t &chromosome)
 {
 	size_t size = chromosome.size();
+	bool changed = false;
 
-	for (size_t i = 0; i < points; i++)
-		chromosome[rng.random(size)] = eo::random(min, max);
+	for (size_t i = 0; i < size; i++)
+		if (rng.flip(rate)) {
+			changed = true;
+			chromosome[i] = eo::random(min, max);
+		}
 
-	return true;
+	return changed;
 }
 
 /******************************************************************************/
-/* eslabMonitor                                                               */
+/* eslabStatsMonitor                                                          */
 /******************************************************************************/
 
 template<class chromosome_t>
-void eslabGenerationalMonitor<chromosome_t>::start()
+void eslabStatsMonitor<chromosome_t>::start()
 {
 	if (tunning.verbose) {
 		std::cout << "   0: ";
@@ -282,14 +295,14 @@ void eslabGenerationalMonitor<chromosome_t>::start()
 }
 
 template<class chromosome_t>
-void eslabGenerationalMonitor<chromosome_t>::finish()
+void eslabStatsMonitor<chromosome_t>::finish()
 {
 	if (tunning.verbose)
 		std::cout << "end" << std::endl;
 }
 
 template<class chromosome_t>
-eoMonitor& eslabGenerationalMonitor<chromosome_t>::operator()(void)
+eoMonitor& eslabStatsMonitor<chromosome_t>::operator()(void)
 {
 	stats.fitness = population.best_element().fitness();
 	stats.generations++;
@@ -307,6 +320,42 @@ eoMonitor& eslabGenerationalMonitor<chromosome_t>::operator()(void)
 
 		last_evaluations = stats.evaluations;
 	}
+
+	return *this;
+}
+
+/******************************************************************************/
+/* eslabEvolutionMonitor                                                      */
+/******************************************************************************/
+
+template<class chromosome_t>
+eslabEvolutionMonitor<chromosome_t>::eslabEvolutionMonitor(
+	eoPop<chromosome_t> &_population) : population(_population) {}
+
+template<class chromosome_t>
+eslabEvolutionMonitor<chromosome_t>::~eslabEvolutionMonitor()
+{
+	if (stream.is_open()) stream.close();
+}
+
+template<class chromosome_t>
+void eslabEvolutionMonitor<chromosome_t>::assign(std::string &filename)
+{
+	stream.open(filename.c_str());
+
+	if (!stream.is_open())
+		throw std::runtime_error("Cannot open the dump file.");
+}
+
+template<class chromosome_t>
+eoMonitor& eslabEvolutionMonitor<chromosome_t>::operator()(void)
+{
+	size_t population_size = population.size();
+
+	for (size_t i = 0; i < population_size; i++)
+		stream << population[i].fitness() << "\t";
+
+	stream << std::endl;
 
 	return *this;
 }

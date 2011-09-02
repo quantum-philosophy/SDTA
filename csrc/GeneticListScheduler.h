@@ -12,13 +12,15 @@
 #include <ga/eoBitOp.h>
 
 #include <map>
+#include <iostream>
+#include <string>
 
 #include "Common.h"
 #include "Hotspot.h"
 #include "MD5Digest.h"
 
 template<class chromosome_t>
-class eslabGenerationalMonitor;
+class eslabStatsMonitor;
 
 class GLSTunning
 {
@@ -44,11 +46,13 @@ class GLSTunning
 	size_t crossover_points;
 
 	/* Mutate */
-	double mutation_rate;
-	size_t mutation_points;
+	double chromosome_mutation_rate;
+	double gene_mutation_rate;
 
 	bool verbose;
 	bool cache;
+
+	std::string dump_evolution;
 
 	GLSTunning() { defaults(); }
 	GLSTunning(const char *filename);
@@ -92,7 +96,7 @@ class GeneticListScheduler
 	typedef typename chromosome_t::Fitness fitness_t;
 	typedef std::map<MD5Digest, fitness_t, MD5DigestComparator> cache_t;
 
-	friend class eslabGenerationalMonitor<chromosome_t>;
+	friend class eslabStatsMonitor<chromosome_t>;
 
 	GeneticListScheduler(Graph *_graph, Hotspot *_hotspot,
 		const GLSTunning &_tunning = GLSTunning());
@@ -161,35 +165,54 @@ class eslabUniformRangeMutation: public eoMonOp<chromosome_t>
 {
 	rank_t max;
 	rank_t min;
-	size_t points;
+	double rate;
 
 	public:
 
-	eslabUniformRangeMutation(rank_t _min, rank_t _max, size_t _points);
+	eslabUniformRangeMutation(rank_t _min, rank_t _max, double _rate);
 
 	bool operator()(chromosome_t& chromosome);
 };
 
 template<class chromosome_t>
-class eslabGenerationalMonitor: public eoMonitor
+class eslabStatsMonitor: public eoMonitor
 {
 	eoPop<chromosome_t> &population;
 	GeneticListScheduler<chromosome_t> *scheduler;
 
 	GLSTunning &tunning;
 	GLSStats &stats;
+
 	size_t last_evaluations;
 
 	public:
 
-	eslabGenerationalMonitor(GeneticListScheduler<chromosome_t> *_scheduler,
+	eslabStatsMonitor(
+		GeneticListScheduler<chromosome_t> *_scheduler,
 		eoPop<chromosome_t> &_population) :
+
 		scheduler(_scheduler), population(_population),
 		tunning(_scheduler->tunning), stats(_scheduler->stats),
 		last_evaluations(0) {}
 
 	inline void start();
 	inline void finish();
+
+	virtual eoMonitor& operator()();
+};
+
+template<class chromosome_t>
+class eslabEvolutionMonitor: public eoMonitor
+{
+	eoPop<chromosome_t> &population;
+	std::ofstream stream;
+
+	public:
+
+	eslabEvolutionMonitor(eoPop<chromosome_t> &_population);
+	~eslabEvolutionMonitor();
+
+	void assign(std::string &filename);
 
 	virtual eoMonitor& operator()();
 };
