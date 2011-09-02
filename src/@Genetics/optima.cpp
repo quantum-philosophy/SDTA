@@ -10,7 +10,7 @@
 #include "Architecture.h"
 #include "Hotspot.h"
 #include "ListScheduler.h"
-#include "SingleGLS.h"
+#include "SingleObjectiveGLS.h"
 #include "DynamicPower.h"
 #include "Lifetime.h"
 
@@ -91,12 +91,12 @@ void optimize(const char *system_config, const char *genetic_config,
 	Graph *graph = NULL;
 	Architecture *architecture = NULL;
 	Hotspot *hotspot = NULL;
-	SingleGLS *scheduler = NULL;
+	SingleObjectiveGLS *scheduler = NULL;
 
 	try {
 		system_t system(system_config);
 
-		SingleGLS::tunning_t tunning(genetic_config);
+		SingleObjectiveGLSTunning tunning(genetic_config);
 
 		graph = new GraphBuilder(system.type, system.link);
 		architecture = new ArchitectureBuilder(system.frequency,
@@ -151,7 +151,7 @@ void optimize(const char *system_config, const char *genetic_config,
 			<< "Initial energy: "
 			<< price.energy << endl;
 
-		scheduler = new SingleGLS(graph, hotspot, tunning);
+		scheduler = new SingleObjectiveGLS(graph, hotspot, tunning);
 
 		if (tunning.verbose && !system.priority.empty())
 			cout << "Using external priority." << endl;
@@ -166,7 +166,7 @@ void optimize(const char *system_config, const char *genetic_config,
 		end = clock();
 		elapsed = (double)(end - begin) / CLOCKS_PER_SEC;
 
-		SingleGLS::stats_t stats = scheduler->get_stats();
+		GLSStats stats = scheduler->get_stats();
 
 		if (tunning.verbose)
 			cout << endl << stats << endl;

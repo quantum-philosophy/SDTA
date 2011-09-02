@@ -1,15 +1,30 @@
-#ifndef __SINGLE_GLS_H__
-#define __SINGLE_GLS_H__
+#ifndef __SOGLS_H__
+#define __SOGLS_H__
 
 #include "Common.h"
 #include "GeneticListScheduler.h"
 
+class SingleObjectiveGLSTunning: public GLSTunning
+{
+	public:
+
+	SingleObjectiveGLSTunning() : GLSTunning() {}
+	SingleObjectiveGLSTunning(const char *filename) : GLSTunning(filename) {}
+};
+
+class SingleObjectiveGLSStats: public GLSStats
+{
+	public:
+
+	SingleObjectiveGLSStats() : GLSStats() {}
+};
+
 #ifdef REAL_RANK
-class SingleGLS: public GeneticListScheduler<eoReal<double> >
+class SingleObjectiveGLS: public GeneticListScheduler<eoReal<double> >
 {
 	typedef eoReal<double> chromosome_t;
 #else
-class SingleGLS: public GeneticListScheduler<eoInt<double> >
+class SingleObjectiveGLS: public GeneticListScheduler<eoInt<double> >
 {
 	typedef eoInt<double> chromosome_t;
 #endif
@@ -20,7 +35,7 @@ class SingleGLS: public GeneticListScheduler<eoInt<double> >
 	{
 		public:
 
-		evaluate_t(SingleGLS *_ls) :
+		evaluate_t(SingleObjectiveGLS *_ls) :
 			eoEvalFunc<chromosome_t>(), ls(_ls) {}
 
 		virtual void operator() (chromosome_t &chromosome)
@@ -31,15 +46,15 @@ class SingleGLS: public GeneticListScheduler<eoInt<double> >
 
 		private:
 
-		SingleGLS *ls;
+		SingleObjectiveGLS *ls;
 	};
 
 	evaluate_t evaluator;
 
 	public:
 
-	SingleGLS(Graph *_graph, Hotspot *_hotspot,
-		const tunning_t &_tunning = tunning_t()) :
+	SingleObjectiveGLS(Graph *_graph, Hotspot *_hotspot,
+		const SingleObjectiveGLSTunning &_tunning = SingleObjectiveGLSTunning()) :
 		GeneticListScheduler<chromosome_t>(_graph, _hotspot, _tunning),
 		evaluator(this) {}
 
@@ -94,7 +109,6 @@ class eslabElitismMerge: public eoMerge<chromosome_t>
 	double rate;
 };
 
-std::ostream &operator<< (std::ostream &o, const SingleGLS::tunning_t &tunning);
-std::ostream &operator<< (std::ostream &o, const SingleGLS::stats_t &stats);
+#include "SingleObjectiveGLS.hpp"
 
 #endif

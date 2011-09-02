@@ -9,9 +9,13 @@
 #include "Task.h"
 #include "ListScheduler.h"
 
+/******************************************************************************/
+/* GeneticListScheduler                                                       */
+/******************************************************************************/
+
 template<class chromosome_t>
 GeneticListScheduler<chromosome_t>::GeneticListScheduler(
-	Graph *_graph, Hotspot *_hotspot, const tunning_t &_tunning) :
+	Graph *_graph, Hotspot *_hotspot, const GLSTunning &_tunning) :
 	graph(_graph), hotspot(_hotspot), tunning(_tunning)
 {
 	eo::log << eo::setlevel(eo::quiet);
@@ -31,7 +35,7 @@ schedule_t &GeneticListScheduler<chromosome_t>::solve(
 	if (task_count == 0) throw std::runtime_error("The graph is empty.");
 
 	/* Reset */
-	stats = stats_t();
+	stats.clear();
 	if (tunning.cache) cache.clear();
 
 	task_vector_t &tasks = graph->tasks;
@@ -143,6 +147,10 @@ typename GeneticListScheduler<chromosome_t>::fitness_t
 	return fitness;
 }
 
+/******************************************************************************/
+/* eslabTransform                                                             */
+/******************************************************************************/
+
 template<class chromosome_t>
 eslabTransform<chromosome_t>::eslabTransform(
 	eoQuadOp<chromosome_t> &_crossover, double _crossover_rate,
@@ -185,6 +193,10 @@ void eslabTransform<chromosome_t>::operator()(eoPop<chromosome_t> &population)
 	for (i = 0; i < population_size; i++)
 		if (changes[i]) population[i].invalidate();
 }
+
+/******************************************************************************/
+/* eslabNPtsBitCrossover                                                      */
+/******************************************************************************/
 
 template<class chromosome_t>
 eslabNPtsBitCrossover<chromosome_t>::eslabNPtsBitCrossover(
@@ -232,6 +244,10 @@ bool eslabNPtsBitCrossover<chromosome_t>::operator()(
 	return true;
 }
 
+/******************************************************************************/
+/* eslabMutation                                                              */
+/******************************************************************************/
+
 template<class chromosome_t>
 eslabUniformRangeMutation<chromosome_t>::eslabUniformRangeMutation(
 	rank_t _min, rank_t _max, size_t _points) :
@@ -251,6 +267,10 @@ bool eslabUniformRangeMutation<chromosome_t>::operator()(chromosome_t &chromosom
 
 	return true;
 }
+
+/******************************************************************************/
+/* eslabMonitor                                                               */
+/******************************************************************************/
 
 template<class chromosome_t>
 void eslabGenerationalMonitor<chromosome_t>::start()
@@ -278,8 +298,11 @@ eoMonitor& eslabGenerationalMonitor<chromosome_t>::operator()(void)
 		size_t width = tunning.population_size -
 			(stats.evaluations - last_evaluations) + 1;
 
-		std::cout << std::setw(width) << " " << stats.fitness;
-		std::cout << std::endl << std::setw(4)
+		std::cout << std::setw(width)
+			<< " " << stats.fitness
+			<< " " << population.worse_element().fitness()
+			<< std::endl << std::setw(4)
+			<< population << std::endl
 			<< stats.generations << ": ";
 		std::cout.flush();
 
@@ -287,109 +310,4 @@ eoMonitor& eslabGenerationalMonitor<chromosome_t>::operator()(void)
 	}
 
 	return *this;
-}
-
-template<class chromosome_t>
-void GeneticListScheduler<chromosome_t>::tunning_t::defaults()
-{
-	/* Randomness */
-	seed = 0;
-
-	/* Create */
-	uniform_ratio = 0.5;
-
-	/* Continuator */
-	population_size = 25;
-	min_generations = 0;
-	max_generations = 100;
-	stall_generations = 20;
-
-	/* Select */
-	elitism_rate = 0.5;
-	tournament_size = 3;
-
-	/* Crossover */
-	crossover_points = 2;
-
-	/* Mutate */
-	mutation_rate = 0.05;
-	mutation_points = 2;
-
-	verbose = false;
-	cache = true;
-}
-
-template<class chromosome_t>
-GeneticListScheduler<chromosome_t>::tunning_t::tunning_t(const char *filename)
-{
-	defaults();
-
-	std::ifstream file(filename);
-	file.exceptions(std::fstream::failbit | std::fstream::badbit);
-
-	if (!file.is_open())
-		throw std::runtime_error("Cannot open the tunning file.");
-
-	std::string line, name;
-	double value;
-
-	while (true) {
-		try {
-			std::getline(file, line);
-		}
-		catch (...) {
-			break;
-		}
-
-		/* Skip empty lines and comments */
-		if (line.empty() || line[0] == '#') continue;
-
-		std::stringstream stream(line);
-		stream.exceptions(std::ios::failbit | std::ios::badbit);
-
-		stream >> name;
-		stream >> value;
-
-		if (name == "seed")
-			seed = value;
-
-		else if (name == "uniform_ratio")
-			uniform_ratio = value;
-		else if (name == "population_size")
-			population_size = value;
-
-		/* Continue */
-		else if (name == "min_generations")
-			min_generations = value;
-		else if (name == "max_generations")
-			max_generations = value;
-		else if (name == "stall_generations")
-			stall_generations = value;
-
-		/* Select */
-		else if (name == "elitism_rate")
-			elitism_rate = value;
-		else if (name == "tournament_size")
-			tournament_size = value;
-
-		/* Crossover */
-		else if (name == "crossover_rate")
-			crossover_rate = value;
-		else if (name == "crossover_points")
-			crossover_points = value;
-
-		/* Mutate */
-		else if (name == "mutation_rate")
-			mutation_rate = value;
-		else if (name == "mutation_points")
-			mutation_points = value;
-
-		else if (name == "verbose")
-			verbose = value;
-		else if (name == "cache")
-			cache = value;
-
-		else
-			throw std::runtime_error("An unknown tunning parameter.");
-	}
 }

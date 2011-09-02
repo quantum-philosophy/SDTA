@@ -20,10 +20,73 @@
 template<class chromosome_t>
 class eslabGenerationalMonitor;
 
+class GLSTunning
+{
+	public:
+
+	int seed;
+
+	/* Create */
+	double uniform_ratio;
+	size_t population_size;
+
+	/* Continue */
+	size_t min_generations;
+	size_t max_generations;
+	size_t stall_generations;
+
+	/* Select */
+	double elitism_rate;
+	size_t tournament_size;
+
+	/* Crossover */
+	double crossover_rate;
+	size_t crossover_points;
+
+	/* Mutate */
+	double mutation_rate;
+	size_t mutation_points;
+
+	bool verbose;
+	bool cache;
+
+	GLSTunning() { defaults(); }
+	GLSTunning(const char *filename);
+
+	protected:
+
+	void defaults();
+};
+
+class GLSStats
+{
+	public:
+
+	size_t generations;
+	size_t evaluations;
+	size_t cache_hits;
+	size_t deadline_misses;
+
+	priority_t priority;
+	schedule_t schedule;
+	double fitness;
+
+	GLSStats() { clear(); }
+
+	virtual void clear()
+	{
+		generations = 0;
+		evaluations = 0;
+		cache_hits = 0;
+		deadline_misses = 0;
+		fitness = 0;
+	}
+};
+
 template<class chromosome_t>
 class GeneticListScheduler
 {
-	protected:
+	public:
 
 	typedef	eoPop<chromosome_t> population_t;
 	typedef typename chromosome_t::Fitness fitness_t;
@@ -31,67 +94,12 @@ class GeneticListScheduler
 
 	friend class eslabGenerationalMonitor<chromosome_t>;
 
-	public:
-
-	struct stats_t {
-		size_t generations;
-		size_t evaluations;
-		size_t cache_hits;
-		size_t deadline_misses;
-
-		priority_t priority;
-		schedule_t schedule;
-		fitness_t fitness;
-
-		stats_t() :
-			generations(0),
-			evaluations(0),
-			cache_hits(0),
-			deadline_misses(0),
-			fitness(0) {}
-	};
-
-	struct tunning_t {
-		int seed;
-
-		/* Create */
-		double uniform_ratio;
-		size_t population_size;
-
-		/* Continue */
-		size_t min_generations;
-		size_t max_generations;
-		size_t stall_generations;
-
-		/* Select */
-		double elitism_rate;
-		size_t tournament_size;
-
-		/* Crossover */
-		double crossover_rate;
-		size_t crossover_points;
-
-		/* Mutate */
-		double mutation_rate;
-		size_t mutation_points;
-
-		bool verbose;
-		bool cache;
-
-		tunning_t() { defaults(); }
-		tunning_t(const char *filename);
-
-		private:
-
-		void defaults();
-	};
-
 	GeneticListScheduler(Graph *_graph, Hotspot *_hotspot,
-		const tunning_t &_tunning = tunning_t());
+		const GLSTunning &_tunning = GLSTunning());
 
 	schedule_t &solve(const priority_t &priority = priority_t());
 
-	inline stats_t get_stats() const { return stats; }
+	GLSStats get_stats() const { return stats; }
 
 	protected:
 
@@ -106,8 +114,8 @@ class GeneticListScheduler
 	Graph *graph;
 	Hotspot *hotspot;
 
-	tunning_t tunning;
-	stats_t stats;
+	GLSTunning tunning;
+	GLSStats stats;
 
 	cache_t cache;
 
@@ -168,8 +176,8 @@ class eslabGenerationalMonitor: public eoMonitor
 	eoPop<chromosome_t> &population;
 	GeneticListScheduler<chromosome_t> *scheduler;
 
-	typename GeneticListScheduler<chromosome_t>::tunning_t &tunning;
-	typename GeneticListScheduler<chromosome_t>::stats_t &stats;
+	GLSTunning &tunning;
+	GLSStats &stats;
 	size_t last_evaluations;
 
 	public:
@@ -185,6 +193,9 @@ class eslabGenerationalMonitor: public eoMonitor
 
 	virtual eoMonitor& operator()();
 };
+
+std::ostream &operator<< (std::ostream &o, const GLSTunning &tunning);
+std::ostream &operator<< (std::ostream &o, const GLSStats &stats);
 
 #include "GeneticListScheduler.hpp"
 
