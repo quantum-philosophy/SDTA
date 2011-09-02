@@ -152,7 +152,7 @@ class GLSStats: public eoMonitor
 	eoPop<chromosome_t> *population;
 
 	bool silent;
-	size_t last_evaluations;
+	size_t last_executions;
 
 	public:
 
@@ -178,7 +178,7 @@ class GLSStats: public eoMonitor
 		best_fitness = 0;
 		worst_fitness = 0;
 
-		last_evaluations = 0;
+		last_executions = 0;
 	}
 
 	eoMonitor& operator()()
@@ -192,9 +192,10 @@ class GLSStats: public eoMonitor
 		if (!silent) {
 			size_t population_size = population->size();
 			size_t width = 0;
+			size_t executions = cache_hits + deadline_misses + evaluations;
 
 			width = population_size -
-				(evaluations - last_evaluations) + 1;
+				(executions - last_executions) + 1;
 
 			std::cout
 				<< std::setw(width) << " "
@@ -202,7 +203,7 @@ class GLSStats: public eoMonitor
 				<< std::endl
 				<< std::setw(4) << generations + 1 << ": ";
 
-			last_evaluations = evaluations;
+			last_executions = executions;
 		}
 
 		generations++;
