@@ -1,5 +1,5 @@
-#ifndef __SOGLS_H__
-#define __SOGLS_H__
+#ifndef __SINGLE_OBJECTIVE_GLS_H__
+#define __SINGLE_OBJECTIVE_GLS_H__
 
 #include "Common.h"
 #include "GeneticListScheduler.h"

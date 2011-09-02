@@ -1,6 +1,7 @@
 #include <stdexcept>
 #include <iomanip>
 #include <algorithm>
+#include <limits>
 
 #include "Task.h"
 #include "Graph.h"
@@ -36,6 +37,20 @@ void Graph::assign_mapping(const Architecture *architecture,
 
 	calc_asap();
 	calc_alap();
+	fix_epsilon();
+}
+
+void Graph::fix_epsilon() const
+{
+	Task *task;
+	double epsilon = std::numeric_limits<double>::epsilon();
+
+	for (size_t i = 0; i < task_count; i++) {
+		task = tasks[i];
+		if (task->asap < epsilon) task->asap = 0;
+		if (task->alap < epsilon) task->alap = 0;
+		if (task->mobility < epsilon) task->mobility = 0;
+	}
 }
 
 void Graph::assign_schedule(const schedule_t &schedule)
@@ -160,7 +175,7 @@ priority_t Graph::calc_priority() const
 	for (size_t i = 0; i < task_count; i++)
 		twins[i] = tasks[i];
 
-	std::sort(twins.begin(), twins.end(), Task::compare_mobility);
+	std::stable_sort(twins.begin(), twins.end(), Task::compare_mobility);
 
 	priority_t priority(task_count);
 

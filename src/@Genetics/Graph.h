@@ -64,6 +64,8 @@ class Graph
 	void calc_asap() const;
 	/* Trigger the propagation of the ALAP time */
 	void calc_alap() const;
+
+	void fix_epsilon() const;
 };
 
 class GraphBuilder : public Graph

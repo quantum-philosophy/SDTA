@@ -52,13 +52,13 @@ void Task::propagate_asap(double time)
 
 void Task::propagate_alap(double time)
 {
-	time = std::max(0.0, time - duration);
+	time = time - duration;
 
 	/* We might already have an assigned ALAP time with a smaller value */
 	if (!(time < alap)) return;
 
 	alap = time;
-	mobility = std::max(0.0, alap - asap);
+	mobility = alap - asap;
 
 	/* Shift data dependent tasks */
 	size_t size = parents.size();

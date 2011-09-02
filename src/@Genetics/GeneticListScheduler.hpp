@@ -302,7 +302,6 @@ eoMonitor& eslabGenerationalMonitor<chromosome_t>::operator()(void)
 			<< " " << stats.fitness
 			<< " " << population.worse_element().fitness()
 			<< std::endl << std::setw(4)
-			<< population << std::endl
 			<< stats.generations << ": ";
 		std::cout.flush();
 
