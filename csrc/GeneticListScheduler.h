@@ -13,14 +13,12 @@
 
 #include <map>
 #include <iostream>
+#include <iomanip>
 #include <string>
 
 #include "Common.h"
 #include "Hotspot.h"
 #include "MD5Digest.h"
-
-template<class chromosome_t>
-class eslabStatsMonitor;
 
 class GLSTunning
 {
@@ -62,30 +60,8 @@ class GLSTunning
 	void defaults();
 };
 
-class GLSStats
-{
-	public:
-
-	size_t generations;
-	size_t evaluations;
-	size_t cache_hits;
-	size_t deadline_misses;
-
-	priority_t priority;
-	schedule_t schedule;
-	double fitness;
-
-	GLSStats() { clear(); }
-
-	virtual void clear()
-	{
-		generations = 0;
-		evaluations = 0;
-		cache_hits = 0;
-		deadline_misses = 0;
-		fitness = 0;
-	}
-};
+template<class chromosome_t>
+class GLSStats;
 
 template<class chromosome_t>
 class GeneticListScheduler
@@ -96,14 +72,10 @@ class GeneticListScheduler
 	typedef typename chromosome_t::Fitness fitness_t;
 	typedef std::map<MD5Digest, fitness_t, MD5DigestComparator> cache_t;
 
-	friend class eslabStatsMonitor<chromosome_t>;
-
 	GeneticListScheduler(Graph *_graph, Hotspot *_hotspot,
 		const GLSTunning &_tunning = GLSTunning());
 
-	schedule_t &solve(const priority_t &priority = priority_t());
-
-	GLSStats get_stats() const { return stats; }
+	schedule_t solve(const priority_t &priority = priority_t());
 
 	protected:
 
@@ -119,7 +91,7 @@ class GeneticListScheduler
 	Hotspot *hotspot;
 
 	GLSTunning tunning;
-	GLSStats stats;
+	GLSStats<chromosome_t> stats;
 
 	cache_t cache;
 
@@ -175,30 +147,86 @@ class eslabUniformRangeMutation: public eoMonOp<chromosome_t>
 };
 
 template<class chromosome_t>
-class eslabStatsMonitor: public eoMonitor
+class GLSStats: public eoMonitor
 {
-	eoPop<chromosome_t> &population;
-	GeneticListScheduler<chromosome_t> *scheduler;
+	eoPop<chromosome_t> *population;
 
-	GLSTunning &tunning;
-	GLSStats &stats;
-
+	bool silent;
 	size_t last_evaluations;
 
 	public:
 
-	eslabStatsMonitor(
-		GeneticListScheduler<chromosome_t> *_scheduler,
-		eoPop<chromosome_t> &_population) :
+	size_t generations;
+	size_t evaluations;
+	size_t cache_hits;
+	size_t deadline_misses;
 
-		scheduler(_scheduler), population(_population),
-		tunning(_scheduler->tunning), stats(_scheduler->stats),
-		last_evaluations(0) {}
+	typename chromosome_t::Fitness best_fitness;
+	typename chromosome_t::Fitness worst_fitness;
 
-	inline void start();
-	inline void finish();
+	GLSStats() : population(NULL) {}
 
-	virtual eoMonitor& operator()();
+	void watch(eoPop<chromosome_t> &_population, bool _silent = false)
+	{
+		population = &_population;
+		silent = _silent;
+
+		generations = 0;
+		evaluations = 0;
+		cache_hits = 0;
+		deadline_misses = 0;
+		best_fitness = 0;
+		worst_fitness = 0;
+
+		last_evaluations = 0;
+	}
+
+	eoMonitor& operator()()
+	{
+		if (!population)
+			throw std::runtime_error("The population is not defined.");
+
+		best_fitness = population->best_element().fitness();
+		worst_fitness = population->worse_element().fitness();
+
+		if (!silent) {
+			size_t population_size = population->size();
+			size_t width = 0;
+
+			width = population_size -
+				(evaluations - last_evaluations) + 1;
+
+			std::cout
+				<< std::setw(width) << " "
+				<< worst_fitness << " " << best_fitness
+				<< std::endl
+				<< std::setw(4) << generations + 1 << ": ";
+
+			last_evaluations = evaluations;
+		}
+
+		generations++;
+
+		return *this;
+	}
+
+	inline void evaluate()
+	{
+		if (!silent) std::cout << "." << std::flush;
+		evaluations++;
+	}
+
+	inline void hit_cache()
+	{
+		if (!silent) std::cout << "#" << std::flush;
+		cache_hits++;
+	}
+
+	inline void miss_deadline()
+	{
+		if (!silent) std::cout << "!" << std::flush;
+		deadline_misses++;
+	}
 };
 
 template<class chromosome_t>
@@ -209,16 +237,13 @@ class eslabEvolutionMonitor: public eoMonitor
 
 	public:
 
-	eslabEvolutionMonitor(eoPop<chromosome_t> &_population);
-	~eslabEvolutionMonitor();
-
-	void assign(std::string &filename);
+	eslabEvolutionMonitor(eoPop<chromosome_t> &_population,
+		const std::string &filename);
 
 	virtual eoMonitor& operator()();
 };
 
 std::ostream &operator<< (std::ostream &o, const GLSTunning &tunning);
-std::ostream &operator<< (std::ostream &o, const GLSStats &stats);
 
 #include "GeneticListScheduler.hpp"
 

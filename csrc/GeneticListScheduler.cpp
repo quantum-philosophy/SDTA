@@ -149,26 +149,3 @@ std::ostream &operator<< (std::ostream &o, const GLSTunning &tunning)
 		<< "  Chromosome mutation: " << tunning.chromosome_mutation_rate << std::endl
 		<< "  Gene mutation rate:  " << tunning.gene_mutation_rate << std::endl;
 }
-
-std::ostream &operator<< (std::ostream &o, const GLSStats &stats)
-{
-	o
-		<< std::setiosflags(std::ios::fixed)
-
-		<< "Stats:" << std::endl
-
-		<< std::setprecision(0)
-		<< "  Generations:         " << stats.generations << std::endl
-		<< "  Evaluations:         " << stats.evaluations << std::endl
-		<< "  Cache hits:          " << stats.cache_hits << std::endl
-		<< "  Deadline misses:     " << stats.deadline_misses << std::endl
-
-		<< std::setiosflags(std::ios::scientific)
-		<< std::setprecision(2)
-		<< "  Best priority:       " << print_t<rank_t>(stats.priority) << std::endl
-		<< std::setiosflags(std::ios::fixed)
-		<< std::setprecision(0)
-		<< "  Best schedule:       " << print_t<tid_t>(stats.schedule) << std::endl
-		<< std::setprecision(2)
-		<< "  Best fitness:        " << stats.fitness << std::endl;
-}

@@ -34,15 +34,13 @@ SingleObjectiveGLS::fitness_t SingleObjectiveGLS::evaluate_schedule(const schedu
 	graph->assign_schedule(schedule);
 
 	if (graph->duration > graph->deadline) {
-		stats.deadline_misses++;
-		fitness = std::numeric_limits<fitness_t>::min();
+		stats.miss_deadline();
 
-		if (tunning.verbose) {
-			std::cout << "!";
-			std::cout.flush();
-		}
+		fitness = std::numeric_limits<fitness_t>::min();
 	}
 	else {
+		stats.evaluate();
+
 		matrix_t dynamic_power, temperature, total_power;
 
 		/* The graph is rescheduled now, obtain the dynamic power profile */
@@ -55,11 +53,6 @@ SingleObjectiveGLS::fitness_t SingleObjectiveGLS::evaluate_schedule(const schedu
 			dynamic_power, temperature, total_power);
 
 		fitness = Lifetime::predict(temperature, sampling_interval);
-
-		if (tunning.verbose) {
-			std::cout << ".";
-			std::cout.flush();
-		}
 	}
 
 	return fitness;

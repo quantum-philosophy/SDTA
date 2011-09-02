@@ -26,7 +26,7 @@ GeneticListScheduler<chromosome_t>::GeneticListScheduler(
 }
 
 template<class chromosome_t>
-schedule_t &GeneticListScheduler<chromosome_t>::solve(
+schedule_t GeneticListScheduler<chromosome_t>::solve(
 	const priority_t &start_priority)
 {
 	size_t i, j;
@@ -35,7 +35,6 @@ schedule_t &GeneticListScheduler<chromosome_t>::solve(
 	if (task_count == 0) throw std::runtime_error("The graph is empty.");
 
 	/* Reset */
-	stats.clear();
 	if (tunning.cache) cache.clear();
 
 	task_vector_t &tasks = graph->tasks;
@@ -69,20 +68,17 @@ schedule_t &GeneticListScheduler<chromosome_t>::solve(
 		if (max < rank) max = rank;
 	}
 
+	if (tunning.verbose)
+		std::cout << "   0: ";
+
 	/* Monitor */
 	eoCheckPoint<chromosome_t> checkpoint(continuator);
+	stats.watch(population, !tunning.verbose);
+	eslabEvolutionMonitor<chromosome_t> evolution_monitor(
+		population, tunning.dump_evolution);
 
-	eslabStatsMonitor<chromosome_t> stats_monitor(this, population);
-	checkpoint.add(stats_monitor);
-
-	eslabEvolutionMonitor<chromosome_t> evolution_monitor(population);
-
-	if (!tunning.dump_evolution.empty()) {
-		evolution_monitor.assign(tunning.dump_evolution);
-		checkpoint.add(evolution_monitor);
-	}
-
-	stats_monitor.start();
+	checkpoint.add(stats);
+	checkpoint.add(evolution_monitor);
 
 	evaluate_chromosome(chromosome);
 
@@ -101,6 +97,8 @@ schedule_t &GeneticListScheduler<chromosome_t>::solve(
 		population.push_back(chromosome);
 	}
 
+	stats();
+
 	/* Transform = Crossover + Mutate */
 	eslabNPtsBitCrossover<chromosome_t> crossover(tunning.crossover_points);
 	eslabUniformRangeMutation<chromosome_t> mutate(min, max,
@@ -108,26 +106,20 @@ schedule_t &GeneticListScheduler<chromosome_t>::solve(
 	eslabTransform<chromosome_t> transform(crossover, tunning.crossover_rate,
 		mutate, tunning.chromosome_mutation_rate);
 
-	stats_monitor();
-
 	process(population, checkpoint, transform);
 
-	stats_monitor.finish();
+	if (tunning.verbose)
+		std::cout << "end" << std::endl;
 
 	chromosome = population.best_element();
 
-	stats.priority = chromosome;
-	stats.schedule = ListScheduler::process(graph, chromosome);
-
-	return stats.schedule;
+	return ListScheduler::process(graph, chromosome);
 }
 
 template<class chromosome_t>
 typename GeneticListScheduler<chromosome_t>::fitness_t
 	GeneticListScheduler<chromosome_t>::evaluate(const chromosome_t &chromosome)
 {
-	stats.evaluations++;
-
 	/* Make a new schedule */
 	schedule_t schedule = ListScheduler::process(graph, chromosome);
 
@@ -140,13 +132,8 @@ typename GeneticListScheduler<chromosome_t>::fitness_t
 	double fitness;
 
 	if (it != cache.end()) {
-		stats.cache_hits++;
+		stats.hit_cache();
 		fitness = it->second;
-
-		if (tunning.verbose) {
-			std::cout << "#";
-			std::cout.flush();
-		}
 	}
 	else {
 		fitness = evaluate_schedule(schedule);
@@ -282,69 +269,17 @@ bool eslabUniformRangeMutation<chromosome_t>::operator()(chromosome_t &chromosom
 }
 
 /******************************************************************************/
-/* eslabStatsMonitor                                                          */
-/******************************************************************************/
-
-template<class chromosome_t>
-void eslabStatsMonitor<chromosome_t>::start()
-{
-	if (tunning.verbose) {
-		std::cout << "   0: ";
-		std::cout.flush();
-	}
-}
-
-template<class chromosome_t>
-void eslabStatsMonitor<chromosome_t>::finish()
-{
-	if (tunning.verbose)
-		std::cout << "end" << std::endl;
-}
-
-template<class chromosome_t>
-eoMonitor& eslabStatsMonitor<chromosome_t>::operator()(void)
-{
-	stats.fitness = population.best_element().fitness();
-	stats.generations++;
-
-	if (tunning.verbose) {
-		size_t width = tunning.population_size -
-			(stats.evaluations - last_evaluations) + 1;
-
-		std::cout << std::setw(width)
-			<< " " << stats.fitness
-			<< " " << population.worse_element().fitness()
-			<< std::endl << std::setw(4)
-			<< stats.generations << ": ";
-		std::cout.flush();
-
-		last_evaluations = stats.evaluations;
-	}
-
-	return *this;
-}
-
-/******************************************************************************/
 /* eslabEvolutionMonitor                                                      */
 /******************************************************************************/
 
 template<class chromosome_t>
 eslabEvolutionMonitor<chromosome_t>::eslabEvolutionMonitor(
-	eoPop<chromosome_t> &_population) : population(_population) {}
-
-template<class chromosome_t>
-eslabEvolutionMonitor<chromosome_t>::~eslabEvolutionMonitor()
-{
-	if (stream.is_open()) stream.close();
-}
-
-template<class chromosome_t>
-void eslabEvolutionMonitor<chromosome_t>::assign(std::string &filename)
+	eoPop<chromosome_t> &_population, const std::string &filename) :
+	population(_population)
 {
 	stream.open(filename.c_str());
-
 	if (!stream.is_open())
-		throw std::runtime_error("Cannot open the dump file.");
+		throw std::runtime_error("Cannot open the output file.");
 }
 
 template<class chromosome_t>
@@ -358,4 +293,28 @@ eoMonitor& eslabEvolutionMonitor<chromosome_t>::operator()(void)
 	stream << std::endl;
 
 	return *this;
+}
+
+/******************************************************************************/
+/* GLSStats                                                                   */
+/******************************************************************************/
+
+template<class chromosome_t>
+std::ostream &operator<< (std::ostream &o, const GLSStats<chromosome_t> &stats)
+{
+	o
+		<< std::setiosflags(std::ios::fixed)
+
+		<< "Stats:" << std::endl
+
+		<< std::setprecision(0)
+		<< "  Generations:         " << stats.generations << std::endl
+		<< "  Evaluations:         " << stats.evaluations << std::endl
+		<< "  Cache hits:          " << stats.cache_hits << std::endl
+		<< "  Deadline misses:     " << stats.deadline_misses << std::endl
+
+		<< std::setiosflags(std::ios::scientific)
+		<< std::setprecision(2)
+		<< "  Best fitness:        " << stats.best_fitness << std::endl
+		<< "  Worst fitness:       " << stats.worst_fitness << std::endl;
 }

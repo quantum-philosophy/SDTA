@@ -12,13 +12,6 @@ class SingleObjectiveGLSTunning: public GLSTunning
 	SingleObjectiveGLSTunning(const char *filename) : GLSTunning(filename) {}
 };
 
-class SingleObjectiveGLSStats: public GLSStats
-{
-	public:
-
-	SingleObjectiveGLSStats() : GLSStats() {}
-};
-
 #ifdef REAL_RANK
 class SingleObjectiveGLS: public GeneticListScheduler<eoReal<double> >
 {
