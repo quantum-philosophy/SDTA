@@ -15,12 +15,12 @@
 
 template<class chromosome_t>
 GeneticListScheduler<chromosome_t>::GeneticListScheduler(
-	Graph *_graph, Hotspot *_hotspot, const GLSTunning &_tunning) :
-	graph(_graph), hotspot(_hotspot), tunning(_tunning)
+	Graph *_graph, Hotspot *_hotspot, const GLSTuning &_tuning) :
+	graph(_graph), hotspot(_hotspot), tuning(_tuning)
 {
 	eo::log << eo::setlevel(eo::quiet);
 
-	if (tunning.seed >= 0) rng.reseed(tunning.seed);
+	if (tuning.seed >= 0) rng.reseed(tuning.seed);
 
 	sampling_interval = hotspot->sampling_interval();
 }
@@ -35,14 +35,14 @@ schedule_t GeneticListScheduler<chromosome_t>::solve(
 	if (task_count == 0) throw std::runtime_error("The graph is empty.");
 
 	/* Reset */
-	if (tunning.cache) cache.clear();
+	if (tuning.cache) cache.clear();
 
 	task_vector_t &tasks = graph->tasks;
 
 	/* Continue */
-	eoGenContinue<chromosome_t> gen_cont(tunning.max_generations);
-	eoSteadyFitContinue<chromosome_t> steady_cont(tunning.min_generations,
-		tunning.stall_generations);
+	eoGenContinue<chromosome_t> gen_cont(tuning.max_generations);
+	eoSteadyFitContinue<chromosome_t> steady_cont(tuning.min_generations,
+		tuning.stall_generations);
 	eoCombinedContinue<chromosome_t> continuator(gen_cont, steady_cont);
 
 	/* Create */
@@ -68,14 +68,14 @@ schedule_t GeneticListScheduler<chromosome_t>::solve(
 		if (max < rank) max = rank;
 	}
 
-	if (tunning.verbose)
+	if (tuning.verbose)
 		std::cout << "   0: ";
 
 	/* Monitor */
 	eoCheckPoint<chromosome_t> checkpoint(continuator);
-	stats.watch(population, !tunning.verbose);
+	stats.watch(population, !tuning.verbose);
 	eslabEvolutionMonitor<chromosome_t> evolution_monitor(
-		population, tunning.dump_evolution);
+		population, tuning.dump_evolution);
 
 	checkpoint.add(stats);
 	checkpoint.add(evolution_monitor);
@@ -83,12 +83,12 @@ schedule_t GeneticListScheduler<chromosome_t>::solve(
 	evaluate_chromosome(chromosome);
 
 	/* Fill the first part with uniform chromosomes */
-	size_t create_count = tunning.uniform_ratio * tunning.population_size;
+	size_t create_count = tuning.uniform_ratio * tuning.population_size;
 	for (i = 0; i < create_count; i++)
 		population.push_back(chromosome);
 
 	/* Fill the second part with randomly generated chromosomes */
-	create_count = tunning.population_size - create_count;
+	create_count = tuning.population_size - create_count;
 	for (i = 0; i < create_count; i++) {
 		for (j = 0; j < task_count; j++)
 			chromosome[j] = eo::random(min, max);
@@ -100,15 +100,15 @@ schedule_t GeneticListScheduler<chromosome_t>::solve(
 	stats();
 
 	/* Transform = Crossover + Mutate */
-	eslabNPtsBitCrossover<chromosome_t> crossover(tunning.crossover_points);
+	eslabNPtsBitCrossover<chromosome_t> crossover(tuning.crossover_points);
 	eslabUniformRangeMutation<chromosome_t> mutate(min, max,
-		tunning.gene_mutation_rate);
-	eslabTransform<chromosome_t> transform(crossover, tunning.crossover_rate,
-		mutate, tunning.chromosome_mutation_rate);
+		tuning.gene_mutation_rate);
+	eslabTransform<chromosome_t> transform(crossover, tuning.crossover_rate,
+		mutate, tuning.chromosome_mutation_rate);
 
 	process(population, checkpoint, transform);
 
-	if (tunning.verbose)
+	if (tuning.verbose)
 		std::cout << "end" << std::endl;
 
 	chromosome = population.best_element();
@@ -123,7 +123,7 @@ typename GeneticListScheduler<chromosome_t>::fitness_t
 	/* Make a new schedule */
 	schedule_t schedule = ListScheduler::process(graph, chromosome);
 
-	if (!tunning.cache)
+	if (!tuning.cache)
 		return evaluate_schedule(schedule);
 
 	MD5Digest key(schedule);

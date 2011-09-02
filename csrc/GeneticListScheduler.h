@@ -20,7 +20,7 @@
 #include "Hotspot.h"
 #include "MD5Digest.h"
 
-class GLSTunning
+class GLSTuning
 {
 	public:
 
@@ -52,8 +52,8 @@ class GLSTunning
 
 	std::string dump_evolution;
 
-	GLSTunning() { defaults(); }
-	GLSTunning(const char *filename);
+	GLSTuning() { defaults(); }
+	GLSTuning(const char *filename);
 
 	protected:
 
@@ -73,7 +73,7 @@ class GeneticListScheduler
 	typedef std::map<MD5Digest, fitness_t, MD5DigestComparator> cache_t;
 
 	GeneticListScheduler(Graph *_graph, Hotspot *_hotspot,
-		const GLSTunning &_tunning = GLSTunning());
+		const GLSTuning &_tuning = GLSTuning());
 
 	schedule_t solve(const priority_t &priority = priority_t());
 
@@ -90,7 +90,7 @@ class GeneticListScheduler
 	Graph *graph;
 	Hotspot *hotspot;
 
-	GLSTunning tunning;
+	GLSTuning tuning;
 	GLSStats<chromosome_t> stats;
 
 	cache_t cache;
@@ -244,7 +244,7 @@ class eslabEvolutionMonitor: public eoMonitor
 	virtual eoMonitor& operator()();
 };
 
-std::ostream &operator<< (std::ostream &o, const GLSTunning &tunning);
+std::ostream &operator<< (std::ostream &o, const GLSTuning &tuning);
 
 #include "GeneticListScheduler.hpp"
 

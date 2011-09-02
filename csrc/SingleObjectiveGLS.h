@@ -4,12 +4,12 @@
 #include "Common.h"
 #include "GeneticListScheduler.h"
 
-class SingleObjectiveGLSTunning: public GLSTunning
+class SingleObjectiveGLSTuning: public GLSTuning
 {
 	public:
 
-	SingleObjectiveGLSTunning() : GLSTunning() {}
-	SingleObjectiveGLSTunning(const char *filename) : GLSTunning(filename) {}
+	SingleObjectiveGLSTuning() : GLSTuning() {}
+	SingleObjectiveGLSTuning(const char *filename) : GLSTuning(filename) {}
 };
 
 #ifdef REAL_RANK
@@ -47,8 +47,8 @@ class SingleObjectiveGLS: public GeneticListScheduler<eoInt<double> >
 	public:
 
 	SingleObjectiveGLS(Graph *_graph, Hotspot *_hotspot,
-		const SingleObjectiveGLSTunning &_tunning = SingleObjectiveGLSTunning()) :
-		GeneticListScheduler<chromosome_t>(_graph, _hotspot, _tunning),
+		const SingleObjectiveGLSTuning &_tuning = SingleObjectiveGLSTuning()) :
+		GeneticListScheduler<chromosome_t>(_graph, _hotspot, _tuning),
 		evaluator(this) {}
 
 	protected:

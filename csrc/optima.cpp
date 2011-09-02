@@ -96,7 +96,7 @@ void optimize(const char *system_config, const char *genetic_config,
 	try {
 		system_t system(system_config);
 
-		SingleObjectiveGLSTunning tunning(genetic_config);
+		SingleObjectiveGLSTuning tuning(genetic_config);
 
 		graph = new GraphBuilder(system.type, system.link);
 		architecture = new ArchitectureBuilder(system.frequency,
@@ -113,7 +113,7 @@ void optimize(const char *system_config, const char *genetic_config,
 			for (size_t i = 0; i < task_count; i++)
 				mapping[i] = i % processor_count;
 		}
-		else if (tunning.verbose)
+		else if (tuning.verbose)
 			cout << "Using external mapping." << endl;
 
 		graph->assign_mapping(architecture, mapping);
@@ -123,7 +123,7 @@ void optimize(const char *system_config, const char *genetic_config,
 		if (schedule.empty()) {
 			schedule = ListScheduler::process(graph);
 		}
-		else if (tunning.verbose)
+		else if (tuning.verbose)
 			cout << "Using external schedule." << endl;
 
 		graph->assign_schedule(schedule);
@@ -133,13 +133,13 @@ void optimize(const char *system_config, const char *genetic_config,
 		if (deadline == 0) {
 			deadline = deadline_ratio * graph->get_duration();
 		}
-		else if (tunning.verbose)
+		else if (tuning.verbose)
 			cout << "Using external deadline." << endl;
 
 		graph->assign_deadline(deadline);
 
-		if (tunning.verbose)
-			cout << tunning << endl << graph << endl << architecture << endl;
+		if (tuning.verbose)
+			cout << tuning << endl << graph << endl << architecture << endl;
 
 		hotspot = new Hotspot(floorplan_config, thermal_config);
 
@@ -151,9 +151,9 @@ void optimize(const char *system_config, const char *genetic_config,
 			<< "Initial energy: "
 			<< price.energy << endl;
 
-		scheduler = new SingleObjectiveGLS(graph, hotspot, tunning);
+		scheduler = new SingleObjectiveGLS(graph, hotspot, tuning);
 
-		if (tunning.verbose && !system.priority.empty())
+		if (tuning.verbose && !system.priority.empty())
 			cout << "Using external priority." << endl;
 
 		clock_t begin, end;
@@ -169,7 +169,7 @@ void optimize(const char *system_config, const char *genetic_config,
 		/*
 		GLSStats stats = scheduler->get_stats();
 
-		if (tunning.verbose)
+		if (tuning.verbose)
 			cout << endl << stats << endl;
 
 		cout << "Improvement: "
@@ -177,7 +177,7 @@ void optimize(const char *system_config, const char *genetic_config,
 			<< (stats.fitness / price.lifetime - 1.0) * 100 << " %" << endl;
 		*/
 
-		if (tunning.verbose)
+		if (tuning.verbose)
 			cout << "Time elapsed: " << elapsed << endl;
 	}
 	catch (exception &e) {

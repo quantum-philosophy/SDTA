@@ -7,7 +7,7 @@
 #include "Task.h"
 #include "GeneticListScheduler.h"
 
-void GLSTunning::defaults()
+void GLSTuning::defaults()
 {
 	/* Randomness */
 	seed = 0;
@@ -36,7 +36,7 @@ void GLSTunning::defaults()
 	cache = true;
 }
 
-GLSTunning::GLSTunning(const char *filename)
+GLSTuning::GLSTuning(const char *filename)
 {
 	defaults();
 
@@ -44,7 +44,7 @@ GLSTunning::GLSTunning(const char *filename)
 	file.exceptions(std::fstream::failbit | std::fstream::badbit);
 
 	if (!file.is_open())
-		throw std::runtime_error("Cannot open the tunning file.");
+		throw std::runtime_error("Cannot open the tuning file.");
 
 	std::string line, name;
 
@@ -107,45 +107,45 @@ GLSTunning::GLSTunning(const char *filename)
 			stream >> dump_evolution;
 
 		else
-			throw std::runtime_error("An unknown tunning parameter.");
+			throw std::runtime_error("An unknown tuning parameter.");
 	}
 }
 
-std::ostream &operator<< (std::ostream &o, const GLSTunning &tunning)
+std::ostream &operator<< (std::ostream &o, const GLSTuning &tuning)
 {
 	o
 		<< std::setiosflags(std::ios::fixed)
 
-		<< "Tunning:" << std::endl
+		<< "Tuning:" << std::endl
 
 		<< std::setprecision(0)
-		<< "  Seed:                " << tunning.seed << std::endl
+		<< "  Seed:                " << tuning.seed << std::endl
 
 		/* Create */
 		<< std::setprecision(2)
-		<< "  Uniform ratio:       " << tunning.uniform_ratio << std::endl
+		<< "  Uniform ratio:       " << tuning.uniform_ratio << std::endl
 		<< std::setprecision(0)
-		<< "  Population size:     " << tunning.population_size << std::endl
+		<< "  Population size:     " << tuning.population_size << std::endl
 
 		/* Continue */
-		<< "  Minimum generations: " << tunning.min_generations << std::endl
-		<< "  Maximum generations: " << tunning.max_generations << std::endl
-		<< "  Stall generations:   " << tunning.stall_generations << std::endl
+		<< "  Minimum generations: " << tuning.min_generations << std::endl
+		<< "  Maximum generations: " << tuning.max_generations << std::endl
+		<< "  Stall generations:   " << tuning.stall_generations << std::endl
 
 		/* Select */
 		<< std::setprecision(2)
-		<< "  Elitism rate:        " << tunning.elitism_rate << std::endl
+		<< "  Elitism rate:        " << tuning.elitism_rate << std::endl
 		<< std::setprecision(0)
-		<< "  Tournament size:     " << tunning.tournament_size << std::endl
+		<< "  Tournament size:     " << tuning.tournament_size << std::endl
 
 		/* Crossover */
 		<< std::setprecision(2)
-		<< "  Crossover rate:      " << tunning.crossover_rate << std::endl
+		<< "  Crossover rate:      " << tuning.crossover_rate << std::endl
 		<< std::setprecision(0)
-		<< "  Crossover points:    " << tunning.crossover_points << std::endl
+		<< "  Crossover points:    " << tuning.crossover_points << std::endl
 
 		/* Mutate */
 		<< std::setprecision(2)
-		<< "  Chromosome mutation: " << tunning.chromosome_mutation_rate << std::endl
-		<< "  Gene mutation rate:  " << tunning.gene_mutation_rate << std::endl;
+		<< "  Chromosome mutation: " << tuning.chromosome_mutation_rate << std::endl
+		<< "  Gene mutation rate:  " << tuning.gene_mutation_rate << std::endl;
 }

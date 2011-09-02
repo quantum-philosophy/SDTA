@@ -8,11 +8,11 @@ void SingleObjectiveGLS::process(eoPop<chromosome_t> &population,
 	eoTransform<chromosome_t> &transform)
 {
 	/* Select */
-	eoDetTournamentSelect<chromosome_t> select_one(tunning.tournament_size);
+	eoDetTournamentSelect<chromosome_t> select_one(tuning.tournament_size);
 	eoSelectPerc<chromosome_t> select(select_one);
 
 	/* Replace = Merge + Reduce */
-	eslabElitismMerge<chromosome_t> merge(tunning.elitism_rate);
+	eslabElitismMerge<chromosome_t> merge(tuning.elitism_rate);
 	eoLinearTruncate<chromosome_t> reduce;
 	eoMergeReduce<chromosome_t> replace(merge, reduce);
 
