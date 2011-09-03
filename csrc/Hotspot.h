@@ -8,7 +8,7 @@ extern "C" {
 #include <hotspot/temperature_block.h>
 }
 
-#include "Common.h"
+#include "common.h"
 
 class Hotspot
 {

@@ -1,7 +1,7 @@
 #ifndef __SINGLE_OBJECTIVE_GLS_H__
 #define __SINGLE_OBJECTIVE_GLS_H__
 
-#include "Common.h"
+#include "common.h"
 #include "GeneticListScheduler.h"
 
 class SingleObjectiveGLSTuning: public GLSTuning

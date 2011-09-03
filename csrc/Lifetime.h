@@ -3,7 +3,7 @@
 
 #include <utility>
 
-#include "Common.h"
+#include "common.h"
 
 typedef std::pair<unsigned int, double> peak_t;
 typedef std::list<peak_t > extrema_t;

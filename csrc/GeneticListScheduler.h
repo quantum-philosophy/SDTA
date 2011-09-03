@@ -16,7 +16,7 @@
 #include <iomanip>
 #include <string>
 
-#include "Common.h"
+#include "common.h"
 #include "Hotspot.h"
 #include "MD5Digest.h"
 

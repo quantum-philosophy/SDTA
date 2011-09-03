@@ -1,7 +1,7 @@
 #ifndef __DYNAMIC_POWER_H__
 #define __DYNAMIC_POWER_H__
 
-#include "Common.h"
+#include "common.h"
 
 class DynamicPower
 {

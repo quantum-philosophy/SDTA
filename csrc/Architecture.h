@@ -1,7 +1,7 @@
 #ifndef __ARCHITECTURE_H__
 #define __ARCHITECTURE_H__
 
-#include "Common.h"
+#include "common.h"
 
 class Architecture
 {

@@ -1,7 +1,7 @@
 #ifndef __LIST_SCHEDULER_H__
 #define __LIST_SCHEDULER_H__
 
-#include "Common.h"
+#include "common.h"
 
 typedef std::list<tid_t> pool_t;
 

@@ -6,7 +6,7 @@
 #include <iomanip>
 #include <string.h>
 
-#include "Common.h"
+#include "common.h"
 
 system_t::system_t(const char *filename)
 {
