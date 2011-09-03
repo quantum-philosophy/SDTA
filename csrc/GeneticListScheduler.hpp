@@ -42,7 +42,7 @@ schedule_t GeneticListScheduler<chromosome_t>::solve(
 	/* Continue */
 	eoGenContinue<chromosome_t> gen_cont(tuning.max_generations);
 	eoSteadyFitContinue<chromosome_t> steady_cont(tuning.min_generations,
-		tuning.stall_generations);
+			tuning.stall_generations);
 	eoCombinedContinue<chromosome_t> continuator(gen_cont, steady_cont);
 
 	/* Create */
@@ -75,7 +75,7 @@ schedule_t GeneticListScheduler<chromosome_t>::solve(
 	eoCheckPoint<chromosome_t> checkpoint(continuator);
 	stats.watch(population, !tuning.verbose);
 	eslabEvolutionMonitor<chromosome_t> evolution_monitor(
-		population, tuning.dump_evolution);
+			population, tuning.dump_evolution);
 
 	checkpoint.add(stats);
 	checkpoint.add(evolution_monitor);
@@ -91,7 +91,7 @@ schedule_t GeneticListScheduler<chromosome_t>::solve(
 	create_count = tuning.population_size - create_count;
 	for (i = 0; i < create_count; i++) {
 		for (j = 0; j < task_count; j++)
-			chromosome[j] = eo::random(min, max);
+			chromosome[j] = min + eo::random(max - min);
 		chromosome.invalidate();
 		evaluate_chromosome(chromosome);
 		population.push_back(chromosome);
@@ -100,11 +100,11 @@ schedule_t GeneticListScheduler<chromosome_t>::solve(
 	stats();
 
 	/* Transform = Crossover + Mutate */
-	eslabNPtsBitCrossover<chromosome_t> crossover(tuning.crossover_points);
+	eslabNPtsBitCrossover<chromosome_t> crossover(tuning.crossover_points,
+		tuning.crossover_rate);
 	eslabUniformRangeMutation<chromosome_t> mutate(min, max,
-		tuning.gene_mutation_rate);
-	eslabTransform<chromosome_t> transform(crossover, tuning.crossover_rate,
-		mutate, tuning.chromosome_mutation_rate);
+		tuning.mutation_rate);
+	eslabTransform<chromosome_t> transform(crossover, mutate);
 
 	process(population, checkpoint, transform);
 
@@ -117,8 +117,8 @@ schedule_t GeneticListScheduler<chromosome_t>::solve(
 }
 
 template<class chromosome_t>
-typename GeneticListScheduler<chromosome_t>::fitness_t
-	GeneticListScheduler<chromosome_t>::evaluate(const chromosome_t &chromosome)
+	typename GeneticListScheduler<chromosome_t>::fitness_t
+GeneticListScheduler<chromosome_t>::evaluate(const chromosome_t &chromosome)
 {
 	/* Make a new schedule */
 	schedule_t schedule = ListScheduler::process(graph, chromosome);
@@ -149,17 +149,8 @@ typename GeneticListScheduler<chromosome_t>::fitness_t
 
 template<class chromosome_t>
 eslabTransform<chromosome_t>::eslabTransform(
-	eoQuadOp<chromosome_t> &_crossover, double _crossover_rate,
-	eoMonOp<chromosome_t> &_mutate, double _mutation_rate) :
-	crossover(_crossover), crossover_rate(_crossover_rate),
-	mutate(_mutate), mutation_rate(_mutation_rate)
-{
-	if (crossover_rate < 0 && crossover_rate > 1)
-		std::runtime_error("The crossover rate is wrong.");
-
-	if (mutation_rate < 0 && mutation_rate > 1)
-		std::runtime_error("The mutation rate is wrong.");
-}
+	eoQuadOp<chromosome_t> &_crossover, eoMonOp<chromosome_t> &_mutate) :
+	crossover(_crossover), mutate(_mutate) {}
 
 template<class chromosome_t>
 void eslabTransform<chromosome_t>::operator()(eoPop<chromosome_t> &population)
@@ -172,16 +163,12 @@ void eslabTransform<chromosome_t>::operator()(eoPop<chromosome_t> &population)
 	std::vector<bool> changes(population_size, false);
 
 	for (i = 0; i < crossover_count; i++) {
-		if (!rng.flip(crossover_rate)) continue;
-
 		changed = crossover(population[2 * i], population[2 * i + 1]);
 		changes[2 * i] = changes[2 * i] || changed;
 		changes[2 * i + 1] = changes[2 * i + 1] || changed;
 	}
 
 	for (i = 0; i < population_size; i++) {
-		if (!rng.flip(mutation_rate)) continue;
-
 		changed = mutate(population[i]);
 		changes[i] = changes[i] || changed;
 	}
@@ -196,16 +183,21 @@ void eslabTransform<chromosome_t>::operator()(eoPop<chromosome_t> &population)
 
 template<class chromosome_t>
 eslabNPtsBitCrossover<chromosome_t>::eslabNPtsBitCrossover(
-	size_t _points) : points(_points)
+	size_t _points, double _rate) : points(_points), rate(_rate)
 {
 	if (points < 1)
 		std::runtime_error("The number of crossover points is invalid.");
+
+	if (rate < 0 || rate > 1)
+		std::runtime_error("The crossover rate is invalid.");
 }
 
 template<class chromosome_t>
 bool eslabNPtsBitCrossover<chromosome_t>::operator()(
 	chromosome_t &one, chromosome_t &another)
 {
+	if (!rng.flip(rate)) return false;
+
 	size_t i;
 	size_t size = one.size();
 	size_t select_points = points;
@@ -216,19 +208,19 @@ bool eslabNPtsBitCrossover<chromosome_t>::operator()(
 	std::vector<bool> turn_points(size, false);
 
 	do {
-		i = eo::rng.random(size);
+		i = 1 + rng.random(size - 1);
 
 		if (turn_points[i]) continue;
 		else {
 			turn_points[i] = true;
-			--select_points;
+			select_points--;
 		}
 	}
 	while (select_points);
 
 	bool change = false;
 
-	for (i = 0; i < size; i++) {
+	for (i = 1; i < size; i++) {
 		if (turn_points[i]) change = !change;
 		if (change) {
 			rank_t tmp = one[i];
@@ -247,10 +239,10 @@ bool eslabNPtsBitCrossover<chromosome_t>::operator()(
 template<class chromosome_t>
 eslabUniformRangeMutation<chromosome_t>::eslabUniformRangeMutation(
 	rank_t _min, rank_t _max, double _rate) :
-	max(_max), min(_min), rate(_rate)
+	min(_min), range(_max - _min), rate(_rate)
 {
 	if (rate < 0 || rate > 1)
-		std::runtime_error("The gene mutation rate is invalid.");
+		std::runtime_error("The mutation rate is invalid.");
 }
 
 template<class chromosome_t>
@@ -262,7 +254,7 @@ bool eslabUniformRangeMutation<chromosome_t>::operator()(chromosome_t &chromosom
 	for (size_t i = 0; i < size; i++)
 		if (rng.flip(rate)) {
 			changed = true;
-			chromosome[i] = eo::random(min, max);
+			chromosome[i] = min + eo::random(range);
 		}
 
 	return changed;
@@ -274,7 +266,7 @@ bool eslabUniformRangeMutation<chromosome_t>::operator()(chromosome_t &chromosom
 
 template<class chromosome_t>
 eslabEvolutionMonitor<chromosome_t>::eslabEvolutionMonitor(
-	eoPop<chromosome_t> &_population, const std::string &filename) :
+		eoPop<chromosome_t> &_population, const std::string &filename) :
 	population(_population)
 {
 	stream.open(filename.c_str());

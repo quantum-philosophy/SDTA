@@ -44,8 +44,7 @@ class GLSTuning
 	size_t crossover_points;
 
 	/* Mutate */
-	double chromosome_mutation_rate;
-	double gene_mutation_rate;
+	double mutation_rate;
 
 	bool verbose;
 	bool cache;
@@ -103,19 +102,15 @@ class eslabTransform: public eoTransform<chromosome_t>
 {
 	public:
 
-	eslabTransform(
-		eoQuadOp<chromosome_t> &_crossover, double _crossover_rate,
-		eoMonOp<chromosome_t> &_mutate, double _mutation_rate);
+	eslabTransform(eoQuadOp<chromosome_t> &_crossover,
+		eoMonOp<chromosome_t> &_mutate);
 
 	void operator()(eoPop<chromosome_t> &population);
 
 	private:
 
 	eoQuadOp<chromosome_t> &crossover;
-	double crossover_rate;
-
 	eoMonOp<chromosome_t> &mutate;
-	double mutation_rate;
 };
 
 template<class chromosome_t>
@@ -123,20 +118,21 @@ class eslabNPtsBitCrossover : public eoQuadOp<chromosome_t>
 {
 	public:
 
-	eslabNPtsBitCrossover(size_t _points);
+	eslabNPtsBitCrossover(size_t _points, double _rate);
 
 	bool operator()(chromosome_t &one, chromosome_t &another);
 
 	private:
 
 	size_t points;
+	double rate;
 };
 
 template<class chromosome_t>
 class eslabUniformRangeMutation: public eoMonOp<chromosome_t>
 {
-	rank_t max;
 	rank_t min;
+	rank_t range;
 	double rate;
 
 	public:

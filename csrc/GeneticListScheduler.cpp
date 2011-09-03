@@ -29,8 +29,7 @@ void GLSTuning::defaults()
 	crossover_points = 2;
 
 	/* Mutate */
-	chromosome_mutation_rate = 1.0;
-	gene_mutation_rate = 0.05;
+	mutation_rate = 0.01;
 
 	verbose = false;
 	cache = true;
@@ -93,10 +92,8 @@ GLSTuning::GLSTuning(const char *filename)
 			stream >> crossover_points;
 
 		/* Mutate */
-		else if (name == "chromosome_mutation_rate")
-			stream >> chromosome_mutation_rate;
-		else if (name == "gene_mutation_rate")
-			stream >> gene_mutation_rate;
+		else if (name == "mutation_rate")
+			stream >> mutation_rate;
 
 		else if (name == "verbose")
 			stream >> verbose;
@@ -146,6 +143,5 @@ std::ostream &operator<< (std::ostream &o, const GLSTuning &tuning)
 
 		/* Mutate */
 		<< std::setprecision(2)
-		<< "  Chromosome mutation: " << tuning.chromosome_mutation_rate << std::endl
-		<< "  Gene mutation rate:  " << tuning.gene_mutation_rate << std::endl;
+		<< "  Mutation rate:       " << tuning.mutation_rate << std::endl;
 }
