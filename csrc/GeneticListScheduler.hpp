@@ -192,7 +192,7 @@ void eslabTransform<chromosome_t>::operator()(eoPop<chromosome_t> &population)
 template<class chromosome_t>
 eslabNPtsBitCrossover<chromosome_t>::eslabNPtsBitCrossover(size_t _points,
 	double _min_rate, double _scale, double _exponent,
-	const GLSStats<chromosome_t> &_stats) :
+	GLSStats<chromosome_t> &_stats) :
 
 	points(_points), min_rate(_min_rate), scale(_scale),
 	exponent(_exponent), stats(_stats)
@@ -208,7 +208,9 @@ template<class chromosome_t>
 bool eslabNPtsBitCrossover<chromosome_t>::operator()(
 	chromosome_t &one, chromosome_t &another)
 {
-	double rate = std::max(min_rate,
+	double rate;
+
+	rate = stats.crossover_rate = std::max(min_rate,
 		scale * std::exp(exponent * (double)stats.generations));
 
 	if (!rng.flip(rate)) return false;
@@ -254,7 +256,7 @@ bool eslabNPtsBitCrossover<chromosome_t>::operator()(
 template<class chromosome_t>
 eslabUniformRangeMutation<chromosome_t>::eslabUniformRangeMutation(
 	rank_t _min, rank_t _max, double _min_rate, double _scale,
-	double _exponent, const GLSStats<chromosome_t> &_stats) :
+	double _exponent, GLSStats<chromosome_t> &_stats) :
 
 	min(_min), range(_max - _min), min_rate(_min_rate), scale(_scale),
 	exponent(_exponent), stats(_stats)
@@ -269,7 +271,9 @@ eslabUniformRangeMutation<chromosome_t>::eslabUniformRangeMutation(
 template<class chromosome_t>
 bool eslabUniformRangeMutation<chromosome_t>::operator()(chromosome_t &chromosome)
 {
-	double rate = std::max(min_rate,
+	double rate;
+
+	rate = stats.mutation_rate = std::max(min_rate,
 		scale * std::exp(exponent * (double)stats.generations));
 
 	size_t size = chromosome.size();

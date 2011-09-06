@@ -143,13 +143,13 @@ class eslabNPtsBitCrossover : public eoQuadOp<chromosome_t>
 	double scale;
 	double exponent;
 
-	const GLSStats<chromosome_t> &stats;
+	GLSStats<chromosome_t> &stats;
 
 	public:
 
 	eslabNPtsBitCrossover(size_t _points,
 		double _min_rate, double _scale, double _exponent,
-		const GLSStats<chromosome_t> &_stats);
+		GLSStats<chromosome_t> &_stats);
 
 	bool operator()(chromosome_t &one, chromosome_t &another);
 };
@@ -164,13 +164,13 @@ class eslabUniformRangeMutation: public eoMonOp<chromosome_t>
 	double scale;
 	double exponent;
 
-	const GLSStats<chromosome_t> &stats;
+	GLSStats<chromosome_t> &stats;
 
 	public:
 
 	eslabUniformRangeMutation(rank_t _min, rank_t _max,
 		double _min_rate, double _scale, double _exponent,
-		const GLSStats<chromosome_t> &_stats);
+		GLSStats<chromosome_t> &_stats);
 
 	bool operator()(chromosome_t& chromosome);
 };
@@ -190,6 +190,9 @@ class GLSStats: public eoMonitor
 	size_t cache_hits;
 	size_t deadline_misses;
 
+	double crossover_rate;
+	double mutation_rate;
+
 	typename chromosome_t::Fitness best_fitness;
 	typename chromosome_t::Fitness worst_fitness;
 
@@ -208,6 +211,9 @@ class GLSStats: public eoMonitor
 		worst_fitness = 0;
 
 		last_executions = 0;
+
+		crossover_rate = 0;
+		mutation_rate = 0;
 	}
 
 	eoMonitor& operator()()
@@ -230,6 +236,7 @@ class GLSStats: public eoMonitor
 				<< std::setw(width) << " "
 				<< best_fitness << " " << worst_fitness
 				<< " [" << population->diversity() << "]"
+				<< " {" << crossover_rate << " " << mutation_rate << "}"
 				<< std::endl
 				<< std::setw(4) << generations + 1 << ": ";
 
