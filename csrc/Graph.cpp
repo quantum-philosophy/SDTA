@@ -185,6 +185,18 @@ priority_t Graph::calc_priority() const
 	return priority;
 }
 
+void Graph::reorder_tasks(const schedule_t &schedule)
+{
+	task_vector_t new_tasks(task_count);
+
+	for (size_t i = 0; i < task_count; i++) {
+		new_tasks[i] = tasks[schedule[i]];
+		new_tasks[i]->id = i;
+	}
+
+	tasks = new_tasks;
+}
+
 std::ostream &operator<< (std::ostream &o, const Graph *graph)
 {
 	o	<< "Task Graph: " << std::endl

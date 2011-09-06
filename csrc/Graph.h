@@ -51,6 +51,8 @@ class Graph
 
 	priority_t calc_priority() const;
 
+	void reorder_tasks(const std::vector<tid_t> &order);
+
 	protected:
 
 	/* The duration of the graph based on the actual start times */

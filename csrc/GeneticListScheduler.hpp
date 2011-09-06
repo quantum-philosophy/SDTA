@@ -4,6 +4,7 @@
 #include <sstream>
 #include <fstream>
 #include <iomanip>
+#include <ctime>
 
 #include "Graph.h"
 #include "Task.h"
@@ -21,6 +22,12 @@ GeneticListScheduler<chromosome_t>::GeneticListScheduler(
 	eo::log << eo::setlevel(eo::quiet);
 
 	if (tuning.seed >= 0) rng.reseed(tuning.seed);
+	else {
+		time_t seed = time(NULL);
+		if (tuning.verbose)
+			std::cout << "Chosen seed: " << seed << std::endl;
+		rng.reseed(seed);
+	}
 
 	sampling_interval = hotspot->sampling_interval();
 }
@@ -46,7 +53,7 @@ schedule_t GeneticListScheduler<chromosome_t>::solve(
 	eoCombinedContinue<chromosome_t> continuator(gen_cont, steady_cont);
 
 	/* Create */
-	eoPop<chromosome_t> population;
+	eslabPop<chromosome_t> population(tuning.population_size, task_count);
 	priority_t priority = start_priority;
 
 	if (priority.empty())
@@ -101,9 +108,11 @@ schedule_t GeneticListScheduler<chromosome_t>::solve(
 
 	/* Transform = Crossover + Mutate */
 	eslabNPtsBitCrossover<chromosome_t> crossover(tuning.crossover_points,
-		tuning.crossover_rate);
+		tuning.crossover_min_rate, tuning.crossover_scale,
+		tuning.crossover_exponent, stats);
 	eslabUniformRangeMutation<chromosome_t> mutate(min, max,
-		tuning.mutation_rate);
+		tuning.mutation_min_rate, tuning.mutation_scale,
+		tuning.mutation_exponent, stats);
 	eslabTransform<chromosome_t> transform(crossover, mutate);
 
 	process(population, checkpoint, transform);
@@ -148,9 +157,8 @@ GeneticListScheduler<chromosome_t>::evaluate(const chromosome_t &chromosome)
 /******************************************************************************/
 
 template<class chromosome_t>
-eslabTransform<chromosome_t>::eslabTransform(
-	eoQuadOp<chromosome_t> &_crossover, eoMonOp<chromosome_t> &_mutate) :
-	crossover(_crossover), mutate(_mutate) {}
+eslabTransform<chromosome_t>::eslabTransform(eoQuadOp<chromosome_t> &_crossover,
+	eoMonOp<chromosome_t> &_mutate) : crossover(_crossover), mutate(_mutate) {}
 
 template<class chromosome_t>
 void eslabTransform<chromosome_t>::operator()(eoPop<chromosome_t> &population)
@@ -182,20 +190,27 @@ void eslabTransform<chromosome_t>::operator()(eoPop<chromosome_t> &population)
 /******************************************************************************/
 
 template<class chromosome_t>
-eslabNPtsBitCrossover<chromosome_t>::eslabNPtsBitCrossover(
-	size_t _points, double _rate) : points(_points), rate(_rate)
+eslabNPtsBitCrossover<chromosome_t>::eslabNPtsBitCrossover(size_t _points,
+	double _min_rate, double _scale, double _exponent,
+	const GLSStats<chromosome_t> &_stats) :
+
+	points(_points), min_rate(_min_rate), scale(_scale),
+	exponent(_exponent), stats(_stats)
 {
 	if (points < 1)
 		std::runtime_error("The number of crossover points is invalid.");
 
-	if (rate < 0 || rate > 1)
-		std::runtime_error("The crossover rate is invalid.");
+	if (min_rate < 0 || min_rate > 1)
+		std::runtime_error("The crossover minimal rate is invalid.");
 }
 
 template<class chromosome_t>
 bool eslabNPtsBitCrossover<chromosome_t>::operator()(
 	chromosome_t &one, chromosome_t &another)
 {
+	double rate = std::max(min_rate,
+		scale * std::exp(exponent * (double)stats.generations));
+
 	if (!rng.flip(rate)) return false;
 
 	size_t i;
@@ -238,16 +253,25 @@ bool eslabNPtsBitCrossover<chromosome_t>::operator()(
 
 template<class chromosome_t>
 eslabUniformRangeMutation<chromosome_t>::eslabUniformRangeMutation(
-	rank_t _min, rank_t _max, double _rate) :
-	min(_min), range(_max - _min), rate(_rate)
+	rank_t _min, rank_t _max, double _min_rate, double _scale,
+	double _exponent, const GLSStats<chromosome_t> &_stats) :
+
+	min(_min), range(_max - _min), min_rate(_min_rate), scale(_scale),
+	exponent(_exponent), stats(_stats)
 {
-	if (rate < 0 || rate > 1)
-		std::runtime_error("The mutation rate is invalid.");
+	if (range < 0)
+		std::runtime_error("The mutation range is invalid.");
+
+	if (min_rate < 0 || min_rate > 1)
+		std::runtime_error("The mutation minimal rate is invalid.");
 }
 
 template<class chromosome_t>
 bool eslabUniformRangeMutation<chromosome_t>::operator()(chromosome_t &chromosome)
 {
+	double rate = std::max(min_rate,
+		scale * std::exp(exponent * (double)stats.generations));
+
 	size_t size = chromosome.size();
 	bool changed = false;
 
@@ -266,7 +290,7 @@ bool eslabUniformRangeMutation<chromosome_t>::operator()(chromosome_t &chromosom
 
 template<class chromosome_t>
 eslabEvolutionMonitor<chromosome_t>::eslabEvolutionMonitor(
-		eoPop<chromosome_t> &_population, const std::string &filename) :
+	eoPop<chromosome_t> &_population, const std::string &filename) :
 	population(_population)
 {
 	stream.open(filename.c_str());
@@ -285,6 +309,28 @@ eoMonitor& eslabEvolutionMonitor<chromosome_t>::operator()(void)
 	stream << std::endl;
 
 	return *this;
+}
+
+/******************************************************************************/
+/* eslabPop                                                                   */
+/******************************************************************************/
+
+template<class chromosome_t>
+double eslabPop<chromosome_t>::diversity() const
+{
+	const eslabPop<chromosome_t> &self = *this;
+
+	size_t i, j, k;
+	size_t count = 0;
+
+	for (i = 0; i < population_size - 1; i++)
+		for (j = i + 1; j < population_size; j++)
+			for (k = 0; k < task_count; k++)
+				if (self[i][k] != self[j][k]) count++;
+
+	return (double)count /
+		((double)population_size * ((double)population_size - 1) / 2.0) /
+		(double)task_count;
 }
 
 /******************************************************************************/

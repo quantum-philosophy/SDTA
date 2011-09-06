@@ -40,14 +40,19 @@ class GLSTuning
 	size_t tournament_size;
 
 	/* Crossover */
-	double crossover_rate;
+	double crossover_min_rate;
+	double crossover_scale;
+	double crossover_exponent;
 	size_t crossover_points;
 
 	/* Mutate */
-	double mutation_rate;
+	double mutation_min_rate;
+	double mutation_scale;
+	double mutation_exponent;
 
 	bool verbose;
 	bool cache;
+	bool reorder_tasks;
 
 	std::string dump_evolution;
 
@@ -57,6 +62,22 @@ class GLSTuning
 	protected:
 
 	void defaults();
+};
+
+template<class chromosome_t>
+class eslabPop: public eoPop<chromosome_t>
+{
+	public:
+
+	eslabPop(size_t _population_size, size_t _task_count) :
+		eoPop<chromosome_t>(), population_size(_population_size),
+		task_count(_task_count) {}
+
+	double diversity() const;
+
+	private:
+
+	size_t population_size, task_count;
 };
 
 template<class chromosome_t>
@@ -116,16 +137,21 @@ class eslabTransform: public eoTransform<chromosome_t>
 template<class chromosome_t>
 class eslabNPtsBitCrossover : public eoQuadOp<chromosome_t>
 {
+	size_t points;
+
+	double min_rate;
+	double scale;
+	double exponent;
+
+	const GLSStats<chromosome_t> &stats;
+
 	public:
 
-	eslabNPtsBitCrossover(size_t _points, double _rate);
+	eslabNPtsBitCrossover(size_t _points,
+		double _min_rate, double _scale, double _exponent,
+		const GLSStats<chromosome_t> &_stats);
 
 	bool operator()(chromosome_t &one, chromosome_t &another);
-
-	private:
-
-	size_t points;
-	double rate;
 };
 
 template<class chromosome_t>
@@ -133,11 +159,18 @@ class eslabUniformRangeMutation: public eoMonOp<chromosome_t>
 {
 	rank_t min;
 	rank_t range;
-	double rate;
+
+	double min_rate;
+	double scale;
+	double exponent;
+
+	const GLSStats<chromosome_t> &stats;
 
 	public:
 
-	eslabUniformRangeMutation(rank_t _min, rank_t _max, double _rate);
+	eslabUniformRangeMutation(rank_t _min, rank_t _max,
+		double _min_rate, double _scale, double _exponent,
+		const GLSStats<chromosome_t> &_stats);
 
 	bool operator()(chromosome_t& chromosome);
 };
@@ -145,7 +178,7 @@ class eslabUniformRangeMutation: public eoMonOp<chromosome_t>
 template<class chromosome_t>
 class GLSStats: public eoMonitor
 {
-	eoPop<chromosome_t> *population;
+	eslabPop<chromosome_t> *population;
 
 	bool silent;
 	size_t last_executions;
@@ -162,7 +195,7 @@ class GLSStats: public eoMonitor
 
 	GLSStats() : population(NULL) {}
 
-	void watch(eoPop<chromosome_t> &_population, bool _silent = false)
+	void watch(eslabPop<chromosome_t> &_population, bool _silent = false)
 	{
 		population = &_population;
 		silent = _silent;
@@ -196,6 +229,7 @@ class GLSStats: public eoMonitor
 			std::cout
 				<< std::setw(width) << " "
 				<< best_fitness << " " << worst_fitness
+				<< " [" << population->diversity() << "]"
 				<< std::endl
 				<< std::setw(4) << generations + 1 << ": ";
 

@@ -126,6 +126,15 @@ void optimize(const char *system_config, const char *genetic_config,
 		else if (tuning.verbose)
 			cout << "Using external schedule." << endl;
 
+		if (tuning.reorder_tasks) {
+			if (tuning.verbose)
+				cout << "Reordering the tasks according to the first schedule." << endl;
+
+			graph->reorder_tasks(schedule);
+			for (size_t i = 0; i < task_count; i++)
+				schedule[i] = i;
+		}
+
 		graph->assign_schedule(schedule);
 
 		double deadline = system.deadline;
