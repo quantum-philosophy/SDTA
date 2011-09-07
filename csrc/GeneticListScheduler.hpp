@@ -33,7 +33,7 @@ GeneticListScheduler<chromosome_t>::GeneticListScheduler(
 }
 
 template<class chromosome_t>
-schedule_t GeneticListScheduler<chromosome_t>::solve(
+schedule_t &GeneticListScheduler<chromosome_t>::solve(
 	const priority_t &start_priority)
 {
 	size_t i, j;
@@ -120,9 +120,10 @@ schedule_t GeneticListScheduler<chromosome_t>::solve(
 	if (tuning.verbose)
 		std::cout << "end" << std::endl;
 
-	chromosome = population.best_element();
+	stats.best_priority = population.best_element();
+	stats.best_schedule = ListScheduler::process(graph, stats.best_priority);
 
-	return ListScheduler::process(graph, chromosome);
+	return stats.best_schedule;
 }
 
 template<class chromosome_t>
@@ -380,14 +381,18 @@ std::ostream &operator<< (std::ostream &o, const GLSStats<chromosome_t> &stats)
 		<< "Stats:" << std::endl
 
 		<< std::setprecision(0)
-		<< "  Generations:         " << stats.generations << std::endl
-		<< "  Evaluations:         " << stats.evaluations << std::endl
-		<< "  Cache hits:          " << stats.cache_hits << std::endl
-		<< "  Deadline misses:     " << stats.deadline_misses << std::endl
+		<< "  Generations:     " << stats.generations << std::endl
+		<< "  Evaluations:     " << stats.evaluations << std::endl
+		<< "  Cache hits:      " << stats.cache_hits << std::endl
+		<< "  Deadline misses: " << stats.deadline_misses << std::endl
 
 		<< std::setprecision(2)
-		<< "  Best fitness:        " << stats.best_fitness << std::endl
-		<< "  Worst fitness:       " << stats.worst_fitness << std::endl;
+		<< "  Best fitness:    " << stats.best_fitness << std::endl
+		<< "  Worst fitness:   " << stats.worst_fitness << std::endl
+
+		<< std::setprecision(0)
+		<< "  Best priority:   " << print_t<rank_t>(stats.best_priority) << std::endl
+		<< "  Best schedule:   " << print_t<int>(stats.best_schedule) << std::endl;
 
 	return o;
 }

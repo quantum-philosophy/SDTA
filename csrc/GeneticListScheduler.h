@@ -97,7 +97,7 @@ class GeneticListScheduler
 	GeneticListScheduler(Graph *_graph, Hotspot *_hotspot,
 		const GLSTuning &_tuning = GLSTuning());
 
-	schedule_t solve(const priority_t &priority = priority_t());
+	schedule_t &solve(const priority_t &priority = priority_t());
 
 	inline stats_t get_stats() const { return stats; }
 
@@ -199,6 +199,9 @@ class GLSStats: public eoMonitor
 
 	typename chromosome_t::Fitness best_fitness;
 	typename chromosome_t::Fitness worst_fitness;
+
+	chromosome_t best_priority;
+	schedule_t best_schedule;
 
 	GLSStats() : population(NULL) {}
 
