@@ -44,7 +44,7 @@ void eslabEvolution<chromosome_t>::evaluate(
 template<class chromosome_t>
 eslabElitismMerge<chromosome_t>::eslabElitismMerge(double _rate) : rate(_rate)
 {
-	if (rate < 0 || rate > 1)
+	if (rate < 0)
 		std::runtime_error("The elitism rate is invalid.");
 }
 
@@ -53,7 +53,13 @@ void eslabElitismMerge<chromosome_t>::operator()(
 	const eoPop<chromosome_t> &population,
 	eoPop<chromosome_t> &offspring)
 {
-	size_t count = rate * population.size();
+	size_t population_size, count;
+
+	population_size = population.size();
+	count = (rate < 1) ? (rate * population_size) : rate;
+
+	if (count > population_size)
+		throw std::runtime_error("The elite size is invalid.");
 
 	std::vector<const chromosome_t *> elite;
 	population.nth_element(count, elite);

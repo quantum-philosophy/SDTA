@@ -320,6 +320,36 @@ eoMonitor& eslabEvolutionMonitor<chromosome_t>::operator()(void)
 /******************************************************************************/
 
 template<class chromosome_t>
+size_t eslabPop<chromosome_t>::unique() const
+{
+	const eslabPop<chromosome_t> &self = *this;
+
+	size_t i, j, k, count;
+	bool found;
+	std::vector<bool> done(population_size, false);
+
+	count = 0;
+	for (i = 0; i < population_size; i++) {
+		if (done[i]) continue;
+		count++;
+
+		for (j = i + 1; j < population_size; j++) {
+			found = true;
+
+			for (k = 0; k < task_count; k++)
+				if (self[i][k] != self[j][k]) {
+					found = false;
+					break;
+				}
+
+			if (found) done[j] = true;
+		}
+	}
+
+	return count;
+}
+
+template<class chromosome_t>
 double eslabPop<chromosome_t>::diversity() const
 {
 	const eslabPop<chromosome_t> &self = *this;

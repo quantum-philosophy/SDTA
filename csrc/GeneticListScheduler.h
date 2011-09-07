@@ -73,6 +73,7 @@ class eslabPop: public eoPop<chromosome_t>
 		eoPop<chromosome_t>(), population_size(_population_size),
 		task_count(_task_count) {}
 
+	size_t unique() const;
 	double diversity() const;
 
 	private:
@@ -240,7 +241,7 @@ class GLSStats: public eoMonitor
 				<< worst_fitness
 				<< std::setprecision(3) << std::setw(8)
 				<< " {" << crossover_rate << " " << mutation_rate << "}"
-				<< " [" << population->diversity() << "]"
+				<< " [" << population->unique() << "/" << population_size << "]"
 				<< std::endl
 				<< std::setw(4) << generations + 1 << ": ";
 
