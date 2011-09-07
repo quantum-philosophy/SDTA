@@ -33,7 +33,7 @@ function [ maxtab, mintab ] = peakdet(v, delta)
   end
 
   % Go around through the first extremum to the second one
-  if lookformax || isempty(mintab), return; end
+  if lookformax || isempty(maxtab), return; end
   nexti = maxtab(1, 1);
 
   for i = 1:(nexti - 1)

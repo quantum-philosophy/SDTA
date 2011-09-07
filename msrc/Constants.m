@@ -24,7 +24,7 @@ classdef Constants < handle
     ambientTemperature = 27 + Constants.degreeKelvin; % K
 
     % Sampling interval
-    samplingInterval = 1e-4; % s
+    samplingInterval = 1e-3; % s
 
     % Temperature runaway
     temperatureRunaway = 120 + Constants.degreeKelvin; % K
