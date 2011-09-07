@@ -385,8 +385,9 @@ std::ostream &operator<< (std::ostream &o, const GLSStats<chromosome_t> &stats)
 		<< "  Cache hits:          " << stats.cache_hits << std::endl
 		<< "  Deadline misses:     " << stats.deadline_misses << std::endl
 
-		<< std::setiosflags(std::ios::scientific)
 		<< std::setprecision(2)
 		<< "  Best fitness:        " << stats.best_fitness << std::endl
 		<< "  Worst fitness:       " << stats.worst_fitness << std::endl;
+
+	return o;
 }

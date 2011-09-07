@@ -92,11 +92,14 @@ class GeneticListScheduler
 	typedef	eoPop<chromosome_t> population_t;
 	typedef typename chromosome_t::Fitness fitness_t;
 	typedef std::map<MD5Digest, fitness_t, MD5DigestComparator> cache_t;
+	typedef GLSStats<chromosome_t> stats_t;
 
 	GeneticListScheduler(Graph *_graph, Hotspot *_hotspot,
 		const GLSTuning &_tuning = GLSTuning());
 
 	schedule_t solve(const priority_t &priority = priority_t());
+
+	inline stats_t get_stats() const { return stats; }
 
 	protected:
 
@@ -287,6 +290,9 @@ class eslabEvolutionMonitor: public eoMonitor
 };
 
 std::ostream &operator<< (std::ostream &o, const GLSTuning &tuning);
+
+template<class chromosome_t>
+std::ostream &operator<< (std::ostream &o, const GLSStats<chromosome_t> &stats);
 
 #include "GeneticListScheduler.hpp"
 
