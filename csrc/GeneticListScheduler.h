@@ -234,9 +234,13 @@ class GLSStats: public eoMonitor
 
 			std::cout
 				<< std::setw(width) << " "
-				<< best_fitness << " " << worst_fitness
-				<< " [" << population->diversity() << "]"
+				<< std::setprecision(2)
+				<< best_fitness << " "
+				<< std::setw(10)
+				<< worst_fitness
+				<< std::setprecision(3) << std::setw(8)
 				<< " {" << crossover_rate << " " << mutation_rate << "}"
+				<< " [" << population->diversity() << "]"
 				<< std::endl
 				<< std::setw(4) << generations + 1 << ": ";
 
