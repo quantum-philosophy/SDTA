@@ -2,60 +2,82 @@
 #define __MULTI_OBJECTIVE_GLS_H__
 
 #include <moeo>
+#include "GeneticListScheduler.h"
 
 #define AGING_OBJECTIVE  0
 #define ENERGY_OBJECTIVE 1
+
+typedef GLSTuning MultiObjectiveGLSTuning;
 
 class eslabObjectiveVectorTraits: public moeoObjectiveVectorTraits
 {
 	public:
 
-	static bool minimizing(int i) { return i == EGING_OBJECTIVE; }
+	static bool minimizing(int i) { return i == ENERGY_OBJECTIVE; }
 	static bool maximizing(int i) { return i == AGING_OBJECTIVE; }
 	static unsigned int nObjectives () { return 2; }
 };
 
 #ifdef REAL_RANK
+#else
 
-typedef moeoRealObjectiveVector<eslabObjectiveVectorTraits> elsabObjectiveVector;
+typedef moeoRealObjectiveVector<eslabObjectiveVectorTraits> eslabObjectiveVector;
 
-class chromosome_t: public moeoRealVector<eslabObjectiveVector, double, double>
+class eslabMOChromosome: public moeoIntVector<eslabObjectiveVector,
+	/* Fitness */ double, /* Diversity */ double>
 {
 	public:
 
-	chromosome_t(size_t _size) :
-		moeoRealVector<eslabObjectiveVector, double, double>(_size) {}
+	typedef eslabObjectiveVector Fitness;
+
+	eslabMOChromosome(size_t _size = 0) :
+		moeoIntVector<eslabObjectiveVector, double, double>(_size) {}
 };
 
-#else
 #endif
 
-class MultiGLS;
-
-class eslabMultiEvaluate: public moeoEvalFunc<chromosome_t>
+#ifdef REAL_RANK
+#else
+class MultiObjectiveGLS: public GeneticListScheduler<eslabMOChromosome>
 {
-	public:
+	typedef eslabMOChromosome chromosome_t;
+#endif
 
-	eslabMultiEvaluate(MultiGLS *_ls) : ls(_ls) {}
+	protected:
 
-	void operator()(chromosome_t &chromosome)
+	class evaluate_t: public moeoEvalFunc<chromosome_t>
 	{
-		if (chromosome.invalidObjectiveVector())
-			chromosome.objectiveVector(ls->evaluate(chromosome));
-	}
+		public:
 
-	private:
+		evaluate_t(MultiObjectiveGLS *_ls) : ls(_ls) {}
 
-	MultiGLS *ls;
-};
+		void operator()(chromosome_t &chromosome)
+		{
+			if (chromosome.invalidObjectiveVector())
+				chromosome.objectiveVector(ls->evaluate(chromosome));
+		}
 
-class MultiGLS: public GeneticListScheduler
-{
-	friend struct eslabMultiEvaluate;
+		private:
+
+		MultiObjectiveGLS *ls;
+	};
+
+	evaluate_t evaluator;
 
 	public:
 
-	eslabObjectiveVector evaluate(const chromosome_t &chromosome);
+	MultiObjectiveGLS(Graph *_graph, Hotspot *_hotspot,
+		const MultiObjectiveGLSTuning &_tuning = MultiObjectiveGLSTuning()) :
+		GeneticListScheduler<chromosome_t>(_graph, _hotspot, _tuning),
+		evaluator(this) {}
+
+	protected:
+
+	fitness_t evaluate_schedule(const schedule_t &schedule);
+	void evaluate_chromosome(chromosome_t &chromosome);
+	void process(eoPop<chromosome_t> &population,
+		eoContinue<chromosome_t> &continuator,
+		eoTransform<chromosome_t> &transform);
 };
 
 #endif

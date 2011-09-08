@@ -1,21 +1,52 @@
-#include "MultiGLS.h"
+#include "MultiObjectiveGLS.h"
+#include "Graph.h"
+#include "Lifetime.h"
+#include "DynamicPower.h"
 
-void MultiGLS::evolve(population_t &populatino,
-	eoContinue &continuator, eoTransform &transform)
+void MultiObjectiveGLS::process(eoPop<chromosome_t> &population,
+	eoContinue<chromosome_t> &continuator,
+	eoTransform<chromosome_t> &transform)
 {
-	eslabEvaluate evaluate(this);
-
-	moeoNSGAII<chromosome_t> ga(continuator, evaluate, transform);
+	moeoNSGAII<chromosome_t> ga(continuator, evaluator, transform);
 
 	ga(population);
 }
 
-eslabObjectiveVector MultiGLS::evaluate(const chromosome_t &chromosome)
+void MultiObjectiveGLS::evaluate_chromosome(chromosome_t &chromosome)
 {
-	eslabObjectiveVector objective;
+	evaluator(chromosome);
+}
 
-	objective[AGING_OBJECTIVE] = aging;
-	objective[ENERGY_OBJECTIVE] = energy;
+MultiObjectiveGLS::fitness_t
+MultiObjectiveGLS::evaluate_schedule(const schedule_t &schedule)
+{
+	fitness_t fitness;
 
-	return objective;
+	graph->assign_schedule(schedule);
+
+	if (graph->duration > graph->deadline) {
+		stats.miss_deadline();
+
+		fitness[AGING_OBJECTIVE] = std::numeric_limits<double>::min();
+		fitness[ENERGY_OBJECTIVE] = std::numeric_limits<double>::max();
+	}
+	else {
+		stats.evaluate();
+
+		matrix_t dynamic_power, temperature, total_power;
+
+		/* The graph is rescheduled now, obtain the dynamic power profile */
+		DynamicPower::compute(graph, sampling_interval, dynamic_power);
+
+		/* Now, we can get the temperature profile, and the total power profile
+		 * including the leakage part.
+		 */
+		size_t iterations = hotspot->solve(graph->architecture,
+			dynamic_power, temperature, total_power);
+
+		fitness[AGING_OBJECTIVE] = Lifetime::predict(temperature, sampling_interval);
+		fitness[ENERGY_OBJECTIVE] = 0;
+	}
+
+	return fitness;
 }

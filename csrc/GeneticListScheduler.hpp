@@ -19,7 +19,9 @@ GeneticListScheduler<chromosome_t>::GeneticListScheduler(
 	Graph *_graph, Hotspot *_hotspot, const GLSTuning &_tuning) :
 	graph(_graph), hotspot(_hotspot), tuning(_tuning)
 {
+#ifdef EO_1_2_0
 	eo::log << eo::setlevel(eo::quiet);
+#endif
 
 	if (tuning.seed >= 0) rng.reseed(tuning.seed);
 	else {
@@ -127,7 +129,7 @@ schedule_t &GeneticListScheduler<chromosome_t>::solve(
 }
 
 template<class chromosome_t>
-	typename GeneticListScheduler<chromosome_t>::fitness_t
+typename GeneticListScheduler<chromosome_t>::fitness_t
 GeneticListScheduler<chromosome_t>::evaluate(const chromosome_t &chromosome)
 {
 	/* Make a new schedule */
@@ -139,7 +141,7 @@ GeneticListScheduler<chromosome_t>::evaluate(const chromosome_t &chromosome)
 	MD5Digest key(schedule);
 	typename cache_t::const_iterator it = cache.find(key);
 
-	double fitness;
+	fitness_t fitness;
 
 	if (it != cache.end()) {
 		stats.hit_cache();

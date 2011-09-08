@@ -27,7 +27,8 @@ void SingleObjectiveGLS::evaluate_chromosome(chromosome_t &chromosome)
 	evaluator(chromosome);
 }
 
-SingleObjectiveGLS::fitness_t SingleObjectiveGLS::evaluate_schedule(const schedule_t &schedule)
+SingleObjectiveGLS::fitness_t
+SingleObjectiveGLS::evaluate_schedule(const schedule_t &schedule)
 {
 	fitness_t fitness;
 

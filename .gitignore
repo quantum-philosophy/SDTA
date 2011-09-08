@@ -37,8 +37,11 @@ vendor/hotspot*/hotspot
 vendor/hotspot*/libhotspot.a
 vendor/hotspot
 
-vendor/eo-*/release/*
-vendor/eo
+vendor/paradiseo-*/paradiseo-eo/*
+vendor/paradiseo-*/paradiseo-mo/*
+vendor/paradiseo-*/paradiseo-moeo/*
+vendor/paradiseo-*/paradiseo-peo/*
+vendor/paradiseo
 
 tags
 build/*.txt

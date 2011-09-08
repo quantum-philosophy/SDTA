@@ -9,7 +9,9 @@ class Graph
 
 	template<class chromosome_t>
 	friend class GeneticListScheduler;
+
 	friend class SingleObjectiveGLS;
+	friend class MultiObjectiveGLS;
 
 	friend class DynamicPower;
 	friend class Lifetime;

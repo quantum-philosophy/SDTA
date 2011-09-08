@@ -4,13 +4,7 @@
 #include "common.h"
 #include "GeneticListScheduler.h"
 
-class SingleObjectiveGLSTuning: public GLSTuning
-{
-	public:
-
-	SingleObjectiveGLSTuning() : GLSTuning() {}
-	SingleObjectiveGLSTuning(const char *filename) : GLSTuning(filename) {}
-};
+typedef GLSTuning SingleObjectiveGLSTuning;
 
 #ifdef REAL_RANK
 class SingleObjectiveGLS: public GeneticListScheduler<eoReal<double> >
