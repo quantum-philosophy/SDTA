@@ -8,8 +8,7 @@ class Graph
 	friend class ListScheduler;
 
 	template<class chromosome_t>
-	friend class GeneticListScheduler;
-
+	friend class GenericGLS;
 	friend class SingleObjectiveGLS;
 	friend class MultiObjectiveGLS;
 

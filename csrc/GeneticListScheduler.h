@@ -24,6 +24,8 @@ class GLSTuning
 {
 	public:
 
+	bool multiobjective;
+
 	int seed;
 
 	/* Create */
@@ -81,11 +83,18 @@ class eslabPop: public eoPop<chromosome_t>
 	size_t population_size, task_count;
 };
 
+class GeneticListScheduler
+{
+	public:
+
+	virtual schedule_t &solve(const priority_t &priority = priority_t()) = 0;
+};
+
 template<class chromosome_t>
 class GLSStats;
 
 template<class chromosome_t>
-class GeneticListScheduler
+class GenericGLS: public GeneticListScheduler
 {
 	public:
 
@@ -94,12 +103,10 @@ class GeneticListScheduler
 	typedef std::map<MD5Digest, fitness_t, MD5DigestComparator> cache_t;
 	typedef GLSStats<chromosome_t> stats_t;
 
-	GeneticListScheduler(Graph *_graph, Hotspot *_hotspot,
+	GenericGLS(Graph *_graph, Hotspot *_hotspot,
 		const GLSTuning &_tuning = GLSTuning());
 
 	schedule_t &solve(const priority_t &priority = priority_t());
-
-	inline stats_t get_stats() const { return stats; }
 
 	protected:
 
@@ -228,8 +235,10 @@ class GLSStats: public eoMonitor
 		if (!population)
 			throw std::runtime_error("The population is not defined.");
 
+		/*
 		best_fitness = population->best_element().fitness();
 		worst_fitness = population->worse_element().fitness();
+		*/
 
 		if (!silent) {
 			size_t population_size = population->size();

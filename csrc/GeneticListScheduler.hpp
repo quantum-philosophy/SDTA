@@ -11,11 +11,11 @@
 #include "ListScheduler.h"
 
 /******************************************************************************/
-/* GeneticListScheduler                                                       */
+/* GenericGLS                                                                 */
 /******************************************************************************/
 
 template<class chromosome_t>
-GeneticListScheduler<chromosome_t>::GeneticListScheduler(
+GenericGLS<chromosome_t>::GenericGLS(
 	Graph *_graph, Hotspot *_hotspot, const GLSTuning &_tuning) :
 	graph(_graph), hotspot(_hotspot), tuning(_tuning)
 {
@@ -35,7 +35,7 @@ GeneticListScheduler<chromosome_t>::GeneticListScheduler(
 }
 
 template<class chromosome_t>
-schedule_t &GeneticListScheduler<chromosome_t>::solve(
+schedule_t &GenericGLS<chromosome_t>::solve(
 	const priority_t &start_priority)
 {
 	size_t i, j;
@@ -129,8 +129,8 @@ schedule_t &GeneticListScheduler<chromosome_t>::solve(
 }
 
 template<class chromosome_t>
-typename GeneticListScheduler<chromosome_t>::fitness_t
-GeneticListScheduler<chromosome_t>::evaluate(const chromosome_t &chromosome)
+typename GenericGLS<chromosome_t>::fitness_t
+GenericGLS<chromosome_t>::evaluate(const chromosome_t &chromosome)
 {
 	/* Make a new schedule */
 	schedule_t schedule = ListScheduler::process(graph, chromosome);
@@ -172,7 +172,6 @@ void eslabTransform<chromosome_t>::operator()(eoPop<chromosome_t> &population)
 
 	bool changed;
 	std::vector<bool> changes(population_size, false);
-
 	for (i = 0; i < crossover_count; i++) {
 		changed = crossover(population[2 * i], population[2 * i + 1]);
 		changes[2 * i] = changes[2 * i] || changed;

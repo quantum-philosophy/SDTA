@@ -9,6 +9,8 @@
 
 void GLSTuning::defaults()
 {
+	multiobjective = false;
+
 	/* Randomness */
 	seed = 0;
 
@@ -69,7 +71,10 @@ GLSTuning::GLSTuning(const char *filename)
 
 		stream >> name;
 
-		if (name == "seed")
+		if (name == "multiobjective")
+			stream >> multiobjective;
+
+		else if (name == "seed")
 			stream >> seed;
 
 		else if (name == "uniform_ratio")
@@ -130,6 +135,8 @@ std::ostream &operator<< (std::ostream &o, const GLSTuning &tuning)
 		<< std::setiosflags(std::ios::fixed)
 
 		<< "Tuning:" << std::endl
+
+		<< "  Multi-objective:         " << tuning.multiobjective << std::endl
 
 		<< std::setprecision(0)
 		<< "  Seed:                    " << tuning.seed << std::endl

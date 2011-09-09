@@ -11,6 +11,7 @@
 #include "Hotspot.h"
 #include "ListScheduler.h"
 #include "SingleObjectiveGLS.h"
+#include "MultiObjectiveGLS.h"
 #include "DynamicPower.h"
 #include "Lifetime.h"
 
@@ -91,12 +92,12 @@ void optimize(const char *system_config, const char *genetic_config,
 	Graph *graph = NULL;
 	Architecture *architecture = NULL;
 	Hotspot *hotspot = NULL;
-	SingleObjectiveGLS *scheduler = NULL;
+	GeneticListScheduler *scheduler = NULL;
 
 	try {
 		system_t system(system_config);
 
-		SingleObjectiveGLSTuning tuning(genetic_config);
+		GLSTuning tuning(genetic_config);
 
 		graph = new GraphBuilder(system.type, system.link);
 		architecture = new ArchitectureBuilder(system.frequency,
@@ -160,7 +161,10 @@ void optimize(const char *system_config, const char *genetic_config,
 			<< "Initial energy: "
 			<< price.energy << endl;
 
-		scheduler = new SingleObjectiveGLS(graph, hotspot, tuning);
+		if (tuning.multiobjective)
+			scheduler = new MultiObjectiveGLS(graph, hotspot, tuning);
+		else
+			scheduler = new SingleObjectiveGLS(graph, hotspot, tuning);
 
 		if (tuning.verbose && !system.priority.empty())
 			cout << "Using external priority." << endl;
@@ -175,7 +179,8 @@ void optimize(const char *system_config, const char *genetic_config,
 		end = clock();
 		elapsed = (double)(end - begin) / CLOCKS_PER_SEC;
 
-		SingleObjectiveGLS::stats_t stats = scheduler->get_stats();
+		/*
+		GLSStats stats = scheduler->get_stats();
 
 		if (tuning.verbose)
 			cout << endl << stats << endl;
@@ -183,6 +188,7 @@ void optimize(const char *system_config, const char *genetic_config,
 		cout << "Improvement: "
 			<< setiosflags(ios::fixed) << setprecision(2)
 			<< (stats.best_fitness / price.lifetime - 1.0) * 100 << "%" << endl;
+		*/
 
 		if (tuning.verbose)
 			cout << "Time elapsed: " << elapsed << endl;

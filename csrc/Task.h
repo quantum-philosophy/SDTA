@@ -11,7 +11,7 @@ class Task
 	friend class ListScheduler;
 
 	template<class chromosome_t>
-	friend class GeneticListScheduler;
+	friend class GenericGLS;
 
 	friend class DynamicPower;
 	friend std::ostream &operator<< (std::ostream &, const Task *);

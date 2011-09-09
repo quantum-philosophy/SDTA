@@ -25,7 +25,7 @@ class Hotspot;
 class Lifetime;
 
 template<class chromosome_t>
-class GeneticListScheduler;
+class GenericGLS;
 
 typedef int tid_t;
 typedef std::vector<tid_t> schedule_t;

@@ -4,14 +4,12 @@
 #include "common.h"
 #include "GeneticListScheduler.h"
 
-typedef GLSTuning SingleObjectiveGLSTuning;
-
 #ifdef REAL_RANK
-class SingleObjectiveGLS: public GeneticListScheduler<eoReal<double> >
+class SingleObjectiveGLS: public GenericGLS<eoReal<double> >
 {
 	typedef eoReal<double> chromosome_t;
 #else
-class SingleObjectiveGLS: public GeneticListScheduler<eoInt<double> >
+class SingleObjectiveGLS: public GenericGLS<eoInt<double> >
 {
 	typedef eoInt<double> chromosome_t;
 #endif
@@ -41,8 +39,8 @@ class SingleObjectiveGLS: public GeneticListScheduler<eoInt<double> >
 	public:
 
 	SingleObjectiveGLS(Graph *_graph, Hotspot *_hotspot,
-		const SingleObjectiveGLSTuning &_tuning = SingleObjectiveGLSTuning()) :
-		GeneticListScheduler<chromosome_t>(_graph, _hotspot, _tuning),
+		const GLSTuning &_tuning = GLSTuning()) :
+		GenericGLS<chromosome_t>(_graph, _hotspot, _tuning),
 		evaluator(this) {}
 
 	protected:

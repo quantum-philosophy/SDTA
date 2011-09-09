@@ -7,8 +7,6 @@
 #define AGING_OBJECTIVE  0
 #define ENERGY_OBJECTIVE 1
 
-typedef GLSTuning MultiObjectiveGLSTuning;
-
 class eslabObjectiveVectorTraits: public moeoObjectiveVectorTraits
 {
 	public:
@@ -38,7 +36,7 @@ class eslabMOChromosome: public moeoIntVector<eslabObjectiveVector,
 
 #ifdef REAL_RANK
 #else
-class MultiObjectiveGLS: public GeneticListScheduler<eslabMOChromosome>
+class MultiObjectiveGLS: public GenericGLS<eslabMOChromosome>
 {
 	typedef eslabMOChromosome chromosome_t;
 #endif
@@ -67,8 +65,8 @@ class MultiObjectiveGLS: public GeneticListScheduler<eslabMOChromosome>
 	public:
 
 	MultiObjectiveGLS(Graph *_graph, Hotspot *_hotspot,
-		const MultiObjectiveGLSTuning &_tuning = MultiObjectiveGLSTuning()) :
-		GeneticListScheduler<chromosome_t>(_graph, _hotspot, _tuning),
+		const GLSTuning &_tuning = GLSTuning()) :
+		GenericGLS<chromosome_t>(_graph, _hotspot, _tuning),
 		evaluator(this) {}
 
 	protected:
