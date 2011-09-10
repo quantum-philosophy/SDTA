@@ -70,10 +70,10 @@ void SingleObjectiveGLSStats::reset()
 
 void SingleObjectiveGLSStats::process()
 {
-	if (silent) return;
-
 	worst_fitness = population->worse_element().fitness();
 	best_fitness = population->best_element().fitness();
+
+	if (silent) return;
 
 	size_t population_size = population->size();
 	size_t width = 0;
@@ -90,7 +90,7 @@ void SingleObjectiveGLSStats::process()
 		<< " {" << crossover_rate << " " << mutation_rate << "}"
 		<< " [" << population->unique() << "/" << population_size << "]"
 		<< std::endl
-		<< std::setw(4) << generations + 1 << ": ";
+		<< std::setw(4) << generations << ": ";
 
 	last_executions = executions;
 }

@@ -121,9 +121,8 @@ void optimize(const char *system_config, const char *genetic_config,
 
 		schedule_t schedule = system.schedule;
 
-		if (schedule.empty()) {
-			schedule = ListScheduler::process(graph);
-		}
+		if (schedule.empty())
+			schedule = ListScheduler::process(graph, system.priority);
 		else if (tuning.verbose)
 			cout << "Using external schedule." << endl;
 
@@ -174,7 +173,7 @@ void optimize(const char *system_config, const char *genetic_config,
 
 		begin = clock();
 
-		GeneticListSchedulerStats stats = scheduler->solve(system.priority);
+		GeneticListSchedulerStats &stats = scheduler->solve(system.priority);
 
 		end = clock();
 		elapsed = (double)(end - begin) / CLOCKS_PER_SEC;
