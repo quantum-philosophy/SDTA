@@ -10,7 +10,7 @@ class Task
 	friend class Architecture;
 	friend class ListScheduler;
 
-	template<class chromosome_t>
+	template<class chromosome_t, class stats_t>
 	friend class GenericGLS;
 
 	friend class DynamicPower;

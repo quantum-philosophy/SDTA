@@ -129,46 +129,58 @@ GLSTuning::GLSTuning(const char *filename)
 	}
 }
 
-std::ostream &operator<< (std::ostream &o, const GLSTuning &tuning)
+void GLSTuning::display(std::ostream &o) const
 {
 	o
 		<< std::setiosflags(std::ios::fixed)
 
 		<< "Tuning:" << std::endl
 
-		<< "  Multi-objective:         " << tuning.multiobjective << std::endl
+		<< "  Multi-objective:         " << multiobjective << std::endl
 
 		<< std::setprecision(0)
-		<< "  Seed:                    " << tuning.seed << std::endl
+		<< "  Seed:                    " << seed << std::endl
 
 		/* Create */
 		<< std::setprecision(2)
-		<< "  Uniform ratio:           " << tuning.uniform_ratio << std::endl
+		<< "  Uniform ratio:           " << uniform_ratio << std::endl
 		<< std::setprecision(0)
-		<< "  Population size:         " << tuning.population_size << std::endl
+		<< "  Population size:         " << population_size << std::endl
 
 		/* Continue */
-		<< "  Minimum generations:     " << tuning.min_generations << std::endl
-		<< "  Maximum generations:     " << tuning.max_generations << std::endl
-		<< "  Stall generations:       " << tuning.stall_generations << std::endl
+		<< "  Minimum generations:     " << min_generations << std::endl
+		<< "  Maximum generations:     " << max_generations << std::endl
+		<< "  Stall generations:       " << stall_generations << std::endl
 
 		/* Select */
 		<< std::setprecision(2)
-		<< "  Elitism rate:            " << tuning.elitism_rate << std::endl
+		<< "  Elitism rate:            " << elitism_rate << std::endl
 		<< std::setprecision(0)
-		<< "  Tournament size:         " << tuning.tournament_size << std::endl
+		<< "  Tournament size:         " << tournament_size << std::endl
 
 		/* Crossover */
 		<< std::setprecision(2)
-		<< "  Crossover minimal rate:  " << tuning.crossover_min_rate << std::endl
-		<< "  Crossover scale:         " << tuning.crossover_scale << std::endl
-		<< "  Crossover exponent:      " << tuning.crossover_exponent << std::endl
+		<< "  Crossover minimal rate:  " << crossover_min_rate << std::endl
+		<< "  Crossover scale:         " << crossover_scale << std::endl
+		<< "  Crossover exponent:      " << crossover_exponent << std::endl
 		<< std::setprecision(0)
-		<< "  Crossover points:        " << tuning.crossover_points << std::endl
+		<< "  Crossover points:        " << crossover_points << std::endl
 
 		/* Mutate */
 		<< std::setprecision(2)
-		<< "  Mutation minimal rate:   " << tuning.mutation_min_rate << std::endl
-		<< "  Mutation scale:          " << tuning.mutation_scale << std::endl
-		<< "  Mutation exponent:       " << tuning.mutation_exponent << std::endl;
+		<< "  Mutation minimal rate:   " << mutation_min_rate << std::endl
+		<< "  Mutation scale:          " << mutation_scale << std::endl
+		<< "  Mutation exponent:       " << mutation_exponent << std::endl;
+}
+
+std::ostream &operator<< (std::ostream &o, const GLSTuning &tuning)
+{
+	tuning.display(o);
+	return o;
+}
+
+std::ostream &operator<< (std::ostream &o, const GeneticListSchedulerStats &stats)
+{
+	stats.display(o);
+	return o;
 }

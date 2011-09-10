@@ -7,7 +7,7 @@ class Graph
 {
 	friend class ListScheduler;
 
-	template<class chromosome_t>
+	template<class chromosome_t, class stats_t>
 	friend class GenericGLS;
 	friend class SingleObjectiveGLS;
 	friend class MultiObjectiveGLS;

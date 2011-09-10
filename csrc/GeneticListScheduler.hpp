@@ -11,11 +11,113 @@
 #include "ListScheduler.h"
 
 /******************************************************************************/
+/* eslabPop                                                                   */
+/******************************************************************************/
+
+template<class CT>
+size_t eslabPop<CT>::unique() const
+{
+	const eslabPop<CT> &self = *this;
+
+	size_t i, j, k, count;
+	bool found;
+	std::vector<bool> done(population_size, false);
+
+	count = 0;
+	for (i = 0; i < population_size; i++) {
+		if (done[i]) continue;
+		count++;
+
+		for (j = i + 1; j < population_size; j++) {
+			found = true;
+
+			for (k = 0; k < task_count; k++)
+				if (self[i][k] != self[j][k]) {
+					found = false;
+					break;
+				}
+
+			if (found) done[j] = true;
+		}
+	}
+
+	return count;
+}
+
+template<class CT>
+double eslabPop<CT>::diversity() const
+{
+	const eslabPop<CT> &self = *this;
+
+	size_t i, j, k;
+	size_t count = 0;
+
+	for (i = 0; i < population_size - 1; i++)
+		for (j = i + 1; j < population_size; j++)
+			for (k = 0; k < task_count; k++)
+				if (self[i][k] != self[j][k]) count++;
+
+	return (double)count /
+		((double)population_size * ((double)population_size - 1) / 2.0) /
+		(double)task_count;
+}
+
+/******************************************************************************/
+/* GenericGLSStats                                                            */
+/******************************************************************************/
+
+template<class CT>
+void GenericGLSStats<CT>::watch(eslabPop<CT> &_population,
+	bool _silent)
+{
+	population = &_population;
+	silent = _silent;
+
+	generations = 0;
+	evaluations = 0;
+	cache_hits = 0;
+	deadline_misses = 0;
+
+	crossover_rate = 0;
+	mutation_rate = 0;
+
+	reset();
+}
+
+template<class CT>
+eoMonitor &GenericGLSStats<CT>::operator()()
+{
+	if (!population)
+		throw std::runtime_error("The population is not defined.");
+
+	generations++;
+
+	process();
+
+	return *this;
+}
+
+template<class CT>
+void GenericGLSStats<CT>::display(std::ostream &o) const
+{
+	o
+		<< std::setiosflags(std::ios::fixed)
+
+		<< "Stats:" << std::endl
+
+		<< std::setprecision(0)
+		<< "  Generations:     " << generations << std::endl
+		<< "  Evaluations:     " << evaluations << std::endl
+		<< "  Cache hits:      " << cache_hits << std::endl
+		<< "  Deadline misses: " << deadline_misses << std::endl;
+}
+
+/******************************************************************************/
 /* GenericGLS                                                                 */
 /******************************************************************************/
 
-template<class chromosome_t>
-GenericGLS<chromosome_t>::GenericGLS(
+template<class CT, class ST>
+GenericGLS<CT, ST>::GenericGLS(
 	Graph *_graph, Hotspot *_hotspot, const GLSTuning &_tuning) :
 	graph(_graph), hotspot(_hotspot), tuning(_tuning)
 {
@@ -34,8 +136,8 @@ GenericGLS<chromosome_t>::GenericGLS(
 	sampling_interval = hotspot->sampling_interval();
 }
 
-template<class chromosome_t>
-schedule_t &GenericGLS<chromosome_t>::solve(
+template<class CT, class ST>
+ST &GenericGLS<CT, ST>::solve(
 	const priority_t &start_priority)
 {
 	size_t i, j;
@@ -119,18 +221,12 @@ schedule_t &GenericGLS<chromosome_t>::solve(
 
 	process(population, checkpoint, transform);
 
-	if (tuning.verbose)
-		std::cout << "end" << std::endl;
-
-	stats.best_priority = population.best_element();
-	stats.best_schedule = ListScheduler::process(graph, stats.best_priority);
-
-	return stats.best_schedule;
+	return stats;
 }
 
-template<class chromosome_t>
-typename GenericGLS<chromosome_t>::fitness_t
-GenericGLS<chromosome_t>::evaluate(const chromosome_t &chromosome)
+template<class CT, class ST>
+typename GenericGLS<CT, ST>::fitness_t
+GenericGLS<CT, ST>::evaluate(const chromosome_t &chromosome)
 {
 	/* Make a new schedule */
 	schedule_t schedule = ListScheduler::process(graph, chromosome);
@@ -159,12 +255,12 @@ GenericGLS<chromosome_t>::evaluate(const chromosome_t &chromosome)
 /* eslabTransform                                                             */
 /******************************************************************************/
 
-template<class chromosome_t>
-eslabTransform<chromosome_t>::eslabTransform(eoQuadOp<chromosome_t> &_crossover,
-	eoMonOp<chromosome_t> &_mutate) : crossover(_crossover), mutate(_mutate) {}
+template<class CT>
+eslabTransform<CT>::eslabTransform(eoQuadOp<CT> &_crossover,
+	eoMonOp<CT> &_mutate) : crossover(_crossover), mutate(_mutate) {}
 
-template<class chromosome_t>
-void eslabTransform<chromosome_t>::operator()(eoPop<chromosome_t> &population)
+template<class CT>
+void eslabTransform<CT>::operator()(eoPop<CT> &population)
 {
 	size_t i;
 	size_t population_size = population.size();
@@ -191,10 +287,10 @@ void eslabTransform<chromosome_t>::operator()(eoPop<chromosome_t> &population)
 /* eslabNPtsBitCrossover                                                      */
 /******************************************************************************/
 
-template<class chromosome_t>
-eslabNPtsBitCrossover<chromosome_t>::eslabNPtsBitCrossover(size_t _points,
+template<class CT>
+eslabNPtsBitCrossover<CT>::eslabNPtsBitCrossover(size_t _points,
 	double _min_rate, double _scale, double _exponent,
-	GLSStats<chromosome_t> &_stats) :
+	GenericGLSStats<CT> &_stats) :
 
 	points(_points), min_rate(_min_rate), scale(_scale),
 	exponent(_exponent), stats(_stats)
@@ -206,9 +302,8 @@ eslabNPtsBitCrossover<chromosome_t>::eslabNPtsBitCrossover(size_t _points,
 		std::runtime_error("The crossover minimal rate is invalid.");
 }
 
-template<class chromosome_t>
-bool eslabNPtsBitCrossover<chromosome_t>::operator()(
-	chromosome_t &one, chromosome_t &another)
+template<class CT>
+bool eslabNPtsBitCrossover<CT>::operator()(CT &one, CT &another)
 {
 	double rate;
 
@@ -255,10 +350,10 @@ bool eslabNPtsBitCrossover<chromosome_t>::operator()(
 /* eslabMutation                                                              */
 /******************************************************************************/
 
-template<class chromosome_t>
-eslabUniformRangeMutation<chromosome_t>::eslabUniformRangeMutation(
+template<class CT>
+eslabUniformRangeMutation<CT>::eslabUniformRangeMutation(
 	rank_t _min, rank_t _max, double _min_rate, double _scale,
-	double _exponent, GLSStats<chromosome_t> &_stats) :
+	double _exponent, GenericGLSStats<CT> &_stats) :
 
 	min(_min), range(_max - _min), min_rate(_min_rate), scale(_scale),
 	exponent(_exponent), stats(_stats)
@@ -270,8 +365,8 @@ eslabUniformRangeMutation<chromosome_t>::eslabUniformRangeMutation(
 		std::runtime_error("The mutation minimal rate is invalid.");
 }
 
-template<class chromosome_t>
-bool eslabUniformRangeMutation<chromosome_t>::operator()(chromosome_t &chromosome)
+template<class CT>
+bool eslabUniformRangeMutation<CT>::operator()(CT &chromosome)
 {
 	double rate;
 
@@ -294,9 +389,9 @@ bool eslabUniformRangeMutation<chromosome_t>::operator()(chromosome_t &chromosom
 /* eslabEvolutionMonitor                                                      */
 /******************************************************************************/
 
-template<class chromosome_t>
-eslabEvolutionMonitor<chromosome_t>::eslabEvolutionMonitor(
-	eoPop<chromosome_t> &_population, const std::string &filename) :
+template<class CT>
+eslabEvolutionMonitor<CT>::eslabEvolutionMonitor(
+	eoPop<CT> &_population, const std::string &filename) :
 	population(_population)
 {
 	stream.open(filename.c_str());
@@ -304,8 +399,8 @@ eslabEvolutionMonitor<chromosome_t>::eslabEvolutionMonitor(
 		throw std::runtime_error("Cannot open the output file.");
 }
 
-template<class chromosome_t>
-eoMonitor& eslabEvolutionMonitor<chromosome_t>::operator()(void)
+template<class CT>
+eoMonitor& eslabEvolutionMonitor<CT>::operator()()
 {
 	size_t population_size = population.size();
 
@@ -315,85 +410,4 @@ eoMonitor& eslabEvolutionMonitor<chromosome_t>::operator()(void)
 	stream << std::endl;
 
 	return *this;
-}
-
-/******************************************************************************/
-/* eslabPop                                                                   */
-/******************************************************************************/
-
-template<class chromosome_t>
-size_t eslabPop<chromosome_t>::unique() const
-{
-	const eslabPop<chromosome_t> &self = *this;
-
-	size_t i, j, k, count;
-	bool found;
-	std::vector<bool> done(population_size, false);
-
-	count = 0;
-	for (i = 0; i < population_size; i++) {
-		if (done[i]) continue;
-		count++;
-
-		for (j = i + 1; j < population_size; j++) {
-			found = true;
-
-			for (k = 0; k < task_count; k++)
-				if (self[i][k] != self[j][k]) {
-					found = false;
-					break;
-				}
-
-			if (found) done[j] = true;
-		}
-	}
-
-	return count;
-}
-
-template<class chromosome_t>
-double eslabPop<chromosome_t>::diversity() const
-{
-	const eslabPop<chromosome_t> &self = *this;
-
-	size_t i, j, k;
-	size_t count = 0;
-
-	for (i = 0; i < population_size - 1; i++)
-		for (j = i + 1; j < population_size; j++)
-			for (k = 0; k < task_count; k++)
-				if (self[i][k] != self[j][k]) count++;
-
-	return (double)count /
-		((double)population_size * ((double)population_size - 1) / 2.0) /
-		(double)task_count;
-}
-
-/******************************************************************************/
-/* GLSStats                                                                   */
-/******************************************************************************/
-
-template<class chromosome_t>
-std::ostream &operator<< (std::ostream &o, const GLSStats<chromosome_t> &stats)
-{
-	o
-		<< std::setiosflags(std::ios::fixed)
-
-		<< "Stats:" << std::endl
-
-		<< std::setprecision(0)
-		<< "  Generations:     " << stats.generations << std::endl
-		<< "  Evaluations:     " << stats.evaluations << std::endl
-		<< "  Cache hits:      " << stats.cache_hits << std::endl
-		<< "  Deadline misses: " << stats.deadline_misses << std::endl
-
-		<< std::setprecision(2)
-		<< "  Best fitness:    " << stats.best_fitness << std::endl
-		<< "  Worst fitness:   " << stats.worst_fitness << std::endl
-
-		<< std::setprecision(0)
-		<< "  Best priority:   " << print_t<rank_t>(stats.best_priority) << std::endl
-		<< "  Best schedule:   " << print_t<int>(stats.best_schedule) << std::endl;
-
-	return o;
 }

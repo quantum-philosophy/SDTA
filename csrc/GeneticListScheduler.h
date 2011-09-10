@@ -20,6 +20,23 @@
 #include "Hotspot.h"
 #include "MD5Digest.h"
 
+template<class CT>
+class eslabPop: public eoPop<CT>
+{
+	public:
+
+	eslabPop(size_t _population_size, size_t _task_count) :
+		eoPop<CT>(), population_size(_population_size),
+		task_count(_task_count) {}
+
+	size_t unique() const;
+	double diversity() const;
+
+	private:
+
+	size_t population_size, task_count;
+};
+
 class GLSTuning
 {
 	public:
@@ -61,138 +78,30 @@ class GLSTuning
 	GLSTuning() { defaults(); }
 	GLSTuning(const char *filename);
 
+	void display(std::ostream &o) const;
+
 	protected:
 
 	void defaults();
 };
 
-template<class chromosome_t>
-class eslabPop: public eoPop<chromosome_t>
+class GeneticListSchedulerStats
 {
 	public:
 
-	eslabPop(size_t _population_size, size_t _task_count) :
-		eoPop<chromosome_t>(), population_size(_population_size),
-		task_count(_task_count) {}
+	GeneticListSchedulerStats() {}
 
-	size_t unique() const;
-	double diversity() const;
-
-	private:
-
-	size_t population_size, task_count;
+	virtual void display(std::ostream &o) const {}
 };
 
-class GeneticListScheduler
+template<class CT>
+class GenericGLSStats: public GeneticListSchedulerStats, public eoMonitor
 {
-	public:
-
-	virtual schedule_t &solve(const priority_t &priority = priority_t()) = 0;
-};
-
-template<class chromosome_t>
-class GLSStats;
-
-template<class chromosome_t>
-class GenericGLS: public GeneticListScheduler
-{
-	public:
-
-	typedef	eoPop<chromosome_t> population_t;
-	typedef typename chromosome_t::Fitness fitness_t;
-	typedef std::map<MD5Digest, fitness_t, MD5DigestComparator> cache_t;
-	typedef GLSStats<chromosome_t> stats_t;
-
-	GenericGLS(Graph *_graph, Hotspot *_hotspot,
-		const GLSTuning &_tuning = GLSTuning());
-
-	schedule_t &solve(const priority_t &priority = priority_t());
-
 	protected:
 
-	fitness_t evaluate(const chromosome_t &chromosome);
-
-	virtual fitness_t evaluate_schedule(const schedule_t &schedule) = 0;
-	virtual void evaluate_chromosome(chromosome_t &chromosome) = 0;
-	virtual void process(eoPop<chromosome_t> &population,
-		eoContinue<chromosome_t> &continuator,
-		eoTransform<chromosome_t> &transform) = 0;
-
-	Graph *graph;
-	Hotspot *hotspot;
-
-	GLSTuning tuning;
-	GLSStats<chromosome_t> stats;
-
-	cache_t cache;
-
-	double sampling_interval;
-};
-
-template<class chromosome_t>
-class eslabTransform: public eoTransform<chromosome_t>
-{
-	public:
-
-	eslabTransform(eoQuadOp<chromosome_t> &_crossover,
-		eoMonOp<chromosome_t> &_mutate);
-
-	void operator()(eoPop<chromosome_t> &population);
-
-	private:
-
-	eoQuadOp<chromosome_t> &crossover;
-	eoMonOp<chromosome_t> &mutate;
-};
-
-template<class chromosome_t>
-class eslabNPtsBitCrossover : public eoQuadOp<chromosome_t>
-{
-	size_t points;
-
-	double min_rate;
-	double scale;
-	double exponent;
-
-	GLSStats<chromosome_t> &stats;
-
-	public:
-
-	eslabNPtsBitCrossover(size_t _points,
-		double _min_rate, double _scale, double _exponent,
-		GLSStats<chromosome_t> &_stats);
-
-	bool operator()(chromosome_t &one, chromosome_t &another);
-};
-
-template<class chromosome_t>
-class eslabUniformRangeMutation: public eoMonOp<chromosome_t>
-{
-	rank_t min;
-	rank_t range;
-
-	double min_rate;
-	double scale;
-	double exponent;
-
-	GLSStats<chromosome_t> &stats;
-
-	public:
-
-	eslabUniformRangeMutation(rank_t _min, rank_t _max,
-		double _min_rate, double _scale, double _exponent,
-		GLSStats<chromosome_t> &_stats);
-
-	bool operator()(chromosome_t& chromosome);
-};
-
-template<class chromosome_t>
-class GLSStats: public eoMonitor
-{
-	eslabPop<chromosome_t> *population;
+	eslabPop<CT> *population;
 
 	bool silent;
-	size_t last_executions;
 
 	public:
 
@@ -204,69 +113,7 @@ class GLSStats: public eoMonitor
 	double crossover_rate;
 	double mutation_rate;
 
-	typename chromosome_t::Fitness best_fitness;
-	typename chromosome_t::Fitness worst_fitness;
-
-	chromosome_t best_priority;
-	schedule_t best_schedule;
-
-	GLSStats() : population(NULL) {}
-
-	void watch(eslabPop<chromosome_t> &_population, bool _silent = false)
-	{
-		population = &_population;
-		silent = _silent;
-
-		generations = 0;
-		evaluations = 0;
-		cache_hits = 0;
-		deadline_misses = 0;
-		best_fitness = 0;
-		worst_fitness = 0;
-
-		last_executions = 0;
-
-		crossover_rate = 0;
-		mutation_rate = 0;
-	}
-
-	eoMonitor& operator()()
-	{
-		if (!population)
-			throw std::runtime_error("The population is not defined.");
-
-		/*
-		best_fitness = population->best_element().fitness();
-		worst_fitness = population->worse_element().fitness();
-		*/
-
-		if (!silent) {
-			size_t population_size = population->size();
-			size_t width = 0;
-			size_t executions = cache_hits + deadline_misses + evaluations;
-
-			width = population_size -
-				(executions - last_executions) + 1;
-
-			std::cout
-				<< std::setw(width) << " "
-				<< std::setprecision(2)
-				<< best_fitness << " "
-				<< std::setw(10)
-				<< worst_fitness
-				<< std::setprecision(3) << std::setw(8)
-				<< " {" << crossover_rate << " " << mutation_rate << "}"
-				<< " [" << population->unique() << "/" << population_size << "]"
-				<< std::endl
-				<< std::setw(4) << generations + 1 << ": ";
-
-			last_executions = executions;
-		}
-
-		generations++;
-
-		return *this;
-	}
+	GenericGLSStats() : population(NULL) {}
 
 	inline void evaluate()
 	{
@@ -285,26 +132,136 @@ class GLSStats: public eoMonitor
 		if (!silent) std::cout << "!" << std::flush;
 		deadline_misses++;
 	}
+
+	void watch(eslabPop<CT> &_population, bool _silent = false);
+	eoMonitor& operator()();
+
+	virtual void display(std::ostream &o) const;
+
+	protected:
+
+	virtual void reset() {}
+	virtual void process() {}
 };
 
-template<class chromosome_t>
+class GeneticListScheduler
+{
+	public:
+
+	virtual GeneticListSchedulerStats &solve(
+		const priority_t &priority = priority_t()) = 0;
+};
+
+template<class CT, class ST>
+class GenericGLS: public GeneticListScheduler
+{
+	public:
+
+	typedef CT chromosome_t;
+	typedef ST stats_t;
+	typedef	eoPop<chromosome_t> population_t;
+	typedef typename chromosome_t::Fitness fitness_t;
+	typedef std::map<MD5Digest, fitness_t, MD5DigestComparator> cache_t;
+
+	GenericGLS(Graph *_graph, Hotspot *_hotspot,
+		const GLSTuning &_tuning = GLSTuning());
+
+	stats_t &solve(const priority_t &priority = priority_t());
+
+	protected:
+
+	fitness_t evaluate(const chromosome_t &chromosome);
+
+	virtual fitness_t evaluate_schedule(const schedule_t &schedule) = 0;
+	virtual void evaluate_chromosome(chromosome_t &chromosome) = 0;
+	virtual void process(eoPop<chromosome_t> &population,
+		eoContinue<chromosome_t> &continuator,
+		eoTransform<chromosome_t> &transform) = 0;
+
+	Graph *graph;
+	Hotspot *hotspot;
+
+	GLSTuning tuning;
+	stats_t stats;
+
+	cache_t cache;
+
+	double sampling_interval;
+};
+
+template<class CT>
+class eslabTransform: public eoTransform<CT>
+{
+	public:
+
+	eslabTransform(eoQuadOp<CT> &_crossover,
+		eoMonOp<CT> &_mutate);
+
+	void operator()(eoPop<CT> &population);
+
+	private:
+
+	eoQuadOp<CT> &crossover;
+	eoMonOp<CT> &mutate;
+};
+
+template<class CT>
+class eslabNPtsBitCrossover : public eoQuadOp<CT>
+{
+	size_t points;
+
+	double min_rate;
+	double scale;
+	double exponent;
+
+	GenericGLSStats<CT> &stats;
+
+	public:
+
+	eslabNPtsBitCrossover(size_t _points,
+		double _min_rate, double _scale, double _exponent,
+		GenericGLSStats<CT> &_stats);
+
+	bool operator()(CT &one, CT &another);
+};
+
+template<class CT>
+class eslabUniformRangeMutation: public eoMonOp<CT>
+{
+	rank_t min;
+	rank_t range;
+
+	double min_rate;
+	double scale;
+	double exponent;
+
+	GenericGLSStats<CT> &stats;
+
+	public:
+
+	eslabUniformRangeMutation(rank_t _min, rank_t _max,
+		double _min_rate, double _scale, double _exponent,
+		GenericGLSStats<CT> &_stats);
+
+	bool operator()(CT& chromosome);
+};
+
+template<class CT>
 class eslabEvolutionMonitor: public eoMonitor
 {
-	eoPop<chromosome_t> &population;
+	eoPop<CT> &population;
 	std::ofstream stream;
 
 	public:
 
-	eslabEvolutionMonitor(eoPop<chromosome_t> &_population,
+	eslabEvolutionMonitor(eoPop<CT> &_population,
 		const std::string &filename);
 
 	virtual eoMonitor& operator()();
 };
 
 std::ostream &operator<< (std::ostream &o, const GLSTuning &tuning);
-
-template<class chromosome_t>
-std::ostream &operator<< (std::ostream &o, const GLSStats<chromosome_t> &stats);
+std::ostream &operator<< (std::ostream &o, const GeneticListSchedulerStats &stats);
 
 #include "GeneticListScheduler.hpp"
 

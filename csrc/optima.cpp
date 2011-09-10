@@ -174,21 +174,23 @@ void optimize(const char *system_config, const char *genetic_config,
 
 		begin = clock();
 
-		schedule = scheduler->solve(system.priority);
+		GeneticListSchedulerStats stats = scheduler->solve(system.priority);
 
 		end = clock();
 		elapsed = (double)(end - begin) / CLOCKS_PER_SEC;
 
-		/*
-		GLSStats stats = scheduler->get_stats();
-
 		if (tuning.verbose)
 			cout << endl << stats << endl;
 
-		cout << "Improvement: "
-			<< setiosflags(ios::fixed) << setprecision(2)
-			<< (stats.best_fitness / price.lifetime - 1.0) * 100 << "%" << endl;
-		*/
+		if (tuning.multiobjective) {
+		}
+		else {
+			SingleObjectiveGLSStats *sstats = (SingleObjectiveGLSStats *)&stats;
+
+			cout << "Improvement: "
+				<< setiosflags(ios::fixed) << setprecision(2)
+				<< (sstats->best_fitness / price.lifetime - 1.0) * 100 << "%" << endl;
+		}
 
 		if (tuning.verbose)
 			cout << "Time elapsed: " << elapsed << endl;

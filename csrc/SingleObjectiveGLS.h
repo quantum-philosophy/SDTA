@@ -5,15 +5,47 @@
 #include "GeneticListScheduler.h"
 
 #ifdef REAL_RANK
-class SingleObjectiveGLS: public GenericGLS<eoReal<double> >
+class SingleObjectiveGLSStats: public GenericGLSStats<eoReal<double> >
 {
 	typedef eoReal<double> chromosome_t;
 #else
-class SingleObjectiveGLS: public GenericGLS<eoInt<double> >
+class SingleObjectiveGLSStats: public GenericGLSStats<eoInt<double> >
 {
 	typedef eoInt<double> chromosome_t;
 #endif
 
+	size_t last_executions;
+
+	public:
+
+	double best_fitness;
+	double worst_fitness;
+
+	chromosome_t best_priority;
+	schedule_t best_schedule;
+
+	SingleObjectiveGLSStats() : GenericGLSStats<chromosome_t>() {}
+
+	void watch(eslabPop<chromosome_t> &_population, bool _silent = false)
+	{
+		GenericGLSStats<chromosome_t>::watch(_population, _silent);
+		last_executions = 0;
+	}
+
+	void display(std::ostream &o) const;
+
+	protected:
+
+	void reset();
+	void process();
+};
+
+#ifdef REAL_RANK
+class SingleObjectiveGLS: public GenericGLS<eoReal<double>, SingleObjectiveGLSStats>
+#else
+class SingleObjectiveGLS: public GenericGLS<eoInt<double>, SingleObjectiveGLSStats>
+#endif
+{
 	protected:
 
 	class evaluate_t: public eoEvalFunc<chromosome_t>
@@ -40,8 +72,8 @@ class SingleObjectiveGLS: public GenericGLS<eoInt<double> >
 
 	SingleObjectiveGLS(Graph *_graph, Hotspot *_hotspot,
 		const GLSTuning &_tuning = GLSTuning()) :
-		GenericGLS<chromosome_t>(_graph, _hotspot, _tuning),
-		evaluator(this) {}
+		GenericGLS<chromosome_t, stats_t>(_graph, _hotspot, _tuning),
+		evaluator(this) { stats = SingleObjectiveGLSStats(); }
 
 	protected:
 

@@ -11,7 +11,6 @@ typedef double rank_t;
 typedef int rank_t;
 #endif
 
-
 class Task;
 class Graph;
 
@@ -24,7 +23,7 @@ class DynamicPower;
 class Hotspot;
 class Lifetime;
 
-template<class chromosome_t>
+template<class chromosome_t, class stats_t>
 class GenericGLS;
 
 typedef int tid_t;
@@ -55,7 +54,8 @@ struct system_t
 	system_t(const char *filename);
 };
 
-struct price_t {
+struct price_t
+{
 	double lifetime;
 	double energy;
 

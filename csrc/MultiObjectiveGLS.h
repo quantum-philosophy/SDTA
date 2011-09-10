@@ -32,15 +32,12 @@ class eslabMOChromosome: public moeoIntVector<eslabObjectiveVector,
 		moeoIntVector<eslabObjectiveVector, double, double>(_size) {}
 };
 
+typedef GenericGLSStats<eslabMOChromosome> MultiObjectiveGLSStats;
+
 #endif
 
-#ifdef REAL_RANK
-#else
-class MultiObjectiveGLS: public GenericGLS<eslabMOChromosome>
+class MultiObjectiveGLS: public GenericGLS<eslabMOChromosome, MultiObjectiveGLSStats>
 {
-	typedef eslabMOChromosome chromosome_t;
-#endif
-
 	protected:
 
 	class evaluate_t: public moeoEvalFunc<chromosome_t>
@@ -66,7 +63,7 @@ class MultiObjectiveGLS: public GenericGLS<eslabMOChromosome>
 
 	MultiObjectiveGLS(Graph *_graph, Hotspot *_hotspot,
 		const GLSTuning &_tuning = GLSTuning()) :
-		GenericGLS<chromosome_t>(_graph, _hotspot, _tuning),
+		GenericGLS<chromosome_t, stats_t>(_graph, _hotspot, _tuning),
 		evaluator(this) {}
 
 	protected:

@@ -2,6 +2,7 @@
 #include "Graph.h"
 #include "Lifetime.h"
 #include "DynamicPower.h"
+#include "ListScheduler.h"
 
 void SingleObjectiveGLS::process(eoPop<chromosome_t> &population,
 	eoContinue<chromosome_t> &continuator,
@@ -20,6 +21,9 @@ void SingleObjectiveGLS::process(eoPop<chromosome_t> &population,
 		transform, replace);
 
 	ga(population);
+
+	stats.best_priority = population.best_element();
+	stats.best_schedule = ListScheduler::process(graph, stats.best_priority);
 }
 
 void SingleObjectiveGLS::evaluate_chromosome(chromosome_t &chromosome)
@@ -57,4 +61,50 @@ SingleObjectiveGLS::evaluate_schedule(const schedule_t &schedule)
 	}
 
 	return fitness;
+}
+
+void SingleObjectiveGLSStats::reset()
+{
+	last_executions = 0;
+}
+
+void SingleObjectiveGLSStats::process()
+{
+	if (silent) return;
+
+	worst_fitness = population->worse_element().fitness();
+	best_fitness = population->best_element().fitness();
+
+	size_t population_size = population->size();
+	size_t width = 0;
+	size_t executions = cache_hits + deadline_misses + evaluations;
+
+	width = population_size -
+		(executions - last_executions) + 1;
+
+	std::cout
+		<< std::setw(width) << " "
+		<< std::setprecision(2) << std::setw(10)
+		<< worst_fitness << " " << best_fitness
+		<< std::setprecision(3) << std::setw(8)
+		<< " {" << crossover_rate << " " << mutation_rate << "}"
+		<< " [" << population->unique() << "/" << population_size << "]"
+		<< std::endl
+		<< std::setw(4) << generations + 1 << ": ";
+
+	last_executions = executions;
+}
+
+void SingleObjectiveGLSStats::display(std::ostream &o) const
+{
+	GenericGLSStats<chromosome_t>::display(o);
+
+	o
+		<< std::setprecision(2)
+		<< "  Best fitness:    " << best_fitness << std::endl
+		<< "  Worst fitness:   " << worst_fitness << std::endl
+
+		<< std::setprecision(0)
+		<< "  Best priority:   " << print_t<rank_t>(best_priority) << std::endl
+		<< "  Best schedule:   " << print_t<int>(best_schedule) << std::endl;
 }

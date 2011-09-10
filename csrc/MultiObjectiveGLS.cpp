@@ -33,19 +33,9 @@ MultiObjectiveGLS::evaluate_schedule(const schedule_t &schedule)
 	else {
 		stats.evaluate();
 
-		matrix_t dynamic_power, temperature, total_power;
-
-		/* The graph is rescheduled now, obtain the dynamic power profile */
-		DynamicPower::compute(graph, sampling_interval, dynamic_power);
-
-		/* Now, we can get the temperature profile, and the total power profile
-		 * including the leakage part.
-		 */
-		size_t iterations = hotspot->solve(graph->architecture,
-			dynamic_power, temperature, total_power);
-
-		fitness[AGING_OBJECTIVE] = Lifetime::predict(temperature, sampling_interval);
-		fitness[ENERGY_OBJECTIVE] = 0;
+		price_t price = graph->evaluate(hotspot);
+		fitness[AGING_OBJECTIVE] = price.lifetime;
+		fitness[ENERGY_OBJECTIVE] = price.energy;
 	}
 
 	return fitness;
