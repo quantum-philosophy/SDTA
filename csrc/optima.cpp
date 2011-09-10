@@ -122,7 +122,7 @@ void optimize(const char *system_config, const char *genetic_config,
 		schedule_t schedule = system.schedule;
 
 		if (schedule.empty())
-			schedule = ListScheduler::process(graph, system.priority);
+			schedule = ListScheduler::process(graph);
 		else if (tuning.verbose)
 			cout << "Using external schedule." << endl;
 
