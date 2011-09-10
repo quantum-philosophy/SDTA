@@ -29,10 +29,15 @@ add_custom_command (
 # ParadisEO
 set (PARADISEO_DIR ${CMAKE_CURRENT_SOURCE_DIR}/paradiseo-${PARADISEO_VERSION})
 add_custom_target (paradiseo
-	COMMAND cd ${PARADISEO_DIR}/paradiseo-eo/build && cmake ..
-	-DCMAKE_CXX_FLAGS_RELEASE='-O3 -DNDEBUG -fPIC' && make
-	COMMAND cd ${PARADISEO_DIR}/paradiseo-moeo/build && cmake ..
-	-DCMAKE_CXX_FLAGS_RELEASE='-O3 -DNDEBUG -fPIC' && make
+	COMMAND cd ${PARADISEO_DIR}/paradiseo-eo/build &&
+    cmake .. -Dconfig=${PARADISEO_DIR}/install.cmake &&
+    make
+	COMMAND cd ${PARADISEO_DIR}/paradiseo-mo/build &&
+    cmake .. -Dconfig=${PARADISEO_DIR}/install.cmake &&
+    make
+	COMMAND cd ${PARADISEO_DIR}/paradiseo-moeo/build &&
+    cmake .. -Dconfig=${PARADISEO_DIR}/install.cmake &&
+    make
 )
 add_custom_command (
 	TARGET paradiseo
