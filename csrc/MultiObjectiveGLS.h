@@ -19,7 +19,18 @@ class eslabObjectiveVectorTraits: public moeoObjectiveVectorTraits
 #ifdef REAL_RANK
 #else
 
-typedef moeoRealObjectiveVector<eslabObjectiveVectorTraits> eslabObjectiveVector;
+class eslabObjectiveVector: public moeoRealObjectiveVector<eslabObjectiveVectorTraits>
+{
+	public:
+
+    eslabObjectiveVector(double _value = 0.0) :
+		moeoRealObjectiveVector<eslabObjectiveVectorTraits>(_value) {}
+
+	operator price_t() const
+	{
+		return price_t((*this)[AGING_OBJECTIVE], (*this)[ENERGY_OBJECTIVE]);
+	}
+};
 
 class eslabMOChromosome: public moeoIntVector<eslabObjectiveVector,
 	/* Fitness */ double, /* Diversity */ double>
@@ -32,7 +43,23 @@ class eslabMOChromosome: public moeoIntVector<eslabObjectiveVector,
 		moeoIntVector<eslabObjectiveVector, double, double>(_size) {}
 };
 
-typedef GenericGLSStats<eslabMOChromosome> MultiObjectiveGLSStats;
+class MultiObjectiveGLSStats: public GenericGLSStats<eslabMOChromosome>
+{
+	typedef eslabMOChromosome chromosome_t;
+
+	size_t last_executions;
+
+	public:
+
+	std::vector<price_t> pareto_optima;
+
+	void display(std::ostream &o) const;
+
+	protected:
+
+	void reset();
+	void process();
+};
 
 #endif
 

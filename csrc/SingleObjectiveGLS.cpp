@@ -70,8 +70,8 @@ void SingleObjectiveGLSStats::reset()
 
 void SingleObjectiveGLSStats::process()
 {
-	worst_fitness = population->worse_element().fitness();
-	best_fitness = population->best_element().fitness();
+	worst_lifetime = population->worse_element().fitness();
+	best_lifetime = population->best_element().fitness();
 
 	if (silent) return;
 
@@ -85,7 +85,7 @@ void SingleObjectiveGLSStats::process()
 	std::cout
 		<< std::setw(width) << " "
 		<< std::setprecision(2) << std::setw(10)
-		<< worst_fitness << " " << best_fitness
+		<< worst_lifetime << " " << best_lifetime
 		<< std::setprecision(3) << std::setw(8)
 		<< " {" << crossover_rate << " " << mutation_rate << "}"
 		<< " [" << population->unique() << "/" << population_size << "]"
@@ -101,8 +101,8 @@ void SingleObjectiveGLSStats::display(std::ostream &o) const
 
 	o
 		<< std::setprecision(2)
-		<< "  Best fitness:    " << best_fitness << std::endl
-		<< "  Worst fitness:   " << worst_fitness << std::endl
+		<< "  Best lifetime:   " << best_lifetime << std::endl
+		<< "  Worst lifetime:  " << worst_lifetime << std::endl
 
 		<< std::setprecision(0)
 		<< "  Best priority:   " << print_t<rank_t>(best_priority) << std::endl

@@ -134,4 +134,7 @@ std::ostream &operator<< (std::ostream &o, const print_t<T> &print)
 	return o;
 }
 
+template<>
+std::ostream &operator<< (std::ostream &o, const print_t<price_t> &print);
+
 #endif

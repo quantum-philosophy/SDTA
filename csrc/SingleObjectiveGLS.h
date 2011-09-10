@@ -18,19 +18,11 @@ class SingleObjectiveGLSStats: public GenericGLSStats<eoInt<double> >
 
 	public:
 
-	double best_fitness;
-	double worst_fitness;
+	double best_lifetime;
+	double worst_lifetime;
 
 	chromosome_t best_priority;
 	schedule_t best_schedule;
-
-	SingleObjectiveGLSStats() : GenericGLSStats<chromosome_t>() {}
-
-	void watch(eslabPop<chromosome_t> &_population, bool _silent = false)
-	{
-		GenericGLSStats<chromosome_t>::watch(_population, _silent);
-		last_executions = 0;
-	}
 
 	void display(std::ostream &o) const;
 
@@ -55,7 +47,7 @@ class SingleObjectiveGLS: public GenericGLS<eoInt<double>, SingleObjectiveGLSSta
 		evaluate_t(SingleObjectiveGLS *_ls) :
 			eoEvalFunc<chromosome_t>(), ls(_ls) {}
 
-		virtual void operator() (chromosome_t &chromosome)
+		virtual void operator()(chromosome_t &chromosome)
 		{
 			if (chromosome.invalid())
 				chromosome.fitness(ls->evaluate(chromosome));
