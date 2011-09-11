@@ -3,43 +3,48 @@
 #include "Lifetime.h"
 #include "DynamicPower.h"
 
-eslabMOPop::fitness_t eslabMOPop::best_fitness() const
+price_t eslabMOPop::best_lifetime() const
 {
-	const eslabMOPop &self = *this;
+	price_t price(std::numeric_limits<double>::min(), 0);
 
-	fitness_t best_vector;
-	size_t population_size = self.size();
-	size_t objective_count = fitness_t::nObjectives();
+	size_t population_size = size();
 
-	/* Reset */
-	for (size_t i = 0; i < objective_count; i++)
-		if (fitness_t::maximizing(i))
-			best_vector[i] = std::numeric_limits<double>::min();
-		else
-			best_vector[i] = std::numeric_limits<double>::max();
-
-	/* Find */
 	for (size_t i = 0; i < population_size; i++) {
-		fitness_t current_vector = self[i].objectiveVector();
-		for (size_t j = 0; j < objective_count; j++) {
-			if (fitness_t::maximizing(j)) {
-				if (current_vector[j] > best_vector[j])
-					best_vector[j] = current_vector[j];
-			}
-			else {
-				if (current_vector[j] < best_vector[j])
-					best_vector[j] = current_vector[j];
-			}
+		fitness_t fitness = (*this)[i].objectiveVector();
+		if (fitness[AGING_OBJECTIVE] > price.lifetime) {
+			price.lifetime = fitness[AGING_OBJECTIVE];
+			price.energy = fitness[ENERGY_OBJECTIVE];
 		}
 	}
 
-	return best_vector;
+	return price;
+}
+
+price_t eslabMOPop::best_energy() const
+{
+	price_t price(0, std::numeric_limits<double>::max());
+
+	size_t population_size = size();
+
+	for (size_t i = 0; i < population_size; i++) {
+		fitness_t fitness = (*this)[i].objectiveVector();
+		if (fitness[ENERGY_OBJECTIVE] < price.energy) {
+			price.lifetime = fitness[AGING_OBJECTIVE];
+			price.energy = fitness[ENERGY_OBJECTIVE];
+		}
+	}
+
+	return price;
 }
 
 void MultiObjectiveGLS::process(population_t &population,
-	eoContinue<chromosome_t> &continuator, eoTransform<chromosome_t> &transform)
+	eoCheckPoint<chromosome_t> &checkpoint, eoTransform<chromosome_t> &transform)
 {
-	moeoNSGAII<chromosome_t> ga(continuator, evaluator, transform);
+	eslabMOStallContinue stall_continue(tuning.min_generations,
+		tuning.stall_generations);
+	checkpoint.add(stall_continue);
+
+	moeoNSGAII<chromosome_t> ga(checkpoint, evaluator, transform);
 
 	ga(population);
 
@@ -98,26 +103,27 @@ void MOGLSStats::process()
 	width = population_size -
 		(executions - last_executions) + 1;
 
-	population_t::fitness_t best = population->best_fitness();
+	price_t best_lifetime = population->best_lifetime();
+	price_t best_energy = population->best_energy();
 
 	std::cout
 		<< std::setw(width) << " "
 		<< std::setprecision(2)
-		<< "("
-			<< std::setw(10) << best[AGING_OBJECTIVE]
-		<< ", *) "
-		<< "(*, "
-			<< std::setw(10) << best[ENERGY_OBJECTIVE]
-		<< ") "
+		<< "( "
+			<< std::setw(10) << best_lifetime.lifetime
+		<< ", * ) "
+		<< "( *, "
+			<< std::setw(10) << best_energy.energy
+		<< " ) "
 		<< std::setprecision(3)
-		<< "{"
+		<< "{ "
 			<< std::setw(6) << crossover_rate << " "
 			<< std::setw(6) << mutation_rate
-		<< "} "
-		<< "["
+		<< " } "
+		<< "[ "
 			<< std::setw(4) << population->unique() << "/"
-			<< std::setw(4) << population_size
-		<< "]"
+			<< population_size
+		<< " ]"
 		<< std::endl
 		<< std::setw(4) << generations << ": ";
 
@@ -126,9 +132,39 @@ void MOGLSStats::process()
 
 void MOGLSStats::display(std::ostream &o) const
 {
-	GenericGLSStats<chromosome_t>::display(o);
+	GenericGLSStats<chromosome_t, population_t>::display(o);
 
 	o
 		<< std::setprecision(2)
 		<< "  Pareto optima:   " << print_t<price_t>(pareto_optima) << std::endl;
+}
+
+void eslabMOStallContinue::reset()
+{
+	eslabStallContinue<chromosome_t, population_t>::reset();
+
+	last_fitness.lifetime = std::numeric_limits<double>::min();
+	last_fitness.energy = std::numeric_limits<double>::max();
+}
+
+bool eslabMOStallContinue::improved(const population_t &population)
+{
+	bool result = false;
+
+	size_t population_size = population.size();
+
+	for (size_t i = 0; i < population_size; i++) {
+		price_t fitness = population[i].objectiveVector();
+
+		if (fitness.lifetime > last_fitness.lifetime) {
+			last_fitness.lifetime = fitness.lifetime;
+			result = true;
+		}
+		if (fitness.energy < last_fitness.energy) {
+			last_fitness.energy = fitness.energy;
+			result = true;
+		}
+	}
+
+	return result;
 }

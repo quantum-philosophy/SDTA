@@ -5,7 +5,7 @@
 #include "ListScheduler.h"
 
 void SingleObjectiveGLS::process(population_t &population,
-	eoContinue<chromosome_t> &continuator,
+	eoCheckPoint<chromosome_t> &checkpoint,
 	eoTransform<chromosome_t> &transform)
 {
 	/* Select */
@@ -17,7 +17,11 @@ void SingleObjectiveGLS::process(population_t &population,
 	eoLinearTruncate<chromosome_t> reduce;
 	eoMergeReduce<chromosome_t> replace(merge, reduce);
 
-	eslabEvolution<chromosome_t> ga(continuator, evaluator, select,
+	eslabSOStallContinue stall_continue(tuning.min_generations,
+		tuning.stall_generations);
+	checkpoint.add(stall_continue);
+
+	eslabEvolution<chromosome_t> ga(checkpoint, evaluator, select,
 		transform, replace);
 
 	ga(population);
@@ -84,11 +88,20 @@ void SOGLSStats::process()
 
 	std::cout
 		<< std::setw(width) << " "
-		<< std::setprecision(2) << std::setw(10)
-		<< worst_lifetime << " " << best_lifetime
-		<< std::setprecision(3) << std::setw(8)
-		<< " {" << crossover_rate << " " << mutation_rate << "}"
-		<< " [" << population->unique() << "/" << population_size << "]"
+		<< std::setprecision(2)
+		<< "( "
+			<< std::setw(10) << worst_lifetime << ", "
+			<< std::setw(10) << best_lifetime
+		<< " ) "
+		<< std::setprecision(3)
+		<< "{ "
+			<< std::setw(6) << crossover_rate << " "
+			<< std::setw(6) << mutation_rate
+		<< " } "
+		<< "[ "
+			<< std::setw(4) << population->unique() << "/"
+			<< population_size
+		<< " ]"
 		<< std::endl
 		<< std::setw(4) << generations << ": ";
 
@@ -97,7 +110,7 @@ void SOGLSStats::process()
 
 void SOGLSStats::display(std::ostream &o) const
 {
-	GenericGLSStats<chromosome_t>::display(o);
+	GenericGLSStats<chromosome_t, population_t>::display(o);
 
 	o
 		<< std::setprecision(2)
@@ -107,4 +120,23 @@ void SOGLSStats::display(std::ostream &o) const
 		<< std::setprecision(0)
 		<< "  Best priority:   " << print_t<rank_t>(best_priority) << std::endl
 		<< "  Best schedule:   " << print_t<int>(best_schedule) << std::endl;
+}
+
+void eslabSOStallContinue::reset()
+{
+	eslabStallContinue<chromosome_t, population_t>::reset();
+	last_fitness = 0;
+}
+
+bool eslabSOStallContinue::improved(const population_t &population)
+{
+	bool result = false;
+
+	double current_fitness = population.best_lifetime();
+
+	if (current_fitness > last_fitness) result = true;
+
+	last_fitness = current_fitness;
+
+	return result;
 }

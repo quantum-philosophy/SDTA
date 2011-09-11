@@ -74,9 +74,8 @@ double eslabPop<CT>::diversity() const
 /* GenericGLSStats                                                            */
 /******************************************************************************/
 
-template<class CT>
-void GenericGLSStats<CT>::watch(population_t &_population,
-	bool _silent)
+template<class CT, class PT>
+void GenericGLSStats<CT, PT>::watch(population_t &_population, bool _silent)
 {
 	population = &_population;
 	silent = _silent;
@@ -92,8 +91,8 @@ void GenericGLSStats<CT>::watch(population_t &_population,
 	reset();
 }
 
-template<class CT>
-eoMonitor &GenericGLSStats<CT>::operator()()
+template<class CT, class PT>
+eoMonitor &GenericGLSStats<CT, PT>::operator()()
 {
 	if (!population)
 		throw std::runtime_error("The population is not defined.");
@@ -105,8 +104,8 @@ eoMonitor &GenericGLSStats<CT>::operator()()
 	return *this;
 }
 
-template<class CT>
-void GenericGLSStats<CT>::display(std::ostream &o) const
+template<class CT, class PT>
+void GenericGLSStats<CT, PT>::display(std::ostream &o) const
 {
 	o
 		<< std::setiosflags(std::ios::fixed)
@@ -159,10 +158,7 @@ ST &GenericGLS<CT, PT, ST>::solve(
 	task_vector_t &tasks = graph->tasks;
 
 	/* Continue */
-	eoGenContinue<chromosome_t> gen_cont(tuning.max_generations);
-	eslabStallContinue<chromosome_t> stall_cont(tuning.min_generations,
-		tuning.stall_generations);
-	eoCombinedContinue<chromosome_t> continuator(gen_cont, stall_cont);
+	eoGenContinue<chromosome_t> gen_continue(tuning.max_generations);
 
 	/* Create */
 	population_t population;
@@ -191,7 +187,7 @@ ST &GenericGLS<CT, PT, ST>::solve(
 		std::cout << "   0: ";
 
 	/* Monitor */
-	eoCheckPoint<chromosome_t> checkpoint(continuator);
+	eoCheckPoint<chromosome_t> checkpoint(gen_continue);
 	stats.watch(population, !tuning.verbose);
 	eslabEvolutionMonitor<chromosome_t> evolution_monitor(
 			population, tuning.dump_evolution);
@@ -219,11 +215,11 @@ ST &GenericGLS<CT, PT, ST>::solve(
 	stats();
 
 	/* Transform = Crossover + Mutate */
-	eslabNPtsBitCrossover<chromosome_t> crossover(tuning.crossover_points,
-		tuning.crossover_min_rate, tuning.crossover_scale,
-		tuning.crossover_exponent, stats);
-	eslabUniformRangeMutation<chromosome_t> mutate(min, max,
-		tuning.mutation_min_rate, tuning.mutation_scale,
+	eslabNPtsBitCrossover<chromosome_t, population_t> crossover(
+		tuning.crossover_points, tuning.crossover_min_rate,
+		tuning.crossover_scale, tuning.crossover_exponent, stats);
+	eslabUniformRangeMutation<chromosome_t, population_t> mutate(
+		min, max, tuning.mutation_min_rate, tuning.mutation_scale,
 		tuning.mutation_exponent, stats);
 	eslabTransform<chromosome_t> transform(crossover, mutate);
 
@@ -295,10 +291,10 @@ void eslabTransform<CT>::operator()(population_t &population)
 /* eslabNPtsBitCrossover                                                      */
 /******************************************************************************/
 
-template<class CT>
-eslabNPtsBitCrossover<CT>::eslabNPtsBitCrossover(size_t _points,
+template<class CT, class PT>
+eslabNPtsBitCrossover<CT, PT>::eslabNPtsBitCrossover(size_t _points,
 	double _min_rate, double _scale, double _exponent,
-	GenericGLSStats<CT> &_stats) :
+	GenericGLSStats<CT, PT> &_stats) :
 
 	points(_points), min_rate(_min_rate), scale(_scale),
 	exponent(_exponent), stats(_stats)
@@ -310,8 +306,8 @@ eslabNPtsBitCrossover<CT>::eslabNPtsBitCrossover(size_t _points,
 		std::runtime_error("The crossover minimal rate is invalid.");
 }
 
-template<class CT>
-bool eslabNPtsBitCrossover<CT>::operator()(CT &one, CT &another)
+template<class CT, class PT>
+bool eslabNPtsBitCrossover<CT, PT>::operator()(CT &one, CT &another)
 {
 	double rate;
 
@@ -358,10 +354,10 @@ bool eslabNPtsBitCrossover<CT>::operator()(CT &one, CT &another)
 /* eslabMutation                                                              */
 /******************************************************************************/
 
-template<class CT>
-eslabUniformRangeMutation<CT>::eslabUniformRangeMutation(
+template<class CT, class PT>
+eslabUniformRangeMutation<CT, PT>::eslabUniformRangeMutation(
 	rank_t _min, rank_t _max, double _min_rate, double _scale,
-	double _exponent, GenericGLSStats<CT> &_stats) :
+	double _exponent, GenericGLSStats<CT, PT> &_stats) :
 
 	min(_min), range(_max - _min), min_rate(_min_rate), scale(_scale),
 	exponent(_exponent), stats(_stats)
@@ -373,8 +369,8 @@ eslabUniformRangeMutation<CT>::eslabUniformRangeMutation(
 		std::runtime_error("The mutation minimal rate is invalid.");
 }
 
-template<class CT>
-bool eslabUniformRangeMutation<CT>::operator()(CT &chromosome)
+template<class CT, class PT>
+bool eslabUniformRangeMutation<CT, PT>::operator()(CT &chromosome)
 {
 	double rate;
 

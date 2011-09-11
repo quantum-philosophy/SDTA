@@ -5,15 +5,23 @@
 #include "GeneticListScheduler.h"
 
 #ifdef REAL_RANK
-class SOGLSStats: public GenericGLSStats<eoReal<double> >
-{
-	typedef eoReal<double> chromosome_t;
+typedef eoReal<double> eslabSOChromosome;
 #else
-class SOGLSStats: public GenericGLSStats<eoInt<double> >
-{
-	typedef eoInt<double> chromosome_t;
+typedef eoInt<double> eslabSOChromosome;
 #endif
 
+class eslabSOPop: public eslabPop<eslabSOChromosome>
+{
+	public:
+
+	inline double best_lifetime() const
+	{
+		return this->nth_element_fitness(0);
+	}
+};
+
+class SOGLSStats: public GenericGLSStats<eslabSOChromosome, eslabSOPop>
+{
 	size_t last_executions;
 
 	public:
@@ -32,13 +40,8 @@ class SOGLSStats: public GenericGLSStats<eoInt<double> >
 	void process();
 };
 
-#ifdef REAL_RANK
 class SingleObjectiveGLS:
-	public GenericGLS<eoReal<double>, eslabPop<eoReal<double> >, SOGLSStats>
-#else
-class SingleObjectiveGLS:
-	public GenericGLS<eoInt<double>, eslabPop<eoInt<double> >, SOGLSStats>
-#endif
+	public GenericGLS<eslabSOChromosome, eslabSOPop, SOGLSStats>
 {
 	protected:
 
@@ -75,7 +78,7 @@ class SingleObjectiveGLS:
 	void evaluate_chromosome(chromosome_t &chromosome);
 
 	void process(population_t &population,
-		eoContinue<chromosome_t> &continuator,
+		eoCheckPoint<chromosome_t> &checkpoint,
 		eoTransform<chromosome_t> &transform);
 };
 
@@ -121,6 +124,24 @@ class eslabElitismMerge: public eoMerge<chromosome_t>
 	private:
 
 	double rate;
+};
+
+class eslabSOStallContinue:
+	public eslabStallContinue<eslabSOChromosome, eslabSOPop>
+{
+	fitness_t last_fitness;
+
+	public:
+
+	eslabSOStallContinue(size_t _min_generations, size_t _stall_generations) :
+		eslabStallContinue<eslabSOChromosome, eslabSOPop>(
+			_min_generations, _stall_generations) {}
+
+	void reset();
+
+	protected:
+
+	bool improved(const eslabSOPop &population);
 };
 
 #include "SingleObjectiveGLS.hpp"

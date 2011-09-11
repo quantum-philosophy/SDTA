@@ -47,13 +47,12 @@ class eslabMOPop: public eslabPop<eslabMOChromosome>
 {
 	public:
 
-	fitness_t best_fitness() const;
+	price_t best_lifetime() const;
+	price_t best_energy() const;
 };
 
-class MOGLSStats: public GenericGLSStats<eslabMOChromosome>
+class MOGLSStats: public GenericGLSStats<eslabMOChromosome, eslabMOPop>
 {
-	typedef eslabMOChromosome chromosome_t;
-
 	size_t last_executions;
 
 	public:
@@ -106,8 +105,26 @@ class MultiObjectiveGLS:
 	fitness_t evaluate_schedule(const schedule_t &schedule);
 	void evaluate_chromosome(chromosome_t &chromosome);
 	void process(population_t &population,
-		eoContinue<chromosome_t> &continuator,
+		eoCheckPoint<chromosome_t> &checkpoint,
 		eoTransform<chromosome_t> &transform);
+};
+
+class eslabMOStallContinue:
+	public eslabStallContinue<eslabMOChromosome, eslabMOPop>
+{
+	price_t last_fitness;
+
+	public:
+
+	eslabMOStallContinue(size_t _min_generations, size_t _stall_generations) :
+		eslabStallContinue<eslabMOChromosome, eslabMOPop>(
+			_min_generations, _stall_generations) {}
+
+	void reset();
+
+	protected:
+
+	bool improved(const eslabMOPop &population);
 };
 
 #endif
