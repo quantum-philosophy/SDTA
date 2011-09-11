@@ -150,8 +150,8 @@ void MOGLSStats::display(std::ostream &o) const
 
 	o
 		<< std::setprecision(2)
-		<< "  Best lifetime:   " << best_lifetime.lifetime << std::endl
-		<< "  Best energy:     " << best_energy.energy << std::endl
+		<< "  Best lifetime:   " << best_lifetime << std::endl
+		<< "  Best energy:     " << best_energy << std::endl
 
 		<< std::setprecision(2)
 		<< "  Pareto optima:   " << print_t<price_t>(pareto_optima) << std::endl;

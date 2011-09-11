@@ -1,11 +1,6 @@
 function drawEvolution(file, multi)
-  if nargin < 2, multi = false; end
 
   evolution = dlmread(file);
-
-  figure;
-
-  title('Evolution');
 
   if multi
     [ generations, population ] = size(evolution);
@@ -24,8 +19,10 @@ function drawEvolution(file, multi)
     [ lifetime, I ] = sort(lifetime(end, :));
     energy = energy(end, I);
 
+    [ lifetime, energy ] = Utils.extractDominant(lifetime, energy);
+
     line(lifetime, energy, ...
-      'Line', 'None', 'Marker', 'o', 'Color', 'b');
+      'Marker', 'o', 'Color', 'b');
   else
     [ generations, population ] = size(evolution);
 

@@ -210,19 +210,11 @@ system_t::system_t(const char *filename)
 		throw std::runtime_error("The deadline should not be negative.");
 }
 
-template<>
-std::ostream &operator<< (std::ostream &o, const print_t<price_t> &print)
+std::ostream &operator<< (std::ostream &o, const price_t &price)
 {
-	size_t size = print.vector.size();
-
-	o << "[ ";
-	for (size_t i = 0; i < size; i++) {
-		o << "(" << print.vector[i].lifetime << ", "
-			<< print.vector[i].energy << ")";
-
-		if (i < size - 1) o << ", ";
-	}
-	o << " ]";
-
-	return o;
+	o << std::setprecision(2)
+		<< "("
+			<< price.lifetime << ", "
+			<< price.energy
+		<< ")";
 }
