@@ -19,7 +19,10 @@ function watchEvolution(file, multi)
     lines = findobj(gca, 'Type', 'line');
     for i = 1:length(lines), delete(lines(i)); end
 
-    Utils.drawEvolution(file, multi);
+    try
+      Utils.drawEvolution(file, multi);
+    catch
+    end
 
     start(t);
     wait(t);

@@ -17,7 +17,7 @@ schedule_t ListScheduler::process(const Graph *graph, const priority_t &priority
 	if (priority.size() != task_count)
 		throw std::runtime_error("The priority vector is bad.");
 
-	pool_t pool;
+	list_schedule_t pool;
 	schedule_t schedule;
 	std::vector<bool> scheduled(task_count, false);
 	std::vector<bool> processed(task_count, false);
@@ -48,7 +48,7 @@ schedule_t ListScheduler::process(const Graph *graph, const priority_t &priority
 		for (size_t i = 0; i < children_count; i++) {
 			Task *child = task->children[i];
 
-			/* Prevent from doing it one again */
+			/* Prevent from doing it once again */
 			if (processed[child->id]) continue;
 
 			/* All parents should be scheduled */
@@ -69,13 +69,13 @@ schedule_t ListScheduler::process(const Graph *graph, const priority_t &priority
 	return schedule;
 }
 
-inline void ListScheduler::insert_into_pool(pool_t &pool, tid_t id,
+inline void ListScheduler::insert_into_pool(list_schedule_t &pool, tid_t id,
 	const priority_t &priority)
 {
 	bool found = false;
 
 	/* Find a place */
-	for (pool_t::iterator it = pool.begin(); it != pool.end(); it++) {
+	for (list_schedule_t::iterator it = pool.begin(); it != pool.end(); it++) {
 		/* Looking for a lower priority (larger number) */
 		if (priority[id] >= priority[*it]) continue;
 

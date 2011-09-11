@@ -40,9 +40,6 @@ class Graph
 	void assign_schedule(const schedule_t &mapping);
 	inline void assign_deadline(double time) { deadline = time; }
 
-	task_vector_t get_roots() const;
-	task_vector_t get_leaves() const;
-
 	inline size_t size() const { return task_count; }
 	inline double get_duration() const { return duration; }
 
@@ -54,7 +51,15 @@ class Graph
 
 	void reorder_tasks(const std::vector<tid_t> &order);
 
+	constrains_t calc_constrains() const;
+
 	protected:
+
+	void collect_constrains(const Task *task, constrains_t &constrains, size_t level) const;
+	size_t count_dependents(const Task *task) const;
+	size_t count_dependents(const Task *task, bit_string_t &counted) const;
+	size_t count_dependencies(const Task *task) const;
+	size_t count_dependencies(const Task *task, bit_string_t &counted) const;
 
 	/* The duration of the graph based on the actual start times */
 	double calc_duration() const;

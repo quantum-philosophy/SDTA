@@ -28,12 +28,26 @@ class GenericGLS;
 
 typedef int tid_t;
 typedef std::vector<tid_t> schedule_t;
+typedef std::list<tid_t> list_schedule_t;
 typedef std::vector<Task *> task_vector_t;
+typedef std::list<Task *> task_list_t;
 typedef std::vector<rank_t> priority_t;
 
 typedef int pid_t;
 typedef std::vector<pid_t> mapping_t;
 typedef std::vector<Processor *> processor_vector_t;
+
+typedef std::vector<bool> bit_string_t;
+
+struct constrain_t
+{
+	rank_t min;
+	rank_t max;
+
+	constrain_t() : max(0), min(0) {}
+};
+
+typedef std::vector<constrain_t> constrains_t;
 
 struct system_t
 {

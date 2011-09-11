@@ -72,28 +72,6 @@ void Graph::assign_schedule(const schedule_t &schedule)
 	duration = calc_duration();
 }
 
-task_vector_t Graph::get_roots() const
-{
-	task_vector_t roots;
-
-	for (tid_t id = 0; id < task_count; id++)
-		if (tasks[id]->is_root())
-			roots.push_back(tasks[id]);
-
-	return roots;
-}
-
-task_vector_t Graph::get_leaves() const
-{
-	task_vector_t leaves;
-
-	for (tid_t id = 0; id < task_count; id++)
-		if (tasks[id]->is_leaf())
-			leaves.push_back(tasks[id]);
-
-	return leaves;
-}
-
 double Graph::calc_duration() const
 {
 	double duration = 0;
@@ -195,6 +173,72 @@ void Graph::reorder_tasks(const schedule_t &schedule)
 	}
 
 	tasks = new_tasks;
+}
+
+constrains_t Graph::calc_constrains() const
+{
+	constrains_t constrains(task_count);
+
+	for (size_t i = 0; i < task_count; i++)
+		if (tasks[i]->is_root())
+			collect_constrains(tasks[i], constrains, 0);
+
+	return constrains;
+}
+
+void Graph::collect_constrains(const Task *task, constrains_t &constrains, size_t level) const
+{
+	size_t i, peer_count, child_count;
+
+	peer_count = task_count - count_dependents(task) - count_dependencies(task) - 1;
+	constrains[task->id].min = level;
+	constrains[task->id].max = level + peer_count;
+
+	child_count = task->children.size();
+	for (size_t i = 0; i < child_count; i++)
+		collect_constrains(task->children[i], constrains, level + 1);
+}
+
+size_t Graph::count_dependents(const Task *task) const
+{
+	bit_string_t counted(task_count, false);
+	return count_dependents(task, counted);
+}
+
+size_t Graph::count_dependents(const Task *task, bit_string_t &counted) const
+{
+	size_t child_count;
+
+	size_t dependents = child_count = task->children.size();
+
+	for (size_t i = 0; i < child_count; i++)
+		if (counted[task->children[i]->id]) {
+			counted[task->children[i]->id] = true;
+			dependents += count_dependents(task->children[i], counted);
+		}
+
+	return dependents;
+}
+
+size_t Graph::count_dependencies(const Task *task) const
+{
+	bit_string_t counted(task_count, false);
+	return count_dependencies(task, counted);
+}
+
+size_t Graph::count_dependencies(const Task *task, bit_string_t &counted) const
+{
+	size_t parent_count;
+
+	size_t dependencies = parent_count = task->parents.size();
+
+	for (size_t i = 0; i < parent_count; i++)
+		if (counted[task->parents[i]->id]) {
+			counted[task->parents[i]->id] = true;
+			dependencies += count_dependencies(task->parents[i], counted);
+		}
+
+	return dependencies;
 }
 
 std::ostream &operator<< (std::ostream &o, const Graph *graph)

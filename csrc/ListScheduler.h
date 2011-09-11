@@ -3,8 +3,6 @@
 
 #include "common.h"
 
-typedef std::list<tid_t> pool_t;
-
 class ListScheduler
 {
 	public:
@@ -16,7 +14,7 @@ class ListScheduler
 
 	private:
 
-	static inline void insert_into_pool(pool_t &pool, tid_t id,
+	static inline void insert_into_pool(list_schedule_t &pool, tid_t id,
 		const priority_t &priority);
 };
 
