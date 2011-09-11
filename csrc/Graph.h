@@ -28,6 +28,8 @@ class Graph
 	double duration;
 	double deadline;
 
+	constrains_t constrains;
+
 	public:
 
 	Graph() : task_count(0), architecture(NULL), duration(0), deadline(0) {}
@@ -51,11 +53,10 @@ class Graph
 
 	void reorder_tasks(const std::vector<tid_t> &order);
 
-	constrains_t calc_constrains() const;
-
 	protected:
 
-	void collect_constrains(const Task *task, constrains_t &constrains, size_t level) const;
+	void calc_constrains();
+
 	size_t count_dependents(const Task *task) const;
 	size_t count_dependents(const Task *task, bit_string_t &counted) const;
 	size_t count_dependencies(const Task *task) const;

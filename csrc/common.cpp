@@ -218,3 +218,12 @@ std::ostream &operator<< (std::ostream &o, const price_t &price)
 			<< price.energy
 		<< ")";
 }
+
+std::ostream &operator<< (std::ostream &o, const constrain_t &constrain)
+{
+	o << std::setprecision(2)
+		<< "{"
+			<< constrain.min << ", "
+			<< constrain.max
+		<< "}";
+}

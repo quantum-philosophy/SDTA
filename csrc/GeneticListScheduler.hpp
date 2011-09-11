@@ -171,17 +171,9 @@ ST &GenericGLS<CT, PT, ST>::solve(
 		throw std::runtime_error("The priority vector has bad dimensions.");
 
 	chromosome_t chromosome(task_count);
-	rank_t min;
-	rank_t max;
 
-	chromosome[0] = min = max = priority[0];
-
-	rank_t rank;
-	for (i = 1; i < task_count; i++) {
-		chromosome[i] = rank = priority[i];
-		if (min > rank) min = rank;
-		if (max < rank) max = rank;
-	}
+	for (i = 0; i < task_count; i++)
+		chromosome[i] = priority[i];
 
 	if (tuning.verbose)
 		std::cout << "   0: ";
@@ -201,9 +193,11 @@ ST &GenericGLS<CT, PT, ST>::solve(
 
 	/* Fill the second part with randomly generated chromosomes */
 	create_count = tuning.population_size - create_count;
+	rank_t range;
 	for (i = 0; i < create_count; i++) {
 		for (j = 0; j < task_count; j++)
-			chromosome[j] = min + eo::random(max - min);
+			chromosome[j] = graph->constrains[j].random();
+
 		chromosome.invalidate();
 		evaluate_chromosome(chromosome);
 		population.push_back(chromosome);
@@ -216,7 +210,7 @@ ST &GenericGLS<CT, PT, ST>::solve(
 		tuning.crossover_points, tuning.crossover_min_rate,
 		tuning.crossover_scale, tuning.crossover_exponent, stats);
 	eslabUniformRangeMutation<chromosome_t, population_t> mutate(
-		min, max, tuning.mutation_min_rate, tuning.mutation_scale,
+		graph->constrains, tuning.mutation_min_rate, tuning.mutation_scale,
 		tuning.mutation_exponent, stats);
 	eslabTransform<chromosome_t> transform(crossover, mutate);
 
@@ -353,15 +347,12 @@ bool eslabNPtsBitCrossover<CT, PT>::operator()(CT &one, CT &another)
 
 template<class CT, class PT>
 eslabUniformRangeMutation<CT, PT>::eslabUniformRangeMutation(
-	rank_t _min, rank_t _max, double _min_rate, double _scale,
+	const constrains_t &_constrains, double _min_rate, double _scale,
 	double _exponent, GenericGLSStats<CT, PT> &_stats) :
 
-	min(_min), range(_max - _min), min_rate(_min_rate), scale(_scale),
+	constrains(_constrains), min_rate(_min_rate), scale(_scale),
 	exponent(_exponent), stats(_stats)
 {
-	if (range < 0)
-		std::runtime_error("The mutation range is invalid.");
-
 	if (min_rate < 0 || min_rate > 1)
 		std::runtime_error("The mutation minimal rate is invalid.");
 }
@@ -380,7 +371,7 @@ bool eslabUniformRangeMutation<CT, PT>::operator()(CT &chromosome)
 	for (size_t i = 0; i < size; i++)
 		if (rng.flip(rate)) {
 			changed = true;
-			chromosome[i] = min + eo::random(range);
+			chromosome[i] = constrains[i].random();
 		}
 
 	return changed;

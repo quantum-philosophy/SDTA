@@ -223,18 +223,17 @@ class eslabNPtsBitCrossover : public eoQuadOp<CT>
 template<class CT, class PT = eslabPop<CT> >
 class eslabUniformRangeMutation: public eoMonOp<CT>
 {
-	rank_t min;
-	rank_t range;
-
 	double min_rate;
 	double scale;
 	double exponent;
 
 	GenericGLSStats<CT, PT> &stats;
 
+	const constrains_t &constrains;
+
 	public:
 
-	eslabUniformRangeMutation(rank_t _min, rank_t _max, double _min_rate,
+	eslabUniformRangeMutation(const constrains_t &constrains, double _min_rate,
 		double _scale, double _exponent, GenericGLSStats<CT, PT> &_stats);
 
 	bool operator()(CT& chromosome);

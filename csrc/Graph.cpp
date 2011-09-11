@@ -38,6 +38,7 @@ void Graph::assign_mapping(const Architecture *architecture,
 	calc_asap();
 	calc_alap();
 	fix_epsilon();
+	calc_constrains();
 }
 
 void Graph::fix_epsilon() const
@@ -157,8 +158,17 @@ priority_t Graph::calc_priority() const
 
 	priority_t priority(task_count);
 
-	for (size_t i = 0; i < task_count; i++)
+	size_t out_range = 0;
+
+	for (size_t i = 0; i < task_count; i++) {
 		priority[twins[i]->id] = i;
+		if (!constrains[twins[i]->id].include(i)) out_range++;
+	}
+
+	if (out_range)
+		std::cout << "Warning: " << out_range
+			<< " out of " << task_count
+			<< " mobility based priorities do not match the constrains." << std::endl;
 
 	return priority;
 }
@@ -175,28 +185,23 @@ void Graph::reorder_tasks(const schedule_t &schedule)
 	tasks = new_tasks;
 }
 
-constrains_t Graph::calc_constrains() const
+void Graph::calc_constrains()
 {
-	constrains_t constrains(task_count);
+	const Task *task;
+	size_t dependents;
+	size_t dependencies;
 
-	for (size_t i = 0; i < task_count; i++)
-		if (tasks[i]->is_root())
-			collect_constrains(tasks[i], constrains, 0);
+	constrains = constrains_t(task_count);
 
-	return constrains;
-}
+	for (size_t i = 0; i < task_count; i++) {
+		task = tasks[i];
 
-void Graph::collect_constrains(const Task *task, constrains_t &constrains, size_t level) const
-{
-	size_t i, peer_count, child_count;
+		dependents = count_dependents(task);
+		dependencies = count_dependencies(task);
 
-	peer_count = task_count - count_dependents(task) - count_dependencies(task) - 1;
-	constrains[task->id].min = level;
-	constrains[task->id].max = level + peer_count;
-
-	child_count = task->children.size();
-	for (size_t i = 0; i < child_count; i++)
-		collect_constrains(task->children[i], constrains, level + 1);
+		constrains[task->id].min = dependencies;
+		constrains[task->id].max = task_count - dependents - 1;
+	}
 }
 
 size_t Graph::count_dependents(const Task *task) const
@@ -207,15 +212,15 @@ size_t Graph::count_dependents(const Task *task) const
 
 size_t Graph::count_dependents(const Task *task, bit_string_t &counted) const
 {
-	size_t child_count;
+	size_t child_count, dependents = 0;
 
-	size_t dependents = child_count = task->children.size();
+	child_count = task->children.size();
 
-	for (size_t i = 0; i < child_count; i++)
-		if (counted[task->children[i]->id]) {
-			counted[task->children[i]->id] = true;
-			dependents += count_dependents(task->children[i], counted);
-		}
+	for (size_t i = 0; i < child_count; i++) {
+		if (counted[task->children[i]->id]) continue;
+		counted[task->children[i]->id] = true;
+		dependents += 1 + count_dependents(task->children[i], counted);
+	}
 
 	return dependents;
 }
@@ -228,15 +233,15 @@ size_t Graph::count_dependencies(const Task *task) const
 
 size_t Graph::count_dependencies(const Task *task, bit_string_t &counted) const
 {
-	size_t parent_count;
+	size_t parent_count, dependencies = 0;
 
-	size_t dependencies = parent_count = task->parents.size();
+	parent_count = task->parents.size();
 
-	for (size_t i = 0; i < parent_count; i++)
-		if (counted[task->parents[i]->id]) {
-			counted[task->parents[i]->id] = true;
-			dependencies += count_dependencies(task->parents[i], counted);
-		}
+	for (size_t i = 0; i < parent_count; i++) {
+		if (counted[task->parents[i]->id]) continue;
+		counted[task->parents[i]->id] = true;
+		dependencies += 1 + count_dependencies(task->parents[i], counted);
+	}
 
 	return dependencies;
 }
@@ -262,6 +267,9 @@ std::ostream &operator<< (std::ostream &o, const Graph *graph)
 
 	for (tid_t id = 0; id < graph->task_count; id++)
 		o << "  " << graph->tasks[id];
+
+	o << "  Rank constrains: "
+		<< print_t<constrain_t>(graph->constrains) << std::endl;
 
 	if (!graph->schedule.empty())
 		o << "  Schedule: " << print_t<int>(graph->schedule);

@@ -1,6 +1,7 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
+#include <eo>
 #include <iostream>
 #include <vector>
 #include <list>
@@ -44,7 +45,17 @@ struct constrain_t
 	rank_t min;
 	rank_t max;
 
-	constrain_t() : max(0), min(0) {}
+	constrain_t() : max(-1), min(-1) {}
+
+	inline bool include(rank_t what) const
+	{
+		return min <= what && what <= max;
+	}
+
+	inline rank_t random() const
+	{
+		return min + eo::random(max - min);
+	}
 };
 
 typedef std::vector<constrain_t> constrains_t;
@@ -149,5 +160,6 @@ std::ostream &operator<< (std::ostream &o, const print_t<T> &print)
 }
 
 std::ostream &operator<< (std::ostream &o, const price_t &price);
+std::ostream &operator<< (std::ostream &o, const constrain_t &constrain);
 
 #endif
