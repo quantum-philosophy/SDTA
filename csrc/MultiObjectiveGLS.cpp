@@ -133,11 +133,7 @@ void MOGLSStats::process()
 		<< "{ "
 			<< std::setw(6) << crossover_rate << " "
 			<< std::setw(6) << mutation_rate
-		<< " } "
-		<< "[ "
-			<< std::setw(4) << population->unique() << "/"
-			<< population_size
-		<< " ]"
+		<< " }"
 		<< std::endl
 		<< std::setw(4) << generations << ": ";
 
