@@ -18,9 +18,13 @@ template<class CT>
 size_t eslabPop<CT>::unique() const
 {
 	const eslabPop<CT> &self = *this;
+	size_t population_size = self.size();
+
+	if (!population_size) return 0;
 
 	size_t i, j, k, count;
 	bool found;
+	size_t chromosome_length = self[0].size();
 	std::vector<bool> done(population_size, false);
 
 	count = 0;
@@ -31,7 +35,7 @@ size_t eslabPop<CT>::unique() const
 		for (j = i + 1; j < population_size; j++) {
 			found = true;
 
-			for (k = 0; k < task_count; k++)
+			for (k = 0; k < chromosome_length; k++)
 				if (self[i][k] != self[j][k]) {
 					found = false;
 					break;
@@ -48,18 +52,22 @@ template<class CT>
 double eslabPop<CT>::diversity() const
 {
 	const eslabPop<CT> &self = *this;
+	size_t population_size = self.size();
+
+	if (!population_size) return 0;
 
 	size_t i, j, k;
 	size_t count = 0;
+	size_t chromosome_length = self[0].size();
 
 	for (i = 0; i < population_size - 1; i++)
 		for (j = i + 1; j < population_size; j++)
-			for (k = 0; k < task_count; k++)
+			for (k = 0; k < chromosome_length; k++)
 				if (self[i][k] != self[j][k]) count++;
 
 	return (double)count /
 		((double)population_size * ((double)population_size - 1) / 2.0) /
-		(double)task_count;
+		(double)chromosome_length;
 }
 
 /******************************************************************************/
@@ -67,7 +75,7 @@ double eslabPop<CT>::diversity() const
 /******************************************************************************/
 
 template<class CT>
-void GenericGLSStats<CT>::watch(eslabPop<CT> &_population,
+void GenericGLSStats<CT>::watch(population_t &_population,
 	bool _silent)
 {
 	population = &_population;
@@ -116,8 +124,8 @@ void GenericGLSStats<CT>::display(std::ostream &o) const
 /* GenericGLS                                                                 */
 /******************************************************************************/
 
-template<class CT, class ST>
-GenericGLS<CT, ST>::GenericGLS(
+template<class CT, class PT, class ST>
+GenericGLS<CT, PT, ST>::GenericGLS(
 	Graph *_graph, Hotspot *_hotspot, const GLSTuning &_tuning) :
 	graph(_graph), hotspot(_hotspot), tuning(_tuning)
 {
@@ -136,8 +144,8 @@ GenericGLS<CT, ST>::GenericGLS(
 	sampling_interval = hotspot->sampling_interval();
 }
 
-template<class CT, class ST>
-ST &GenericGLS<CT, ST>::solve(
+template<class CT, class PT, class ST>
+ST &GenericGLS<CT, PT, ST>::solve(
 	const priority_t &start_priority)
 {
 	size_t i, j;
@@ -152,12 +160,12 @@ ST &GenericGLS<CT, ST>::solve(
 
 	/* Continue */
 	eoGenContinue<chromosome_t> gen_cont(tuning.max_generations);
-	eoSteadyFitContinue<chromosome_t> steady_cont(tuning.min_generations,
-			tuning.stall_generations);
-	eoCombinedContinue<chromosome_t> continuator(gen_cont, steady_cont);
+	eslabStallContinue<chromosome_t> stall_cont(tuning.min_generations,
+		tuning.stall_generations);
+	eoCombinedContinue<chromosome_t> continuator(gen_cont, stall_cont);
 
 	/* Create */
-	eslabPop<chromosome_t> population(tuning.population_size, task_count);
+	population_t population;
 	priority_t priority = start_priority;
 
 	if (priority.empty())
@@ -224,9 +232,9 @@ ST &GenericGLS<CT, ST>::solve(
 	return stats;
 }
 
-template<class CT, class ST>
-typename GenericGLS<CT, ST>::fitness_t
-GenericGLS<CT, ST>::evaluate(const chromosome_t &chromosome)
+template<class CT, class PT, class ST>
+typename GenericGLS<CT, PT, ST>::fitness_t
+GenericGLS<CT, PT, ST>::evaluate(const chromosome_t &chromosome)
 {
 	/* Make a new schedule */
 	schedule_t schedule = ListScheduler::process(graph, chromosome);
@@ -260,7 +268,7 @@ eslabTransform<CT>::eslabTransform(eoQuadOp<CT> &_crossover,
 	eoMonOp<CT> &_mutate) : crossover(_crossover), mutate(_mutate) {}
 
 template<class CT>
-void eslabTransform<CT>::operator()(eoPop<CT> &population)
+void eslabTransform<CT>::operator()(population_t &population)
 {
 	size_t i;
 	size_t population_size = population.size();
@@ -390,9 +398,8 @@ bool eslabUniformRangeMutation<CT>::operator()(CT &chromosome)
 /******************************************************************************/
 
 template<class CT>
-eslabEvolutionMonitor<CT>::eslabEvolutionMonitor(
-	eoPop<CT> &_population, const std::string &filename) :
-	population(_population)
+eslabEvolutionMonitor<CT>::eslabEvolutionMonitor(population_t &_population,
+	const std::string &filename) : population(_population)
 {
 	stream.open(filename.c_str());
 	if (!stream.is_open())

@@ -23,7 +23,7 @@ class DynamicPower;
 class Hotspot;
 class Lifetime;
 
-template<class chromosome_t, class stats_t>
+template<class CT, class PT, class ST>
 class GenericGLS;
 
 typedef int tid_t;

@@ -3,13 +3,48 @@
 #include "Lifetime.h"
 #include "DynamicPower.h"
 
-void MultiObjectiveGLS::process(eoPop<chromosome_t> &population,
-	eoContinue<chromosome_t> &continuator,
-	eoTransform<chromosome_t> &transform)
+eslabMOPop::fitness_t eslabMOPop::best_fitness() const
+{
+	const eslabMOPop &self = *this;
+
+	fitness_t best_vector;
+	size_t population_size = self.size();
+	size_t objective_count = fitness_t::nObjectives();
+
+	/* Reset */
+	for (size_t i = 0; i < objective_count; i++)
+		if (fitness_t::maximizing(i))
+			best_vector[i] = std::numeric_limits<double>::min();
+		else
+			best_vector[i] = std::numeric_limits<double>::max();
+
+	/* Find */
+	for (size_t i = 0; i < population_size; i++) {
+		fitness_t current_vector = self[i].objectiveVector();
+		for (size_t j = 0; j < objective_count; j++) {
+			if (fitness_t::maximizing(j)) {
+				if (current_vector[j] > best_vector[j])
+					best_vector[j] = current_vector[j];
+			}
+			else {
+				if (current_vector[j] < best_vector[j])
+					best_vector[j] = current_vector[j];
+			}
+		}
+	}
+
+	return best_vector;
+}
+
+void MultiObjectiveGLS::process(population_t &population,
+	eoContinue<chromosome_t> &continuator, eoTransform<chromosome_t> &transform)
 {
 	moeoNSGAII<chromosome_t> ga(continuator, evaluator, transform);
 
 	ga(population);
+
+	moeoUnboundedArchive<chromosome_t> arch;
+	arch(population);
 
 	stats.pareto_optima.clear();
 
@@ -47,12 +82,12 @@ MultiObjectiveGLS::evaluate_schedule(const schedule_t &schedule)
 	return fitness;
 }
 
-void MultiObjectiveGLSStats::reset()
+void MOGLSStats::reset()
 {
 	last_executions = 0;
 }
 
-void MultiObjectiveGLSStats::process()
+void MOGLSStats::process()
 {
 	if (silent) return;
 
@@ -63,30 +98,33 @@ void MultiObjectiveGLSStats::process()
 	width = population_size -
 		(executions - last_executions) + 1;
 
-	double lifetime;
-	double best_lifetime = 0;
-	double worst_lifetime = 0;
-	for (size_t i = 0; i < population_size; i++) {
-		lifetime = (*population)[i].objectiveVector()[AGING_OBJECTIVE];
-
-		if (lifetime > best_lifetime) best_lifetime = lifetime;
-		if (lifetime < worst_lifetime) worst_lifetime = lifetime;
-	}
+	population_t::fitness_t best = population->best_fitness();
 
 	std::cout
 		<< std::setw(width) << " "
-		<< std::setprecision(2) << std::setw(10)
-		<< worst_lifetime << " " << best_lifetime
-		<< std::setprecision(3) << std::setw(8)
-		<< " {" << crossover_rate << " " << mutation_rate << "}"
-		<< " [" << population->unique() << "/" << population_size << "]"
+		<< std::setprecision(2)
+		<< "("
+			<< std::setw(10) << best[AGING_OBJECTIVE]
+		<< ", *) "
+		<< "(*, "
+			<< std::setw(10) << best[ENERGY_OBJECTIVE]
+		<< ") "
+		<< std::setprecision(3)
+		<< "{"
+			<< std::setw(6) << crossover_rate << " "
+			<< std::setw(6) << mutation_rate
+		<< "} "
+		<< "["
+			<< std::setw(4) << population->unique() << "/"
+			<< std::setw(4) << population_size
+		<< "]"
 		<< std::endl
 		<< std::setw(4) << generations << ": ";
 
 	last_executions = executions;
 }
 
-void MultiObjectiveGLSStats::display(std::ostream &o) const
+void MOGLSStats::display(std::ostream &o) const
 {
 	GenericGLSStats<chromosome_t>::display(o);
 

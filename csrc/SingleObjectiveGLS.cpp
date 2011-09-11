@@ -4,7 +4,7 @@
 #include "DynamicPower.h"
 #include "ListScheduler.h"
 
-void SingleObjectiveGLS::process(eoPop<chromosome_t> &population,
+void SingleObjectiveGLS::process(population_t &population,
 	eoContinue<chromosome_t> &continuator,
 	eoTransform<chromosome_t> &transform)
 {
@@ -63,12 +63,12 @@ SingleObjectiveGLS::evaluate_schedule(const schedule_t &schedule)
 	return fitness;
 }
 
-void SingleObjectiveGLSStats::reset()
+void SOGLSStats::reset()
 {
 	last_executions = 0;
 }
 
-void SingleObjectiveGLSStats::process()
+void SOGLSStats::process()
 {
 	worst_lifetime = population->worse_element().fitness();
 	best_lifetime = population->best_element().fitness();
@@ -95,7 +95,7 @@ void SingleObjectiveGLSStats::process()
 	last_executions = executions;
 }
 
-void SingleObjectiveGLSStats::display(std::ostream &o) const
+void SOGLSStats::display(std::ostream &o) const
 {
 	GenericGLSStats<chromosome_t>::display(o);
 

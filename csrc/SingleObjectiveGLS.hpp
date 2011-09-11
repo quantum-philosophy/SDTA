@@ -2,11 +2,11 @@
 /* eslabEvolution                                                             */
 /******************************************************************************/
 
-template<class chromosome_t>
-void eslabEvolution<chromosome_t>::operator()(eoPop<chromosome_t> &population)
+template<class CT>
+void eslabEvolution<CT>::operator()(population_t &population)
 {
 	size_t population_size = population.size();;
-	eoPop<chromosome_t> offspring;
+	population_t offspring;
 
 	/* Initial evaluation */
 	evaluate(population);
@@ -30,28 +30,26 @@ void eslabEvolution<chromosome_t>::operator()(eoPop<chromosome_t> &population)
 	while (continuator(population));
 }
 
-template<class chromosome_t>
-void eslabEvolution<chromosome_t>::evaluate(
-	eoPop<chromosome_t> &population) const
+template<class CT>
+void eslabEvolution<CT>::evaluate(population_t &population) const
 {
-	apply<chromosome_t>(evaluate_one, population);
+	apply<CT>(evaluate_one, population);
 }
 
 /******************************************************************************/
 /* eslabElitismMerge                                                          */
 /******************************************************************************/
 
-template<class chromosome_t>
-eslabElitismMerge<chromosome_t>::eslabElitismMerge(double _rate) : rate(_rate)
+template<class CT>
+eslabElitismMerge<CT>::eslabElitismMerge(double _rate) : rate(_rate)
 {
 	if (rate < 0)
 		std::runtime_error("The elitism rate is invalid.");
 }
 
-template<class chromosome_t>
-void eslabElitismMerge<chromosome_t>::operator()(
-	const eoPop<chromosome_t> &population,
-	eoPop<chromosome_t> &offspring)
+template<class CT>
+void eslabElitismMerge<CT>::operator()(const population_t &population,
+	population_t &offspring)
 {
 	size_t population_size, count;
 
@@ -61,7 +59,7 @@ void eslabElitismMerge<chromosome_t>::operator()(
 	if (count > population_size)
 		throw std::runtime_error("The elite size is invalid.");
 
-	std::vector<const chromosome_t *> elite;
+	std::vector<const CT *> elite;
 	population.nth_element(count, elite);
 
 	for (size_t i = 0; i < count; i++)

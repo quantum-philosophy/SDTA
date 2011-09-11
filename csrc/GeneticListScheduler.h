@@ -25,16 +25,15 @@ class eslabPop: public eoPop<CT>
 {
 	public:
 
-	eslabPop(size_t _population_size, size_t _task_count) :
-		eoPop<CT>(), population_size(_population_size),
-		task_count(_task_count) {}
+	typedef typename eoPop<CT>::Fitness fitness_t;
 
 	size_t unique() const;
 	double diversity() const;
 
-	private:
-
-	size_t population_size, task_count;
+	virtual fitness_t best_fitness() const
+	{
+		return this->nth_element_fitness(0);
+	}
 };
 
 class GLSTuning
@@ -97,13 +96,9 @@ class GeneticListSchedulerStats
 template<class CT>
 class GenericGLSStats: public GeneticListSchedulerStats, public eoMonitor
 {
-	protected:
-
-	eslabPop<CT> *population;
-
-	bool silent;
-
 	public:
+
+	typedef eslabPop<CT> population_t;
 
 	size_t generations;
 	size_t evaluations;
@@ -133,7 +128,7 @@ class GenericGLSStats: public GeneticListSchedulerStats, public eoMonitor
 		deadline_misses++;
 	}
 
-	void watch(eslabPop<CT> &_population, bool _silent = false);
+	void watch(population_t &_population, bool _silent = false);
 	eoMonitor& operator()();
 
 	virtual void display(std::ostream &o) const;
@@ -142,6 +137,9 @@ class GenericGLSStats: public GeneticListSchedulerStats, public eoMonitor
 
 	virtual void reset() {}
 	virtual void process() {}
+
+	population_t *population;
+	bool silent;
 };
 
 class GeneticListScheduler
@@ -152,14 +150,14 @@ class GeneticListScheduler
 		const priority_t &priority = priority_t()) = 0;
 };
 
-template<class CT, class ST>
+template<class CT, class PT, class ST>
 class GenericGLS: public GeneticListScheduler
 {
 	public:
 
 	typedef CT chromosome_t;
+	typedef	PT population_t;
 	typedef ST stats_t;
-	typedef	eoPop<chromosome_t> population_t;
 	typedef typename chromosome_t::Fitness fitness_t;
 	typedef std::map<MD5Digest, fitness_t, MD5DigestComparator> cache_t;
 
@@ -174,7 +172,7 @@ class GenericGLS: public GeneticListScheduler
 
 	virtual fitness_t evaluate_schedule(const schedule_t &schedule) = 0;
 	virtual void evaluate_chromosome(chromosome_t &chromosome) = 0;
-	virtual void process(eoPop<chromosome_t> &population,
+	virtual void process(population_t &population,
 		eoContinue<chromosome_t> &continuator,
 		eoTransform<chromosome_t> &transform) = 0;
 
@@ -192,12 +190,14 @@ class GenericGLS: public GeneticListScheduler
 template<class CT>
 class eslabTransform: public eoTransform<CT>
 {
+	typedef eoPop<CT> population_t;
+
 	public:
 
 	eslabTransform(eoQuadOp<CT> &_crossover,
 		eoMonOp<CT> &_mutate);
 
-	void operator()(eoPop<CT> &population);
+	void operator()(population_t &population);
 
 	private:
 
@@ -218,9 +218,8 @@ class eslabNPtsBitCrossover : public eoQuadOp<CT>
 
 	public:
 
-	eslabNPtsBitCrossover(size_t _points,
-		double _min_rate, double _scale, double _exponent,
-		GenericGLSStats<CT> &_stats);
+	eslabNPtsBitCrossover(size_t _points, double _min_rate, double _scale,
+		double _exponent, GenericGLSStats<CT> &_stats);
 
 	bool operator()(CT &one, CT &another);
 };
@@ -239,9 +238,8 @@ class eslabUniformRangeMutation: public eoMonOp<CT>
 
 	public:
 
-	eslabUniformRangeMutation(rank_t _min, rank_t _max,
-		double _min_rate, double _scale, double _exponent,
-		GenericGLSStats<CT> &_stats);
+	eslabUniformRangeMutation(rank_t _min, rank_t _max, double _min_rate,
+		double _scale, double _exponent, GenericGLSStats<CT> &_stats);
 
 	bool operator()(CT& chromosome);
 };
@@ -249,15 +247,77 @@ class eslabUniformRangeMutation: public eoMonOp<CT>
 template<class CT>
 class eslabEvolutionMonitor: public eoMonitor
 {
-	eoPop<CT> &population;
+	typedef eoPop<CT> population_t;
+
+	population_t &population;
 	std::ofstream stream;
 
 	public:
 
-	eslabEvolutionMonitor(eoPop<CT> &_population,
-		const std::string &filename);
+	eslabEvolutionMonitor(population_t &_population, const std::string &filename);
 
 	virtual eoMonitor& operator()();
+};
+
+template<class CT>
+class eslabStallContinue: public eoContinue<CT>
+{
+	typedef typename CT::Fitness fitness_t;
+
+	public:
+
+	eslabStallContinue(size_t _min_generations, size_t _stall_generations) :
+		min_generations(_min_generations), stall_generations(_stall_generations)
+	{
+		reset();
+	}
+
+	virtual bool operator()(const eoPop<CT> &_population)
+	{
+		generations++;
+
+		const eslabPop<CT> *population =
+			dynamic_cast<const eslabPop<CT> *>(&_population);
+
+		if (!population)
+			throw std::runtime_error("The population has a wrong type.");
+
+		fitness_t current_fitness = population->best_fitness();
+
+		if (steady_state) {
+			if (current_fitness != best_fitness) {
+				best_fitness = current_fitness;
+				last_improvement = generations;
+			}
+			else if (generations - last_improvement > stall_generations) {
+				return false;
+			}
+		}
+		else if (generations > min_generations) {
+			steady_state = true;
+			best_fitness = current_fitness;
+			last_improvement = generations;
+		}
+
+		return true;
+	}
+
+	virtual void reset()
+	{
+		steady_state = false;
+		generations = 0;
+		last_improvement = 0;
+	}
+
+	private:
+
+	size_t min_generations;
+	size_t stall_generations;
+
+	bool steady_state;
+	size_t generations;
+	size_t last_improvement;
+	fitness_t best_fitness;
 };
 
 std::ostream &operator<< (std::ostream &o, const GLSTuning &tuning);

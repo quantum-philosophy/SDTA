@@ -5,11 +5,11 @@
 #include "GeneticListScheduler.h"
 
 #ifdef REAL_RANK
-class SingleObjectiveGLSStats: public GenericGLSStats<eoReal<double> >
+class SOGLSStats: public GenericGLSStats<eoReal<double> >
 {
 	typedef eoReal<double> chromosome_t;
 #else
-class SingleObjectiveGLSStats: public GenericGLSStats<eoInt<double> >
+class SOGLSStats: public GenericGLSStats<eoInt<double> >
 {
 	typedef eoInt<double> chromosome_t;
 #endif
@@ -33,9 +33,11 @@ class SingleObjectiveGLSStats: public GenericGLSStats<eoInt<double> >
 };
 
 #ifdef REAL_RANK
-class SingleObjectiveGLS: public GenericGLS<eoReal<double>, SingleObjectiveGLSStats>
+class SingleObjectiveGLS:
+	public GenericGLS<eoReal<double>, eslabPop<eoReal<double> >, SOGLSStats>
 #else
-class SingleObjectiveGLS: public GenericGLS<eoInt<double>, SingleObjectiveGLSStats>
+class SingleObjectiveGLS:
+	public GenericGLS<eoInt<double>, eslabPop<eoInt<double> >, SOGLSStats>
 #endif
 {
 	protected:
@@ -64,15 +66,15 @@ class SingleObjectiveGLS: public GenericGLS<eoInt<double>, SingleObjectiveGLSSta
 
 	SingleObjectiveGLS(Graph *_graph, Hotspot *_hotspot,
 		const GLSTuning &_tuning = GLSTuning()) :
-		GenericGLS<chromosome_t, stats_t>(_graph, _hotspot, _tuning),
-		evaluator(this) { stats = SingleObjectiveGLSStats(); }
+		GenericGLS<chromosome_t, population_t, stats_t>(_graph, _hotspot, _tuning),
+		evaluator(this) { stats = SOGLSStats(); }
 
 	protected:
 
 	fitness_t evaluate_schedule(const schedule_t &schedule);
 	void evaluate_chromosome(chromosome_t &chromosome);
 
-	void process(eoPop<chromosome_t> &population,
+	void process(population_t &population,
 		eoContinue<chromosome_t> &continuator,
 		eoTransform<chromosome_t> &transform);
 };
@@ -80,6 +82,8 @@ class SingleObjectiveGLS: public GenericGLS<eoInt<double>, SingleObjectiveGLSSta
 template<class chromosome_t>
 class eslabEvolution: public eoAlgo<chromosome_t>
 {
+	typedef eoPop<chromosome_t> population_t;
+
 	public:
 
 	eslabEvolution(eoContinue<chromosome_t> &_continuator,
@@ -90,11 +94,11 @@ class eslabEvolution: public eoAlgo<chromosome_t>
 		continuator(_continuator), evaluate_one(_evaluate_one), select(_select),
 		transform(_transform), replace(_replace) {}
 
-	void operator()(eoPop<chromosome_t> &population);
+	void operator()(population_t &population);
 
 	private:
 
-	inline void evaluate(eoPop<chromosome_t> &population) const;
+	inline void evaluate(population_t &population) const;
 
 	eoContinue<chromosome_t> &continuator;
 	eoEvalFunc<chromosome_t> &evaluate_one;
@@ -106,12 +110,13 @@ class eslabEvolution: public eoAlgo<chromosome_t>
 template<class chromosome_t>
 class eslabElitismMerge: public eoMerge<chromosome_t>
 {
+	typedef eoPop<chromosome_t> population_t;
+
 	public:
 
 	eslabElitismMerge(double _rate);
 
-	void operator()(const eoPop<chromosome_t> &source,
-		eoPop<chromosome_t> &destination);
+	void operator()(const population_t &source, population_t &destination);
 
 	private:
 

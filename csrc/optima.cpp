@@ -182,14 +182,14 @@ void optimize(const char *system_config, const char *genetic_config,
 			cout << endl << stats << endl;
 
 		if (!tuning.multiobjective) {
-			SingleObjectiveGLSStats *sstats = (SingleObjectiveGLSStats *)&stats;
+			SOGLSStats *sstats = (SOGLSStats *)&stats;
 
 			cout << "Improvement: "
 				<< setiosflags(ios::fixed) << setprecision(2)
 				<< (sstats->best_lifetime / price.lifetime - 1.0) * 100 << "%" << endl;
 		}
 		else {
-			MultiObjectiveGLSStats *sstats = (MultiObjectiveGLSStats *)&stats;
+			MOGLSStats *sstats = (MOGLSStats *)&stats;
 		}
 
 		if (tuning.verbose)

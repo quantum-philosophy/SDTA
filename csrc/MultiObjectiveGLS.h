@@ -43,7 +43,14 @@ class eslabMOChromosome: public moeoIntVector<eslabObjectiveVector,
 		moeoIntVector<eslabObjectiveVector, double, double>(_size) {}
 };
 
-class MultiObjectiveGLSStats: public GenericGLSStats<eslabMOChromosome>
+class eslabMOPop: public eslabPop<eslabMOChromosome>
+{
+	public:
+
+	fitness_t best_fitness() const;
+};
+
+class MOGLSStats: public GenericGLSStats<eslabMOChromosome>
 {
 	typedef eslabMOChromosome chromosome_t;
 
@@ -63,7 +70,8 @@ class MultiObjectiveGLSStats: public GenericGLSStats<eslabMOChromosome>
 
 #endif
 
-class MultiObjectiveGLS: public GenericGLS<eslabMOChromosome, MultiObjectiveGLSStats>
+class MultiObjectiveGLS:
+	public GenericGLS<eslabMOChromosome, eslabMOPop, MOGLSStats>
 {
 	protected:
 
@@ -90,14 +98,14 @@ class MultiObjectiveGLS: public GenericGLS<eslabMOChromosome, MultiObjectiveGLSS
 
 	MultiObjectiveGLS(Graph *_graph, Hotspot *_hotspot,
 		const GLSTuning &_tuning = GLSTuning()) :
-		GenericGLS<chromosome_t, stats_t>(_graph, _hotspot, _tuning),
+		GenericGLS<chromosome_t, population_t, stats_t>(_graph, _hotspot, _tuning),
 		evaluator(this) {}
 
 	protected:
 
 	fitness_t evaluate_schedule(const schedule_t &schedule);
 	void evaluate_chromosome(chromosome_t &chromosome);
-	void process(eoPop<chromosome_t> &population,
+	void process(population_t &population,
 		eoContinue<chromosome_t> &continuator,
 		eoTransform<chromosome_t> &transform);
 };
