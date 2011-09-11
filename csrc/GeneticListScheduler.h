@@ -246,6 +246,7 @@ class eslabEvolutionMonitor: public eoMonitor
 	public:
 
 	typedef eoPop<CT> population_t;
+	typedef typename eoPop<CT>::Fitness fitness_t;
 
 	eslabEvolutionMonitor(population_t &_population, const std::string &filename);
 

@@ -165,9 +165,11 @@ eoMonitor& eslabMOEvolutionMonitor::operator()()
 {
 	size_t population_size = population.size();
 
-	for (size_t i = 0; i < population_size; i++)
-		stream << population[i][LIFETIME_OBJECTIVE] << "\t"
-			<< population[i][ENERGY_OBJECTIVE] << "\t";
+	for (size_t i = 0; i < population_size; i++) {
+		fitness_t fitness = population[i].objectiveVector();
+		stream << fitness[LIFETIME_OBJECTIVE] << "\t"
+			<< fitness[ENERGY_OBJECTIVE] << "\t";
+	}
 
 	stream << std::endl;
 
