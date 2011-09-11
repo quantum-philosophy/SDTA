@@ -11,8 +11,8 @@ price_t eslabMOPop::best_lifetime() const
 
 	for (size_t i = 0; i < population_size; i++) {
 		fitness_t fitness = (*this)[i].objectiveVector();
-		if (fitness[AGING_OBJECTIVE] > price.lifetime) {
-			price.lifetime = fitness[AGING_OBJECTIVE];
+		if (fitness[LIFETIME_OBJECTIVE] > price.lifetime) {
+			price.lifetime = fitness[LIFETIME_OBJECTIVE];
 			price.energy = fitness[ENERGY_OBJECTIVE];
 		}
 	}
@@ -29,7 +29,7 @@ price_t eslabMOPop::best_energy() const
 	for (size_t i = 0; i < population_size; i++) {
 		fitness_t fitness = (*this)[i].objectiveVector();
 		if (fitness[ENERGY_OBJECTIVE] < price.energy) {
-			price.lifetime = fitness[AGING_OBJECTIVE];
+			price.lifetime = fitness[LIFETIME_OBJECTIVE];
 			price.energy = fitness[ENERGY_OBJECTIVE];
 		}
 	}
@@ -73,14 +73,14 @@ MultiObjectiveGLS::evaluate_schedule(const schedule_t &schedule)
 	if (graph->duration > graph->deadline) {
 		stats.miss_deadline();
 
-		fitness[AGING_OBJECTIVE] = std::numeric_limits<double>::min();
+		fitness[LIFETIME_OBJECTIVE] = std::numeric_limits<double>::min();
 		fitness[ENERGY_OBJECTIVE] = std::numeric_limits<double>::max();
 	}
 	else {
 		stats.evaluate();
 
 		price_t price = graph->evaluate(hotspot);
-		fitness[AGING_OBJECTIVE] = price.lifetime;
+		fitness[LIFETIME_OBJECTIVE] = price.lifetime;
 		fitness[ENERGY_OBJECTIVE] = price.energy;
 	}
 

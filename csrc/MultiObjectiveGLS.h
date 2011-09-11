@@ -4,7 +4,7 @@
 #include <moeo>
 #include "GeneticListScheduler.h"
 
-#define AGING_OBJECTIVE  0
+#define LIFETIME_OBJECTIVE  0
 #define ENERGY_OBJECTIVE 1
 
 class eslabObjectiveVectorTraits: public moeoObjectiveVectorTraits
@@ -12,7 +12,7 @@ class eslabObjectiveVectorTraits: public moeoObjectiveVectorTraits
 	public:
 
 	static bool minimizing(int i) { return i == ENERGY_OBJECTIVE; }
-	static bool maximizing(int i) { return i == AGING_OBJECTIVE; }
+	static bool maximizing(int i) { return i == LIFETIME_OBJECTIVE; }
 	static unsigned int nObjectives () { return 2; }
 };
 
@@ -28,7 +28,7 @@ class eslabObjectiveVector: public moeoRealObjectiveVector<eslabObjectiveVectorT
 
 	operator price_t() const
 	{
-		return price_t((*this)[AGING_OBJECTIVE], (*this)[ENERGY_OBJECTIVE]);
+		return price_t((*this)[LIFETIME_OBJECTIVE], (*this)[ENERGY_OBJECTIVE]);
 	}
 };
 
