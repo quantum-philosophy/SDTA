@@ -243,16 +243,18 @@ class eslabUniformRangeMutation: public eoMonOp<CT>
 template<class CT>
 class eslabEvolutionMonitor: public eoMonitor
 {
-	typedef eoPop<CT> population_t;
-
-	population_t &population;
-	std::ofstream stream;
-
 	public:
+
+	typedef eoPop<CT> population_t;
 
 	eslabEvolutionMonitor(population_t &_population, const std::string &filename);
 
-	virtual eoMonitor& operator()();
+	virtual eoMonitor& operator()() = 0;
+
+	protected:
+
+	population_t &population;
+	std::ofstream stream;
 };
 
 template<class CT, class PT>

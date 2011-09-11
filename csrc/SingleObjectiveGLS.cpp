@@ -4,6 +4,10 @@
 #include "DynamicPower.h"
 #include "ListScheduler.h"
 
+/******************************************************************************/
+/* SingleObjectiveGLS                                                         */
+/******************************************************************************/
+
 void SingleObjectiveGLS::process(population_t &population,
 	eoCheckPoint<chromosome_t> &checkpoint,
 	eoTransform<chromosome_t> &transform)
@@ -19,7 +23,9 @@ void SingleObjectiveGLS::process(population_t &population,
 
 	eslabSOStallContinue stall_continue(tuning.min_generations,
 		tuning.stall_generations);
+	eslabSOEvolutionMonitor evolution_monitor(population, tuning.dump_evolution);
 	checkpoint.add(stall_continue);
+	checkpoint.add(evolution_monitor);
 
 	eslabEvolution<chromosome_t> ga(checkpoint, evaluator, select,
 		transform, replace);
@@ -66,6 +72,10 @@ SingleObjectiveGLS::evaluate_schedule(const schedule_t &schedule)
 
 	return fitness;
 }
+
+/******************************************************************************/
+/* SOGLSStats                                                                 */
+/******************************************************************************/
 
 void SOGLSStats::reset()
 {
@@ -121,6 +131,26 @@ void SOGLSStats::display(std::ostream &o) const
 		<< "  Best priority:   " << print_t<rank_t>(best_priority) << std::endl
 		<< "  Best schedule:   " << print_t<int>(best_schedule) << std::endl;
 }
+
+/******************************************************************************/
+/* eslabSOEvolutionMonitor                                                    */
+/******************************************************************************/
+
+eoMonitor& eslabSOEvolutionMonitor::operator()()
+{
+	size_t population_size = population.size();
+
+	for (size_t i = 0; i < population_size; i++)
+		stream << population[i].fitness() << "\t";
+
+	stream << std::endl;
+
+	return *this;
+}
+
+/******************************************************************************/
+/* eslabSOStallContinue                                                       */
+/******************************************************************************/
 
 void eslabSOStallContinue::reset()
 {

@@ -188,12 +188,9 @@ ST &GenericGLS<CT, PT, ST>::solve(
 
 	/* Monitor */
 	eoCheckPoint<chromosome_t> checkpoint(gen_continue);
-	stats.watch(population, !tuning.verbose);
-	eslabEvolutionMonitor<chromosome_t> evolution_monitor(
-			population, tuning.dump_evolution);
 
+	stats.watch(population, !tuning.verbose);
 	checkpoint.add(stats);
-	checkpoint.add(evolution_monitor);
 
 	evaluate_chromosome(chromosome);
 
@@ -400,17 +397,4 @@ eslabEvolutionMonitor<CT>::eslabEvolutionMonitor(population_t &_population,
 	stream.open(filename.c_str());
 	if (!stream.is_open())
 		throw std::runtime_error("Cannot open the output file.");
-}
-
-template<class CT>
-eoMonitor& eslabEvolutionMonitor<CT>::operator()()
-{
-	size_t population_size = population.size();
-
-	for (size_t i = 0; i < population_size; i++)
-		stream << population[i].fitness() << "\t";
-
-	stream << std::endl;
-
-	return *this;
 }

@@ -126,6 +126,16 @@ class eslabElitismMerge: public eoMerge<chromosome_t>
 	double rate;
 };
 
+class eslabSOEvolutionMonitor: public eslabEvolutionMonitor<eslabSOChromosome>
+{
+	public:
+
+	eslabSOEvolutionMonitor(population_t &_population, const std::string &_filename) :
+		eslabEvolutionMonitor<eslabSOChromosome>(_population, _filename) {}
+
+	eoMonitor& operator()();
+};
+
 class eslabSOStallContinue:
 	public eslabStallContinue<eslabSOChromosome, eslabSOPop>
 {

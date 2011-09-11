@@ -3,6 +3,10 @@
 #include "Lifetime.h"
 #include "DynamicPower.h"
 
+/******************************************************************************/
+/* eslabMOPop                                                                 */
+/******************************************************************************/
+
 price_t eslabMOPop::best_lifetime() const
 {
 	price_t price(std::numeric_limits<double>::min(), 0);
@@ -37,12 +41,18 @@ price_t eslabMOPop::best_energy() const
 	return price;
 }
 
+/******************************************************************************/
+/* MultiObjectiveGLS                                                          */
+/******************************************************************************/
+
 void MultiObjectiveGLS::process(population_t &population,
 	eoCheckPoint<chromosome_t> &checkpoint, eoTransform<chromosome_t> &transform)
 {
 	eslabMOStallContinue stall_continue(tuning.min_generations,
 		tuning.stall_generations);
+	eslabMOEvolutionMonitor evolution_monitor(population, tuning.dump_evolution);
 	checkpoint.add(stall_continue);
+	checkpoint.add(evolution_monitor);
 
 	moeoNSGAII<chromosome_t> ga(checkpoint, evaluator, transform);
 
@@ -87,6 +97,10 @@ MultiObjectiveGLS::evaluate_schedule(const schedule_t &schedule)
 	return fitness;
 }
 
+/******************************************************************************/
+/* MOGLSStats                                                                 */
+/******************************************************************************/
+
 void MOGLSStats::reset()
 {
 	last_executions = 0;
@@ -94,6 +108,9 @@ void MOGLSStats::reset()
 
 void MOGLSStats::process()
 {
+	best_lifetime = population->best_lifetime();
+	best_energy = population->best_energy();
+
 	if (silent) return;
 
 	size_t population_size = population->size();
@@ -102,9 +119,6 @@ void MOGLSStats::process()
 
 	width = population_size -
 		(executions - last_executions) + 1;
-
-	price_t best_lifetime = population->best_lifetime();
-	price_t best_energy = population->best_energy();
 
 	std::cout
 		<< std::setw(width) << " "
@@ -136,8 +150,33 @@ void MOGLSStats::display(std::ostream &o) const
 
 	o
 		<< std::setprecision(2)
+		<< "  Best lifetime:   " << best_lifetime.lifetime << std::endl
+		<< "  Best energy:     " << best_energy.energy << std::endl
+
+		<< std::setprecision(2)
 		<< "  Pareto optima:   " << print_t<price_t>(pareto_optima) << std::endl;
 }
+
+/******************************************************************************/
+/* eslabMOEvolutionMonitor                                                    */
+/******************************************************************************/
+
+eoMonitor& eslabMOEvolutionMonitor::operator()()
+{
+	size_t population_size = population.size();
+
+	for (size_t i = 0; i < population_size; i++)
+		stream << population[i][LIFETIME_OBJECTIVE] << "\t"
+			<< population[i][ENERGY_OBJECTIVE] << "\t";
+
+	stream << std::endl;
+
+	return *this;
+}
+
+/******************************************************************************/
+/* eslabMOStallContinue                                                       */
+/******************************************************************************/
 
 void eslabMOStallContinue::reset()
 {

@@ -57,6 +57,9 @@ class MOGLSStats: public GenericGLSStats<eslabMOChromosome, eslabMOPop>
 
 	public:
 
+	price_t best_lifetime;
+	price_t best_energy;
+
 	std::vector<price_t> pareto_optima;
 
 	void display(std::ostream &o) const;
@@ -107,6 +110,16 @@ class MultiObjectiveGLS:
 	void process(population_t &population,
 		eoCheckPoint<chromosome_t> &checkpoint,
 		eoTransform<chromosome_t> &transform);
+};
+
+class eslabMOEvolutionMonitor: public eslabEvolutionMonitor<eslabMOChromosome>
+{
+	public:
+
+	eslabMOEvolutionMonitor(population_t &_population, const std::string &_filename) :
+		eslabEvolutionMonitor<eslabMOChromosome>(_population, _filename) {}
+
+	eoMonitor& operator()();
 };
 
 class eslabMOStallContinue:

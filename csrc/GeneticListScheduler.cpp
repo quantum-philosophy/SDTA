@@ -7,6 +7,10 @@
 #include "Task.h"
 #include "GeneticListScheduler.h"
 
+/******************************************************************************/
+/* GLSTuning                                                                  */
+/******************************************************************************/
+
 void GLSTuning::defaults()
 {
 	multiobjective = false;
