@@ -1,3 +1,4 @@
+#include <eo>
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
@@ -7,6 +8,11 @@
 #include <string.h>
 
 #include "common.h"
+
+rank_t constrain_t::random() const
+{
+	return min + eo::random(max - min);
+}
 
 system_t::system_t(const char *filename)
 {

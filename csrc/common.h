@@ -1,7 +1,6 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
-#include <eo>
 #include <iostream>
 #include <vector>
 #include <list>
@@ -52,10 +51,7 @@ struct constrain_t
 		return min <= what && what <= max;
 	}
 
-	inline rank_t random() const
-	{
-		return min + eo::random(max - min);
-	}
+	rank_t random() const;
 };
 
 typedef std::vector<constrain_t> constrains_t;
