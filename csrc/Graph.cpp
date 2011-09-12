@@ -272,7 +272,7 @@ size_t Graph::count_dependencies(const Task *task, bit_string_t &counted) const
 
 std::ostream &operator<< (std::ostream &o, const Graph *graph)
 {
-	o	<< "Task Graph: " << std::endl
+	o	<< "Task Graph:" << std::endl
 		<< "  Number of tasks: " << graph->task_count << std::endl
 		<< std::setprecision(2) << std::setiosflags(std::ios::fixed)
 		<< "  Duration: " << graph->duration << std::endl
@@ -287,7 +287,7 @@ std::ostream &operator<< (std::ostream &o, const Graph *graph)
 		<< std::setw(8) << "asap" << " : "
 		<< std::setw(8) << "mobility" << " : "
 		<< std::setw(8) << "alap" << " ) -> [ "
-		<< "children" << " ] " << std::endl;
+		<< "children" << " ]" << std::endl;
 
 	for (tid_t id = 0; id < graph->task_count; id++)
 		o << "  " << graph->tasks[id];

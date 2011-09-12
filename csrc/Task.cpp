@@ -86,7 +86,7 @@ std::ostream &operator<< (std::ostream &o, const Task *task)
 		if (i + 1 < children_count) o << ", ";
 	}
 
-	o << " ] " << std::endl;
+	o << " ]" << std::endl;
 
 	return o;
 }

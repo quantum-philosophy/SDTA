@@ -40,14 +40,14 @@ void Architecture::order_tasks(task_vector_t &tasks, const schedule_t &schedule)
 
 std::ostream &operator<< (std::ostream &o, const Architecture *architecture)
 {
-	o	<< "Architecture: " << std::endl
+	o	<< "Architecture:" << std::endl
 		<< "  Number of processors: " << architecture->processor_count << std::endl;
 
 	o	<< "  "
 		<< std::setw(4) << "id" << " ( "
 		<< std::setw(8) << "freq" << " : "
 		<< std::setw(8) << "volt" << " : "
-		<< std::setw(8) << "types" << " ) " << std::endl;
+		<< std::setw(8) << "types" << " )" << std::endl;
 
 	for (pid_t id = 0; id < architecture->processor_count; id++)
 		o << "  " << architecture->processors[id];

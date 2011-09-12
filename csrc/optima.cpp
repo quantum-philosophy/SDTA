@@ -24,7 +24,7 @@ using namespace std;
 		some = NULL;			\
 	} while(0)
 
-void perform(const string &system_config, const string &genetic_config,
+void optimize(const string &system_config, const string &genetic_config,
 	const string &floorplan_config, const string &thermal_config,
 	stringstream &tuning_stream);
 
@@ -32,7 +32,7 @@ int main(int argc, char **argv)
 {
 	try {
 		CommandLine arguments(argc, (const char **)argv);
-		perform(arguments.system_config, arguments.genetic_config,
+		optimize(arguments.system_config, arguments.genetic_config,
 			arguments.floorplan_config, arguments.thermal_config,
 			arguments.tuning_stream);
 	}
@@ -45,11 +45,28 @@ int main(int argc, char **argv)
 	return EXIT_SUCCESS;
 }
 
-void optimize(const system_t &system, const GLSTuning &tuning,
-	const string &floorplan_config, const string &thermal_config)
+void backup(const string &iname, int index)
 {
-	clock_t begin, end;
-	double elapsed;
+	stringstream oname;
+	oname << iname << "_" << index;
+	ifstream is(iname.c_str(), ios::binary);
+	ofstream os(oname.str().c_str(), ios::binary);
+	os << is.rdbuf();
+}
+
+void optimize(const string &system_config, const string &genetic_config,
+	const string &floorplan_config, const string &thermal_config,
+	stringstream &tuning_stream)
+{
+	system_t system(system_config);
+
+	GLSTuning tuning(genetic_config);
+	tuning.update(tuning_stream);
+
+	if (tuning.verbose)
+		cout << tuning << endl;
+
+	size_t repeat = tuning.repeat < 0 ? 1 : tuning.repeat;
 
 	Graph *graph = NULL;
 	Architecture *architecture = NULL;
@@ -131,48 +148,56 @@ void optimize(const system_t &system, const GLSTuning &tuning,
 
 		price_t price = graph->evaluate(hotspot);
 
-		cout << "Initial lifetime: "
-			<< setiosflags(ios::fixed) << setprecision(2)
-			<< price.lifetime << endl
-			<< "Initial energy: "
-			<< price.energy << endl;
-
-		if (tuning.multiobjective)
-			scheduler = new MultiObjectiveGLS(graph, hotspot, tuning);
-		else
-			scheduler = new SingleObjectiveGLS(graph, hotspot, tuning);
-
-		begin = clock();
-
-		GeneticListSchedulerStats &stats = scheduler->solve(priority);
-
-		end = clock();
-		elapsed = (double)(end - begin) / CLOCKS_PER_SEC;
-
 		if (tuning.verbose)
+			cout << "Initial lifetime: "
+				<< setiosflags(ios::fixed) << setprecision(2)
+				<< price.lifetime << endl
+				<< "Initial energy: "
+				<< price.energy << endl;
+
+		for (size_t i = 0; i < repeat; i++) {
+			if (tuning.multiobjective)
+				scheduler = new MultiObjectiveGLS(graph, hotspot, tuning);
+			else
+				scheduler = new SingleObjectiveGLS(graph, hotspot, tuning);
+
+			clock_t begin = clock();
+
+			GeneticListSchedulerStats &stats = scheduler->solve(priority);
+
+			clock_t end = clock();
+			double elapsed = (double)(end - begin) / CLOCKS_PER_SEC;
+
 			cout << endl << stats << endl;
 
-		cout << "Improvement: " << setiosflags(ios::fixed) << setprecision(2);
+			cout << "Improvement: " << setiosflags(ios::fixed) << setprecision(2);
 
-		if (tuning.verbose)
-			cout << "Time elapsed: " << elapsed << endl;
+			if (!tuning.multiobjective) {
+				SOGLSStats *sstats = (SOGLSStats *)&stats;
 
-		if (!tuning.multiobjective) {
-			SOGLSStats *sstats = (SOGLSStats *)&stats;
+				cout
+					<< (sstats->best_lifetime / price.lifetime - 1.0) * 100
+					<< "% lifetime" << endl;
+			}
+			else {
+				MOGLSStats *sstats = (MOGLSStats *)&stats;
 
-			cout
-				<< (sstats->best_lifetime / price.lifetime - 1.0) * 100
-				<< "% lifetime" << endl;
-		}
-		else {
-			MOGLSStats *sstats = (MOGLSStats *)&stats;
+				cout
+					<< (sstats->best_lifetime.lifetime / price.lifetime - 1.0) * 100
+					<< "% lifetime with "
+					<< (sstats->best_lifetime.energy / price.energy - 1.0) * 100
+					<< "% energy"
+					<< endl;
+			}
 
-			cout
-				<< (sstats->best_lifetime.lifetime / price.lifetime - 1.0) * 100
-				<< "% lifetime with "
-				<< (sstats->best_lifetime.energy / price.energy - 1.0) * 100
-				<< "% energy"
-				<< endl;
+			if (tuning.verbose)
+				cout << "Time elapsed: " << elapsed << endl << endl;
+
+			/* Make a back copy of the dump file */
+			if (!tuning.dump_evolution.empty() && repeat > 1)
+				backup(tuning.dump_evolution, i);
+
+			__DELETE(scheduler);
 		}
 	}
 	catch (exception &e) {
@@ -187,36 +212,4 @@ void optimize(const system_t &system, const GLSTuning &tuning,
 	__DELETE(architecture);
 	__DELETE(hotspot);
 	__DELETE(scheduler);
-}
-
-void backup(const string &iname, int index)
-{
-	stringstream oname;
-	oname << iname << "_" << index;
-	ifstream is(iname.c_str(), ios::binary);
-	ofstream os(oname.str().c_str(), ios::binary);
-	os << is.rdbuf();
-}
-
-void perform(const string &system_config, const string &genetic_config,
-	const string &floorplan_config, const string &thermal_config,
-	stringstream &tuning_stream)
-{
-	system_t system(system_config);
-
-	GLSTuning tuning(genetic_config);
-	tuning.update(tuning_stream);
-
-	if (tuning.verbose)
-		cout << tuning << endl;
-
-	size_t repeat = tuning.repeat < 0 ? 1 : tuning.repeat;
-
-	for (size_t i = 0; i < repeat; i++) {
-		optimize(system, tuning, floorplan_config, thermal_config);
-
-		/* Make a back copy of the dump file */
-		if (!tuning.dump_evolution.empty() && repeat > 1)
-			backup(tuning.dump_evolution, i);
-	}
 }
