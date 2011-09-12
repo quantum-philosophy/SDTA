@@ -36,6 +36,7 @@ class GLSTuning
 	public:
 
 	/* Prepare */
+	size_t repeat;
 	double deadline_ratio;
 	bool reorder_tasks;
 

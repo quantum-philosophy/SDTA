@@ -301,8 +301,8 @@ std::ostream &operator<< (std::ostream &o, const Graph *graph)
 	return o;
 }
 
-GraphBuilder::GraphBuilder(std::vector<unsigned int> &type,
-	std::vector<std::vector<bool> > &link) : Graph()
+GraphBuilder::GraphBuilder(const std::vector<unsigned int> &type,
+	const std::vector<std::vector<bool> > &link) : Graph()
 {
 	Task *task;
 	task_vector_t tasks;

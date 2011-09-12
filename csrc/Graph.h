@@ -82,8 +82,8 @@ class GraphBuilder : public Graph
 {
 	public:
 
-	GraphBuilder(std::vector<unsigned int> &type,
-		std::vector<std::vector<bool> > &link);
+	GraphBuilder(const std::vector<unsigned int> &type,
+		const std::vector<std::vector<bool> > &link);
 	~GraphBuilder();
 };
 

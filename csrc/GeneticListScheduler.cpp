@@ -14,6 +14,7 @@
 void GLSTuning::defaults()
 {
 	/* Preparation */
+	repeat = -1;
 	deadline_ratio = 1.1;
 	reorder_tasks = false;
 
@@ -94,7 +95,9 @@ void GLSTuning::update(std::istream &stream)
 		stream >> name;
 
 		/* Prepare */
-		if (name == "deadline_ratio")
+		if (name == "repeat")
+			stream >> repeat;
+		else if (name == "deadline_ratio")
 			stream >> deadline_ratio;
 		else if (name == "reorder_tasks")
 			stream >> reorder_tasks;
@@ -170,6 +173,7 @@ void GLSTuning::display(std::ostream &o) const
 		<< "Tuning:" << std::endl
 
 		/* Prepare */
+		<< "  Repeat:                  " << repeat << std::endl
 		<< "  Deadline ratio:          " << deadline_ratio << std::endl
 		<< "  Reorder tasks:           " << reorder_tasks << std::endl
 

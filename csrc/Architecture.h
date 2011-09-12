@@ -31,10 +31,11 @@ class ArchitectureBuilder : public Architecture
 {
 	public:
 
-	ArchitectureBuilder(std::vector<double> &frequency,
-		std::vector<double> &voltage, std::vector<unsigned long int> &ngate,
-		std::vector<std::vector<unsigned long int> > &nc,
-		std::vector<std::vector<double> > &ceff);
+	ArchitectureBuilder(const std::vector<double> &frequency,
+		const std::vector<double> &voltage,
+		const std::vector<unsigned long int> &ngate,
+		const std::vector<std::vector<unsigned long int> > &nc,
+		const std::vector<std::vector<double> > &ceff);
 	~ArchitectureBuilder();
 };
 

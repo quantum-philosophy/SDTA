@@ -24,7 +24,7 @@ using namespace std;
 		some = NULL;			\
 	} while(0)
 
-void optimize(const string &system_config, const string &genetic_config,
+void perform(const string &system_config, const string &genetic_config,
 	const string &floorplan_config, const string &thermal_config,
 	stringstream &tuning_stream);
 
@@ -32,7 +32,7 @@ int main(int argc, char **argv)
 {
 	try {
 		CommandLine arguments(argc, (const char **)argv);
-		optimize(arguments.system_config, arguments.genetic_config,
+		perform(arguments.system_config, arguments.genetic_config,
 			arguments.floorplan_config, arguments.thermal_config,
 			arguments.tuning_stream);
 	}
@@ -45,21 +45,18 @@ int main(int argc, char **argv)
 	return EXIT_SUCCESS;
 }
 
-void optimize(const string &system_config, const string &genetic_config,
-	const string &floorplan_config, const string &thermal_config,
-	stringstream &tuning_stream)
+void optimize(const system_t &system, const GLSTuning &tuning,
+	const string &floorplan_config, const string &thermal_config)
 {
+	clock_t begin, end;
+	double elapsed;
+
 	Graph *graph = NULL;
 	Architecture *architecture = NULL;
 	Hotspot *hotspot = NULL;
 	GeneticListScheduler *scheduler = NULL;
 
 	try {
-		system_t system(system_config);
-
-		GLSTuning tuning(genetic_config);
-		tuning.update(tuning_stream);
-
 		graph = new GraphBuilder(system.type, system.link);
 		architecture = new ArchitectureBuilder(system.frequency,
 			system.voltage, system.ngate, system.nc, system.ceff);
@@ -128,7 +125,7 @@ void optimize(const string &system_config, const string &genetic_config,
 		}
 
 		if (tuning.verbose)
-			cout << tuning << endl << graph << endl << architecture << endl;
+			cout << graph << endl << architecture << endl;
 
 		hotspot = new Hotspot(floorplan_config, thermal_config);
 
@@ -145,12 +142,9 @@ void optimize(const string &system_config, const string &genetic_config,
 		else
 			scheduler = new SingleObjectiveGLS(graph, hotspot, tuning);
 
-		clock_t begin, end;
-		double elapsed;
-
 		begin = clock();
 
-		GeneticListSchedulerStats &stats = scheduler->solve(system.priority);
+		GeneticListSchedulerStats &stats = scheduler->solve(priority);
 
 		end = clock();
 		elapsed = (double)(end - begin) / CLOCKS_PER_SEC;
@@ -159,6 +153,9 @@ void optimize(const string &system_config, const string &genetic_config,
 			cout << endl << stats << endl;
 
 		cout << "Improvement: " << setiosflags(ios::fixed) << setprecision(2);
+
+		if (tuning.verbose)
+			cout << "Time elapsed: " << elapsed << endl;
 
 		if (!tuning.multiobjective) {
 			SOGLSStats *sstats = (SOGLSStats *)&stats;
@@ -177,9 +174,6 @@ void optimize(const string &system_config, const string &genetic_config,
 				<< "% energy"
 				<< endl;
 		}
-
-		if (tuning.verbose)
-			cout << "Time elapsed: " << elapsed << endl;
 	}
 	catch (exception &e) {
 		__DELETE(graph);
@@ -193,4 +187,22 @@ void optimize(const string &system_config, const string &genetic_config,
 	__DELETE(architecture);
 	__DELETE(hotspot);
 	__DELETE(scheduler);
+}
+
+void perform(const string &system_config, const string &genetic_config,
+	const string &floorplan_config, const string &thermal_config,
+	stringstream &tuning_stream)
+{
+	system_t system(system_config);
+
+	GLSTuning tuning(genetic_config);
+	tuning.update(tuning_stream);
+
+	if (tuning.verbose)
+		cout << tuning << endl;
+
+	size_t repeat = tuning.repeat < 0 ? 1 : tuning.repeat;
+
+	for (size_t i = 0; i < repeat; i++)
+		optimize(system, tuning, floorplan_config, thermal_config);
 }
