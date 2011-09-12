@@ -1,17 +1,9 @@
-function watchEvolution(file, multi)
+function watchEvolution(file, multi, point, full)
   if nargin < 2, multi = false; end
+  if nargin < 3, point = []; end
+  if nargin < 4, full = true; end
 
   figure;
-
-  title('Evolution');
-
-  if multi
-    xlabel('Lifetime');
-    ylabel('Energy');
-  else
-    xlabel('Generation');
-    ylabel('Lifetime');
-  end
 
   t = timer('TimerFcn', @(a,b)1, 'StartDelay', 1);
 
@@ -20,7 +12,7 @@ function watchEvolution(file, multi)
     for i = 1:length(lines), delete(lines(i)); end
 
     try
-      Utils.drawEvolution(file, multi);
+      Utils.drawEvolution(file, multi, point, full);
     catch
     end
 
