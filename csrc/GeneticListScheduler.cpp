@@ -174,6 +174,7 @@ void GLSTuning::display(std::ostream &o) const
 
 		/* Prepare */
 		<< "  Repeat:                  " << repeat << std::endl
+		<< std::setprecision(2)
 		<< "  Deadline ratio:          " << deadline_ratio << std::endl
 		<< "  Reorder tasks:           " << reorder_tasks << std::endl
 
