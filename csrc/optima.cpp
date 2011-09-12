@@ -189,6 +189,15 @@ void optimize(const system_t &system, const GLSTuning &tuning,
 	__DELETE(scheduler);
 }
 
+void backup(const string &iname, int index)
+{
+	stringstream oname;
+	oname << iname << "_" << index;
+	ifstream is(iname.c_str(), ios::binary);
+	ofstream os(oname.str().c_str(), ios::binary);
+	os << is.rdbuf();
+}
+
 void perform(const string &system_config, const string &genetic_config,
 	const string &floorplan_config, const string &thermal_config,
 	stringstream &tuning_stream)
@@ -203,6 +212,11 @@ void perform(const string &system_config, const string &genetic_config,
 
 	size_t repeat = tuning.repeat < 0 ? 1 : tuning.repeat;
 
-	for (size_t i = 0; i < repeat; i++)
+	for (size_t i = 0; i < repeat; i++) {
 		optimize(system, tuning, floorplan_config, thermal_config);
+
+		/* Make a back copy of the dump file */
+		if (!tuning.dump_evolution.empty() && repeat > 1)
+			backup(tuning.dump_evolution, i);
+	}
 }
