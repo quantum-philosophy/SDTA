@@ -14,7 +14,6 @@ set (COMMON_SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/ListScheduler.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/DynamicPower.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Lifetime.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/MD5Digest.cpp
 )
 
 add_executable (optima optima.cpp ${COMMON_SRCS})

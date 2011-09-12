@@ -18,7 +18,6 @@
 
 #include "common.h"
 #include "Hotspot.h"
-#include "MD5Digest.h"
 
 template<class CT>
 class eslabPop: public eoPop<CT>
@@ -36,9 +35,10 @@ class GLSTuning
 	public:
 
 	/* Prepare */
-	size_t repeat;
+	int repeat;
 	double deadline_ratio;
 	bool reorder_tasks;
+	bool include_mapping;
 
 	/* Target */
 	bool multiobjective;
@@ -71,9 +71,6 @@ class GLSTuning
 
 	/* Evolve */
 	double elitism_rate;
-
-	/* Speed up */
-	bool cache;
 
 	/* Output */
 	bool verbose;
@@ -110,7 +107,6 @@ class GenericGLSStats: public GeneticListSchedulerStats, public eoMonitor
 
 	size_t generations;
 	size_t evaluations;
-	size_t cache_hits;
 	size_t deadline_misses;
 
 	double crossover_rate;
@@ -122,12 +118,6 @@ class GenericGLSStats: public GeneticListSchedulerStats, public eoMonitor
 	{
 		if (!silent) std::cout << "." << std::flush;
 		evaluations++;
-	}
-
-	inline void hit_cache()
-	{
-		if (!silent) std::cout << "#" << std::flush;
-		cache_hits++;
 	}
 
 	inline void miss_deadline()
@@ -155,7 +145,8 @@ class GeneticListScheduler
 	public:
 
 	virtual GeneticListSchedulerStats &solve(
-		const priority_t &priority = priority_t()) = 0;
+		const priority_t &priority = priority_t(),
+		const layout_t &layout = layout_t()) = 0;
 };
 
 template<class CT, class PT, class ST>
@@ -167,34 +158,36 @@ class GenericGLS: public GeneticListScheduler
 	typedef	PT population_t;
 	typedef ST stats_t;
 	typedef typename chromosome_t::Fitness fitness_t;
-	typedef std::map<MD5Digest, fitness_t, MD5DigestComparator> cache_t;
 
-	GenericGLS(Graph *_graph, Hotspot *_hotspot,
+	GenericGLS(Architecture *_architecture, Graph *_graph, Hotspot *_hotspot,
 		const GLSTuning &_tuning = GLSTuning());
 
 	void update(std::istream &stream);
 
-	stats_t &solve(const priority_t &priority = priority_t());
+	stats_t &solve(const priority_t &priority = priority_t(),
+		const layout_t &layout = layout_t());
 
 	protected:
 
-	fitness_t evaluate(const chromosome_t &chromosome);
+	void populate(population_t &population, priority_t priority, layout_t layout);
 
-	virtual fitness_t evaluate_schedule(const schedule_t &schedule) = 0;
+	virtual fitness_t evaluate(const chromosome_t &chromosome) = 0;
 	virtual void evaluate_chromosome(chromosome_t &chromosome) = 0;
 	virtual void process(population_t &population,
 		eoCheckPoint<chromosome_t> &checkpoint,
 		eoTransform<chromosome_t> &transform) = 0;
 
+	Architecture *architecture;
 	Graph *graph;
 	Hotspot *hotspot;
 
-	GLSTuning tuning;
 	stats_t stats;
 
-	cache_t cache;
-
-	double sampling_interval;
+	const GLSTuning tuning;
+	const size_t task_count;
+	const size_t chromosome_length;
+	const constrains_t constrains;
+	const double sampling_interval;
 };
 
 template<class CT>

@@ -9,7 +9,6 @@ class ListScheduler
 
 	ListScheduler() {}
 
-	static schedule_t process(const Graph *graph);
 	static schedule_t process(const Graph *graph, const priority_t &priority);
 
 	private:

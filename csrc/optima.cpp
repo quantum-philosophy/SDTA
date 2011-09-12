@@ -81,58 +81,58 @@ void optimize(const string &system_config, const string &genetic_config,
 		size_t task_count = graph->size();
 		size_t processor_count = architecture->size();
 
+		/* In order to assign a reasonable deadline and perform
+		 * initial measurements to compare with, we:
+		 * - assign a dummy mapping,
+		 * - compute a mobility-based priority,
+		 * - and obtain a schedule with help of List Scheduler.
+		 */
+
 		mapping_t mapping = system.mapping;
 		schedule_t schedule = system.schedule;
 		priority_t priority = system.priority;
 		double deadline = system.deadline;
 
-		/* 1. Assign a mapping
+		/* 1. Create and assign an even mapping.
 		 *
-		 * Generate an even mapping.
 		 */
-		if (mapping.empty()) {
-			mapping = mapping_t(task_count);
-
-			for (size_t i = 0; i < task_count; i++)
-				mapping[i] = i % processor_count;
-		}
+		if (mapping.empty())
+			mapping = graph->calc_layout(architecture);
 		else if (tuning.verbose)
 			cout << "Using external mapping." << endl;
 
 		graph->assign_mapping(architecture, mapping);
 
-		/* 2. Assign a schedule
+		/* 2. Calculate a priority vector based on the task mobility.
 		 *
-		 * Generate a schedule based on the task mobility or
-		 * the given priority.
 		 */
-		if (schedule.empty()) {
-			if (priority.empty())
-				schedule = ListScheduler::process(graph);
-			else
-				schedule = ListScheduler::process(graph, priority);
-		}
+		if (priority.empty())
+			priority = graph->calc_priority();
+		else if (tuning.verbose)
+			cout << "Using external priority." << endl;
+
+		/* 3. Compute a schedule.
+		 *
+		 */
+		if (schedule.empty())
+			schedule = ListScheduler::process(graph, priority);
 		else if (tuning.verbose)
 			cout << "Using external schedule." << endl;
 
-		if (tuning.verbose && !priority.empty())
-			cout << "Using external priority." << endl;
-
 		graph->assign_schedule(schedule);
 
-		/* 3. Assign a deadline
+		/* 4. Assign a deadline.
 		 *
-		 * Calculate if needed.
 		 */
-		if (deadline == 0) {
+		if (deadline == 0)
 			deadline = tuning.deadline_ratio * graph->get_duration();
-		}
 		else if (tuning.verbose)
 			cout << "Using external deadline." << endl;
 
 		graph->assign_deadline(deadline);
 
-		/* 4. Reorder the tasks if requested.
+		/* 5. Reorder the tasks if requested.
+		 *
 		 */
 		if (tuning.reorder_tasks) {
 			if (tuning.verbose)
@@ -146,6 +146,9 @@ void optimize(const string &system_config, const string &genetic_config,
 
 		hotspot = new Hotspot(floorplan_config, thermal_config);
 
+		/* 6. Obtain the initial measurements to compare with.
+		 *
+		 */
 		price_t price = graph->evaluate(hotspot);
 
 		if (tuning.verbose)
@@ -156,10 +159,14 @@ void optimize(const string &system_config, const string &genetic_config,
 				<< price.energy << endl;
 
 		for (size_t i = 0; i < repeat; i++) {
-			if (tuning.multiobjective)
-				scheduler = new MultiObjectiveGLS(graph, hotspot, tuning);
-			else
-				scheduler = new SingleObjectiveGLS(graph, hotspot, tuning);
+			if (tuning.multiobjective) {
+				scheduler = new MultiObjectiveGLS(architecture,
+					graph, hotspot, tuning);
+			}
+			else {
+				scheduler = new SingleObjectiveGLS(architecture,
+					graph, hotspot, tuning);
+			}
 
 			clock_t begin = clock();
 

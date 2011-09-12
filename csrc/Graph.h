@@ -17,20 +17,6 @@ class Graph
 	friend class Lifetime;
 	friend std::ostream &operator<< (std::ostream &, const Graph *);
 
-	protected:
-
-	task_vector_t tasks;
-	size_t task_count;
-
-	const Architecture *architecture;
-	mapping_t mapping;
-	schedule_t schedule;
-
-	double duration;
-	double deadline;
-
-	constrains_t constrains;
-
 	public:
 
 	Graph() : task_count(0), architecture(NULL), duration(0), deadline(0) {}
@@ -38,21 +24,28 @@ class Graph
 	void add_task(Task *task);
 	void add_link(Task *parent, Task *child);
 
-	void assign_mapping(const Architecture *architecture,
-		const mapping_t &mapping);
+	void assign_mapping(const Architecture *architecture, const mapping_t &mapping);
+	void assign_mapping(const mapping_t &mapping);
 	void assign_schedule(const schedule_t &mapping);
 	inline void assign_deadline(double time) { deadline = time; }
 
 	inline size_t size() const { return task_count; }
 	inline double get_duration() const { return duration; }
 
-	const Task *operator[] (tid_t id) const { return tasks[id]; }
+	inline const Task *operator[] (tid_t id) const { return tasks[id]; }
 
 	price_t evaluate(Hotspot *hotspot) const;
 
+	void reorder_tasks(const std::vector<tid_t> &order);
+
+	layout_t calc_layout(const Architecture *architecture = NULL) const;
 	priority_t calc_priority() const;
 
-	void reorder_tasks(const std::vector<tid_t> &order);
+	inline const constrains_t &get_constrains()
+	{
+		if (constrains.empty()) calc_constrains();
+		return constrains;
+	}
 
 	protected:
 
@@ -76,6 +69,18 @@ class Graph
 	void calc_alap() const;
 
 	void fix_epsilon() const;
+
+	task_vector_t tasks;
+	size_t task_count;
+
+	const Architecture *architecture;
+	mapping_t mapping;
+	schedule_t schedule;
+
+	double duration;
+	double deadline;
+
+	constrains_t constrains;
 };
 
 class GraphBuilder : public Graph

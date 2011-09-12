@@ -5,14 +5,12 @@
 
 class Architecture
 {
+	template<class CT, class PT, class ST>
+	friend class GenericGLS;
+
 	friend class DynamicPower;
 	friend class Hotspot;
 	friend std::ostream &operator<< (std::ostream &, const Architecture *);
-
-	protected:
-
-	processor_vector_t processors;
-	size_t processor_count;
 
 	public:
 
@@ -22,9 +20,14 @@ class Architecture
 	void assign_tasks(task_vector_t &tasks, const mapping_t &mapping) const;
 	void order_tasks(task_vector_t &tasks, const schedule_t &schedule) const;
 
-	size_t size() const { return processor_count; }
+	inline size_t size() const { return processor_count; }
 
-	const Processor *operator[] (pid_t id) const { return processors[id]; }
+	inline const Processor *operator[] (pid_t id) const { return processors[id]; }
+
+	protected:
+
+	processor_vector_t processors;
+	size_t processor_count;
 };
 
 class ArchitectureBuilder : public Architecture

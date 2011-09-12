@@ -27,10 +27,18 @@ void Graph::add_link(Task *parent, Task *child)
 void Graph::assign_mapping(const Architecture *architecture,
 	const mapping_t &mapping)
 {
+	this->architecture = architecture;
+	assign_mapping(mapping);
+}
+
+void Graph::assign_mapping(const mapping_t &mapping)
+{
+	if (!architecture)
+		throw std::runtime_error("The architecture is unknown.");
+
 	if (mapping.size() != task_count)
 		throw std::runtime_error("The given mapping is not sufficient.");
 
-	this->architecture = architecture;
 	this->mapping = mapping;
 
 	architecture->assign_tasks(tasks, mapping);
@@ -147,23 +155,6 @@ price_t Graph::evaluate(Hotspot *hotspot) const
 	return price_t(lifetime, energy);
 }
 
-priority_t Graph::calc_priority() const
-{
-	std::vector<const Task *> twins(task_count);
-
-	for (size_t i = 0; i < task_count; i++)
-		twins[i] = tasks[i];
-
-	std::stable_sort(twins.begin(), twins.end(), Task::compare_mobility);
-
-	priority_t priority(task_count);
-
-	for (size_t i = 0; i < task_count; i++)
-		priority[twins[i]->id] = i;
-
-	return priority;
-}
-
 void Graph::reorder_tasks(const schedule_t &order)
 {
 	size_t i;
@@ -209,22 +200,61 @@ void Graph::reorder_tasks(const schedule_t &order)
 	}
 }
 
+layout_t Graph::calc_layout(const Architecture *architecture) const
+{
+	if (!architecture) architecture = this->architecture;
+
+	if (!architecture)
+		throw std::runtime_error("The graph should be mapped.");
+
+	size_t processor_count = architecture->size();
+
+	layout_t layout(task_count);
+
+	for (size_t i = 0; i < task_count; i++)
+		layout[i] = i % processor_count;
+
+	return layout;
+}
+
+priority_t Graph::calc_priority() const
+{
+	std::vector<const Task *> twins(task_count);
+
+	for (size_t i = 0; i < task_count; i++)
+		twins[i] = tasks[i];
+
+	std::stable_sort(twins.begin(), twins.end(), Task::compare_mobility);
+
+	priority_t priority(task_count);
+
+	for (size_t i = 0; i < task_count; i++)
+		priority[twins[i]->id] = i;
+
+	return priority;
+}
+
 void Graph::calc_constrains()
 {
 	const Task *task;
-	size_t dependents;
-	size_t dependencies;
+	size_t dependents, dependencies, processor_count;
 
-	constrains = constrains_t(task_count);
+	constrains = constrains_t(2 * task_count);
+	processor_count = architecture->size();
 
-	for (size_t i = 0; i < task_count; i++) {
-		task = tasks[i];
+	for (tid_t id = 0; id < task_count; id++) {
+		task = tasks[id];
 
 		dependents = count_dependents(task);
 		dependencies = count_dependencies(task);
 
-		constrains[task->id].min = dependencies;
-		constrains[task->id].max = task_count - dependents - 1;
+		/* Scheduling constrains */
+		constrains[id].min = dependencies;
+		constrains[id].max = task_count - dependents - 1;
+
+		/* Mapping constrains */
+		constrains[task_count + id].min = 0;
+		constrains[task_count + id].max = processor_count - 1;
 	}
 }
 

@@ -17,6 +17,7 @@ void GLSTuning::defaults()
 	repeat = -1;
 	deadline_ratio = 1.1;
 	reorder_tasks = false;
+	include_mapping = false;
 
 	/* Method */
 	multiobjective = false;
@@ -50,9 +51,6 @@ void GLSTuning::defaults()
 	/* Evolve */
 	elitism_rate = 0.5;
 
-	/* Speed up */
-	cache = true;
-
 	/* Output */
 	verbose = false;
 	dump_evolution = std::string();
@@ -72,15 +70,15 @@ GLSTuning::GLSTuning(const std::string &filename)
 	update(file);
 }
 
-void GLSTuning::update(std::istream &stream)
+void GLSTuning::update(std::istream &main_stream)
 {
-	stream.exceptions(std::ios::failbit | std::ios::badbit);
+	main_stream.exceptions(std::ios::failbit | std::ios::badbit);
 
 	std::string line, name;
 
 	while (true) {
 		try {
-			std::getline(stream, line);
+			std::getline(main_stream, line);
 		}
 		catch (...) {
 			break;
@@ -101,6 +99,8 @@ void GLSTuning::update(std::istream &stream)
 			stream >> deadline_ratio;
 		else if (name == "reorder_tasks")
 			stream >> reorder_tasks;
+		else if (name == "include_mapping")
+			stream >> include_mapping;
 
 		/* Target */
 		else if (name == "multiobjective")
@@ -150,10 +150,6 @@ void GLSTuning::update(std::istream &stream)
 		else if (name == "elitism_rate")
 			stream >> elitism_rate;
 
-		/* Speed up */
-		else if (name == "cache")
-			stream >> cache;
-
 		/* Output */
 		else if (name == "verbose")
 			stream >> verbose;
@@ -177,6 +173,7 @@ void GLSTuning::display(std::ostream &o) const
 		<< std::setprecision(2)
 		<< "  Deadline ratio:          " << deadline_ratio << std::endl
 		<< "  Reorder tasks:           " << reorder_tasks << std::endl
+		<< "  Consider mapping:        " << include_mapping << std::endl
 
 		/* Target */
 		<< "  Multi-objective:         " << multiobjective << std::endl
@@ -217,9 +214,6 @@ void GLSTuning::display(std::ostream &o) const
 		/* Evolve */
 		<< std::setprecision(2)
 		<< "  Elitism rate:            " << elitism_rate << std::endl
-
-		/* Speed up */
-		<< "  Use caching:             " << cache << std::endl
 
 		/* Output */
 		<< "  Verbose:                 " << verbose << std::endl

@@ -4,11 +4,6 @@
 #include "Graph.h"
 #include "Task.h"
 
-schedule_t ListScheduler::process(const Graph *graph)
-{
-	return process(graph, graph->calc_priority());
-}
-
 schedule_t ListScheduler::process(const Graph *graph, const priority_t &priority)
 {
 	tid_t id;

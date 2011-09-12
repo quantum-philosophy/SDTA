@@ -42,11 +42,22 @@ void SingleObjectiveGLS::evaluate_chromosome(chromosome_t &chromosome)
 }
 
 SingleObjectiveGLS::fitness_t
-SingleObjectiveGLS::evaluate_schedule(const schedule_t &schedule)
+SingleObjectiveGLS::evaluate(const chromosome_t &chromosome)
 {
-	fitness_t fitness;
+	if (tuning.include_mapping) {
+		mapping_t mapping(chromosome.begin() + task_count, chromosome.end());
+		graph->assign_mapping(mapping);
 
-	graph->assign_schedule(schedule);
+		priority_t priority(chromosome.begin(), chromosome.begin() + task_count);
+		schedule_t schedule = ListScheduler::process(graph, priority);
+		graph->assign_schedule(schedule);
+	}
+	else {
+		schedule_t schedule = ListScheduler::process(graph, chromosome);
+		graph->assign_schedule(schedule);
+	}
+
+	fitness_t fitness;
 
 	if (graph->duration > graph->deadline) {
 		stats.miss_deadline();
@@ -91,7 +102,7 @@ void SOGLSStats::process()
 
 	size_t population_size = population->size();
 	size_t width = 0;
-	size_t executions = cache_hits + deadline_misses + evaluations;
+	size_t executions = deadline_misses + evaluations;
 
 	width = population_size -
 		(executions - last_executions) + 1;

@@ -82,7 +82,6 @@ void GenericGLSStats<CT, PT>::watch(population_t &_population, bool _silent)
 
 	generations = 0;
 	evaluations = 0;
-	cache_hits = 0;
 	deadline_misses = 0;
 
 	crossover_rate = 0;
@@ -115,7 +114,6 @@ void GenericGLSStats<CT, PT>::display(std::ostream &o) const
 		<< std::setprecision(0)
 		<< "  Generations:     " << generations << std::endl
 		<< "  Evaluations:     " << evaluations << std::endl
-		<< "  Cache hits:      " << cache_hits << std::endl
 		<< "  Deadline misses: " << deadline_misses << std::endl;
 }
 
@@ -124,10 +122,20 @@ void GenericGLSStats<CT, PT>::display(std::ostream &o) const
 /******************************************************************************/
 
 template<class CT, class PT, class ST>
-GenericGLS<CT, PT, ST>::GenericGLS(
+GenericGLS<CT, PT, ST>::GenericGLS(Architecture *_architecture,
 	Graph *_graph, Hotspot *_hotspot, const GLSTuning &_tuning) :
-	graph(_graph), hotspot(_hotspot), tuning(_tuning)
+
+	architecture(_architecture), graph(_graph), hotspot(_hotspot),
+
+	/* Constants */
+	tuning(_tuning), task_count(graph->task_count),
+	chromosome_length(task_count * (1 + (tuning.include_mapping ? 1 : 0))),
+	constrains(graph->get_constrains()),
+	sampling_interval(hotspot->sampling_interval())
 {
+	if (task_count == 0)
+		throw std::runtime_error("The graph is empty.");
+
 #ifdef EO_1_2_0
 	eo::log << eo::setlevel(eo::quiet);
 #endif
@@ -139,78 +147,35 @@ GenericGLS<CT, PT, ST>::GenericGLS(
 			std::cout << "Chosen seed: " << seed << std::endl;
 		rng.reseed(seed);
 	}
-
-	sampling_interval = hotspot->sampling_interval();
 }
 
 template<class CT, class PT, class ST>
-ST &GenericGLS<CT, PT, ST>::solve(const priority_t &start_priority)
+ST &GenericGLS<CT, PT, ST>::solve(
+	const priority_t &priority, const layout_t &layout)
 {
-	size_t i, j;
-	size_t task_count = graph->task_count;
-
-	if (task_count == 0)
-		throw std::runtime_error("The graph is empty.");
-
-	/* Reset */
-	if (tuning.cache) cache.clear();
-
-	task_vector_t &tasks = graph->tasks;
+	population_t population;
 
 	/* Continue */
 	eoGenContinue<chromosome_t> gen_continue(tuning.max_generations);
 
-	/* Create */
-	population_t population;
-	priority_t priority = start_priority;
-
-	if (priority.empty())
-		priority = graph->calc_priority();
-
-	if (priority.size() != task_count)
-		throw std::runtime_error("The priority vector has bad dimensions.");
-
-	chromosome_t chromosome(task_count);
-
-	for (i = 0; i < task_count; i++)
-		chromosome[i] = priority[i];
-
-	if (tuning.verbose)
-		std::cout << "   0: ";
-
 	/* Monitor */
 	eoCheckPoint<chromosome_t> checkpoint(gen_continue);
-
 	stats.watch(population, !tuning.verbose);
 	checkpoint.add(stats);
 
-	evaluate_chromosome(chromosome);
+	/* TODO: Get rid of... */ if (tuning.verbose) std::cout << "   0: ";
 
-	/* Fill the first part with uniform chromosomes */
-	size_t create_count = tuning.uniform_ratio * tuning.population_size;
-	for (i = 0; i < create_count; i++)
-		population.push_back(chromosome);
+	/* Create */
+	populate(population, priority, layout);
 
-	/* Fill the second part with randomly generated chromosomes */
-	create_count = tuning.population_size - create_count;
-	rank_t range;
-	for (i = 0; i < create_count; i++) {
-		for (j = 0; j < task_count; j++)
-			chromosome[j] = graph->constrains[j].random();
-
-		chromosome.invalidate();
-		evaluate_chromosome(chromosome);
-		population.push_back(chromosome);
-	}
-
-	stats();
+	/* TODO: Get rid of... */ stats();
 
 	/* Transform = Crossover + Mutate */
 	eslabNPtsBitCrossover<chromosome_t, population_t> crossover(
 		tuning.crossover_points, tuning.crossover_min_rate,
 		tuning.crossover_scale, tuning.crossover_exponent, stats);
 	eslabUniformRangeMutation<chromosome_t, population_t> mutate(
-		graph->constrains, tuning.mutation_min_rate, tuning.mutation_scale,
+		constrains, tuning.mutation_min_rate, tuning.mutation_scale,
 		tuning.mutation_exponent, stats);
 	eslabTransform<chromosome_t> transform(crossover, mutate);
 
@@ -220,30 +185,56 @@ ST &GenericGLS<CT, PT, ST>::solve(const priority_t &start_priority)
 }
 
 template<class CT, class PT, class ST>
-typename GenericGLS<CT, PT, ST>::fitness_t
-GenericGLS<CT, PT, ST>::evaluate(const chromosome_t &chromosome)
+void GenericGLS<CT, PT, ST>::populate(population_t &population,
+	priority_t priority, layout_t layout)
 {
-	/* Make a new schedule */
-	schedule_t schedule = ListScheduler::process(graph, chromosome);
+	size_t i, j, k;
+	size_t create_count;
 
-	if (!tuning.cache)
-		return evaluate_schedule(schedule);
+	population.clear();
 
-	MD5Digest key(schedule);
-	typename cache_t::const_iterator it = cache.find(key);
+	/* The scheduling part */
+	if (priority.empty())
+		priority = graph->calc_priority();
 
-	fitness_t fitness;
+	if (priority.size() != task_count)
+		throw std::runtime_error("The priority vector has bad dimensions.");
 
-	if (it != cache.end()) {
-		stats.hit_cache();
-		fitness = it->second;
+	/* The mapping part */
+	if (tuning.include_mapping) {
+		if (layout.empty())
+			layout = graph->calc_layout();
+
+		if (layout.size() != task_count)
+			throw std::runtime_error("The layout vector has bad dimensions.");
 	}
-	else {
-		fitness = evaluate_schedule(schedule);
-		cache[key] = fitness;
+
+	chromosome_t chromosome(chromosome_length);
+
+	for (i = 0; i < task_count; i++) {
+		chromosome[i] = priority[i];
+
+		if (tuning.include_mapping)
+			chromosome[task_count + i] = layout[i];
 	}
 
-	return fitness;
+	evaluate_chromosome(chromosome);
+
+	/* Fill the first part with uniform chromosomes */
+	create_count = tuning.uniform_ratio * tuning.population_size;
+	for (i = 0; i < create_count; i++)
+		population.push_back(chromosome);
+
+	/* Fill the second part with randomly generated chromosomes */
+	create_count = tuning.population_size - create_count;
+	for (i = 0; i < create_count; i++) {
+		for (j = 0; j < chromosome_length; j++)
+			chromosome[j] = constrains[j].random();
+
+		chromosome.invalidate();
+		evaluate_chromosome(chromosome);
+		population.push_back(chromosome);
+	}
 }
 
 /******************************************************************************/

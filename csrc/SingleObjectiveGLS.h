@@ -67,16 +67,16 @@ class SingleObjectiveGLS:
 
 	public:
 
-	SingleObjectiveGLS(Graph *_graph, Hotspot *_hotspot,
-		const GLSTuning &_tuning = GLSTuning()) :
-		GenericGLS<chromosome_t, population_t, stats_t>(_graph, _hotspot, _tuning),
-		evaluator(this) { stats = SOGLSStats(); }
+	SingleObjectiveGLS(Architecture *_architecture, Graph *_graph,
+		Hotspot *_hotspot, const GLSTuning &_tuning = GLSTuning()) :
+
+		GenericGLS<chromosome_t, population_t, stats_t>(_architecture,
+			_graph, _hotspot, _tuning), evaluator(this) {}
 
 	protected:
 
-	fitness_t evaluate_schedule(const schedule_t &schedule);
+	fitness_t evaluate(const chromosome_t &chromosome);
 	void evaluate_chromosome(chromosome_t &chromosome);
-
 	void process(population_t &population,
 		eoCheckPoint<chromosome_t> &checkpoint,
 		eoTransform<chromosome_t> &transform);

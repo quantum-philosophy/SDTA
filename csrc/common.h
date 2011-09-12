@@ -36,6 +36,7 @@ typedef std::vector<rank_t> priority_t;
 typedef int pid_t;
 typedef std::vector<pid_t> mapping_t;
 typedef std::vector<Processor *> processor_vector_t;
+typedef std::vector<rank_t> layout_t;
 
 typedef std::vector<bool> bit_string_t;
 
