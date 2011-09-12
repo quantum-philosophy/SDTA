@@ -42,7 +42,7 @@ class Hotspot
 
 	public:
 
-	Hotspot(char *floorplan, char *config,
+	Hotspot(const std::string &floorplan, const std::string &config,
 		str_pair *extra_table = NULL, size_t tsize = 0);
 	~Hotspot();
 

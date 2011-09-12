@@ -144,13 +144,13 @@ GenericGLS<CT, PT, ST>::GenericGLS(
 }
 
 template<class CT, class PT, class ST>
-ST &GenericGLS<CT, PT, ST>::solve(
-	const priority_t &start_priority)
+ST &GenericGLS<CT, PT, ST>::solve(const priority_t &start_priority)
 {
 	size_t i, j;
 	size_t task_count = graph->task_count;
 
-	if (task_count == 0) throw std::runtime_error("The graph is empty.");
+	if (task_count == 0)
+		throw std::runtime_error("The graph is empty.");
 
 	/* Reset */
 	if (tuning.cache) cache.clear();

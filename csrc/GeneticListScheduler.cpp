@@ -13,10 +13,15 @@
 
 void GLSTuning::defaults()
 {
+	/* Preparation */
+	deadline_ratio = 1.1;
+	reorder_tasks = false;
+
+	/* Method */
 	multiobjective = false;
 
 	/* Randomness */
-	seed = 0;
+	seed = -1;
 
 	/* Create */
 	uniform_ratio = 0.5;
@@ -28,7 +33,6 @@ void GLSTuning::defaults()
 	stall_generations = 20;
 
 	/* Select */
-	elitism_rate = 0.5;
 	tournament_size = 3;
 
 	/* Crossover */
@@ -42,26 +46,40 @@ void GLSTuning::defaults()
 	mutation_scale = 1;
 	mutation_exponent = -0.05;
 
-	verbose = false;
+	/* Evolve */
+	elitism_rate = 0.5;
+
+	/* Speed up */
 	cache = true;
-	reorder_tasks = false;
+
+	/* Output */
+	verbose = false;
+	dump_evolution = std::string();
 }
 
-GLSTuning::GLSTuning(const char *filename)
+GLSTuning::GLSTuning(const std::string &filename)
 {
 	defaults();
 
-	std::ifstream file(filename);
-	file.exceptions(std::fstream::failbit | std::fstream::badbit);
+	if (filename.empty()) return;
+
+	std::ifstream file(filename.c_str());
 
 	if (!file.is_open())
 		throw std::runtime_error("Cannot open the tuning file.");
+
+	update(file);
+}
+
+void GLSTuning::update(std::istream &stream)
+{
+	stream.exceptions(std::ios::failbit | std::ios::badbit);
 
 	std::string line, name;
 
 	while (true) {
 		try {
-			std::getline(file, line);
+			std::getline(stream, line);
 		}
 		catch (...) {
 			break;
@@ -75,12 +93,21 @@ GLSTuning::GLSTuning(const char *filename)
 
 		stream >> name;
 
-		if (name == "multiobjective")
+		/* Prepare */
+		if (name == "deadline_ratio")
+			stream >> deadline_ratio;
+		else if (name == "reorder_tasks")
+			stream >> reorder_tasks;
+
+		/* Target */
+		else if (name == "multiobjective")
 			stream >> multiobjective;
 
+		/* Randomize */
 		else if (name == "seed")
 			stream >> seed;
 
+		/* Create */
 		else if (name == "uniform_ratio")
 			stream >> uniform_ratio;
 		else if (name == "population_size")
@@ -95,8 +122,6 @@ GLSTuning::GLSTuning(const char *filename)
 			stream >> stall_generations;
 
 		/* Select */
-		else if (name == "elitism_rate")
-			stream >> elitism_rate;
 		else if (name == "tournament_size")
 			stream >> tournament_size;
 
@@ -118,13 +143,17 @@ GLSTuning::GLSTuning(const char *filename)
 		else if (name == "mutation_exponent")
 			stream >> mutation_exponent;
 
-		else if (name == "verbose")
-			stream >> verbose;
+		/* Evolve */
+		else if (name == "elitism_rate")
+			stream >> elitism_rate;
+
+		/* Speed up */
 		else if (name == "cache")
 			stream >> cache;
-		else if (name == "reorder_tasks")
-			stream >> reorder_tasks;
 
+		/* Output */
+		else if (name == "verbose")
+			stream >> verbose;
 		else if (name == "dump_evolution")
 			stream >> dump_evolution;
 
@@ -140,8 +169,14 @@ void GLSTuning::display(std::ostream &o) const
 
 		<< "Tuning:" << std::endl
 
+		/* Prepare */
+		<< "  Deadline ratio:          " << deadline_ratio << std::endl
+		<< "  Reorder tasks:           " << reorder_tasks << std::endl
+
+		/* Target */
 		<< "  Multi-objective:         " << multiobjective << std::endl
 
+		/* Randomize */
 		<< std::setprecision(0)
 		<< "  Seed:                    " << seed << std::endl
 
@@ -157,8 +192,6 @@ void GLSTuning::display(std::ostream &o) const
 		<< "  Stall generations:       " << stall_generations << std::endl
 
 		/* Select */
-		<< std::setprecision(2)
-		<< "  Elitism rate:            " << elitism_rate << std::endl
 		<< std::setprecision(0)
 		<< "  Tournament size:         " << tournament_size << std::endl
 
@@ -174,7 +207,18 @@ void GLSTuning::display(std::ostream &o) const
 		<< std::setprecision(2)
 		<< "  Mutation minimal rate:   " << mutation_min_rate << std::endl
 		<< "  Mutation scale:          " << mutation_scale << std::endl
-		<< "  Mutation exponent:       " << mutation_exponent << std::endl;
+		<< "  Mutation exponent:       " << mutation_exponent << std::endl
+
+		/* Evolve */
+		<< std::setprecision(2)
+		<< "  Elitism rate:            " << elitism_rate << std::endl
+
+		/* Speed up */
+		<< "  Use caching:             " << cache << std::endl
+
+		/* Output */
+		<< "  Verbose:                 " << verbose << std::endl
+		<< "  Dump evolution:          " << dump_evolution << std::endl;
 }
 
 std::ostream &operator<< (std::ostream &o, const GLSTuning &tuning)

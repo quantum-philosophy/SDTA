@@ -6,6 +6,7 @@
 #include <vector>
 #include <time.h>
 
+#include "CommandLine.h"
 #include "Graph.h"
 #include "Architecture.h"
 #include "Hotspot.h"
@@ -23,72 +24,31 @@ using namespace std;
 		some = NULL;			\
 	} while(0)
 
-#define __MX_FREE(some) \
-	do { 						\
-		if (some) mxFree(some); \
-		some = NULL;			\
-	} while(0)
-
-void usage();
-bool file_exist(const char *filename);
-void optimize(const char *system, const char *genetic, char *floorplan, char *thermal);
-void parse_system(const char *filename, vector<unsigned int> &type,
-	vector<vector<bool> > &link, vector<double> &frequency,
-	vector<double> &voltage, vector<unsigned long int> &ngate,
-	vector<vector<unsigned long int> > &nc, vector<vector<double> > &ceff,
-	mapping_t &mapping, schedule_t &schedule, priority_t &priority);
+void optimize(const string &system_config, const string &genetic_config,
+	const string &floorplan_config, const string &thermal_config,
+	stringstream &tuning_stream);
 
 int main(int argc, char **argv)
 {
-	char *system, *genetic, *floorplan, *thermal;
-
 	try {
-		if (argc != 5) {
-			usage();
-			throw runtime_error("Wrong number of arguments.");
-		}
-
-		if (!file_exist(system = argv[1]))
-			throw runtime_error("The system configuration file does not exist.");
-
-		if (!file_exist(genetic = argv[2]))
-			throw runtime_error("The genetic configuration file does not exist.");
-
-		if (!file_exist(floorplan = argv[3]))
-			throw runtime_error("The floorplan configuration file does not exist.");
-
-		if (!file_exist(thermal = argv[4]))
-			throw runtime_error("The thermal configuration file does not exist.");
-
-		optimize(system, genetic, floorplan, thermal);
+		CommandLine arguments(argc, (const char **)argv);
+		optimize(arguments.system_config, arguments.genetic_config,
+			arguments.floorplan_config, arguments.thermal_config,
+			arguments.tuning_stream);
 	}
 	catch (exception &e) {
 		cerr << e.what() << endl;
+		CommandLine::usage();
 		return EXIT_FAILURE;
 	}
 
 	return EXIT_SUCCESS;
 }
 
-void usage()
+void optimize(const string &system_config, const string &genetic_config,
+	const string &floorplan_config, const string &thermal_config,
+	stringstream &tuning_stream)
 {
-	cout << "Usage: optima <system config> <genetic config> <floorplan config> <thermal config>" << endl
-		<< "  * <system config>    - a task graph with a set of PEs (architecture)" << endl
-		<< "  * <genetic config>   - the configuration of the GLSA" << endl
-		<< "  * <floorplan config> - the floorplan of the architecture" << endl
-		<< "  * <thermal config>   - the configuration of Hotspot" << endl;
-}
-
-bool file_exist(const char *filename)
-{
-	return ifstream(filename).is_open();
-}
-
-void optimize(const char *system_config, const char *genetic_config,
-	char *floorplan_config, char *thermal_config)
-{
-	const double deadline_ratio = 1.1;
-
 	Graph *graph = NULL;
 	Architecture *architecture = NULL;
 	Hotspot *hotspot = NULL;
@@ -98,6 +58,7 @@ void optimize(const char *system_config, const char *genetic_config,
 		system_t system(system_config);
 
 		GLSTuning tuning(genetic_config);
+		tuning.update(tuning_stream);
 
 		graph = new GraphBuilder(system.type, system.link);
 		architecture = new ArchitectureBuilder(system.frequency,
@@ -107,7 +68,14 @@ void optimize(const char *system_config, const char *genetic_config,
 		size_t processor_count = architecture->size();
 
 		mapping_t mapping = system.mapping;
+		schedule_t schedule = system.schedule;
+		priority_t priority = system.priority;
+		double deadline = system.deadline;
 
+		/* 1. Assign a mapping
+		 *
+		 * Generate an even mapping.
+		 */
 		if (mapping.empty()) {
 			mapping = mapping_t(task_count);
 
@@ -119,33 +87,45 @@ void optimize(const char *system_config, const char *genetic_config,
 
 		graph->assign_mapping(architecture, mapping);
 
-		schedule_t schedule = system.schedule;
-
-		if (schedule.empty())
-			schedule = ListScheduler::process(graph);
+		/* 2. Assign a schedule
+		 *
+		 * Generate a schedule based on the task mobility or
+		 * the given priority.
+		 */
+		if (schedule.empty()) {
+			if (priority.empty())
+				schedule = ListScheduler::process(graph);
+			else
+				schedule = ListScheduler::process(graph, priority);
+		}
 		else if (tuning.verbose)
 			cout << "Using external schedule." << endl;
 
-		if (tuning.reorder_tasks) {
-			if (tuning.verbose)
-				cout << "Reordering the tasks according to the first schedule." << endl;
-
-			graph->reorder_tasks(schedule);
-			for (size_t i = 0; i < task_count; i++)
-				schedule[i] = i;
-		}
+		if (tuning.verbose && !priority.empty())
+			cout << "Using external priority." << endl;
 
 		graph->assign_schedule(schedule);
 
-		double deadline = system.deadline;
-
+		/* 3. Assign a deadline
+		 *
+		 * Calculate if needed.
+		 */
 		if (deadline == 0) {
-			deadline = deadline_ratio * graph->get_duration();
+			deadline = tuning.deadline_ratio * graph->get_duration();
 		}
 		else if (tuning.verbose)
 			cout << "Using external deadline." << endl;
 
 		graph->assign_deadline(deadline);
+
+		/* 4. Reorder the tasks if requested.
+		 */
+		if (tuning.reorder_tasks) {
+			if (tuning.verbose)
+				cout << "Reordering the tasks according to the first schedule." << endl;
+
+			graph->reorder_tasks(schedule);
+		}
 
 		if (tuning.verbose)
 			cout << tuning << endl << graph << endl << architecture << endl;
@@ -164,9 +144,6 @@ void optimize(const char *system_config, const char *genetic_config,
 			scheduler = new MultiObjectiveGLS(graph, hotspot, tuning);
 		else
 			scheduler = new SingleObjectiveGLS(graph, hotspot, tuning);
-
-		if (tuning.verbose && !system.priority.empty())
-			cout << "Using external priority." << endl;
 
 		clock_t begin, end;
 		double elapsed;

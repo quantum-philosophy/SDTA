@@ -158,31 +158,55 @@ priority_t Graph::calc_priority() const
 
 	priority_t priority(task_count);
 
-	size_t out_range = 0;
-
-	for (size_t i = 0; i < task_count; i++) {
+	for (size_t i = 0; i < task_count; i++)
 		priority[twins[i]->id] = i;
-		if (!constrains[twins[i]->id].include(i)) out_range++;
-	}
-
-	if (out_range)
-		std::cout << "Warning: " << out_range
-			<< " out of " << task_count
-			<< " mobility based priorities do not match the constrains." << std::endl;
 
 	return priority;
 }
 
-void Graph::reorder_tasks(const schedule_t &schedule)
+void Graph::reorder_tasks(const schedule_t &order)
 {
+	size_t i;
+
+	/* First of all, reorder the tasks themselves */
 	task_vector_t new_tasks(task_count);
 
-	for (size_t i = 0; i < task_count; i++) {
-		new_tasks[i] = tasks[schedule[i]];
+	for (i = 0; i < task_count; i++) {
+		new_tasks[i] = tasks[order[i]];
 		new_tasks[i]->id = i;
 	}
 
 	tasks = new_tasks;
+
+	/* Fix the mapping */
+	if (!mapping.empty()) {
+		mapping_t new_mapping(task_count);
+
+		for (i = 0; i < task_count; i++)
+			new_mapping[i] = mapping[order[i]];
+
+		mapping = new_mapping;
+	}
+
+	/* Fix the schedule */
+	if (!schedule.empty()) {
+		schedule_t new_schedule(task_count);
+
+		for (i = 0; i < task_count; i++)
+			new_schedule[i] = schedule[order[i]];
+
+		schedule = new_schedule;
+	}
+
+	/* Fix the constrains */
+	if (!constrains.empty()) {
+		constrains_t new_constrains(task_count);
+
+		for (i = 0; i < task_count; i++)
+			new_constrains[i] = constrains[order[i]];
+
+		constrains = new_constrains;
+	}
 }
 
 void Graph::calc_constrains()

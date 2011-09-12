@@ -72,7 +72,7 @@ struct system_t
 	priority_t priority;
 	double deadline;
 
-	system_t(const char *filename);
+	system_t(const std::string &filename);
 };
 
 struct price_t

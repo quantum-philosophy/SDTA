@@ -35,8 +35,14 @@ class GLSTuning
 {
 	public:
 
+	/* Prepare */
+	double deadline_ratio;
+	bool reorder_tasks;
+
+	/* Target */
 	bool multiobjective;
 
+	/* Randomize */
 	int seed;
 
 	/* Create */
@@ -49,7 +55,6 @@ class GLSTuning
 	size_t stall_generations;
 
 	/* Select */
-	double elitism_rate;
 	size_t tournament_size;
 
 	/* Crossover */
@@ -63,14 +68,20 @@ class GLSTuning
 	double mutation_scale;
 	double mutation_exponent;
 
-	bool verbose;
-	bool cache;
-	bool reorder_tasks;
+	/* Evolve */
+	double elitism_rate;
 
+	/* Speed up */
+	bool cache;
+
+	/* Output */
+	bool verbose;
 	std::string dump_evolution;
 
 	GLSTuning() { defaults(); }
-	GLSTuning(const char *filename);
+	GLSTuning(const std::string &filename);
+
+	void update(std::istream &stream);
 
 	void display(std::ostream &o) const;
 
@@ -159,6 +170,8 @@ class GenericGLS: public GeneticListScheduler
 
 	GenericGLS(Graph *_graph, Hotspot *_hotspot,
 		const GLSTuning &_tuning = GLSTuning());
+
+	void update(std::istream &stream);
 
 	stats_t &solve(const priority_t &priority = priority_t());
 

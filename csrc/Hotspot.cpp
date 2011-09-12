@@ -1,4 +1,5 @@
 #include <stdexcept>
+#include <string>
 #include <nr3.h>
 #include <eigen_sym.h>
 
@@ -7,24 +8,22 @@
 #include "Architecture.h"
 #include "utils.h"
 
-Hotspot::Hotspot(char *floorplan, char *config,
+Hotspot::Hotspot(const std::string &floorplan, const std::string &config,
 	str_pair *extra_table, size_t tsize)
 {
-	if (!fexist(floorplan) || !fexist(config))
-		throw std::runtime_error("The configuration files do not exist.");
-
 	cfg = default_thermal_config();
 
-	if (config) {
+	if (!config.empty()) {
 		str_pair table[MAX_ENTRIES];
-		int i = read_str_pairs(&table[0], MAX_ENTRIES, config);
+		int i = read_str_pairs(&table[0], MAX_ENTRIES,
+			const_cast<char *>(config.c_str()));
 		thermal_config_add_from_strs(&cfg, table, i);
 	}
 
 	if (extra_table && tsize)
 		thermal_config_add_from_strs(&cfg, extra_table, tsize);
 
-	flp = read_flp(floorplan, FALSE);
+	flp = read_flp(const_cast<char *>(floorplan.c_str()), FALSE);
 }
 
 Hotspot::~Hotspot()

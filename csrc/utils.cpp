@@ -1,12 +1,5 @@
 #include <nr3.h>
 
-bool fexist(const char *filename)
-{
-	FILE *fp = fopen(filename, "r");
-	if (fp) { fclose(fp); return true; }
-	return false;
-}
-
 void transpose_matrix(const MatDoub &U, MatDoub &UT)
 {
 	int i, j;

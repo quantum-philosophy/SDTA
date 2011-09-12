@@ -14,14 +14,14 @@ rank_t constrain_t::random() const
 	return min + eo::random(max - min);
 }
 
-system_t::system_t(const char *filename)
+system_t::system_t(const std::string &filename)
 {
 	char c;
 	int i, j, tmp;
 	std::string line, name;
 	size_t rows, cols;
 
-	std::ifstream file(filename);
+	std::ifstream file(filename.c_str());
 	file.exceptions(std::fstream::failbit | std::fstream::badbit);
 
 	if (!file.is_open())
