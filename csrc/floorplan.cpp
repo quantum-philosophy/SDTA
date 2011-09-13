@@ -1,6 +1,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <cmath>
+#include <stdlib.h>
 
 #ifndef PROCESSOR_LABEL
 #define PROCESSOR_LABEL "core"

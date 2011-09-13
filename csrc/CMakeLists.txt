@@ -18,8 +18,6 @@ set (COMMON_SRCS
 
 add_executable (optima optima.cpp ${COMMON_SRCS})
 
-add_dependencies (optima hotspot paradiseo)
-
 target_link_libraries (optima libeo libmoeo libeoutils libhotspot)
 
 include_directories (
@@ -58,3 +56,4 @@ set_property(
 
 # Tools
 add_executable (floorplan floorplan.cpp)
+add_executable (system system.cpp)

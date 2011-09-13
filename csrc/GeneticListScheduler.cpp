@@ -170,7 +170,7 @@ void GLSTuning::display(std::ostream &o) const
 
 		/* Prepare */
 		<< "  Repeat:                  " << repeat << std::endl
-		<< std::setprecision(2)
+		<< std::setprecision(3)
 		<< "  Deadline ratio:          " << deadline_ratio << std::endl
 		<< "  Reorder tasks:           " << reorder_tasks << std::endl
 		<< "  Consider mapping:        " << include_mapping << std::endl
@@ -183,7 +183,7 @@ void GLSTuning::display(std::ostream &o) const
 		<< "  Seed:                    " << seed << std::endl
 
 		/* Create */
-		<< std::setprecision(2)
+		<< std::setprecision(3)
 		<< "  Uniform ratio:           " << uniform_ratio << std::endl
 		<< std::setprecision(0)
 		<< "  Population size:         " << population_size << std::endl
@@ -198,7 +198,7 @@ void GLSTuning::display(std::ostream &o) const
 		<< "  Tournament size:         " << tournament_size << std::endl
 
 		/* Crossover */
-		<< std::setprecision(2)
+		<< std::setprecision(3)
 		<< "  Crossover minimal rate:  " << crossover_min_rate << std::endl
 		<< "  Crossover scale:         " << crossover_scale << std::endl
 		<< "  Crossover exponent:      " << crossover_exponent << std::endl
@@ -206,13 +206,13 @@ void GLSTuning::display(std::ostream &o) const
 		<< "  Crossover points:        " << crossover_points << std::endl
 
 		/* Mutate */
-		<< std::setprecision(2)
+		<< std::setprecision(3)
 		<< "  Mutation minimal rate:   " << mutation_min_rate << std::endl
 		<< "  Mutation scale:          " << mutation_scale << std::endl
 		<< "  Mutation exponent:       " << mutation_exponent << std::endl
 
 		/* Evolve */
-		<< std::setprecision(2)
+		<< std::setprecision(3)
 		<< "  Elitism rate:            " << elitism_rate << std::endl
 
 		/* Output */
