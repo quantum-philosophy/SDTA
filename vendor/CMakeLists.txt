@@ -9,10 +9,6 @@ add_custom_command (
 	COMMAND ln -fs ${HOTSPOT_DIR}/hotspot ${PROJECT_BINARY_DIR}/hotspot
 	COMMAND ln -sfn ${CMAKE_CURRENT_SOURCE_DIR}/hotspot-${HOTSPOT_VERSION} ${CMAKE_CURRENT_SOURCE_DIR}/hotspot
 )
-add_custom_target (hotspot-patch
-	COMMAND perl -pi -e 's/^EXTRAFLAGS.*/EXTRAFLAGS=-fPIC/' ${HOTSPOT_DIR}/Makefile
-)
-add_dependencies (hotspot hotspot-patch)
 
 # TGFF
 set (TGFF_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tgff-${TGFF_VERSION})
