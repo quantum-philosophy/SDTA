@@ -29,8 +29,7 @@ class SOGLSStats: public GenericGLSStats<eslabSOChromosome, eslabSOPop>
 	double best_lifetime;
 	double worst_lifetime;
 
-	chromosome_t best_priority;
-	schedule_t best_schedule;
+	chromosome_t best_chromosome;
 
 	void display(std::ostream &o) const;
 

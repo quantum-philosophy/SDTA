@@ -32,8 +32,7 @@ void SingleObjectiveGLS::process(population_t &population,
 
 	ga(population);
 
-	stats.best_priority = population.best_element();
-	stats.best_schedule = ListScheduler::process(graph, stats.best_priority);
+	stats.best_chromosome = population.best_element();
 }
 
 void SingleObjectiveGLS::evaluate_chromosome(chromosome_t &chromosome)
@@ -138,8 +137,7 @@ void SOGLSStats::display(std::ostream &o) const
 		<< "  Worst lifetime:  " << worst_lifetime << std::endl
 
 		<< std::setprecision(0)
-		<< "  Best priority:   " << print_t<rank_t>(best_priority) << std::endl
-		<< "  Best schedule:   " << print_t<int>(best_schedule) << std::endl;
+		<< "  Best chromosome: " << print_t<rank_t>(best_chromosome) << std::endl;
 }
 
 /******************************************************************************/
