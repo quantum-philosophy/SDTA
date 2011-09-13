@@ -1,12 +1,13 @@
+#include "Processor.h"
+#include "Architecture.h"
+
 #include <stdexcept>
 #include <string>
 #include <nr3.h>
 #include <eigen_sym.h>
 
-#include "Hotspot.h"
-#include "Processor.h"
-#include "Architecture.h"
 #include "utils.h"
+#include "Hotspot.h"
 
 Hotspot::Hotspot(const std::string &floorplan, const std::string &config,
 	str_pair *extra_table, size_t tsize)

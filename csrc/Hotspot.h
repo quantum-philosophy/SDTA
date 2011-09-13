@@ -8,8 +8,6 @@ extern "C" {
 #include <hotspot/temperature_block.h>
 }
 
-#include "common.h"
-
 class Hotspot
 {
 	thermal_config_t cfg;
