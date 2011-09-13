@@ -209,14 +209,12 @@ void GenericGLS<CT, PT, ST>::populate(population_t &population,
 			throw std::runtime_error("The layout vector has bad dimensions.");
 	}
 
-	chromosome_t chromosome(chromosome_length);
+	chromosome_t chromosome;
 
-	for (i = 0; i < task_count; i++) {
-		chromosome[i] = priority[i];
-
-		if (tuning.include_mapping)
-			chromosome[task_count + i] = layout[i];
-	}
+	if (tuning.include_mapping)
+		chromosome = eslabDualGeneEncoder<chromosome_t>(priority, layout);
+	else
+		chromosome = eslabMonoGeneEncoder<chromosome_t>(priority);
 
 	evaluate_chromosome(chromosome);
 

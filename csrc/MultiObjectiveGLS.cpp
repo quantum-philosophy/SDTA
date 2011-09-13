@@ -77,11 +77,10 @@ MultiObjectiveGLS::fitness_t
 MultiObjectiveGLS::evaluate(const chromosome_t &chromosome)
 {
 	if (tuning.include_mapping) {
-		mapping_t mapping(chromosome.begin() + task_count, chromosome.end());
-		graph->assign_mapping(mapping);
+		eslabDualGeneEncoder<chromosome_t> dual(chromosome);
 
-		priority_t priority(chromosome.begin(), chromosome.begin() + task_count);
-		schedule_t schedule = ListScheduler::process(graph, priority);
+		graph->assign_mapping(dual.layout());
+		schedule_t schedule = ListScheduler::process(graph, dual.priority());
 		graph->assign_schedule(schedule);
 	}
 	else {

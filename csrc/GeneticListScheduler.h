@@ -20,6 +20,124 @@
 #include "Hotspot.h"
 
 template<class CT>
+class eslabGeneEncoder
+{
+	public:
+
+	inline const priority_t &priority() const { return m_priority; }
+	inline const CT &chromosome() const { return m_chromosome; }
+	inline operator CT() const { return m_chromosome; }
+
+	protected:
+
+	priority_t m_priority;
+	CT m_chromosome;
+};
+
+template<class CT>
+class eslabMonoGeneEncoder: public eslabGeneEncoder<CT>
+{
+	public:
+
+	eslabMonoGeneEncoder(const priority_t &_priority)
+	{
+		encode(_priority);
+	}
+
+	eslabMonoGeneEncoder(const CT &_chromosome)
+	{
+		decode(_chromosome);
+	}
+
+	private:
+
+	using eslabGeneEncoder<CT>::m_priority;
+	using eslabGeneEncoder<CT>::m_chromosome;
+
+	inline void encode(const priority_t &_priority)
+	{
+		m_priority = _priority;
+
+		size_t size = _priority.size();
+
+		m_chromosome = CT(size);
+
+		for (size_t i = 0; i < size; i++)
+			m_chromosome[i] = _priority[i];
+	}
+
+	inline void decode(const CT &_chromosome)
+	{
+		m_chromosome = _chromosome;
+
+		size_t size = _chromosome.size();
+
+		m_priority = priority_t(size);
+
+		for (size_t i = 0; i < size; i++)
+			m_priority[i] = _chromosome[i];
+	}
+};
+
+template<class CT>
+class eslabDualGeneEncoder: public eslabGeneEncoder<CT>
+{
+	layout_t m_layout;
+
+	public:
+
+	eslabDualGeneEncoder(const priority_t &_priority, const layout_t &_layout)
+	{
+		encode(_priority, _layout);
+	}
+
+	eslabDualGeneEncoder(const CT &_chromosome)
+	{
+		decode(_chromosome);
+	}
+
+	inline const layout_t &layout() const { return m_layout; }
+
+	private:
+
+	using eslabGeneEncoder<CT>::m_priority;
+	using eslabGeneEncoder<CT>::m_chromosome;
+
+	inline void encode(const priority_t &_priority, const layout_t &_layout)
+	{
+		m_priority = _priority;
+		m_layout = _layout;
+
+		size_t half = _priority.size();
+
+		if (_layout.size() != half)
+			throw std::runtime_error("The layout is wrong.");
+
+		m_chromosome = CT(2 * half);
+
+		for (size_t i = 0; i < half; i++) {
+			m_chromosome[i] = _priority[i];
+			m_chromosome[half + i] = _layout[i];
+		}
+	}
+
+	inline void decode(const CT &_chromosome)
+	{
+		m_chromosome = _chromosome;
+
+		size_t half = _chromosome.size() / 2;
+
+		m_priority = priority_t(half);
+		m_layout = layout_t(half);
+
+		for (size_t i = 0; i < half; i++) {
+			m_priority[i] = _chromosome[i];
+			m_layout[i] = _chromosome[half + i];
+		}
+	}
+};
+
+template<class CT>
 class eslabPop: public eoPop<CT>
 {
 	public:
