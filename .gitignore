@@ -45,3 +45,4 @@ vendor/paradiseo
 
 tags
 build/*.txt
+build/floorplan

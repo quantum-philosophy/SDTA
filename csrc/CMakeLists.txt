@@ -55,3 +55,6 @@ set_property(
 	TARGET libhotspot PROPERTY
 	IMPORTED_LOCATION ${VENDOR_DIR}/hotspot/libhotspot.a
 )
+
+# Tools
+add_executable (floorplan floorplan.cpp)
