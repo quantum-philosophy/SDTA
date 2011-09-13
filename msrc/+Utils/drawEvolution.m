@@ -59,13 +59,13 @@ function drawEvolution(file, multi, point, full)
     if length(point) == 2
       percentLifetime = Utils.round2((maxLifetime/point(1) - 1) * 100, 0.01);
       percentEnergy = Utils.round2((withEnergy/point(2) - 1) * 100, 0.01);
-      title([ 'GLS (LT ', num2str(percentLifetime), '%, E ', ...
+      title([ 'GA (LT ', num2str(percentLifetime), '%, E ', ...
         num2str(percentEnergy), '%)' ]);
     elseif length(point) == 1
       percentLifetime = Utils.round2((maxLifetime/point(1) - 1) * 100, 0.01);
-      title([ 'GLS (LT ', num2str(persentLifetime), '%)' ]);
+      title([ 'GA (LT ', num2str(persentLifetime), '%)' ]);
     else
-      title([ 'GLS (max ', num2str(maxLifetime), ' TU with ', ...
+      title([ 'GA (max ', num2str(maxLifetime), ' TU with ', ...
         num2str(withEnergy), ' J)' ]);
     end
   else
@@ -110,10 +110,10 @@ function drawEvolution(file, multi, point, full)
     labels{end + 1} = [ 'Max generations (', num2str(generations), ')' ];
 
     if isempty(point)
-      title([ 'GLS (max ', num2str(maxLifetime), ')' ]);
+      title([ 'GA (max ', num2str(maxLifetime), ')' ]);
     else
       percentLifetime = Utils.round2((maxLifetime/point - 1) * 100, 0.01);
-      title([ 'GLS (+', num2str(percentLifetime), '%)' ]);
+      title([ 'GA (+', num2str(percentLifetime), '%)' ]);
     end
   end
 
