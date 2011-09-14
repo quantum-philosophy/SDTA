@@ -1,6 +1,6 @@
 #include <mex.h>
 #include <hotspot.h>
-#include "utils.h"
+#include "mex_utils.h"
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
@@ -63,7 +63,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	if (it < 0) {
 		mxDestroyArray(out_T);
-		mexErrMsgIdAndTxt("HotSpot:solve_original",
+		mexErrMsgIdAndTxt("Hotspot:solve_original",
 			"Cannot solve using the original method (%d).", it);
 	}
 

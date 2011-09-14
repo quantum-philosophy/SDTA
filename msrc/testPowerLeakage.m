@@ -14,15 +14,8 @@ if true
   maxPower = max(sum(dynamicPowerProfile, 2));
   totalTime = steps * Constants.samplingInterval;
 
-  vdd = [];
-  ngate = [];
-
+  [ vdd, ngate ] = Utils.collectLeakageParams(graph);
   pes = graph.pes;
-
-  for i = 1:cores
-    vdd(end + 1) = pes{i}.voltage;
-    ngate(end + 1) = pes{i}.ngate;
-  end
 else
   name = 'simple';
 

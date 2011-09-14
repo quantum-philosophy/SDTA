@@ -68,13 +68,7 @@ classdef HotSpot < handle
       options = hs.options;
       if nargin > 2, options.sampling_intvl = ts; end
 
-      % ATTENTION: B is a steps-by-cores matrix right now. Because of the fact
-      % than MatLab stores matrices column by column, not row by row as
-      % it is in C/C++, the external code will get uncomfortable formatted
-      % data. To eliminate extra transformations there, we do them here.
-      B = transpose(B);
       T = hs.solve_condensed_equation(B, options);
-      T = transpose(T);
     end
 
     function [ T, it, B ] = solveCondensedEquationWithLeakage(hs, B, ...
@@ -83,12 +77,8 @@ classdef HotSpot < handle
       if nargin < 5, tol = 0.01; end
       if nargin < 6, maxit = 10; end
 
-      % ATTENTION: The same note as above.
-      B = transpose(B);
       [ T, it ] = hs.solve_condensed_equation_with_leakage(...
         B, vdd, ngate, tol, maxit, hs.options);
-      T = transpose(T);
-      B = transpose(B);
     end
 
     function [ T, it ] = solveOriginal(hs, B, tol, minbad, maxit, ts)

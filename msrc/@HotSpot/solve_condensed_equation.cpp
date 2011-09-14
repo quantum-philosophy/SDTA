@@ -1,6 +1,11 @@
 #include <mex.h>
-#include <hotspot.h>
-#include "utils.h"
+#include <mex_utils.h>
+#include <common.h>
+#include <Hotspot.h>
+
+#include <string>
+
+using namespace std;
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
@@ -10,13 +15,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	if (nrhs < 2 || mxIsEmpty(prhs[1])) mexErrMsgTxt(
 		"The second input should be a matrix of the power profile.");
 
-	/* ATTENTION: Due to the fact that MatLab stores matrices column by
-	 * column, not row by row as regular C/C++ arrays, as input we expect
-	 * to get a power profile where columns are steps, and rows are cores.
-	 */
-	int cores = mxGetM(prhs[1]); /* rows */
-	int steps = mxGetN(prhs[1]); /* columns */
-	double *power = mxGetPr(prhs[1]);
+	int step_count = mxGetM(prhs[1]);
+	int processor_count = mxGetN(prhs[1]);
+	double *_power = mxGetPr(prhs[1]);
 
 	int tsize = 0;
 	str_pair *table = NULL;
@@ -28,23 +29,25 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			"The format of the configuration structure is wrong.");
 	}
 
-	/* ATTENTION: The same note (look above) with the output temperature.
-	 */
-    mxArray *out_T = mxCreateDoubleMatrix(cores, steps, mxREAL);
-	double *T = mxGetPr(out_T);
+    mxArray *out_temperature = mxCreateDoubleMatrix(
+		step_count, processor_count, mxREAL);
+	double *_temperature = mxGetPr(out_temperature);
 
-	int ret = solve_condensed_equation(floorplan, config,
-		table, tsize, power, cores, steps, T);
+	Hotspot hotspot(string(floorplan), string(config), table, tsize);
 
 	if (table) mxFree(table);
 	mxFree(floorplan);
 	mxFree(config);
 
-	if (ret < 0) {
-		mxDestroyArray(out_T);
-		mexErrMsgIdAndTxt("HotSpot:solve_condensed_equation",
-			"Cannot solve using the condensed equation method (%d).", ret);
-	}
+	matrix_t power(step_count, processor_count);
+	matrix_t temperature;
 
-    plhs[0] = out_T;
+	mex_matrix_to_c(power.pointer(), _power, step_count, processor_count);
+
+	hotspot.solve(power, temperature);
+
+	c_matrix_to_mex(_temperature, temperature.pointer(),
+		step_count, processor_count);
+
+    plhs[0] = out_temperature;
 }

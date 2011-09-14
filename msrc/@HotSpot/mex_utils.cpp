@@ -1,4 +1,4 @@
-#include "utils.h"
+#include "mex_utils.h"
 
 #include <string.h>
 
@@ -44,7 +44,7 @@ void verify_and_fetch_properties(int nrhs, const mxArray *prhs[],
 	char **floorplan, char **config)
 {
 	if (nrhs < 1 || strcmp("HotSpot", mxGetClassName(prhs[0])) != 0)
-		mexErrMsgTxt("The first input should be an instance of the HotSpot class.");
+		mexErrMsgTxt("The first input should be an instance of the Hotspot class.");
 
 	/* Floorplan */
 	mxArray *pfloorplan = mxGetProperty(prhs[0], 0, "floorplan");
@@ -53,7 +53,7 @@ void verify_and_fetch_properties(int nrhs, const mxArray *prhs[],
 	*floorplan = mxArrayToString(pfloorplan);
 	if (!*floorplan) mexErrMsgTxt("Cannot read the floorplan property.");
 
-	/* HotSpot config */
+	/* Hotspot config */
 	mxArray *pconfig = mxGetProperty(prhs[0], 0, "config");
 	if (!pfloorplan) mexErrMsgTxt("Cannot read the config property.");
 
@@ -62,4 +62,18 @@ void verify_and_fetch_properties(int nrhs, const mxArray *prhs[],
 		mxFree(*floorplan);
 		mexErrMsgTxt("Cannot read the config property.");
 	}
+}
+
+void mex_matrix_to_c(double *dest, const double *src, size_t rows, size_t cols)
+{
+	for (size_t i = 0; i < rows; i++)
+		for (size_t j = 0; j < cols; j++)
+			dest[i * cols + j] = src[i + j * rows];
+}
+
+void c_matrix_to_mex(double *dest, const double *src, size_t rows, size_t cols)
+{
+	for (size_t i = 0; i < rows; i++)
+		for (size_t j = 0; j < cols; j++)
+			dest[i + j * rows] = src[i * cols + j];
 }

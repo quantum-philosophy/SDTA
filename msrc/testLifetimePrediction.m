@@ -4,12 +4,22 @@ clear all;
 clc;
 rng(0);
 
-[ graph, hotspot, powerProfile ] = setup('test_cases/004_010');
-[ steps, cores ] = size(powerProfile);
+[ graph, hotspot, dynamicPowerProfile ] = setup('test_cases/004_060');
+[ steps, cores ] = size(dynamicPowerProfile);
 
 x = ((1:steps) - 1) * Constants.samplingInterval;
 
-T = hotspot.solveCondensedEquation(powerProfile);
+if true
+  tol = 0.01; % K
+  maxit = 10;
+
+  [ vdd, ngate ] = Utils.collectLeakageParams(graph);
+
+  [ T, i, totaldynamicPowerProfile ] = hotspot.solveCondensedEquationWithLeakage(...
+    dynamicPowerProfile, vdd, ngate, tol, maxit);
+else
+  T = hotspot.solveCondensedEquation(dynamicPowerProfile);
+end
 
 tic
 mttf = Lifetime.predictMultiple(T);

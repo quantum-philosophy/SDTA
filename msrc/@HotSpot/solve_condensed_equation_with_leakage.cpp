@@ -1,6 +1,29 @@
 #include <mex.h>
-#include <hotspot.h>
-#include "utils.h"
+#include <mex_utils.h>
+#include <Architecture.h>
+#include <Hotspot.h>
+
+#include <vector>
+#include <string>
+
+using namespace std;
+
+ArchitectureBuilder construct_architecture(size_t processor_count,
+	const double *_voltage, const double *_ngate)
+{
+	vector<double> frequency(processor_count, 0);
+	vector<double> voltage(processor_count);
+	vector<unsigned long int> ngate(processor_count);
+	vector<vector<unsigned long int> > nc(processor_count);
+	vector<vector<double> > ceff(processor_count);
+
+	for (size_t i = 0; i < processor_count; i++) {
+		voltage[i] = _voltage[i];
+		ngate[i] = _ngate[i];
+	}
+
+	return ArchitectureBuilder(frequency, voltage, ngate, nc, ceff);
+}
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
@@ -10,23 +33,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	if (nrhs < 2 || mxIsEmpty(prhs[1])) mexErrMsgTxt(
 		"The second input should be the dynamic power profile.");
 
-	/* ATTENTION: Due to the fact that MatLab stores matrices column by
-	 * column, not row by row as regular C/C++ arrays, as input we expect
-	 * to get a power profile where columns are steps, and rows are cores.
-	 */
-	int cores = mxGetM(prhs[1]); /* rows */
-	int steps = mxGetN(prhs[1]); /* columns */
-	double *dynamic_power = mxGetPr(prhs[1]);
+	int step_count = mxGetM(prhs[1]);
+	int processor_count = mxGetN(prhs[1]);
+	double *_dynamic_power = mxGetPr(prhs[1]);
 
 	if (nrhs < 3 || mxIsEmpty(prhs[2])) mexErrMsgTxt(
 		"The third input should be a vector of the voltage supply.");
-	if (mxGetN(prhs[2]) * mxGetM(prhs[2]) != cores) mexErrMsgTxt(
+	if (mxGetN(prhs[2]) * mxGetM(prhs[2]) != processor_count) mexErrMsgTxt(
 		"Dimensions of the power profile and the voltage supply should agree.");
-	double *vdd = mxGetPr(prhs[2]);
+	double *voltage = mxGetPr(prhs[2]);
 
 	if (nrhs < 4 || mxIsEmpty(prhs[3])) mexErrMsgTxt(
 		"The fourth input should be a vector of the number of gates.");
-	if (mxGetN(prhs[3]) * mxGetM(prhs[3]) != cores) mexErrMsgTxt(
+	if (mxGetN(prhs[3]) * mxGetM(prhs[3]) != processor_count) mexErrMsgTxt(
 		"Dimensions of the power profile and the number of gates should agree.");
 	double *ngate = mxGetPr(prhs[3]);
 
@@ -54,26 +73,42 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			"The format of the configuration structure is wrong.");
 	}
 
-	/* ATTENTION: The same note as above */
-    mxArray *out_T = mxCreateDoubleMatrix(cores, steps, mxREAL);
-	double *T = mxGetPr(out_T);
+    mxArray *out_temperature = mxCreateDoubleMatrix(
+		step_count, processor_count, mxREAL);
+	double *_temperature = mxGetPr(out_temperature);
 
-	int it = solve_condensed_equation_with_leakage(floorplan, config,
-		table, tsize, cores, steps, dynamic_power, vdd, ngate, T, tol, maxit);
+	ArchitectureBuilder architecture = construct_architecture(processor_count,
+		voltage, ngate);
+	Hotspot hotspot(string(floorplan), string(config), table, tsize);
 
 	if (table) mxFree(table);
 	mxFree(floorplan);
 	mxFree(config);
 
+	matrix_t dynamic_power(step_count, processor_count);
+	matrix_t temperature;
+	matrix_t total_power;
+
+	mex_matrix_to_c(dynamic_power.pointer(), _dynamic_power,
+		step_count, processor_count);
+
+	size_t it = hotspot.solve(&architecture, dynamic_power,
+		temperature, total_power, tol, maxit);
+
 	if (it < 0) {
-		mxDestroyArray(out_T);
-		mexErrMsgIdAndTxt("HotSpot:solve_condensed_equation_with_leakage",
+		mxDestroyArray(out_temperature);
+		mexErrMsgIdAndTxt("Hotspot:solve_condensed_equation_with_leakage",
 			"Cannot solve using the condensed equation method (%d).", it);
 	}
+
+	c_matrix_to_mex(_dynamic_power, total_power.pointer(),
+		step_count, processor_count);
+	c_matrix_to_mex(_temperature, temperature.pointer(),
+		step_count, processor_count);
 
 	mxArray *out_it = mxCreateDoubleMatrix(1, 1, mxREAL);
 	*mxGetPr(out_it) = it;
 
-    plhs[0] = out_T;
+    plhs[0] = out_temperature;
     plhs[1] = out_it;
 }

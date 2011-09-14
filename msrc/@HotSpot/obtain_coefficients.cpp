@@ -1,30 +1,32 @@
 #include <mex.h>
-#include <hotspot.h>
-#include "utils.h"
+#include <mex_utils.h>
+#include <common.h>
+#include <Hotspot.h>
+
+#include <string>
+
+using namespace std;
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
 	char *floorplan, *config;
 	verify_and_fetch_properties(nrhs, prhs, &floorplan, &config);
 
-	double *negA, *dinvC;
-
-	int nodes = obtain_coefficients(floorplan, config, &negA, &dinvC,
-		mxMalloc, mxFree);
+	Hotspot hotspot(string(floorplan), string(config), NULL, 0);
 
 	mxFree(floorplan);
 	mxFree(config);
 
-	if (nodes < 0) mexErrMsgIdAndTxt("HotSpot:obtain_coefficients",
-		"Cannot obtain the coefficient matrices (%d).", nodes);
+	matrix_t neg_a;
+	vector_t inv_c;
 
-    plhs[0] = mxCreateDoubleMatrix(0, 0, mxREAL);
-	mxSetPr(plhs[0], negA);
-	mxSetM(plhs[0], nodes);
-	mxSetN(plhs[0], nodes);
+	hotspot.calc_coefficients(neg_a, inv_c);
 
-    plhs[1] = mxCreateDoubleMatrix(0, 0, mxREAL);
-	mxSetPr(plhs[1], dinvC);
-	mxSetM(plhs[1], 1);
-	mxSetN(plhs[1], nodes);
+	int node_count = inv_c.size();
+
+    plhs[0] = mxCreateDoubleMatrix(node_count, node_count, mxREAL);
+	c_matrix_to_mex(mxGetPr(plhs[0]), neg_a.pointer(), node_count, node_count);
+
+    plhs[1] = mxCreateDoubleMatrix(1, node_count, mxREAL);
+	memcpy(mxGetPr(plhs[1]), &inv_c[0], sizeof(double) * node_count);
 }
