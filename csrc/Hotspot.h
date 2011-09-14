@@ -44,11 +44,16 @@ class Hotspot
 		str_pair *extra_table = NULL, size_t tsize = 0);
 	~Hotspot();
 
-	unsigned int solve(const Architecture *architecture,
-		const matrix_t &m_dynamic_power, matrix_t &m_temperature,
-		matrix_t &m_total_power);
+	void calc_coefficients(matrix_t &neg_a, vector_t &inv_c);
 
-	double sampling_interval() const { return cfg.sampling_intvl; }
+	void solve(const matrix_t &m_power, matrix_t &m_temperature);
+
+	size_t solve(const Architecture *architecture,
+		const matrix_t &m_dynamic_power, matrix_t &m_temperature,
+		matrix_t &m_total_power, double tol = Hotspot::tol,
+		size_t maxit = Hotspot::maxit);
+
+	inline double sampling_interval() const { return cfg.sampling_intvl; }
 
 	private:
 

@@ -9,6 +9,7 @@
 #include "Graph.h"
 #include "Task.h"
 #include "ListScheduler.h"
+#include "Hotspot.h"
 
 /******************************************************************************/
 /* eslabPop                                                                   */

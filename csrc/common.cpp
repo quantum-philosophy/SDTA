@@ -1,4 +1,3 @@
-#include <eo>
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
@@ -11,7 +10,8 @@
 
 rank_t constrain_t::random() const
 {
-	return min + eo::random(max - min);
+	double uniform = (double)rand() / (double)RAND_MAX;
+	return min + double(max - min) * uniform;
 }
 
 system_t::system_t(const std::string &filename)

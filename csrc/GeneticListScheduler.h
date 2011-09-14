@@ -17,7 +17,6 @@
 #include <string>
 
 #include "common.h"
-#include "Hotspot.h"
 
 template<class CT>
 class eslabGeneEncoder

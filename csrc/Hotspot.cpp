@@ -32,9 +32,171 @@ Hotspot::~Hotspot()
 	free_flp(flp, FALSE);
 }
 
-unsigned int Hotspot::solve(const Architecture *architecture,
+void Hotspot::calc_coefficients(matrix_t &neg_a, vector_t &inv_c)
+{
+	size_t i, j;
+	size_t node_count;
+
+	RC_model_t *model;
+	block_model_t *block;
+
+	model = alloc_RC_model(&cfg, flp);
+	block = model->block;
+
+	populate_R_model(model, flp);
+	populate_C_model(model, flp);
+
+	node_count = model->block->n_nodes;
+
+	neg_a.resize(node_count, node_count);
+	inv_c.resize(node_count);
+
+	for (i = 0; i < node_count; i++) {
+		for (j = 0; j < node_count; j++)
+			neg_a[i][j] = block->b[i][j];
+		inv_c[i] = block->inva[i];
+	}
+
+	delete_RC_model(model);
+}
+
+void Hotspot::solve(const matrix_t &m_power, matrix_t &m_temperature)
+{
+	size_t i, j, k, it;
+	size_t processor_count, node_count, step_count, total;
+	double ts, am, tmp;
+
+	RC_model_t *model;
+	block_model_t *block;
+
+	processor_count = flp->n_units;
+	step_count = m_power.rows();
+	total = processor_count * step_count;
+
+	if (processor_count != m_power.cols())
+		throw std::runtime_error("The floorplan does not match the given power.");
+
+	model = alloc_RC_model(&cfg, flp);
+	block = model->block;
+
+	populate_R_model(model, flp);
+	populate_C_model(model, flp);
+
+	node_count = model->block->n_nodes;
+
+	m_temperature.resize(m_power);
+
+	double *temperature = m_temperature.pointer();
+
+	ts = model->config->sampling_intvl;
+	am = model->config->ambient;
+
+	/* We have:
+	 * C * dT/dt = A * T + B
+	 */
+	MatDoub A(node_count, node_count);
+	VecDoub sinvC(node_count);
+
+	for (i = 0; i < node_count; i++) {
+		for (j = 0; j < node_count; j++)
+			A[i][j] = -block->b[i][j];
+		sinvC[i] = sqrt(block->inva[i]);
+	}
+
+	delete_RC_model(model);
+
+	MatDoub &D = A;
+	MatDoub m_temp(node_count, node_count);
+
+	/* We want to get rid of everything in front of dX/dt,
+	 * but at the same time we want to keep the matrix in front of X
+	 * symmetric, so we do the following substitution:
+	 * Y = C^(1/2) * T
+	 * D = C^(-1/2) * A * C^(-1/2)
+	 * E = C^(-1/2) * B
+	 *
+	 * Eventually, we have:
+	 * dY/dt = DY + E
+	 */
+	multiply_diagonal_matrix_matrix(sinvC, A, m_temp);
+	multiply_matrix_diagonal_matrix(m_temp, sinvC, D);
+
+	/* Eigenvalue decomposition:
+	 * D = U * L * UT
+	 *
+	 * Where:
+	 * L = diag(l0, ..., l(n-1))
+	 */
+	Symmeig S(D);
+
+	VecDoub &L = S.d;
+	MatDoub &U = S.z;
+	MatDoub UT(node_count, node_count);
+
+	transpose_matrix(U, UT);
+
+	/* Matrix exponential:
+	 * K = exp(D * t) = U * exp(L * t) UT
+	 */
+	MatDoub &K = A;
+	VecDoub v_temp(node_count);
+
+	for (i = 0; i < node_count; i++) v_temp[i] = exp(ts * L[i]);
+	multiply_matrix_diagonal_matrix(U, v_temp, m_temp);
+	multiply_matrix_matrix(m_temp, UT, K);
+
+	/* Coefficient matrix G:
+	 * G = D^(-1) * (exp(D * t) - I) * C^(-1/2) =
+	 * = U * diag((exp(t * l0) - 1) / l0, ...) * UT * C^(-1/2)
+	 */
+	MatDoub G(node_count, node_count);
+
+	for (i = 0; i < node_count; i++) v_temp[i] = (v_temp[i] - 1) / L[i];
+	multiply_matrix_diagonal_matrix(U, v_temp, m_temp);
+	multiply_matrix_matrix_diagonal_matrix(m_temp, UT, sinvC, G);
+
+	MatDoub P(step_count, node_count);
+	MatDoub Q(step_count, node_count);
+	MatDoub Y(step_count, node_count);
+
+	/* M = diag(1/(1 - exp(m * l0)), ....) */
+	for (i = 0; i < node_count; i++)
+		v_temp[i] = 1.0 / (1.0 - exp(ts * step_count * L[i]));
+
+	/* Q(0) = G * B(0) */
+	multiply_matrix_incomplete_vector(G, m_power[0], processor_count, Q[0]);
+	/* P(0) = Q(0) */
+	copy_vector(P[0], Q[0], node_count);
+
+	for (i = 1; i < step_count; i++) {
+		/* Q(i) = G * B(i) */
+		multiply_matrix_incomplete_vector(G, m_power[i],
+			processor_count, Q[i]);
+		/* P(i) = K * P(i-1) + Q(i) */
+		multiply_matrix_vector_plus_vector(K, P[i - 1], Q[i], P[i]);
+	}
+
+	/* Y(0) = U * M * UT * P(m-1), for M see above ^ */
+	multiply_matrix_diagonal_matrix(U, v_temp, m_temp);
+	multiply_matrix_matrix_vector(m_temp, UT, P[step_count - 1], Y[0]);
+
+	/* Y(i+1) = K * Y(i) + Q(i) */
+	for (i = 1; i < step_count; i++)
+		multiply_matrix_vector_plus_vector(K, Y[i - 1], Q[i - 1], Y[i]);
+
+	/* Return back to T from Y:
+	 * T = C^(-1/2) * Y
+	 *
+	 * And do not forget about the ambient temperature.
+	 */
+	for (i = 0, k = 0; i < step_count; i++)
+		for (j = 0; j < processor_count; j++, k++)
+			temperature[k] = Y[i][j] * sinvC[j] + am;
+}
+
+size_t Hotspot::solve(const Architecture *architecture,
 	const matrix_t &m_dynamic_power, matrix_t &m_temperature,
-	matrix_t &m_total_power)
+	matrix_t &m_total_power, double tol, size_t maxit)
 {
 	size_t i, j, k, it;
 	size_t processor_count, node_count, step_count, total;

@@ -9,12 +9,12 @@
 #include "CommandLine.h"
 #include "Graph.h"
 #include "Architecture.h"
-#include "Hotspot.h"
 #include "ListScheduler.h"
 #include "SingleObjectiveGLS.h"
 #include "MultiObjectiveGLS.h"
 #include "DynamicPower.h"
 #include "Lifetime.h"
+#include "Hotspot.h"
 
 using namespace std;
 

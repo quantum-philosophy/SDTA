@@ -3,8 +3,6 @@
 #include <fstream>
 #include <sstream>
 
-#include "Graph.h"
-#include "Task.h"
 #include "GeneticListScheduler.h"
 
 /******************************************************************************/

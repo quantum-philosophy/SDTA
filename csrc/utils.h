@@ -3,8 +3,6 @@
 
 #include <nr3.h>
 
-bool fexist(const char *filename);
-
 #define copy_vector(dst, src, n) memcpy(dst, src, sizeof(double) * n)
 
 void transpose_matrix(const MatDoub &U, MatDoub &UT);

@@ -88,7 +88,7 @@ struct price_t
 
 typedef std::vector<double> vector_t;
 
-class matrix_t : public std::vector<double>
+class matrix_t: public std::vector<double>
 {
 	size_t m_rows;
 	size_t m_cols;
