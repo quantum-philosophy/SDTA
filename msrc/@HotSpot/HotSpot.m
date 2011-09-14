@@ -77,11 +77,13 @@ classdef HotSpot < handle
       if nargin < 5, tol = 0.01; end
       if nargin < 6, maxit = 10; end
 
-      [ T, it ] = hs.solve_condensed_equation_with_leakage(...
+      [ T, B, it ] = hs.solve_condensed_equation_with_leakage(...
         B, vdd, ngate, tol, maxit, hs.options);
     end
 
     function [ T, it ] = solveOriginal(hs, B, tol, minbad, maxit, ts)
+      error('Not implemented yet');
+
       if nargin < 3, tol = 2; end
       if nargin < 4, minbad = 0; end
       if nargin < 5, maxit = 10; end

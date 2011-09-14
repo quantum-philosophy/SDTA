@@ -73,10 +73,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			"The format of the configuration structure is wrong.");
 	}
 
-    mxArray *out_temperature = mxCreateDoubleMatrix(
-		step_count, processor_count, mxREAL);
-	double *_temperature = mxGetPr(out_temperature);
-
 	ArchitectureBuilder architecture = construct_architecture(processor_count,
 		voltage, ngate);
 	Hotspot hotspot(string(floorplan), string(config), table, tsize);
@@ -95,20 +91,27 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	size_t it = hotspot.solve(&architecture, dynamic_power,
 		temperature, total_power, tol, maxit);
 
-	if (it < 0) {
-		mxDestroyArray(out_temperature);
+	if (it < 0)
 		mexErrMsgIdAndTxt("Hotspot:solve_condensed_equation_with_leakage",
 			"Cannot solve using the condensed equation method (%d).", it);
-	}
 
-	c_matrix_to_mex(_dynamic_power, total_power.pointer(),
+    mxArray *out_total_power = mxCreateDoubleMatrix(
+		step_count, processor_count, mxREAL);
+
+	c_matrix_to_mex(mxGetPr(out_total_power), total_power.pointer(),
 		step_count, processor_count);
-	c_matrix_to_mex(_temperature, temperature.pointer(),
+
+    mxArray *out_temperature = mxCreateDoubleMatrix(
+		step_count, processor_count, mxREAL);
+
+	c_matrix_to_mex(mxGetPr(out_temperature), temperature.pointer(),
 		step_count, processor_count);
 
 	mxArray *out_it = mxCreateDoubleMatrix(1, 1, mxREAL);
 	*mxGetPr(out_it) = it;
 
     plhs[0] = out_temperature;
-    plhs[1] = out_it;
+    plhs[1] = out_total_power;
+    plhs[2] = out_it;
+
 }
