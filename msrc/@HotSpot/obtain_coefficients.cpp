@@ -2,6 +2,7 @@
 #include <mex_utils.h>
 #include <common.h>
 #include <Hotspot.h>
+#include <string.h>
 
 #include <string>
 
