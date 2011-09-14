@@ -155,6 +155,45 @@ classdef Lifetime < handle
       set(gca, 'YLim', YLim);
     end
 
+    function drawCycles(T)
+      mttf = zeros(0);
+      cycles = zeros(0);
+
+      [ steps, cores ] = size(T);
+
+      index = zeros(steps, cores);
+
+      cycleLegend = {};
+
+      for i = 1:size(T, 2)
+        [ mttf(end + 1), maxp, minp, discreteCycle ] = ...
+          Lifetime.predictSingle(T(:, i));
+        cycles(end + 1) = sum(discreteCycle);
+
+        cycleLegend{end + 1} = sprintf('%d cycles', ceil(cycles(end)));
+
+        I = sort([ maxp(:, 1); minp(:, 1) ]);
+        index(1:length(I), i) = I;
+      end
+
+      x = ((1:steps) - 1) * Constants.samplingInterval;
+      T = T - Constants.degreeKelvin;
+
+      maxT = max(max(T));
+      minT = min(min(T));
+
+      Utils.drawLines('Cycles', 'Time, s', 'Temperature, C', ...
+        x, T, index);
+
+      line([ x(1), x(end) ], [ minT, minT ], 'Line', '--', 'Color', 'k');
+      cycleLegend{end + 1} = [ 'Tmin (', num2str(Utils.round2(minT, 0.01)), ' C)' ];
+
+      line([ x(1), x(end) ], [ maxT, maxT ], 'Line', '-.', 'Color', 'k');
+      cycleLegend{end + 1} = [ 'Tmax (', num2str(Utils.round2(maxT, 0.01)), ' C)' ];
+
+      legend(cycleLegend{:});
+    end
+
     function Atc = calculateAtc
       % Let us assume to have the mean time to failure equal to 20 years
       % with the average temperature of 60 C, the total application period

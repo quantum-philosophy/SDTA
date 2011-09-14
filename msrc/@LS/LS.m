@@ -3,7 +3,7 @@ classdef LS < handle
     function schedule = schedule(graph, priority)
       taskCount = length(graph.tasks);
 
-      if nargin < 2
+      if nargin < 2 || isempty(priority)
         priority = zeros(1, taskCount);
         for i = 1:taskCount, priority(i) = graph.tasks{i}.mobility; end
       end

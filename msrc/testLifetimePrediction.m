@@ -15,7 +15,7 @@ if true
 
   [ vdd, ngate ] = Utils.collectLeakageParams(graph);
 
-  [ T, i, totaldynamicPowerProfile ] = hotspot.solveCondensedEquationWithLeakage(...
+  [ T, i, totalPowerProfile ] = hotspot.solveCondensedEquationWithLeakage(...
     dynamicPowerProfile, vdd, ngate, tol, maxit);
 else
   T = hotspot.solveCondensedEquation(dynamicPowerProfile);
