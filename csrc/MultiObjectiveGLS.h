@@ -16,9 +16,6 @@ class eslabObjectiveVectorTraits: public moeoObjectiveVectorTraits
 	static unsigned int nObjectives () { return 2; }
 };
 
-#ifdef REAL_RANK
-#else
-
 class eslabObjectiveVector: public moeoRealObjectiveVector<eslabObjectiveVectorTraits>
 {
 	public:
@@ -32,7 +29,12 @@ class eslabObjectiveVector: public moeoRealObjectiveVector<eslabObjectiveVectorT
 	}
 };
 
-class eslabMOChromosome: public moeoIntVector<eslabObjectiveVector,
+class eslabMOChromosome:
+#ifdef REAL_RANK
+	public moeoRealVector<eslabObjectiveVector,
+#else
+	public moeoIntVector<eslabObjectiveVector,
+#endif
 	/* Fitness */ double, /* Diversity */ double>
 {
 	public:
@@ -40,7 +42,11 @@ class eslabMOChromosome: public moeoIntVector<eslabObjectiveVector,
 	typedef eslabObjectiveVector Fitness;
 
 	eslabMOChromosome(size_t _size = 0) :
+#ifdef REAL_RANK
+		moeoRealVector<eslabObjectiveVector, double, double>(_size) {}
+#else
 		moeoIntVector<eslabObjectiveVector, double, double>(_size) {}
+#endif
 };
 
 class eslabMOPop: public eslabPop<eslabMOChromosome>
@@ -69,8 +75,6 @@ class MOGLSStats: public GenericGLSStats<eslabMOChromosome, eslabMOPop>
 	void reset();
 	void process();
 };
-
-#endif
 
 class MultiObjectiveGLS:
 	public GenericGLS<eslabMOChromosome, eslabMOPop, MOGLSStats>

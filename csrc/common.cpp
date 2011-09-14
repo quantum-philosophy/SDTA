@@ -12,7 +12,12 @@
 rank_t constrain_t::random() const
 {
 	double uniform = (double)rand() / (double)RAND_MAX;
-	return min + double(max - min) * uniform;
+
+	/* 'uniform' belongs to [0, 1), we want to have number in [min, max]
+	 * (including the right side of the interval), so +1.
+	 * Will do even if rank_t is not an integer type.
+	 */
+	return min + double(1 + max - min) * uniform;
 }
 
 system_t::system_t(const std::string &filename)

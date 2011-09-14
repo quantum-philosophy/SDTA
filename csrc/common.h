@@ -36,7 +36,29 @@ typedef std::vector<rank_t> priority_t;
 typedef int pid_t;
 typedef std::vector<pid_t> mapping_t;
 typedef std::vector<Processor *> processor_vector_t;
+
+#ifdef REAL_RANK
+class layout_t: public std::vector<rank_t>
+{
+	public:
+
+	layout_t(size_t _size = 0) : std::vector<rank_t>(_size) {}
+
+	operator mapping_t() const
+	{
+		size_t length = size();
+
+		mapping_t mapping(length);
+
+		for (size_t i = 0; i < length; i++)
+			mapping[i] = (*this)[i];
+
+		return mapping;
+	}
+};
+#else
 typedef std::vector<rank_t> layout_t;
+#endif
 
 typedef std::vector<bool> bit_string_t;
 
