@@ -72,11 +72,11 @@ double eslabPop<CT>::diversity() const
 }
 
 /******************************************************************************/
-/* GenericGLSStats                                                            */
+/* GenericEvolutionStats                                                      */
 /******************************************************************************/
 
 template<class CT, class PT>
-void GenericGLSStats<CT, PT>::watch(population_t &_population, bool _silent)
+void GenericEvolutionStats<CT, PT>::watch(population_t &_population, bool _silent)
 {
 	population = &_population;
 	silent = _silent;
@@ -92,7 +92,7 @@ void GenericGLSStats<CT, PT>::watch(population_t &_population, bool _silent)
 }
 
 template<class CT, class PT>
-eoMonitor &GenericGLSStats<CT, PT>::operator()()
+eoMonitor &GenericEvolutionStats<CT, PT>::operator()()
 {
 	if (!population)
 		throw std::runtime_error("The population is not defined.");
@@ -105,7 +105,7 @@ eoMonitor &GenericGLSStats<CT, PT>::operator()()
 }
 
 template<class CT, class PT>
-void GenericGLSStats<CT, PT>::display(std::ostream &o) const
+void GenericEvolutionStats<CT, PT>::display(std::ostream &o) const
 {
 	o
 		<< std::setiosflags(std::ios::fixed)
@@ -119,12 +119,12 @@ void GenericGLSStats<CT, PT>::display(std::ostream &o) const
 }
 
 /******************************************************************************/
-/* GenericGLS                                                                 */
+/* GenericEvolution                                                           */
 /******************************************************************************/
 
 template<class CT, class PT, class ST>
-GenericGLS<CT, PT, ST>::GenericGLS(Architecture *_architecture,
-	Graph *_graph, Hotspot *_hotspot, const GLSTuning &_tuning) :
+GenericEvolution<CT, PT, ST>::GenericEvolution(Architecture *_architecture,
+	Graph *_graph, Hotspot *_hotspot, const EvolutionTuning &_tuning) :
 
 	architecture(_architecture), graph(_graph), hotspot(_hotspot),
 
@@ -151,7 +151,7 @@ GenericGLS<CT, PT, ST>::GenericGLS(Architecture *_architecture,
 }
 
 template<class CT, class PT, class ST>
-ST &GenericGLS<CT, PT, ST>::solve(
+ST &GenericEvolution<CT, PT, ST>::solve(
 	const priority_t &priority, const layout_t &layout)
 {
 	population_t population;
@@ -186,7 +186,7 @@ ST &GenericGLS<CT, PT, ST>::solve(
 }
 
 template<class CT, class PT, class ST>
-void GenericGLS<CT, PT, ST>::populate(population_t &population,
+void GenericEvolution<CT, PT, ST>::populate(population_t &population,
 	priority_t priority, layout_t layout)
 {
 	size_t i, j, k;
@@ -275,7 +275,7 @@ void eslabTransform<CT>::operator()(population_t &population)
 template<class CT, class PT>
 eslabNPtsBitCrossover<CT, PT>::eslabNPtsBitCrossover(size_t _points,
 	double _min_rate, double _scale, double _exponent,
-	GenericGLSStats<CT, PT> &_stats) :
+	GenericEvolutionStats<CT, PT> &_stats) :
 
 	points(_points), min_rate(_min_rate), scale(_scale),
 	exponent(_exponent), stats(_stats)
@@ -338,7 +338,7 @@ bool eslabNPtsBitCrossover<CT, PT>::operator()(CT &one, CT &another)
 template<class CT, class PT>
 eslabUniformRangeMutation<CT, PT>::eslabUniformRangeMutation(
 	const constrains_t &_constrains, double _min_rate, double _scale,
-	double _exponent, GenericGLSStats<CT, PT> &_stats) :
+	double _exponent, GenericEvolutionStats<CT, PT> &_stats) :
 
 	constrains(_constrains), min_rate(_min_rate), scale(_scale),
 	exponent(_exponent), stats(_stats)

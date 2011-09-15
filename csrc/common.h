@@ -24,7 +24,7 @@ class Hotspot;
 class Lifetime;
 
 template<class CT, class PT, class ST>
-class GenericGLS;
+class GenericEvolution;
 
 typedef int tid_t;
 typedef std::vector<tid_t> schedule_t;

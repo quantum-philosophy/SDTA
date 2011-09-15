@@ -1,8 +1,8 @@
-#ifndef __MULTI_OBJECTIVE_GLS_H__
-#define __MULTI_OBJECTIVE_GLS_H__
+#ifndef __MO_EVOLUTION_H__
+#define __MO_EVOLUTION_H__
 
 #include <moeo>
-#include "GeneticListScheduler.h"
+#include "Evolution.h"
 
 #define LIFETIME_OBJECTIVE  0
 #define ENERGY_OBJECTIVE 1
@@ -57,7 +57,7 @@ class eslabMOPop: public eslabPop<eslabMOChromosome>
 	price_t best_energy() const;
 };
 
-class MOGLSStats: public GenericGLSStats<eslabMOChromosome, eslabMOPop>
+class MOEvolutionStats: public GenericEvolutionStats<eslabMOChromosome, eslabMOPop>
 {
 	size_t last_executions;
 
@@ -76,8 +76,8 @@ class MOGLSStats: public GenericGLSStats<eslabMOChromosome, eslabMOPop>
 	void process();
 };
 
-class MultiObjectiveGLS:
-	public GenericGLS<eslabMOChromosome, eslabMOPop, MOGLSStats>
+class MOEvolution:
+	public GenericEvolution<eslabMOChromosome, eslabMOPop, MOEvolutionStats>
 {
 	protected:
 
@@ -85,7 +85,7 @@ class MultiObjectiveGLS:
 	{
 		public:
 
-		evaluate_t(MultiObjectiveGLS *_ls) : ls(_ls) {}
+		evaluate_t(MOEvolution *_ls) : ls(_ls) {}
 
 		void operator()(chromosome_t &chromosome)
 		{
@@ -95,17 +95,17 @@ class MultiObjectiveGLS:
 
 		private:
 
-		MultiObjectiveGLS *ls;
+		MOEvolution *ls;
 	};
 
 	evaluate_t evaluator;
 
 	public:
 
-	MultiObjectiveGLS(Architecture *_architecture, Graph *_graph,
-		Hotspot *_hotspot, const GLSTuning &_tuning = GLSTuning()) :
+	MOEvolution(Architecture *_architecture, Graph *_graph,
+		Hotspot *_hotspot, const EvolutionTuning &_tuning = EvolutionTuning()) :
 
-		GenericGLS<chromosome_t, population_t, stats_t>(_architecture,
+		GenericEvolution<chromosome_t, population_t, stats_t>(_architecture,
 			_graph, _hotspot, _tuning), evaluator(this) {}
 
 	protected:

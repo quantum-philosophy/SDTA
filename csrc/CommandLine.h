@@ -64,7 +64,7 @@ class CommandLine
 			<< std::endl
 			<< "  Available parameters:" << std::endl
 			<< "  * s, system      - a task graph with a set of PEs (architecture)" << std::endl
-			<< "    g, genetic     - the configuration of the GLSA" << std::endl
+			<< "    g, genetic     - the configuration of the GA" << std::endl
 			<< "  * f, floorplan   - the floorplan of the architecture" << std::endl
 			<< "    t, thermal     - the configuration of Hotspot" << std::endl
 			<< "    other          - overwrite the genetic configuration" << std::endl

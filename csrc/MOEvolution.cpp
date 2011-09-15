@@ -1,4 +1,4 @@
-#include "MultiObjectiveGLS.h"
+#include "MOEvolution.h"
 #include "Graph.h"
 #include "Lifetime.h"
 #include "DynamicPower.h"
@@ -42,10 +42,10 @@ price_t eslabMOPop::best_energy() const
 }
 
 /******************************************************************************/
-/* MultiObjectiveGLS                                                          */
+/* MOEvolution                                                                */
 /******************************************************************************/
 
-void MultiObjectiveGLS::process(population_t &population,
+void MOEvolution::process(population_t &population,
 	eoCheckPoint<chromosome_t> &checkpoint, eoTransform<chromosome_t> &transform)
 {
 	eslabMOStallContinue stall_continue(tuning.min_generations,
@@ -68,13 +68,13 @@ void MultiObjectiveGLS::process(population_t &population,
 		stats.pareto_optima.push_back((price_t)population[i].objectiveVector());
 }
 
-void MultiObjectiveGLS::evaluate_chromosome(chromosome_t &chromosome)
+void MOEvolution::evaluate_chromosome(chromosome_t &chromosome)
 {
 	evaluator(chromosome);
 }
 
-MultiObjectiveGLS::fitness_t
-MultiObjectiveGLS::evaluate(const chromosome_t &chromosome)
+MOEvolution::fitness_t
+MOEvolution::evaluate(const chromosome_t &chromosome)
 {
 	if (tuning.include_mapping) {
 		eslabDualGeneEncoder<chromosome_t> dual(chromosome);
@@ -108,15 +108,15 @@ MultiObjectiveGLS::evaluate(const chromosome_t &chromosome)
 }
 
 /******************************************************************************/
-/* MOGLSStats                                                                 */
+/* MOEvolutionStats                                                                 */
 /******************************************************************************/
 
-void MOGLSStats::reset()
+void MOEvolutionStats::reset()
 {
 	last_executions = 0;
 }
 
-void MOGLSStats::process()
+void MOEvolutionStats::process()
 {
 	best_lifetime = population->best_lifetime();
 	best_energy = population->best_energy();
@@ -150,9 +150,9 @@ void MOGLSStats::process()
 	last_executions = executions;
 }
 
-void MOGLSStats::display(std::ostream &o) const
+void MOEvolutionStats::display(std::ostream &o) const
 {
-	GenericGLSStats<chromosome_t, population_t>::display(o);
+	GenericEvolutionStats<chromosome_t, population_t>::display(o);
 
 	o
 		<< std::setprecision(2)

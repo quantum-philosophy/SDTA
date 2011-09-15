@@ -1,8 +1,8 @@
-#ifndef __SINGLE_OBJECTIVE_GLS_H__
-#define __SINGLE_OBJECTIVE_GLS_H__
+#ifndef __SO_EVOLUTION_H__
+#define __SO_EVOLUTION_H__
 
 #include "common.h"
-#include "GeneticListScheduler.h"
+#include "Evolution.h"
 
 #ifdef REAL_RANK
 typedef eoReal<double> eslabSOChromosome;
@@ -20,7 +20,7 @@ class eslabSOPop: public eslabPop<eslabSOChromosome>
 	}
 };
 
-class SOGLSStats: public GenericGLSStats<eslabSOChromosome, eslabSOPop>
+class SOEvolutionStats: public GenericEvolutionStats<eslabSOChromosome, eslabSOPop>
 {
 	size_t last_executions;
 
@@ -39,8 +39,8 @@ class SOGLSStats: public GenericGLSStats<eslabSOChromosome, eslabSOPop>
 	void process();
 };
 
-class SingleObjectiveGLS:
-	public GenericGLS<eslabSOChromosome, eslabSOPop, SOGLSStats>
+class SOEvolution:
+	public GenericEvolution<eslabSOChromosome, eslabSOPop, SOEvolutionStats>
 {
 	protected:
 
@@ -48,7 +48,7 @@ class SingleObjectiveGLS:
 	{
 		public:
 
-		evaluate_t(SingleObjectiveGLS *_ls) :
+		evaluate_t(SOEvolution *_ls) :
 			eoEvalFunc<chromosome_t>(), ls(_ls) {}
 
 		virtual void operator()(chromosome_t &chromosome)
@@ -59,17 +59,17 @@ class SingleObjectiveGLS:
 
 		private:
 
-		SingleObjectiveGLS *ls;
+		SOEvolution *ls;
 	};
 
 	evaluate_t evaluator;
 
 	public:
 
-	SingleObjectiveGLS(Architecture *_architecture, Graph *_graph,
-		Hotspot *_hotspot, const GLSTuning &_tuning = GLSTuning()) :
+	SOEvolution(Architecture *_architecture, Graph *_graph,
+		Hotspot *_hotspot, const EvolutionTuning &_tuning = EvolutionTuning()) :
 
-		GenericGLS<chromosome_t, population_t, stats_t>(_architecture,
+		GenericEvolution<chromosome_t, population_t, stats_t>(_architecture,
 			_graph, _hotspot, _tuning), evaluator(this) {}
 
 	protected:
@@ -82,13 +82,13 @@ class SingleObjectiveGLS:
 };
 
 template<class chromosome_t>
-class eslabEvolution: public eoAlgo<chromosome_t>
+class eslabSOAlgorithm: public eoAlgo<chromosome_t>
 {
 	typedef eoPop<chromosome_t> population_t;
 
 	public:
 
-	eslabEvolution(eoContinue<chromosome_t> &_continuator,
+	eslabSOAlgorithm(eoContinue<chromosome_t> &_continuator,
 		eoEvalFunc<chromosome_t> &_evaluate_one, eoSelect<chromosome_t> &_select,
 		eoTransform<chromosome_t> &_transform,
 		eoReplacement<chromosome_t> &_replace) :
@@ -153,6 +153,6 @@ class eslabSOStallContinue:
 	bool improved(const eslabSOPop &population);
 };
 
-#include "SingleObjectiveGLS.hpp"
+#include "SOEvolution.hpp"
 
 #endif

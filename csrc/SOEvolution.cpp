@@ -1,14 +1,14 @@
-#include "SingleObjectiveGLS.h"
+#include "SOEvolution.h"
 #include "Graph.h"
 #include "Lifetime.h"
 #include "DynamicPower.h"
 #include "ListScheduler.h"
 
 /******************************************************************************/
-/* SingleObjectiveGLS                                                         */
+/* SOEvolution                                                                */
 /******************************************************************************/
 
-void SingleObjectiveGLS::process(population_t &population,
+void SOEvolution::process(population_t &population,
 	eoCheckPoint<chromosome_t> &checkpoint,
 	eoTransform<chromosome_t> &transform)
 {
@@ -27,7 +27,7 @@ void SingleObjectiveGLS::process(population_t &population,
 	checkpoint.add(stall_continue);
 	checkpoint.add(evolution_monitor);
 
-	eslabEvolution<chromosome_t> ga(checkpoint, evaluator, select,
+	eslabSOAlgorithm<chromosome_t> ga(checkpoint, evaluator, select,
 		transform, replace);
 
 	ga(population);
@@ -35,13 +35,13 @@ void SingleObjectiveGLS::process(population_t &population,
 	stats.best_chromosome = population.best_element();
 }
 
-void SingleObjectiveGLS::evaluate_chromosome(chromosome_t &chromosome)
+void SOEvolution::evaluate_chromosome(chromosome_t &chromosome)
 {
 	evaluator(chromosome);
 }
 
-SingleObjectiveGLS::fitness_t
-SingleObjectiveGLS::evaluate(const chromosome_t &chromosome)
+SOEvolution::fitness_t
+SOEvolution::evaluate(const chromosome_t &chromosome)
 {
 	if (tuning.include_mapping) {
 		eslabDualGeneEncoder<chromosome_t> dual(chromosome);
@@ -83,15 +83,15 @@ SingleObjectiveGLS::evaluate(const chromosome_t &chromosome)
 }
 
 /******************************************************************************/
-/* SOGLSStats                                                                 */
+/* SOEvolutionStats                                                                 */
 /******************************************************************************/
 
-void SOGLSStats::reset()
+void SOEvolutionStats::reset()
 {
 	last_executions = 0;
 }
 
-void SOGLSStats::process()
+void SOEvolutionStats::process()
 {
 	worst_lifetime = population->worse_element().fitness();
 	best_lifetime = population->best_element().fitness();
@@ -127,9 +127,9 @@ void SOGLSStats::process()
 	last_executions = executions;
 }
 
-void SOGLSStats::display(std::ostream &o) const
+void SOEvolutionStats::display(std::ostream &o) const
 {
-	GenericGLSStats<chromosome_t, population_t>::display(o);
+	GenericEvolutionStats<chromosome_t, population_t>::display(o);
 
 	o
 		<< std::setprecision(2)

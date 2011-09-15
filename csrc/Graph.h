@@ -9,9 +9,9 @@ class Graph
 	friend class ListScheduler;
 
 	template<class CT, class PT, class ST>
-	friend class GenericGLS;
-	friend class SingleObjectiveGLS;
-	friend class MultiObjectiveGLS;
+	friend class GenericEvolution;
+	friend class SOEvolution;
+	friend class MOEvolution;
 
 	friend class DynamicPower;
 	friend class Lifetime;

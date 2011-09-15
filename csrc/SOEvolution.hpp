@@ -1,9 +1,9 @@
 /******************************************************************************/
-/* eslabEvolution                                                             */
+/* eslabSOAlgorithm                                                           */
 /******************************************************************************/
 
 template<class CT>
-void eslabEvolution<CT>::operator()(population_t &population)
+void eslabSOAlgorithm<CT>::operator()(population_t &population)
 {
 	size_t population_size = population.size();;
 	population_t offspring;
@@ -31,7 +31,7 @@ void eslabEvolution<CT>::operator()(population_t &population)
 }
 
 template<class CT>
-void eslabEvolution<CT>::evaluate(population_t &population) const
+void eslabSOAlgorithm<CT>::evaluate(population_t &population) const
 {
 	apply<CT>(evaluate_one, population);
 }

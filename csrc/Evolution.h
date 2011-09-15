@@ -1,5 +1,5 @@
-#ifndef __GENETIC_LIST_SCHEDULER_H__
-#define __GENETIC_LIST_SCHEDULER_H__
+#ifndef __EVOLUTION_H__
+#define __EVOLUTION_H__
 
 #include <eo>
 
@@ -147,7 +147,7 @@ class eslabPop: public eoPop<CT>
 	double diversity() const;
 };
 
-class GLSTuning
+class EvolutionTuning
 {
 	public:
 
@@ -193,8 +193,8 @@ class GLSTuning
 	bool verbose;
 	std::string dump_evolution;
 
-	GLSTuning() { defaults(); }
-	GLSTuning(const std::string &filename);
+	EvolutionTuning() { defaults(); }
+	EvolutionTuning(const std::string &filename);
 
 	void update(std::istream &stream);
 
@@ -205,17 +205,17 @@ class GLSTuning
 	void defaults();
 };
 
-class GeneticListSchedulerStats
+class EvolutionStats
 {
 	public:
 
-	GeneticListSchedulerStats() {}
+	EvolutionStats() {}
 
 	virtual void display(std::ostream &o) const {}
 };
 
 template<class CT, class PT = eslabPop<CT> >
-class GenericGLSStats: public GeneticListSchedulerStats, public eoMonitor
+class GenericEvolutionStats: public EvolutionStats, public eoMonitor
 {
 	public:
 
@@ -229,7 +229,7 @@ class GenericGLSStats: public GeneticListSchedulerStats, public eoMonitor
 	double crossover_rate;
 	double mutation_rate;
 
-	GenericGLSStats() : population(NULL) {}
+	GenericEvolutionStats() : population(NULL) {}
 
 	inline void evaluate()
 	{
@@ -257,17 +257,17 @@ class GenericGLSStats: public GeneticListSchedulerStats, public eoMonitor
 	bool silent;
 };
 
-class GeneticListScheduler
+class Evolution
 {
 	public:
 
-	virtual GeneticListSchedulerStats &solve(
+	virtual EvolutionStats &solve(
 		const priority_t &priority = priority_t(),
 		const layout_t &layout = layout_t()) = 0;
 };
 
 template<class CT, class PT, class ST>
-class GenericGLS: public GeneticListScheduler
+class GenericEvolution: public Evolution
 {
 	public:
 
@@ -276,8 +276,8 @@ class GenericGLS: public GeneticListScheduler
 	typedef ST stats_t;
 	typedef typename chromosome_t::Fitness fitness_t;
 
-	GenericGLS(Architecture *_architecture, Graph *_graph, Hotspot *_hotspot,
-		const GLSTuning &_tuning = GLSTuning());
+	GenericEvolution(Architecture *_architecture, Graph *_graph, Hotspot *_hotspot,
+		const EvolutionTuning &_tuning = EvolutionTuning());
 
 	void update(std::istream &stream);
 
@@ -300,7 +300,7 @@ class GenericGLS: public GeneticListScheduler
 
 	stats_t stats;
 
-	const GLSTuning tuning;
+	const EvolutionTuning tuning;
 	const size_t task_count;
 	const size_t chromosome_length;
 	const constrains_t constrains;
@@ -334,12 +334,12 @@ class eslabNPtsBitCrossover : public eoQuadOp<CT>
 	double scale;
 	double exponent;
 
-	GenericGLSStats<CT, PT> &stats;
+	GenericEvolutionStats<CT, PT> &stats;
 
 	public:
 
 	eslabNPtsBitCrossover(size_t _points, double _min_rate, double _scale,
-		double _exponent, GenericGLSStats<CT, PT> &_stats);
+		double _exponent, GenericEvolutionStats<CT, PT> &_stats);
 
 	bool operator()(CT &one, CT &another);
 };
@@ -351,14 +351,14 @@ class eslabUniformRangeMutation: public eoMonOp<CT>
 	double scale;
 	double exponent;
 
-	GenericGLSStats<CT, PT> &stats;
+	GenericEvolutionStats<CT, PT> &stats;
 
 	const constrains_t &constrains;
 
 	public:
 
 	eslabUniformRangeMutation(const constrains_t &constrains, double _min_rate,
-		double _scale, double _exponent, GenericGLSStats<CT, PT> &_stats);
+		double _scale, double _exponent, GenericEvolutionStats<CT, PT> &_stats);
 
 	bool operator()(CT& chromosome);
 };
@@ -437,9 +437,9 @@ class eslabStallContinue: public eoContinue<CT>
 	size_t last_improvement;
 };
 
-std::ostream &operator<< (std::ostream &o, const GLSTuning &tuning);
-std::ostream &operator<< (std::ostream &o, const GeneticListSchedulerStats &stats);
+std::ostream &operator<< (std::ostream &o, const EvolutionTuning &tuning);
+std::ostream &operator<< (std::ostream &o, const EvolutionStats &stats);
 
-#include "GeneticListScheduler.hpp"
+#include "Evolution.hpp"
 
 #endif

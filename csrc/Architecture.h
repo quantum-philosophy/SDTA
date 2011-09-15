@@ -6,7 +6,7 @@
 class Architecture
 {
 	template<class CT, class PT, class ST>
-	friend class GenericGLS;
+	friend class GenericEvolution;
 
 	friend class DynamicPower;
 	friend class Hotspot;

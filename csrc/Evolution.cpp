@@ -3,13 +3,13 @@
 #include <fstream>
 #include <sstream>
 
-#include "GeneticListScheduler.h"
+#include "Evolution.h"
 
 /******************************************************************************/
-/* GLSTuning                                                                  */
+/* EvolutionTuning                                                            */
 /******************************************************************************/
 
-void GLSTuning::defaults()
+void EvolutionTuning::defaults()
 {
 	/* Preparation */
 	repeat = -1;
@@ -54,7 +54,7 @@ void GLSTuning::defaults()
 	dump_evolution = std::string();
 }
 
-GLSTuning::GLSTuning(const std::string &filename)
+EvolutionTuning::EvolutionTuning(const std::string &filename)
 {
 	defaults();
 
@@ -68,7 +68,7 @@ GLSTuning::GLSTuning(const std::string &filename)
 	update(file);
 }
 
-void GLSTuning::update(std::istream &main_stream)
+void EvolutionTuning::update(std::istream &main_stream)
 {
 	main_stream.exceptions(std::ios::failbit | std::ios::badbit);
 
@@ -159,7 +159,7 @@ void GLSTuning::update(std::istream &main_stream)
 	}
 }
 
-void GLSTuning::display(std::ostream &o) const
+void EvolutionTuning::display(std::ostream &o) const
 {
 	o
 		<< std::setiosflags(std::ios::fixed)
@@ -218,13 +218,13 @@ void GLSTuning::display(std::ostream &o) const
 		<< "  Dump evolution:          " << dump_evolution << std::endl;
 }
 
-std::ostream &operator<< (std::ostream &o, const GLSTuning &tuning)
+std::ostream &operator<< (std::ostream &o, const EvolutionTuning &tuning)
 {
 	tuning.display(o);
 	return o;
 }
 
-std::ostream &operator<< (std::ostream &o, const GeneticListSchedulerStats &stats)
+std::ostream &operator<< (std::ostream &o, const EvolutionStats &stats)
 {
 	stats.display(o);
 	return o;

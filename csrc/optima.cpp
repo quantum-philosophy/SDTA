@@ -10,15 +10,15 @@
 #include "Graph.h"
 #include "Architecture.h"
 #include "ListScheduler.h"
-#include "SingleObjectiveGLS.h"
-#include "MultiObjectiveGLS.h"
+#include "SOEvolution.h"
+#include "MOEvolution.h"
 #include "DynamicPower.h"
 #include "Lifetime.h"
 #include "Hotspot.h"
 
 using namespace std;
 
-#define __DELETE(some) \
+#define __DELETE(some) 			\
 	do { 						\
 		if (some) delete some; 	\
 		some = NULL;			\
@@ -60,7 +60,7 @@ void optimize(const string &system_config, const string &genetic_config,
 {
 	system_t system(system_config);
 
-	GLSTuning tuning(genetic_config);
+	EvolutionTuning tuning(genetic_config);
 	tuning.update(tuning_stream);
 
 	if (tuning.verbose)
@@ -71,7 +71,7 @@ void optimize(const string &system_config, const string &genetic_config,
 	Graph *graph = NULL;
 	Architecture *architecture = NULL;
 	Hotspot *hotspot = NULL;
-	GeneticListScheduler *scheduler = NULL;
+	Evolution *scheduler = NULL;
 
 	try {
 		graph = new GraphBuilder(system.type, system.link);
@@ -160,17 +160,17 @@ void optimize(const string &system_config, const string &genetic_config,
 
 		for (size_t i = 0; i < repeat; i++) {
 			if (tuning.multiobjective) {
-				scheduler = new MultiObjectiveGLS(architecture,
+				scheduler = new MOEvolution(architecture,
 					graph, hotspot, tuning);
 			}
 			else {
-				scheduler = new SingleObjectiveGLS(architecture,
+				scheduler = new SOEvolution(architecture,
 					graph, hotspot, tuning);
 			}
 
 			clock_t begin = clock();
 
-			GeneticListSchedulerStats &stats = scheduler->solve(priority);
+			EvolutionStats &stats = scheduler->solve(priority);
 
 			clock_t end = clock();
 			double elapsed = (double)(end - begin) / CLOCKS_PER_SEC;
@@ -180,14 +180,14 @@ void optimize(const string &system_config, const string &genetic_config,
 			cout << "Improvement: " << setiosflags(ios::fixed) << setprecision(2);
 
 			if (!tuning.multiobjective) {
-				SOGLSStats *sstats = (SOGLSStats *)&stats;
+				SOEvolutionStats *sstats = (SOEvolutionStats *)&stats;
 
 				cout
 					<< (sstats->best_lifetime / price.lifetime - 1.0) * 100
 					<< "% lifetime" << endl;
 			}
 			else {
-				MOGLSStats *sstats = (MOGLSStats *)&stats;
+				MOEvolutionStats *sstats = (MOEvolutionStats *)&stats;
 
 				cout
 					<< (sstats->best_lifetime.lifetime / price.lifetime - 1.0) * 100

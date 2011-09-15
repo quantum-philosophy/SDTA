@@ -11,7 +11,7 @@ class Task
 	friend class ListScheduler;
 
 	template<class CT, class PT, class ST>
-	friend class GenericGLS;
+	friend class GenericEvolution;
 
 	friend class DynamicPower;
 	friend std::ostream &operator<< (std::ostream &, const Task *);
