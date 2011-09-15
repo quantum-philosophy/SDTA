@@ -20,7 +20,7 @@ function showEvolutionStats(file)
       case 'Evaluations'
         evaluations(end + 1) = str2num(value);
       case 'Improvement'
-        tokens = regexp(value, '(.*)%.*', 'tokens');
+        tokens = regexp(value, '([^%]+)%.*', 'tokens');
         improvement(end + 1) = str2num(tokens{1}{1});
       case 'Time elapsed'
         time(end + 1) = str2num(value);
