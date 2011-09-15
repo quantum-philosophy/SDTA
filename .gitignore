@@ -19,20 +19,8 @@
 
 tags
 
-build/*Make*
-build/*make*
-build/hotspot*
-
-build/tgff
-build/optima
-build/floorplan*
-build/system*
-build/*.txt
-
-build/csrc
-build/msrc
-build/vendor
-build/test
+build/*
+build/*
 
 vendor/tgff*/tgff
 vendor/tgff

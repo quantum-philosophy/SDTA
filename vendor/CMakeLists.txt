@@ -1,42 +1,42 @@
-# HotSpot
-set (HOTSPOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/hotspot-${HOTSPOT_VERSION})
+# Hotspot
+set (hotspot_dir ${CMAKE_CURRENT_SOURCE_DIR}/hotspot-${HOTSPOT_VERSION})
 add_custom_target (hotspot
-	COMMAND ${CMAKE_BUILD_TOOL} -C ${HOTSPOT_DIR}
+	COMMAND ${CMAKE_BUILD_TOOL} -C ${hotspot_dir}
 )
 add_custom_command (
 	TARGET hotspot
 	POST_BUILD
-	COMMAND ln -fs ${HOTSPOT_DIR}/hotspot ${PROJECT_BINARY_DIR}/hotspot
+	COMMAND ln -fs ${hotspot_dir}/hotspot ${PROJECT_BINARY_DIR}/hotspot
 	COMMAND ln -sfn ${CMAKE_CURRENT_SOURCE_DIR}/hotspot-${HOTSPOT_VERSION} ${CMAKE_CURRENT_SOURCE_DIR}/hotspot
 )
 
 # TGFF
-set (TGFF_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tgff-${TGFF_VERSION})
+set (tgff_dir ${CMAKE_CURRENT_SOURCE_DIR}/tgff-${TGFF_VERSION})
 add_custom_target (tgff
-	COMMAND ${CMAKE_BUILD_TOOL} -C ${TGFF_DIR}
+	COMMAND ${CMAKE_BUILD_TOOL} -C ${tgff_dir}
 )
 add_custom_command (
 	TARGET tgff
 	POST_BUILD
-	COMMAND ln -fs ${TGFF_DIR}/tgff ${PROJECT_BINARY_DIR}/tgff
-	COMMAND ln -sfn ${TGFF_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/tgff
+	COMMAND ln -fs ${tgff_dir}/tgff ${CMAKE_CURRENT_BINARY_DIR}/tgff
+	COMMAND ln -sfn ${tgff_dir} ${CMAKE_CURRENT_SOURCE_DIR}/tgff
 )
 
 # ParadisEO
-set (PARADISEO_DIR ${CMAKE_CURRENT_SOURCE_DIR}/paradiseo-${PARADISEO_VERSION})
+set (paradiseo_dir ${CMAKE_CURRENT_SOURCE_DIR}/paradiseo-${PARADISEO_VERSION})
 add_custom_target (paradiseo
-	COMMAND cd ${PARADISEO_DIR}/paradiseo-eo/build &&
-    cmake .. -Dconfig=${PARADISEO_DIR}/install.cmake &&
+	COMMAND cd ${paradiseo_dir}/paradiseo-eo/build &&
+    cmake .. -Dconfig=${paradiseo_dir}/install.cmake &&
     make
-	COMMAND cd ${PARADISEO_DIR}/paradiseo-mo/build &&
-    cmake .. -Dconfig=${PARADISEO_DIR}/install.cmake &&
+	COMMAND cd ${paradiseo_dir}/paradiseo-mo/build &&
+    cmake .. -Dconfig=${paradiseo_dir}/install.cmake &&
     make
-	COMMAND cd ${PARADISEO_DIR}/paradiseo-moeo/build &&
-    cmake .. -Dconfig=${PARADISEO_DIR}/install.cmake &&
+	COMMAND cd ${paradiseo_dir}/paradiseo-moeo/build &&
+    cmake .. -Dconfig=${paradiseo_dir}/install.cmake &&
     make
 )
 add_custom_command (
 	TARGET paradiseo
 	POST_BUILD
-	COMMAND ln -sfn ${PARADISEO_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/paradiseo
+	COMMAND ln -sfn ${paradiseo_dir} ${CMAKE_CURRENT_SOURCE_DIR}/paradiseo
 )

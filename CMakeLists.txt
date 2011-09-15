@@ -8,10 +8,10 @@ set (HOTSPOT_VERSION 5.0)
 set (TGFF_VERSION 3.5)
 set (PARADISEO_VERSION 1.3-beta2)
 
-set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+# set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
 add_subdirectory (msrc)
-add_subdirectory (csrc)
+add_subdirectory (csrc tools)
 add_subdirectory (vendor)
 add_subdirectory (test)
 
