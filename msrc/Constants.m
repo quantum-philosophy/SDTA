@@ -1,7 +1,7 @@
 classdef Constants < handle
   properties (Constant)
     % Working directory, everything goes here
-    workingDirectory = '../build';
+    workingDirectory = '../build/test';
 
     % HotSpot version
     hotspotVersion = '5.0';

@@ -6,7 +6,7 @@ add_custom_target (hotspot
 add_custom_command (
 	TARGET hotspot
 	POST_BUILD
-	COMMAND ln -fs ${hotspot_dir}/hotspot ${PROJECT_BINARY_DIR}/hotspot
+	COMMAND ln -fs ${hotspot_dir}/hotspot ${CMAKE_CURRENT_BINARY_DIR}/hotspot
 	COMMAND ln -sfn ${CMAKE_CURRENT_SOURCE_DIR}/hotspot-${HOTSPOT_VERSION} ${CMAKE_CURRENT_SOURCE_DIR}/hotspot
 )
 

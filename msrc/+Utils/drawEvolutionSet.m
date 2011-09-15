@@ -3,7 +3,9 @@ function drawEvolutionSet(prefix, multi, point, full)
   if nargin < 3, point = []; end
   if nargin < 4, full = false; end
 
-  files = dir([ prefix, '_*' ]);
+  files = dir([ prefix, '/', 'evolution.txt_*' ]);
+
+  Utils.showEvolutionStats([ prefix, '/', 'evolution.log' ]);
 
   evolutionCount = length(files);
 
@@ -17,7 +19,7 @@ function drawEvolutionSet(prefix, multi, point, full)
 
   for i = 1:evolutionCount
     subplot(rows, cols, i);
-    file = [ prefix, '_', num2str(i - 1) ];
+    file = [ prefix, '/', 'evolution.txt_', num2str(i - 1) ];
     Utils.drawEvolution(file, multi, point, full);
 
     legend 'off';

@@ -4,7 +4,7 @@ clear all;
 clc;
 rng(0);
 
-[ graph, hotspot, dynamicPowerProfile ] = setup('test_cases/004_060');
+[ graph, hotspot, dynamicPowerProfile ] = setup('001_060');
 [ steps, cores ] = size(dynamicPowerProfile);
 
 x = ((1:steps) - 1) * Constants.samplingInterval;

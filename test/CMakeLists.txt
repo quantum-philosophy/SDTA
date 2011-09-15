@@ -67,8 +67,16 @@ foreach (file ${files})
 		COMMAND echo ${run_command}
 	)
 
-	add_custom_target ("run_${test_name}"
+	add_custom_target ("runone_${test_name}"
 		COMMAND ${run_command}
+		DEPENDS optima
+	)
+
+	add_dependencies ("runone_${test_name}" "test_${test_name}")
+
+	add_custom_target ("run_${test_name}"
+		COMMAND mkdir -p `date +'%Y%m%d-%H%M'`
+		COMMAND cd `date +'%Y%m%d-%H%M'` && ${run_command} > evolution.log
 		DEPENDS optima
 	)
 
