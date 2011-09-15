@@ -16,18 +16,23 @@
 *.flp
 *.ptrace*
 *.ttrace*
-build/test_cases/*.config
+
+tags
 
 build/*Make*
 build/*make*
 build/hotspot*
+
+build/tgff
+build/optima
+build/floorplan*
+build/system*
+build/*.txt
+
 build/csrc
 build/msrc
-build/tgff
 build/vendor
-build/optima
-
-msrc/@HotSpot/hotspot
+build/test
 
 vendor/tgff*/tgff
 vendor/tgff
@@ -42,8 +47,3 @@ vendor/paradiseo-*/paradiseo-mo/*
 vendor/paradiseo-*/paradiseo-moeo/*
 vendor/paradiseo-*/paradiseo-peo/*
 vendor/paradiseo
-
-tags
-build/*.txt
-build/floorplan
-build/system

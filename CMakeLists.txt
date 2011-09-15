@@ -13,6 +13,7 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 add_subdirectory (msrc)
 add_subdirectory (csrc)
 add_subdirectory (vendor)
+add_subdirectory (test)
 
 add_custom_target (cleanup
 	COMMAND rm -f ${PROJECT_BINARY_DIR}/test_cases/*.tgff
