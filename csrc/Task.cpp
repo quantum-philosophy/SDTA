@@ -61,6 +61,21 @@ void Task::collect_alap(vector_t &alap, double time) const
 		parents[i]->collect_alap(alap, time);
 }
 
+void Task::collect_depth(std::vector<int> &depth, int level) const
+{
+	int &my_depth = depth[id];
+
+	/* We might already have an assigned depth with a larger value */
+	if (!(my_depth < level)) return;
+
+	my_depth = level++;
+
+	/* Shift data dependent tasks */
+	size_t size = children.size();
+	for (size_t i = 0; i < size; i++)
+		children[i]->collect_depth(depth, level);
+}
+
 std::ostream &operator<< (std::ostream &o, const Task *task)
 {
 	o.precision(2);

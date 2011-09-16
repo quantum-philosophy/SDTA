@@ -328,8 +328,7 @@ class Evolution
 {
 	public:
 
-	virtual EvolutionStats &solve(
-		const priority_t &priority = priority_t(),
+	virtual EvolutionStats &solve(const priority_t &priority,
 		const layout_t &layout = layout_t()) = 0;
 };
 
@@ -348,7 +347,7 @@ class GenericEvolution: public Evolution
 
 	void update(std::istream &stream);
 
-	stats_t &solve(const priority_t &priority = priority_t(),
+	stats_t &solve(const priority_t &priority,
 		const layout_t &layout = layout_t());
 
 	protected:

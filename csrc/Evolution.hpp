@@ -154,8 +154,8 @@ GenericEvolution<CT, PT, ST>::GenericEvolution(Architecture *_architecture,
 }
 
 template<class CT, class PT, class ST>
-ST &GenericEvolution<CT, PT, ST>::solve(
-	const priority_t &priority, const layout_t &layout)
+ST &GenericEvolution<CT, PT, ST>::solve(const priority_t &priority,
+	const layout_t &layout)
 {
 	population_t population;
 
@@ -196,9 +196,6 @@ void GenericEvolution<CT, PT, ST>::populate(population_t &population,
 	population.clear();
 
 	/* The scheduling part */
-	if (priority.empty())
-		priority = graph->calc_priority();
-
 	if (priority.size() != task_count)
 		throw std::runtime_error("The priority vector has bad dimensions.");
 

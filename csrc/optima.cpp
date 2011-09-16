@@ -107,7 +107,7 @@ void optimize(const string &system_config, const string &genetic_config,
 		 *
 		 */
 		if (priority.empty())
-			priority = graph->calc_priority();
+			priority = graph->calc_mobile_priority();
 		else if (tuning.verbose)
 			cout << "Using external priority." << endl;
 
@@ -142,7 +142,8 @@ void optimize(const string &system_config, const string &genetic_config,
 		}
 
 		if (tuning.verbose)
-			cout << graph << endl << architecture << endl;
+			cout << graph << endl << architecture << endl
+				<< "Start priority: " << print_t<rank_t>(priority) << endl;
 
 		hotspot = new Hotspot(floorplan_config, thermal_config);
 

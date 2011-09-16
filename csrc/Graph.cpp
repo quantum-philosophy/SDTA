@@ -248,7 +248,7 @@ vector_t Graph::calc_mobility() const
 	return mobility;
 }
 
-priority_t Graph::calc_priority() const
+priority_t Graph::calc_mobile_priority() const
 {
 	priority_t priority(task_count);
 	vector_t mobility = calc_mobility();
@@ -270,6 +270,22 @@ priority_t Graph::calc_priority() const
 
 	for (size_t i = 0; i < task_count; i++)
 		priority[pairs[i].second->id] = i;
+
+	return priority;
+}
+
+priority_t Graph::calc_depth_priority() const
+{
+	tid_t id;
+	const Task *task;
+
+	priority_t priority(task_count, -1);
+
+	for (id = 0; id < task_count; id++) {
+		task = tasks[id];
+		if (task->is_root())
+			task->collect_depth(priority, 0);
+	}
 
 	return priority;
 }

@@ -65,6 +65,7 @@ class Task
 
 	void collect_asap(vector_t &asap, double time) const;
 	void collect_alap(vector_t &alap, double time) const;
+	void collect_depth(std::vector<int> &depth, int level) const;
 };
 
 #endif

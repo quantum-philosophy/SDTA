@@ -43,7 +43,8 @@ class Graph
 		const Architecture *architecture = NULL) const;
 
 	vector_t calc_mobility() const;
-	priority_t calc_priority() const;
+	priority_t calc_mobile_priority() const;
+	priority_t calc_depth_priority() const;
 
 	inline const constrains_t &get_constrains()
 	{
