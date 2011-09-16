@@ -205,6 +205,73 @@ class EvolutionTuning
 	void defaults();
 };
 
+template<class CT>
+class eslabCheckPoint : public eoContinue<CT>
+{
+	public:
+
+	eslabCheckPoint(eoContinue<CT> &continuator)
+	{
+		continuators.push_back(&continuator);
+	}
+
+	bool operator()(const eoPop<CT> &population)
+	{
+		size_t monitor_count, continuator_count, i;
+
+		monitor_count = monitors.size();
+		continuator_count = continuators.size();
+
+		for (i = 0; i < monitor_count; i++) (*monitors[i])();
+
+		bool go_on = true;
+
+		for (i = 0; i < continuator_count; i++)
+			if (!(*continuators[i])(population)) go_on = false;
+
+		/* Say goodbye */
+		if (!go_on) {
+			for (i = 0; i < monitor_count; i++)
+				monitors[i]->lastCall();
+		}
+
+		return go_on;
+	}
+
+	inline void add(eoContinue<CT> &continuator)
+	{
+		continuators.push_back(&continuator);
+	}
+
+	inline void remove(eoContinue<CT> &continuator)
+	{
+		bool found = false;
+
+		typename std::vector<eoContinue<CT> *>::iterator it;
+
+		for (it = continuators.begin(); it != continuators.end(); it++) {
+			if (*it == &continuator) {
+				continuators.erase(it);
+				found = true;
+				break;
+			}
+		}
+
+		if (!found)
+			throw std::runtime_error("Cannot find the given continuator.");
+	}
+
+	inline void add(eoMonitor &monitor)
+	{
+		monitors.push_back(&monitor);
+	}
+
+	private:
+
+	std::vector<eoContinue<CT> *> continuators;
+	std::vector<eoMonitor *> monitors;
+};
+
 class EvolutionStats
 {
 	public:
@@ -291,7 +358,7 @@ class GenericEvolution: public Evolution
 	virtual fitness_t evaluate(const chromosome_t &chromosome) = 0;
 	virtual void evaluate_chromosome(chromosome_t &chromosome) = 0;
 	virtual void process(population_t &population,
-		eoCheckPoint<chromosome_t> &checkpoint,
+		eslabCheckPoint<chromosome_t> &checkpoint,
 		eoTransform<chromosome_t> &transform) = 0;
 
 	Architecture *architecture;

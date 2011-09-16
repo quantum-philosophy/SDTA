@@ -1,9 +1,9 @@
 /******************************************************************************/
-/* eslabSOAlgorithm                                                           */
+/* eslabSOGeneticAlgorithm                                                    */
 /******************************************************************************/
 
 template<class CT>
-void eslabSOAlgorithm<CT>::operator()(population_t &population)
+void eslabSOGeneticAlgorithm<CT>::operator()(population_t &population)
 {
 	size_t population_size = population.size();;
 	population_t offspring;
@@ -30,10 +30,52 @@ void eslabSOAlgorithm<CT>::operator()(population_t &population)
 	while (continuator(population));
 }
 
+/******************************************************************************/
+/* eslabSOLocalSearchAlgorithm                                                */
+/******************************************************************************/
+
 template<class CT>
-void eslabSOAlgorithm<CT>::evaluate(population_t &population) const
+void eslabSOLocalSearchAlgorithm<CT>::operator()(population_t &population)
 {
-	apply<CT>(evaluate_one, population);
+	int pos, last_pos = -1;
+	size_t chromosome_length;
+
+	evaluate(population);
+	chromosome_t chromosome = select(population);
+
+	chromosome_length = chromosome.size();
+	population.reserve(population.size());
+
+	do {
+		population.clear();
+		population.push_back(chromosome);
+
+		do { pos = eo::random(chromosome_length); }
+		while (pos == last_pos);
+
+		const constrain_t &constrain = constrains[pos];
+		rank_t best_rank = chromosome[pos];
+
+		for (rank_t rank = constrain.min; rank <= constrain.max; rank++) {
+			if (rank == best_rank) continue;
+			chromosome[pos] = rank;
+			chromosome.invalidate();
+			population.push_back(chromosome);
+		}
+
+		evaluate(population);
+		chromosome = select(population);
+
+		last_pos = pos;
+	}
+	while (continuator(population));
+}
+
+template<class CT>
+const CT &eslabSOLocalSearchAlgorithm<CT>::select(
+	population_t &population) const
+{
+	return population.best_element();
 }
 
 /******************************************************************************/

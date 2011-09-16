@@ -46,7 +46,7 @@ price_t eslabMOPop::best_energy() const
 /******************************************************************************/
 
 void MOEvolution::process(population_t &population,
-	eoCheckPoint<chromosome_t> &checkpoint, eoTransform<chromosome_t> &transform)
+	eslabCheckPoint<chromosome_t> &checkpoint, eoTransform<chromosome_t> &transform)
 {
 	eslabMOStallContinue stall_continue(tuning.min_generations,
 		tuning.stall_generations);

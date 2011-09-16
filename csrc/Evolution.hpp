@@ -81,6 +81,9 @@ void GenericEvolutionStats<CT, PT>::watch(population_t &_population, bool _silen
 	population = &_population;
 	silent = _silent;
 
+	if (!silent)
+		std::cout << "   0: ";
+
 	generations = 0;
 	evaluations = 0;
 	deadline_misses = 0;
@@ -160,11 +163,9 @@ ST &GenericEvolution<CT, PT, ST>::solve(
 	eoGenContinue<chromosome_t> gen_continue(tuning.max_generations);
 
 	/* Monitor */
-	eoCheckPoint<chromosome_t> checkpoint(gen_continue);
+	eslabCheckPoint<chromosome_t> checkpoint(gen_continue);
 	stats.watch(population, !tuning.verbose);
 	checkpoint.add(stats);
-
-	/* TODO: Get rid of... */ if (tuning.verbose) std::cout << "   0: ";
 
 	/* Create */
 	populate(population, priority, layout);

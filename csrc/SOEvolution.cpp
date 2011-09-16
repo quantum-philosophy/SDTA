@@ -9,7 +9,7 @@
 /******************************************************************************/
 
 void SOEvolution::process(population_t &population,
-	eoCheckPoint<chromosome_t> &checkpoint,
+	eslabCheckPoint<chromosome_t> &checkpoint,
 	eoTransform<chromosome_t> &transform)
 {
 	/* Select */
@@ -27,10 +27,18 @@ void SOEvolution::process(population_t &population,
 	checkpoint.add(stall_continue);
 	checkpoint.add(evolution_monitor);
 
-	eslabSOAlgorithm<chromosome_t> ga(checkpoint, evaluator, select,
+	eslabSOGeneticAlgorithm<chromosome_t> ga(checkpoint, evaluator, select,
 		transform, replace);
 
 	ga(population);
+
+#if 0
+	checkpoint.remove(stall_continue);
+
+	eslabSOLocalSearchAlgorithm<chromosome_t> ls(*graph, checkpoint, evaluator);
+
+	ls(population);
+#endif
 
 	stats.best_chromosome = population.best_element();
 }

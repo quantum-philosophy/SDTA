@@ -77,42 +77,89 @@ class SOEvolution:
 	fitness_t evaluate(const chromosome_t &chromosome);
 	void evaluate_chromosome(chromosome_t &chromosome);
 	void process(population_t &population,
-		eoCheckPoint<chromosome_t> &checkpoint,
+		eslabCheckPoint<chromosome_t> &checkpoint,
 		eoTransform<chromosome_t> &transform);
 };
 
-template<class chromosome_t>
-class eslabSOAlgorithm: public eoAlgo<chromosome_t>
+template<class CT>
+class eslabAlgorithm: public eoAlgo<CT>
 {
-	typedef eoPop<chromosome_t> population_t;
-
 	public:
 
-	eslabSOAlgorithm(eoContinue<chromosome_t> &_continuator,
-		eoEvalFunc<chromosome_t> &_evaluate_one, eoSelect<chromosome_t> &_select,
+	typedef CT chromosome_t;
+	typedef eoPop<chromosome_t> population_t;
+
+	eslabAlgorithm(
+		eoContinue<chromosome_t> &_continuator,
+		eoEvalFunc<chromosome_t> &_evaluate_one) :
+
+		continuator(_continuator), evaluate_one(_evaluate_one) {}
+
+	protected:
+
+	inline void evaluate(population_t &population) const
+	{
+		apply<chromosome_t>(evaluate_one, population);
+	}
+
+	eoContinue<chromosome_t> &continuator;
+	eoEvalFunc<chromosome_t> &evaluate_one;
+};
+
+template<class CT>
+class eslabSOGeneticAlgorithm: public eslabAlgorithm<CT>
+{
+	public:
+
+	typedef CT chromosome_t;
+	typedef eoPop<chromosome_t> population_t;
+
+	eslabSOGeneticAlgorithm(
+		eoContinue<chromosome_t> &_continuator,
+		eoEvalFunc<chromosome_t> &_evaluate_one,
+		eoSelect<chromosome_t> &_select,
 		eoTransform<chromosome_t> &_transform,
 		eoReplacement<chromosome_t> &_replace) :
 
-		continuator(_continuator), evaluate_one(_evaluate_one), select(_select),
-		transform(_transform), replace(_replace) {}
+		eslabAlgorithm<chromosome_t>(_continuator, _evaluate_one),
+		select(_select), transform(_transform), replace(_replace) {}
 
 	void operator()(population_t &population);
 
 	private:
 
-	inline void evaluate(population_t &population) const;
-
-	eoContinue<chromosome_t> &continuator;
-	eoEvalFunc<chromosome_t> &evaluate_one;
 	eoSelect<chromosome_t> &select;
 	eoTransform<chromosome_t> &transform;
 	eoReplacement<chromosome_t> &replace;
 };
 
-template<class chromosome_t>
-class eslabElitismMerge: public eoMerge<chromosome_t>
+template<class CT>
+class eslabSOLocalSearchAlgorithm: public eslabAlgorithm<CT>
 {
+	public:
+
+	typedef CT chromosome_t;
 	typedef eoPop<chromosome_t> population_t;
+
+	eslabSOLocalSearchAlgorithm(Graph &graph,
+		eoContinue<chromosome_t> &_continuator,
+		eoEvalFunc<chromosome_t> &_evaluate_one) :
+
+		eslabAlgorithm<CT>(_continuator, _evaluate_one),
+		constrains(graph.get_constrains()) {}
+
+	void operator()(population_t &population);
+
+	private:
+
+	const constrains_t &constrains;
+	const chromosome_t &select(population_t &population) const;
+};
+
+template<class CT>
+class eslabElitismMerge: public eoMerge<CT>
+{
+	typedef eoPop<CT> population_t;
 
 	public:
 

@@ -113,7 +113,7 @@ class MOEvolution:
 	fitness_t evaluate(const chromosome_t &chromosome);
 	void evaluate_chromosome(chromosome_t &chromosome);
 	void process(population_t &population,
-		eoCheckPoint<chromosome_t> &checkpoint,
+		eslabCheckPoint<chromosome_t> &checkpoint,
 		eoTransform<chromosome_t> &transform);
 };
 
