@@ -160,7 +160,7 @@ ST &GenericEvolution<CT, PT, ST>::solve(const priority_t &priority,
 	population_t population;
 
 	/* Continue */
-	eoGenContinue<chromosome_t> gen_continue(tuning.max_generations);
+	eslabGenContinue<chromosome_t> gen_continue(tuning.max_generations);
 
 	/* Monitor */
 	eslabCheckPoint<chromosome_t> checkpoint(gen_continue);

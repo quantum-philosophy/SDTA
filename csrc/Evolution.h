@@ -206,11 +206,19 @@ class EvolutionTuning
 };
 
 template<class CT>
+class eslabContinue: public eoContinue<CT>
+{
+	public:
+
+	virtual void reset() = 0;
+};
+
+template<class CT>
 class eslabCheckPoint : public eoContinue<CT>
 {
 	public:
 
-	eslabCheckPoint(eoContinue<CT> &continuator)
+	eslabCheckPoint(eslabContinue<CT> &continuator)
 	{
 		continuators.push_back(&continuator);
 	}
@@ -238,27 +246,9 @@ class eslabCheckPoint : public eoContinue<CT>
 		return go_on;
 	}
 
-	inline void add(eoContinue<CT> &continuator)
+	inline void add(eslabContinue<CT> &continuator)
 	{
 		continuators.push_back(&continuator);
-	}
-
-	inline void remove(eoContinue<CT> &continuator)
-	{
-		bool found = false;
-
-		typename std::vector<eoContinue<CT> *>::iterator it;
-
-		for (it = continuators.begin(); it != continuators.end(); it++) {
-			if (*it == &continuator) {
-				continuators.erase(it);
-				found = true;
-				break;
-			}
-		}
-
-		if (!found)
-			throw std::runtime_error("Cannot find the given continuator.");
 	}
 
 	inline void add(eoMonitor &monitor)
@@ -266,9 +256,16 @@ class eslabCheckPoint : public eoContinue<CT>
 		monitors.push_back(&monitor);
 	}
 
+	inline void reset()
+	{
+		size_t count = continuators.size();
+		for (size_t i = 0; i < count; i++)
+			continuators[i]->reset();
+	}
+
 	private:
 
-	std::vector<eoContinue<CT> *> continuators;
+	std::vector<eslabContinue<CT> *> continuators;
 	std::vector<eoMonitor *> monitors;
 };
 
@@ -447,8 +444,37 @@ class eslabEvolutionMonitor: public eoMonitor
 	std::ofstream stream;
 };
 
+template<class CT>
+class eslabGenContinue: public eslabContinue<CT>
+{
+	public:
+
+	typedef CT chromosome_t;
+
+	eslabGenContinue(size_t _max_generations) :
+		max_generations(_max_generations) { reset(); }
+
+	virtual bool operator()(const eoPop<chromosome_t> &population)
+	{
+		generations++;
+
+		if (generations >= max_generations) return false;
+		return true;
+	}
+
+	virtual void reset()
+	{
+		generations = 0;
+	}
+
+	private:
+
+	size_t max_generations;
+	size_t generations;
+};
+
 template<class CT, class PT>
-class eslabStallContinue: public eoContinue<CT>
+class eslabStallContinue: public eslabContinue<CT>
 {
 	public:
 
