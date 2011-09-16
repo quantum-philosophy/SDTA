@@ -1,6 +1,7 @@
 #ifndef __PROCESSOR_H__
 #define __PROCESSOR_H__
 
+#include <stdexcept>
 #include "common.h"
 
 class Processor
@@ -21,8 +22,6 @@ class Processor
 	std::vector<double> ceff;
 	size_t type_count;
 
-	inline size_t size() const { return type_count; }
-
 	public:
 
 	Processor(double _frequency, double _voltage, unsigned long int _ngate) :
@@ -30,6 +29,28 @@ class Processor
 		ngate(_ngate) {}
 
 	void add_type(unsigned long int nc, double ceff);
+
+	inline size_t size() const { return type_count; }
+
+	inline double calc_duration(unsigned int type) const
+	{
+#ifndef SHALLOW_CHECK
+		if (type >= type_count)
+			throw std::runtime_error("The processor does not have such type.");
+#endif
+		/* t = NC / f */
+		return nc[type] / frequency;
+	}
+
+	inline double calc_power(unsigned int type) const
+	{
+#ifndef SHALLOW_CHECK
+		if (type >= type_count)
+			throw std::runtime_error("The processor does not have such type.");
+#endif
+		/* P = Ceff * f * V^2 */
+		return ceff[type] * frequency * voltage * voltage;
+	}
 };
 
 #endif

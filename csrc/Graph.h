@@ -39,6 +39,10 @@ class Graph
 	void reorder_tasks(const std::vector<tid_t> &order);
 
 	layout_t calc_layout(const Architecture *architecture = NULL) const;
+	layout_t calc_layout(const schedule_t &schedule,
+		const Architecture *architecture = NULL) const;
+
+	vector_t calc_mobility() const;
 	priority_t calc_priority() const;
 
 	inline const constrains_t &get_constrains()
@@ -58,17 +62,9 @@ class Graph
 
 	/* The duration of the graph based on the actual start times */
 	double calc_duration() const;
-	/* The duration of the graph based on the ASAP times */
-	double calc_asap_duration() const;
 
 	/* Trigger the propagation of the start time */
 	void calc_start() const;
-	/* Trigger the propagation of the ASAP time */
-	void calc_asap() const;
-	/* Trigger the propagation of the ALAP time */
-	void calc_alap() const;
-
-	void fix_epsilon() const;
 
 	task_vector_t tasks;
 	size_t task_count;

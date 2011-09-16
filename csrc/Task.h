@@ -29,20 +29,16 @@ class Task
 	Task *successor;
 
 	/* Assigned on mapping */
-    double duration;	/* Execution time */
+	double duration;	/* Execution time */
 	double power; 		/* Consuming power */
 
-    double start;		/* Actual start time (mapped and scheduled) */
-    double asap; 		/* ASAP, as soon as possible */
-    double alap;		/* ALAP, as late as possible */
-    double mobility;	/* ALAP - ASAP */
+	double start;		/* Actual start time (mapped and scheduled) */
 
 	public:
 
 	Task(unsigned int _type) :
 		id(-1), type(_type), ancestor(NULL), successor(NULL),
-		duration(0), power(0), start(-1), asap(-1),
-		alap(std::numeric_limits<double>::max()), mobility(0) {}
+		duration(0), power(0), start(-1) {}
 
 	void assign_processor(const Processor *processor);
 
@@ -63,16 +59,12 @@ class Task
 	inline bool is_leaf() const { return children.empty(); }
 	inline bool is_root() const { return parents.empty(); }
 
-	static bool compare_mobility(const Task *one, const Task *another)
-	{
-		return one->mobility < another->mobility;
-	}
-
 	private:
 
 	void propagate_start(double time);
-	void propagate_asap(double time);
-	void propagate_alap(double time);
+
+	void collect_asap(vector_t &asap, double time) const;
+	void collect_alap(vector_t &alap, double time) const;
 };
 
 #endif

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <list>
+#include <utility>
 
 #ifdef REAL_RANK
 typedef double rank_t;
@@ -180,5 +181,17 @@ std::ostream &operator<< (std::ostream &o, const print_t<T> &print)
 
 std::ostream &operator<< (std::ostream &o, const price_t &price);
 std::ostream &operator<< (std::ostream &o, const constrain_t &constrain);
+
+template<class T>
+class Comparator
+{
+	public:
+
+	static bool pair(const std::pair<double, T> &first,
+		const std::pair<double, T> &second)
+	{
+		return first.first < second.first;
+	}
+};
 
 #endif

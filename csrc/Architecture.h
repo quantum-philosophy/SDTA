@@ -5,6 +5,8 @@
 
 class Architecture
 {
+	friend class Graph;
+
 	template<class CT, class PT, class ST>
 	friend class GenericEvolution;
 

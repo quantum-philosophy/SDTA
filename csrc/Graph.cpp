@@ -43,31 +43,17 @@ void Graph::assign_mapping(const mapping_t &mapping)
 
 	architecture->assign_tasks(tasks, mapping);
 
-	calc_asap();
-	calc_alap();
-	fix_epsilon();
 	calc_constrains();
-}
-
-void Graph::fix_epsilon() const
-{
-	Task *task;
-	double epsilon = std::numeric_limits<double>::epsilon();
-
-	for (size_t i = 0; i < task_count; i++) {
-		task = tasks[i];
-		if (task->asap < epsilon) task->asap = 0;
-		if (task->alap < epsilon) task->alap = 0;
-		if (task->mobility < epsilon) task->mobility = 0;
-	}
 }
 
 void Graph::assign_schedule(const schedule_t &schedule)
 {
+#ifndef SHALLOW_CHECK
 	if (!architecture) std::runtime_error("The graph should be mapped.");
 
 	if (schedule.size() != task_count)
 		throw std::runtime_error("The given schedule is not sufficient.");
+#endif
 
 	this->schedule = schedule;
 
@@ -95,41 +81,11 @@ double Graph::calc_duration() const
 	return duration;
 }
 
-double Graph::calc_asap_duration() const
-{
-	double duration = 0;
-	Task *task;
-
-	for (tid_t id = 0; id < task_count; id++) {
-		task = tasks[id];
-		if (task->is_leaf())
-			duration = std::max(duration, task->asap + task->duration);
-	}
-
-	return duration;
-}
-
 void Graph::calc_start() const
 {
 	for (tid_t id = 0; id < task_count; id++)
 		if (tasks[id]->is_root())
 			tasks[id]->propagate_start(0);
-}
-
-void Graph::calc_asap() const
-{
-	for (tid_t id = 0; id < task_count; id++)
-		if (tasks[id]->is_root())
-			tasks[id]->propagate_asap(0);
-}
-
-void Graph::calc_alap() const
-{
-	double duration = calc_asap_duration();
-
-	for (tid_t id = 0; id < task_count; id++)
-		if (tasks[id]->is_leaf())
-			tasks[id]->propagate_alap(duration);
 }
 
 price_t Graph::evaluate(Hotspot *hotspot) const
@@ -204,8 +160,10 @@ layout_t Graph::calc_layout(const Architecture *architecture) const
 {
 	if (!architecture) architecture = this->architecture;
 
+#ifndef SHALLOW_CHECK
 	if (!architecture)
 		throw std::runtime_error("The graph should be mapped.");
+#endif
 
 	size_t processor_count = architecture->size();
 
@@ -217,19 +175,101 @@ layout_t Graph::calc_layout(const Architecture *architecture) const
 	return layout;
 }
 
+layout_t Graph::calc_layout(const schedule_t &schedule,
+	const Architecture *architecture) const
+{
+	if (!architecture) architecture = this->architecture;
+
+#ifndef SHALLOW_CHECK
+	if (!architecture)
+		throw std::runtime_error("The graph should be mapped.");
+
+	if (schedule.size() != task_count)
+		throw std::runtime_error("The schedule size is invalid.");
+#endif
+
+	pid_t pid;
+	size_t i, j, processor_count = architecture->size();
+
+	layout_t layout(task_count);
+
+	vector_t processor_time(processor_count, 0);
+	const processor_vector_t &processors = architecture->processors;
+
+	for (i = 0; i < task_count; i++) {
+		const Task *task = tasks[schedule[i]];
+
+		for (pid = 0, j = 1; j < processor_count; j++)
+			if (processor_time[j] < processor_time[pid]) pid = j;
+
+		layout[schedule[i]] = pid;
+		processor_time[pid] += processors[pid]->calc_duration(task->type);
+	}
+
+	return layout;
+}
+
+vector_t Graph::calc_mobility() const
+{
+	tid_t id;
+	const Task *task;
+	vector_t asap(task_count, -1);
+	vector_t alap(task_count, std::numeric_limits<double>::max());
+	vector_t mobility(task_count);
+
+	/* Calculate ASAP */
+	for (id = 0; id < task_count; id++) {
+		task = tasks[id];
+		if (task->is_root())
+			task->collect_asap(asap, 0);
+	}
+
+	/* Calculate the overall duration according to ASAP */
+	double duration = 0;
+	for (id = 0; id < task_count; id++) {
+		task = tasks[id];
+		if (task->is_leaf())
+			duration = std::max(duration, asap[id] + task->duration);
+	}
+
+	/* Calculate ALAP */
+	for (id = 0; id < task_count; id++) {
+		task = tasks[id];
+		if (task->is_leaf())
+			task->collect_alap(alap, duration);
+	}
+
+	double epsilon = std::numeric_limits<double>::epsilon();
+	for (size_t i = 0; i < task_count; i++) {
+		mobility[i] = alap[i] - asap[i];
+		if (mobility[i] < epsilon) mobility[i] = 0;
+	}
+
+	return mobility;
+}
+
 priority_t Graph::calc_priority() const
 {
-	std::vector<const Task *> twins(task_count);
-
-	for (size_t i = 0; i < task_count; i++)
-		twins[i] = tasks[i];
-
-	std::stable_sort(twins.begin(), twins.end(), Task::compare_mobility);
-
 	priority_t priority(task_count);
+	vector_t mobility = calc_mobility();
+
+#ifndef SHALLOW_CHECK
+	if (mobility.size() != task_count)
+		throw std::runtime_error("The mobility vector is invalid.");
+#endif
+
+	std::vector<std::pair<double, const Task *> > pairs(task_count);
+
+	for (size_t i = 0; i < task_count; i++) {
+		pairs[i].first = mobility[i];
+		pairs[i].second = tasks[i];
+	}
+
+	std::stable_sort(pairs.begin(), pairs.end(),
+		Comparator<const Task *>::pair);
 
 	for (size_t i = 0; i < task_count; i++)
-		priority[twins[i]->id] = i;
+		priority[pairs[i].second->id] = i;
 
 	return priority;
 }
@@ -313,11 +353,7 @@ std::ostream &operator<< (std::ostream &o, const Graph *graph)
 		<< std::setw(4) << "proc" << " : "
 		<< std::setw(4) << "type" << " : "
 		<< std::setw(8) << "start" << " : "
-		<< std::setw(8) << "duration" << " : "
-		<< std::setw(8) << "asap" << " : "
-		<< std::setw(8) << "mobility" << " : "
-		<< std::setw(8) << "alap" << " ) -> [ "
-		<< "children" << " ]" << std::endl;
+		<< std::setw(8) << "duration" << " ) -> [ children ]" << std::endl;
 
 	for (tid_t id = 0; id < graph->task_count; id++)
 		o << "  " << graph->tasks[id];

@@ -1,4 +1,3 @@
-#include <stdexcept>
 #include <iomanip>
 
 #include "Task.h"
@@ -6,17 +5,10 @@
 
 void Task::assign_processor(const Processor *processor)
 {
-	if (processor->type_count < type + 1)
-		throw std::runtime_error("The processor does not have such type.");
-
 	this->processor = processor;
 
-	/* t = NC / f */
-	duration = processor->nc[type] / processor->frequency;
-
-	/* P = Ceff * f * V^2 */
-	power = processor->ceff[type] * processor->frequency *
-		processor->voltage * processor->voltage;
+	duration = processor->calc_duration(type);
+	power = processor->calc_power(type);
 }
 
 void Task::propagate_start(double time)
@@ -36,34 +28,37 @@ void Task::propagate_start(double time)
 	if (successor) successor->propagate_start(time);
 }
 
-void Task::propagate_asap(double time)
+void Task::collect_asap(vector_t &asap, double time) const
 {
-	/* We might already have an assigned ASAP time with a larger value */
-	if (!(asap < time)) return;
+	double &my_asap = asap[id];
 
-	asap = time;
+	/* We might already have an assigned ASAP time with a larger value */
+	if (!(my_asap < time)) return;
+
+	my_asap = time;
 	time = time + duration;
 
 	/* Shift data dependent tasks */
 	size_t size = children.size();
 	for (size_t i = 0; i < size; i++)
-		children[i]->propagate_asap(time);
+		children[i]->collect_asap(asap, time);
 }
 
-void Task::propagate_alap(double time)
+void Task::collect_alap(vector_t &alap, double time) const
 {
+	double &my_alap = alap[id];
+
 	time = time - duration;
 
 	/* We might already have an assigned ALAP time with a smaller value */
-	if (!(time < alap)) return;
+	if (!(time < my_alap)) return;
 
-	alap = time;
-	mobility = alap - asap;
+	my_alap = time;
 
 	/* Shift data dependent tasks */
 	size_t size = parents.size();
 	for (size_t i = 0; i < size; i++)
-		parents[i]->propagate_alap(time);
+		parents[i]->collect_alap(alap, time);
 }
 
 std::ostream &operator<< (std::ostream &o, const Task *task)
@@ -75,10 +70,7 @@ std::ostream &operator<< (std::ostream &o, const Task *task)
 		<< std::setw(4) << (task->processor ? task->processor->id : -1) << " : "
 		<< std::setw(4) << task->type << " : "
 		<< std::setw(8) << task->start << " : "
-		<< std::setw(8) << task->duration << " : "
-		<< std::setw(8) << task->asap << " : "
-		<< std::setw(8) << task->mobility << " : "
-		<< std::setw(8) << task->alap << " ) -> [ ";
+		<< std::setw(8) << task->duration << " ) -> [ ";
 
 	size_t children_count = task->children.size();
 	for (size_t i = 0; i < children_count; i++) {

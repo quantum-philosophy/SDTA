@@ -7,13 +7,15 @@
 schedule_t ListScheduler::process(const Graph *graph, const priority_t &priority)
 {
 	tid_t id;
-	size_t task_count = graph->task_count;
+	size_t index = 0, task_count = graph->task_count;
 
+#ifndef SHALLOW_CHECK
 	if (priority.size() != task_count)
 		throw std::runtime_error("The priority vector is bad.");
+#endif
 
 	list_schedule_t pool;
-	schedule_t schedule;
+	schedule_t schedule(task_count);
 	std::vector<bool> scheduled(task_count, false);
 	std::vector<bool> processed(task_count, false);
 
@@ -33,7 +35,7 @@ schedule_t ListScheduler::process(const Graph *graph, const priority_t &priority
 		pool.pop_front();
 
 		/* Append to the schedule */
-		schedule.push_back(id);
+		schedule[index++] = id;
 		scheduled[id] = true;
 
 		/* Append new tasks, but only ready ones, and ensure absence
