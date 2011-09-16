@@ -194,4 +194,19 @@ class Comparator
 	}
 };
 
+class Random
+{
+	public:
+
+	static inline double uniform(double range = 1.0)
+	{
+		return range * (double)rand() / (double)RAND_MAX;
+	}
+
+	static inline int number(int range)
+	{
+		return double(range) * uniform();
+	}
+};
+
 #endif

@@ -170,7 +170,11 @@ layout_t Graph::calc_layout(const Architecture *architecture) const
 	layout_t layout(task_count);
 
 	for (size_t i = 0; i < task_count; i++)
+#ifdef RANDOM_MAPPING
+		layout[i] = Random::number(processor_count);
+#else
 		layout[i] = i % processor_count;
+#endif
 
 	return layout;
 }
@@ -293,7 +297,7 @@ priority_t Graph::calc_depth_priority() const
 void Graph::calc_constrains()
 {
 	const Task *task;
-	size_t dependents, dependencies, processor_count;
+	size_t dependent_count, dependency_count, processor_count;
 
 	constrains = constrains_t(2 * task_count);
 	processor_count = architecture->size();
@@ -301,12 +305,15 @@ void Graph::calc_constrains()
 	for (tid_t id = 0; id < task_count; id++) {
 		task = tasks[id];
 
-		dependents = count_dependents(task);
-		dependencies = count_dependencies(task);
+		bit_string_t dependents(task_count, false);
+		dependent_count = count_dependents(task, dependents);
+
+		bit_string_t dependencies(task_count, false);
+		dependency_count = count_dependencies(task, dependencies);
 
 		/* Scheduling constrains */
-		constrains[id].min = dependencies;
-		constrains[id].max = task_count - dependents - 1;
+		constrains[id].min = dependency_count;
+		constrains[id].max = task_count - dependent_count - 1;
 
 		/* Mapping constrains */
 		constrains[task_count + id].min = 0;
