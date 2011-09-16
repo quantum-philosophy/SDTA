@@ -32,13 +32,13 @@ void SOEvolution::process(population_t &population,
 
 	ga(population);
 
-#if 0
-	checkpoint.remove(stall_continue);
+	/*
+	stall_continue.reset();
 
 	eslabSOLocalSearchAlgorithm<chromosome_t> ls(*graph, checkpoint, evaluator);
 
 	ls(population);
-#endif
+	*/
 
 	stats.best_chromosome = population.best_element();
 }
