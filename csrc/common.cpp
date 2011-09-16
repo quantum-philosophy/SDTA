@@ -5,7 +5,6 @@
 #include <string>
 #include <iomanip>
 #include <string.h>
-#include <stdlib.h>
 
 #include "common.h"
 

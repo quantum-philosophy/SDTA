@@ -5,6 +5,7 @@
 #include <vector>
 #include <list>
 #include <utility>
+#include <stdlib.h>
 
 #ifdef REAL_RANK
 typedef double rank_t;
