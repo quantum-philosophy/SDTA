@@ -22,7 +22,7 @@ double Lifetime::calc_damage(const matrix_t &temperature)
 	vector_t amplitudes, means;
 
 	double damage, factor, tmax, n;
-	double Q = q; /* Some stupid joke */
+	const double Q = q; /* Some stupid joke */
 
 	/* Get extrema */
 	detect_peaks(temperature, peaks);
@@ -67,18 +67,16 @@ void Lifetime::detect_peaks(const matrix_t &data, std::vector<extrema_t> &peaks)
 	size_t mxpos, mnpos, col, row, firstpos;
 	double current, mx, mn;
 
-	bool look_for_max;
+	bool look_for_max, found;
 
 	peaks.resize(cols);
 
 	/* For each column */
 	for (col = 0; col < cols; col++) {
-		mx = data[0][col];
-		mn = data[0][col];
-
+		mx = mn = data[0][col];
 		mxpos = mnpos = 0;
 
-		look_for_max = true;
+		look_for_max = false;
 
 		peaks[col].clear();
 
@@ -113,24 +111,45 @@ void Lifetime::detect_peaks(const matrix_t &data, std::vector<extrema_t> &peaks)
 			}
 		}
 
-		if (look_for_max || peaks[col].empty()) continue;
+		/* The first one is always a minimum, so if the last one is
+		 * a maximum, we are fine.
+		 */
+		if (!look_for_max) continue;
 
-		/* Go around through to capture a minimum that we must have missed */
+		/* The last one was a minimum which means that either we have
+		 * missed a maximum in the beginning, or the first minimum is
+		 * larger then the last one and should be eliminated.
+		 */
+
 		firstpos = peaks[col].begin()->first;
+		found = false;
 
 		for (row = 0; row < firstpos; row++) {
 			current = data[row][col];
 
-			if (current < mn) {
-				mn = current;
-				mnpos = row;
+			if (current > mx) {
+				mx = current;
+				mxpos = row;
 			}
 
-			if (current > (mn + delta)) {
-				if (mnpos > row) peaks[col].push_back(peak_t(mnpos, mn));
-				else peaks[col].push_front(peak_t(mnpos, mn));
-				break;
-			}
+			if (current >= (mx - delta)) continue;
+
+			/* Yeah, we have missed a maximum */
+			if (mxpos < row) peaks[col].push_front(peak_t(mxpos, mx));
+			else peaks[col].push_back(peak_t(mxpos, mx));
+
+			found = true;
+			break;
+		}
+
+		if (found) continue;
+
+		/* Nope, there are two minima, delete one! */
+		if (peaks[col].begin()->second < peaks[col].end()->second) {
+			peaks[col].pop_back();
+		}
+		else {
+			peaks[col].pop_front();
 		}
 	}
 }

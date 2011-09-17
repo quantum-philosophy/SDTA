@@ -2,6 +2,7 @@
 #define __COMMON_H__
 
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <list>
 #include <utility>
@@ -213,6 +214,29 @@ class Random
 	static inline int number(int range)
 	{
 		return double(range) * uniform();
+	}
+};
+
+class Helper
+{
+	public:
+
+	static void dump(const matrix_t &matrix, const char *filename)
+	{
+		std::ofstream stream(filename);
+
+		size_t rows = matrix.rows();
+		size_t cols = matrix.cols();
+
+		for (size_t i = 0; i < rows; i++) {
+			for (size_t j = 0; j < cols; j++) {
+				stream << matrix[i][j];
+				if (j + 1 < cols) stream << '\t';
+			}
+			stream << std::endl;
+		}
+
+		stream.close();
 	}
 };
 

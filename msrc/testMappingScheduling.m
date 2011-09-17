@@ -4,7 +4,7 @@ clear all;
 clc;
 rng(0);
 
-name = 'test_cases/test_case_4_60';
+name = '004_060';
 floorplan = Utils.path([ name, '.flp' ]);
 testCase = Utils.path([ name, '.tgff' ]);
 config = Utils.path('hotspot.config');

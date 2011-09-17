@@ -7,7 +7,7 @@ function [ maxtab, mintab ] = peakdet(v, delta)
   mnpos = 1;
   mxpos = 1;
 
-  lookformax = true;
+  lookformax = false;
 
   for i = 2:length(v)
     this = v(i);
@@ -32,22 +32,33 @@ function [ maxtab, mintab ] = peakdet(v, delta)
     end
   end
 
-  % Go around through the first extremum to the second one
-  if lookformax || isempty(maxtab), return; end
-  nexti = maxtab(1, 1);
+  if ~lookformax, return; end
 
-  for i = 1:(nexti - 1)
+  firstpos = maxtab(1, 1);
+  found = false;
+
+  for i = 1:(firstpos - 1)
     this = v(i);
 
-    if this < mn, mn = this; mnpos = i; end
+    if this > mx, mx = this; mxpos = i; end
 
-    if this > (mn + delta)
-      if mnpos > i
-        mintab(end + 1, :) = [ mnpos mn ];
-      else
-        mintab = [ mnpos mn; mintab ];
-      end
-      break;
+    if this >= (mx - delta), continue; end
+
+    if mxpos < i
+      maxtab = [ mxpos mx; maxtab ];
+    else
+      maxtab(end + 1, :) = [ mxpos mx ];
     end
+
+    found = true;
+    break;
+  end
+
+  if found, return; end
+
+  if mintab(1, 2) < mintab(end, 2)
+    mintab = mintab(1:(end - 1), :);
+  else
+    mintab = mintab(2:end, :);
   end
 end

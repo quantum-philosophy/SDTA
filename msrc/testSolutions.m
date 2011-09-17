@@ -14,7 +14,7 @@ solutions{end + 1} = [ 0, 1, 8, 2, 5, 5, 4, 12, 27, 7, 22, 9, 12, 33, 14, 4, 18,
 
 solutionCount = length(solutions);
 
-[ graph, hotspot ] = setup('test_cases/004_060');
+[ graph, hotspot ] = setup('004_060');
 
 [ vdd, ngate ] = Utils.collectLeakageParams(graph);
 
@@ -24,8 +24,6 @@ figure;
 
 fprintf('%10s%15s%15s\n', 'Solution', 'Lifetime, TU', '+ %');
 for i = 1:solutionCount
-  subplot(solutionCount, 1, i);
-
   priority = solutions{i};
 
   LS.schedule(graph, priority);
@@ -36,8 +34,14 @@ for i = 1:solutionCount
     powerProfile, vdd, ngate, tol, maxit);
 
   mttf(end + 1) = Lifetime.predictCombined(T);
-  Lifetime.drawCycles(T);
 
+  subplot(solutionCount, 2, 2 * i - 1);
+  x = ((1:size(powerProfile, 1)) - 1) * Constants.samplingInterval;
+  Utils.drawLines('Temperature', 'Time, s', 'Temperature, C', ...
+    x, T - Constants.degreeKelvin);
+
+  subplot(solutionCount, 2, 2 * i);
+  Lifetime.drawCycles(T);
   title([ 'Thermal cycles (lifetime ', ...
     num2str(Utils.round2(mttf(end), 0.01)), ' TU)' ]);
 

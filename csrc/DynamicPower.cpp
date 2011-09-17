@@ -37,6 +37,11 @@ void DynamicPower::compute(const Graph *graph, double sampling_interval,
     	start = floor(task->start / sampling_interval);
 		end = floor((task->start + task->duration) / sampling_interval);
 
+#ifndef SHALLOW_CHECK
+		if (end >= step_count)
+			throw std::runtime_error("The duration of the task is too long.");
+#endif
+
 		for (j = start; j < end && j < step_count; j++)
 			ptr[j * processor_count + pid] = task->power;
 	}
