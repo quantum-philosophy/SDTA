@@ -180,7 +180,7 @@ template<class CT, class PT, class ST>
 void GenericEvolution<CT, PT, ST>::populate(population_t &population,
 	priority_t priority, layout_t layout)
 {
-	size_t i, j, k;
+	size_t i, j;
 	size_t create_count;
 
 	population.clear();
@@ -320,20 +320,8 @@ bool eslabNPtsBitCrossover<CT, PT>::operator()(CT &one, CT &another)
 }
 
 /******************************************************************************/
-/* eslabMutation                                                              */
+/* eslabUniformRangeMutation                                                  */
 /******************************************************************************/
-
-template<class CT, class PT>
-eslabUniformRangeMutation<CT, PT>::eslabUniformRangeMutation(
-	const constrains_t &_constrains, double _min_rate, double _scale,
-	double _exponent, GenericEvolutionStats<CT, PT> &_stats) :
-
-	constrains(_constrains), min_rate(_min_rate), scale(_scale),
-	exponent(_exponent), stats(_stats)
-{
-	if (min_rate < 0 || min_rate > 1)
-		std::runtime_error("The mutation minimal rate is invalid.");
-}
 
 template<class CT, class PT>
 bool eslabUniformRangeMutation<CT, PT>::operator()(CT &chromosome)

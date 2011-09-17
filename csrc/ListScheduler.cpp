@@ -91,7 +91,9 @@ inline void ListScheduler::insert_into_pool(list_schedule_t &pool, tid_t id,
 	}
 
 	/* Insert! */
+#ifndef DETERMINISTIC_LIST_SCHEDULER
 	size_t go_back = Random::number(equal + 1);
 	for (size_t i = 0; i < go_back; i++) it--;
+#endif
 	pool.insert(it, id);
 }

@@ -25,8 +25,8 @@ class Processor
 	public:
 
 	Processor(double _frequency, double _voltage, unsigned long int _ngate) :
-		id(-1), type_count(0), frequency(_frequency), voltage(_voltage),
-		ngate(_ngate) {}
+		id(-1), frequency(_frequency), voltage(_voltage), ngate(_ngate),
+		type_count(0) {}
 
 	void add_type(unsigned long int nc, double ceff);
 

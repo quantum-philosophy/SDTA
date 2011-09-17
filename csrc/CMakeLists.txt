@@ -28,7 +28,14 @@ include_directories (
 	${VENDOR_DIR}
 )
 
-set(CMAKE_CXX_FLAGS "-DINT_RANK -O3")
+# Available definitions:
+#
+# * REAL_RANK - ranking in doubles.
+# * SHALLOW_CHECK - eliminate excessive checks.
+# * UNCONSTRAINED - the genes do not have any constrains.
+# * DETERMINISTIC_LIST_SCHEDULER - the LS chooses the first one between peers.
+#
+set(CMAKE_CXX_FLAGS "-Wall -Wno-sign-compare -O3 -DDETERMINISTIC_LIST_SCHEDULER")
 
 add_library(libeo STATIC IMPORTED)
 set_property(

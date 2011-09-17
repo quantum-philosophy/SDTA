@@ -20,9 +20,9 @@ rank_t constrain_t::random() const
 system_t::system_t(const std::string &filename)
 {
 	char c;
-	int i, j, tmp;
+	int tmp;
 	std::string line, name;
-	size_t rows, cols;
+	size_t i, j, rows, cols;
 
 	std::ifstream file(filename.c_str());
 	file.exceptions(std::fstream::failbit | std::fstream::badbit);
@@ -226,6 +226,8 @@ std::ostream &operator<< (std::ostream &o, const price_t &price)
 			<< price.lifetime << ", "
 			<< price.energy
 		<< ")";
+
+	return o;
 }
 
 std::ostream &operator<< (std::ostream &o, const constrain_t &constrain)
@@ -235,4 +237,6 @@ std::ostream &operator<< (std::ostream &o, const constrain_t &constrain)
 			<< constrain.min << ", "
 			<< constrain.max
 		<< "}";
+
+	return o;
 }

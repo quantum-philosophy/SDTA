@@ -96,7 +96,7 @@ price_t Graph::evaluate(Hotspot *hotspot) const
 
 	DynamicPower::compute(this, sampling_interval, dynamic_power);
 
-	unsigned int iterations = hotspot->solve(architecture,
+	(void)hotspot->solve(architecture,
 		dynamic_power, temperature, total_power);
 
 	double lifetime = Lifetime::predict(temperature, sampling_interval);
@@ -306,6 +306,7 @@ void Graph::calc_constrains()
 	for (tid_t id = 0; id < task_count; id++) {
 		task = tasks[id];
 
+#ifndef UNCONSTRAINED
 		bit_string_t dependents(task_count, false);
 		dependent_count = count_dependents(task, dependents);
 
@@ -320,6 +321,11 @@ void Graph::calc_constrains()
 		for (int i = 0; i < task_count; i++)
 			if (i != id && !dependents[i] && !dependencies[i])
 				constrains[id].peers.push_back(i);
+#else
+		constrains[id].peers.clear();
+		constrains[id].min = 0;
+		constrains[id].max = task_count - 1;
+#endif
 
 		/* Mapping constrains */
 		constrains[task_count + id].peers.clear();

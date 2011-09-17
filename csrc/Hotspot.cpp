@@ -62,9 +62,9 @@ void Hotspot::calc_coefficients(matrix_t &neg_a, vector_t &inv_c)
 
 void Hotspot::solve(const matrix_t &m_power, matrix_t &m_temperature)
 {
-	size_t i, j, k, it;
+	size_t i, j, k;
 	size_t processor_count, node_count, step_count, total;
-	double ts, am, tmp;
+	double ts, am;
 
 	RC_model_t *model;
 	block_model_t *block;

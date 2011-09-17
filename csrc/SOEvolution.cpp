@@ -79,7 +79,7 @@ SOEvolution::evaluate(const chromosome_t &chromosome)
 		/* Now, we can get the temperature profile, and the total power profile
 		 * including the leakage part.
 		 */
-		size_t iterations = hotspot->solve(graph->architecture,
+		(void)hotspot->solve(graph->architecture,
 			dynamic_power, temperature, total_power);
 
 		fitness = Lifetime::predict(temperature, sampling_interval);

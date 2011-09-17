@@ -67,8 +67,8 @@ typedef std::vector<bool> bit_string_t;
 
 struct constrain_t
 {
-	rank_t min;
 	rank_t max;
+	rank_t min;
 	std::vector<tid_t> peers;
 
 	constrain_t() : max(-1), min(-1) {}

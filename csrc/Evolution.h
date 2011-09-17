@@ -410,18 +410,24 @@ class eslabNPtsBitCrossover : public eoQuadOp<CT>
 template<class CT, class PT = eslabPop<CT> >
 class eslabUniformRangeMutation: public eoMonOp<CT>
 {
+	const constrains_t &constrains;
 	double min_rate;
 	double scale;
 	double exponent;
 
 	GenericEvolutionStats<CT, PT> &stats;
 
-	const constrains_t &constrains;
-
 	public:
 
-	eslabUniformRangeMutation(const constrains_t &constrains, double _min_rate,
-		double _scale, double _exponent, GenericEvolutionStats<CT, PT> &_stats);
+	eslabUniformRangeMutation(const constrains_t &_constrains, double _min_rate,
+		double _scale, double _exponent, GenericEvolutionStats<CT, PT> &_stats) :
+
+		constrains(_constrains), min_rate(_min_rate), scale(_scale),
+		exponent(_exponent), stats(_stats)
+	{
+		if (min_rate < 0 || min_rate > 1)
+			std::runtime_error("The mutation minimal rate is invalid.");
+	}
 
 	bool operator()(CT& chromosome);
 };

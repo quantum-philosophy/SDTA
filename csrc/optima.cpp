@@ -85,9 +85,6 @@ void optimize(const string &system_config, const string &genetic_config,
 		architecture = new ArchitectureBuilder(system.frequency,
 			system.voltage, system.ngate, system.nc, system.ceff);
 
-		size_t task_count = graph->size();
-		size_t processor_count = architecture->size();
-
 		/* In order to assign a reasonable deadline and perform
 		 * initial measurements to compare with, we:
 		 * - assign a dummy mapping,
@@ -149,7 +146,7 @@ void optimize(const string &system_config, const string &genetic_config,
 		}
 
 		if (tuning.verbose)
-			cout << graph << endl << architecture << endl
+			cout << graph << endl << architecture
 				<< "Start priority: " << print_t<rank_t>(priority) << endl;
 
 		hotspot = new Hotspot(floorplan_config, thermal_config);
