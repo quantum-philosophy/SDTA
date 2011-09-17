@@ -69,19 +69,29 @@ schedule_t ListScheduler::process(const Graph *graph, const priority_t &priority
 inline void ListScheduler::insert_into_pool(list_schedule_t &pool, tid_t id,
 	const priority_t &priority)
 {
-	bool found = false;
+	size_t equal = 0;
+	list_schedule_t::iterator it;
+	rank_t new_priority = priority[id], another_priority;
 
 	/* Find a place */
-	for (list_schedule_t::iterator it = pool.begin(); it != pool.end(); it++) {
-		/* Looking for a lower priority (larger number) */
-		if (priority[id] >= priority[*it]) continue;
+	for (it = pool.begin(); it != pool.end(); it++) {
+		another_priority = priority[*it];
 
-		/* Insert! */
-		pool.insert(it, id);
-		found = true;
-		break;
+		/* Looking for a lower priority (larger number) */
+		if (new_priority < another_priority) break;
+		else if (new_priority == another_priority) {
+			equal++;
+			continue;
+		}
+
+#ifndef SHALLOW_CHECK
+		if (equal > 0)
+			throw std::runtime_error("Something went wrong with the LS.");
+#endif
 	}
 
-	/* If we do not find, push back */
-	if (!found) pool.push_back(id);
+	/* Insert! */
+	size_t go_back = Random::number(equal + 1);
+	for (size_t i = 0; i < go_back; i++) it--;
+	pool.insert(it, id);
 }

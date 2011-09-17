@@ -140,17 +140,7 @@ GenericEvolution<CT, PT, ST>::GenericEvolution(Architecture *_architecture,
 	if (task_count == 0)
 		throw std::runtime_error("The graph is empty.");
 
-#ifdef EO_1_2_0
-	eo::log << eo::setlevel(eo::quiet);
-#endif
-
-	if (tuning.seed >= 0) rng.reseed(tuning.seed);
-	else {
-		time_t seed = time(NULL);
-		if (tuning.verbose)
-			std::cout << "Chosen seed: " << seed << std::endl;
-		rng.reseed(seed);
-	}
+	rng.reseed(tuning.seed);
 }
 
 template<class CT, class PT, class ST>

@@ -13,6 +13,11 @@ void Task::assign_processor(const Processor *processor)
 
 void Task::propagate_start(double time)
 {
+#ifndef SHALLOW_CHECK
+	if (!processor)
+		throw std::runtime_error("The task is not assigned to any processor.");
+#endif
+
 	/* We might already have an assigned start time with a larger value */
 	if (!(start < time)) return;
 
@@ -36,7 +41,7 @@ void Task::collect_asap(vector_t &asap, double time) const
 	if (!(my_asap < time)) return;
 
 	my_asap = time;
-	time = time + duration;
+	time = time + (duration ? duration : 1);
 
 	/* Shift data dependent tasks */
 	size_t size = children.size();
@@ -48,7 +53,7 @@ void Task::collect_alap(vector_t &alap, double time) const
 {
 	double &my_alap = alap[id];
 
-	time = time - duration;
+	time = time - (duration ? duration : 1);
 
 	/* We might already have an assigned ALAP time with a smaller value */
 	if (!(time < my_alap)) return;

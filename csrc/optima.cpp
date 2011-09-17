@@ -63,6 +63,13 @@ void optimize(const string &system_config, const string &genetic_config,
 	EvolutionTuning tuning(genetic_config);
 	tuning.update(tuning_stream);
 
+	if (tuning.seed < 0) {
+		tuning.seed = time(NULL);
+		if (tuning.verbose)
+			std::cout << "Chosen seed: " << tuning.seed << std::endl;
+	}
+	Random::seed(tuning.seed);
+
 	if (tuning.verbose)
 		cout << tuning << endl;
 
@@ -107,7 +114,7 @@ void optimize(const string &system_config, const string &genetic_config,
 		 *
 		 */
 		if (priority.empty())
-			priority = graph->calc_mobile_priority();
+			priority = graph->calc_priority();
 		else if (tuning.verbose)
 			cout << "Using external priority." << endl;
 

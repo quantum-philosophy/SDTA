@@ -149,6 +149,7 @@ void Graph::reorder_tasks(const schedule_t &order)
 	if (!constrains.empty()) {
 		constrains_t new_constrains(task_count);
 
+		/* TODO: reorder the peers as well */
 		for (i = 0; i < task_count; i++)
 			new_constrains[i] = constrains[order[i]];
 
@@ -252,7 +253,7 @@ vector_t Graph::calc_mobility() const
 	return mobility;
 }
 
-priority_t Graph::calc_mobile_priority() const
+priority_t Graph::calc_priority() const
 {
 	priority_t priority(task_count);
 	vector_t mobility = calc_mobility();
@@ -312,10 +313,16 @@ void Graph::calc_constrains()
 		dependency_count = count_dependencies(task, dependencies);
 
 		/* Scheduling constrains */
+		constrains[id].peers.clear();
 		constrains[id].min = dependency_count;
 		constrains[id].max = task_count - dependent_count - 1;
 
+		for (int i = 0; i < task_count; i++)
+			if (i != id && !dependents[i] && !dependencies[i])
+				constrains[id].peers.push_back(i);
+
 		/* Mapping constrains */
+		constrains[task_count + id].peers.clear();
 		constrains[task_count + id].min = 0;
 		constrains[task_count + id].max = processor_count - 1;
 	}

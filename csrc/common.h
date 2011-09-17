@@ -68,6 +68,7 @@ struct constrain_t
 {
 	rank_t min;
 	rank_t max;
+	std::vector<tid_t> peers;
 
 	constrain_t() : max(-1), min(-1) {}
 
@@ -198,6 +199,11 @@ class Comparator
 class Random
 {
 	public:
+
+	static void seed(int what)
+	{
+		srand(what);
+	}
 
 	static inline double uniform(double range = 1.0)
 	{
