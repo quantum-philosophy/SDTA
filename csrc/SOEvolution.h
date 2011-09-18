@@ -142,12 +142,12 @@ class eslabSOLocalSearchAlgorithm: public eslabAlgorithm<CT>
 	typedef CT chromosome_t;
 	typedef eoPop<chromosome_t> population_t;
 
-	eslabSOLocalSearchAlgorithm(Graph &graph,
+	eslabSOLocalSearchAlgorithm(const constrains_t &_constrains,
 		eoContinue<chromosome_t> &_continuator,
 		eoEvalFunc<chromosome_t> &_evaluate_one) :
 
 		eslabAlgorithm<CT>(_continuator, _evaluate_one),
-		constrains(graph.get_constrains()) {}
+		constrains(_constrains) {}
 
 	void operator()(population_t &population);
 

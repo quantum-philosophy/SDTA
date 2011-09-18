@@ -8,6 +8,9 @@ set (COMMON_SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/Processor.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Architecture.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Schedule.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Priority.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Mobility.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Constrain.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Evolution.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/SOEvolution.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/MOEvolution.cpp

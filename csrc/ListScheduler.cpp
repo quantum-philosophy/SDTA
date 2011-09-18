@@ -7,11 +7,11 @@
 #include "Task.h"
 #include "Schedule.h"
 
-Schedule ListScheduler::process(const Architecture *architecture,
-	const Graph *graph, const layout_t layout, const priority_t &priority)
+Schedule ListScheduler::process(const Architecture &architecture,
+	const Graph &graph, const layout_t &layout, const priority_t &priority)
 {
-	size_t task_count = graph->task_count;
-	size_t processor_count = architecture->processor_count;
+	size_t task_count = graph.task_count;
+	size_t processor_count = architecture.processor_count;
 
 #ifndef SHALLOW_CHECK
 	if (priority.size() != task_count)
@@ -21,8 +21,8 @@ Schedule ListScheduler::process(const Architecture *architecture,
 		throw std::runtime_error("The layout vector is bad.");
 #endif
 
-	const task_vector_t &tasks = graph->tasks;
-	const processor_vector_t &processors = architecture->processors;
+	const task_vector_t &tasks = graph.tasks;
+	const processor_vector_t &processors = architecture.processors;
 
 	bool empty;
 	tid_t id, cid;
@@ -65,7 +65,7 @@ Schedule ListScheduler::process(const Architecture *architecture,
 
 			/* Calculate its start time and duration */
 			start = std::max(processor_time[pid], task_time[id]);
-			duration = processor->calc_duration(task->type);
+			duration = processor->calc_duration(task->get_type());
 			finish = start + duration;
 
 			processor_time[pid] = finish;

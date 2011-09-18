@@ -7,6 +7,8 @@ class Task
 {
 	friend class Graph;
 	friend class Architecture;
+	friend class Constrain;
+	friend class Mobility;
 	friend class ListScheduler;
 
 	template<class CT, class PT, class ST>
@@ -24,8 +26,7 @@ class Task
 
 	public:
 
-	Task(unsigned int _type) :
-		id(-1), type(_type), ancestor(NULL), successor(NULL) {}
+	Task(unsigned int _type) : id(-1), type(_type) {}
 
 	inline void add_parent(Task *task)
 	{
@@ -45,6 +46,11 @@ class Task
 	inline bool is_root() const
 	{
 		return parents.empty();
+	}
+
+	inline unsigned int get_type() const
+	{
+		return type;
 	}
 };
 

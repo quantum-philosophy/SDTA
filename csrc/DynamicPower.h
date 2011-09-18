@@ -9,7 +9,7 @@ class DynamicPower
 
 	static void compute(const Architecture &architecture,
 		const Graph &graph, const Schedule &schedule,
-		double sampling_interval, matrix_t &power);
+		double sampling_interval, matrix_t &dynamic_power);
 };
 
 #endif

@@ -11,7 +11,7 @@
 
 void DynamicPower::compute(const Architecture &architecture,
 	const Graph &graph, const Schedule &schedule,
-	double sampling_interval, matrix_t &power);
+	double sampling_interval, matrix_t &dynamic_power)
 {
 	pid_t pid;
 	const processor_vector_t &processors = architecture.processors;
@@ -23,8 +23,9 @@ void DynamicPower::compute(const Architecture &architecture,
 	dynamic_power.resize(step_count, processor_count);
 	double *ptr = dynamic_power.pointer();
 
-	size_t task_count;
+	size_t i, j, task_count;
 	const Processor *processor;
+	double start, end, power;
 
 	/* Here we build a profile for the whole time period of the graph
 	 * including its actual duration (only tasks) plus the gap to

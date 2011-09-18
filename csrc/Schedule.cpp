@@ -1,13 +1,25 @@
+#include <iomanip>
+
 #include "Schedule.h"
 #include "Hotspot.h"
 #include "Architecture.h"
 #include "Processor.h"
 #include "Graph.h"
 #include "Task.h"
+#include "DynamicPower.h"
+#include "Lifetime.h"
+#include "Mobility.h"
+
+Schedule::Schedule(const Architecture &_architecture, const Graph &_graph) :
+
+	architecture(_architecture), graph(_graph),
+	processor_count(architecture.size()), task_count(graph.size()),
+	schedules(std::vector<LocalSchedule>(processor_count)),
+	mapping(mapping_t(task_count, -1)), duration(0) {}
 
 price_t Schedule::evaluate(const Hotspot &hotspot) const
 {
-	double sampling_interval = hotspot->sampling_interval();
+	double sampling_interval = hotspot.sampling_interval();
 
 	matrix_t dynamic_power, temperature, total_power;
 
@@ -29,39 +41,13 @@ price_t Schedule::evaluate(const Hotspot &hotspot) const
 	return price_t(lifetime, energy);
 }
 
-priority_t Schedule::calc_priority() const
-{
-	priority_t priority(task_count);
-	vector_t mobility = calc_mobility();
-
-#ifndef SHALLOW_CHECK
-	if (mobility.size() != task_count)
-		throw std::runtime_error("The mobility vector is invalid.");
-#endif
-
-	std::vector<std::pair<double, const Task *> > pairs(task_count);
-
-	for (size_t i = 0; i < task_count; i++) {
-		pairs[i].first = mobility[i];
-		pairs[i].second = graph->tasks[i];
-	}
-
-	std::stable_sort(pairs.begin(), pairs.end(),
-		Comparator<const Task *>::pair);
-
-	for (size_t i = 0; i < task_count; i++)
-		priority[pairs[i].second->id] = i;
-
-	return priority;
-}
-
 std::ostream &operator<< (std::ostream &o, const Schedule &schedule)
 {
 	size_t processor_count = schedule.size();
 
 	o
 		<< "Global schedule: " << std::endl
-		<< "  Duration: " << schedule.duration() << std::endl
+		<< "  Duration: " << schedule.get_duration() << std::endl
 		<< "  "
 			<< std::setw(4) << "id" << " ( "
 			<< std::setw(4) << "proc" << " : "

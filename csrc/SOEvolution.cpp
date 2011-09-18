@@ -3,6 +3,7 @@
 #include "Lifetime.h"
 #include "DynamicPower.h"
 #include "ListScheduler.h"
+#include "Schedule.h"
 
 /******************************************************************************/
 /* SOEvolution                                                                */
@@ -34,7 +35,8 @@ void SOEvolution::process(population_t &population,
 
 	checkpoint.reset();
 
-	eslabSOLocalSearchAlgorithm<chromosome_t> ls(graph, checkpoint, evaluator);
+	eslabSOLocalSearchAlgorithm<chromosome_t> ls(constrains,
+		checkpoint, evaluator);
 
 	ls(population);
 
@@ -51,7 +53,7 @@ SOEvolution::evaluate_schedule(const Schedule &schedule)
 {
 	fitness_t fitness;
 
-	if (schedule.get_duration() > deadline) {
+	if (schedule.get_duration() > graph.get_deadline()) {
 		stats.miss_deadline();
 
 		fitness = std::numeric_limits<fitness_t>::min();

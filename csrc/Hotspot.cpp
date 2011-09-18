@@ -32,7 +32,7 @@ Hotspot::~Hotspot()
 	free_flp(flp, FALSE);
 }
 
-void Hotspot::calc_coefficients(matrix_t &neg_a, vector_t &inv_c)
+void Hotspot::calc_coefficients(matrix_t &neg_a, vector_t &inv_c) const
 {
 	size_t i, j;
 	size_t node_count;
@@ -40,7 +40,9 @@ void Hotspot::calc_coefficients(matrix_t &neg_a, vector_t &inv_c)
 	RC_model_t *model;
 	block_model_t *block;
 
-	model = alloc_RC_model(&cfg, flp);
+	model = alloc_RC_model(
+		const_cast<thermal_config_t *>(&cfg),
+		const_cast<flp_t *>(flp));
 	block = model->block;
 
 	populate_R_model(model, flp);
@@ -60,7 +62,7 @@ void Hotspot::calc_coefficients(matrix_t &neg_a, vector_t &inv_c)
 	delete_RC_model(model);
 }
 
-void Hotspot::solve(const matrix_t &m_power, matrix_t &m_temperature)
+void Hotspot::solve(const matrix_t &m_power, matrix_t &m_temperature) const
 {
 	size_t i, j, k;
 	size_t processor_count, node_count, step_count, total;
@@ -76,7 +78,9 @@ void Hotspot::solve(const matrix_t &m_power, matrix_t &m_temperature)
 	if (processor_count != m_power.cols())
 		throw std::runtime_error("The floorplan does not match the given power.");
 
-	model = alloc_RC_model(&cfg, flp);
+	model = alloc_RC_model(
+		const_cast<thermal_config_t *>(&cfg),
+		const_cast<flp_t *>(flp));
 	block = model->block;
 
 	populate_R_model(model, flp);
@@ -196,7 +200,7 @@ void Hotspot::solve(const matrix_t &m_power, matrix_t &m_temperature)
 
 size_t Hotspot::solve(const Architecture &architecture,
 	const matrix_t &m_dynamic_power, matrix_t &m_temperature,
-	matrix_t &m_total_power, double tol, size_t maxit)
+	matrix_t &m_total_power, double tol, size_t maxit) const
 {
 	size_t i, j, k, it;
 	size_t processor_count, node_count, step_count, total;
@@ -212,7 +216,9 @@ size_t Hotspot::solve(const Architecture &architecture,
 	if (processor_count != m_dynamic_power.cols())
 		throw std::runtime_error("The floorplan does not match the given power.");
 
-	model = alloc_RC_model(&cfg, flp);
+	model = alloc_RC_model(
+		const_cast<thermal_config_t *>(&cfg),
+		const_cast<flp_t *>(flp));
 	block = model->block;
 
 	populate_R_model(model, flp);

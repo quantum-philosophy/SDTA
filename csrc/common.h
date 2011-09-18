@@ -83,6 +83,8 @@ struct price_t
 /* Constrains                                                                 */
 /******************************************************************************/
 
+class Constrain;
+
 struct constrain_t
 {
 	rank_t max;

@@ -2,6 +2,7 @@
 #include "Graph.h"
 #include "Lifetime.h"
 #include "DynamicPower.h"
+#include "Schedule.h"
 
 /******************************************************************************/
 /* eslabMOPop                                                                 */
@@ -78,7 +79,7 @@ MOEvolution::evaluate_schedule(const Schedule &schedule)
 {
 	fitness_t fitness;
 
-	if (schedule.get_duration() > deadline) {
+	if (schedule.get_duration() > graph.get_deadline()) {
 		stats.miss_deadline();
 
 		fitness[LIFETIME_OBJECTIVE] = std::numeric_limits<double>::min();

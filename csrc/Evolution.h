@@ -326,7 +326,7 @@ class Evolution
 	public:
 
 	virtual EvolutionStats &solve(const layout_t &layout,
-		const priority_t &priority);
+		const priority_t &priority) = 0;
 };
 
 template<class CT, class PT, class ST>
@@ -349,8 +349,10 @@ class GenericEvolution: public Evolution
 
 	protected:
 
-	void populate(population_t &population,
-		const layout_t &layout, const priority_t &priority);
+	void populate(population_t &population, const layout_t &layout,
+		const priority_t &priority);
+
+	fitness_t evaluate(const chromosome_t &chromosome);
 
 	virtual fitness_t evaluate_schedule(const Schedule &schedule) = 0;
 	virtual void evaluate_chromosome(chromosome_t &chromosome) = 0;

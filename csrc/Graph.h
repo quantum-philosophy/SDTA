@@ -34,11 +34,6 @@ class Graph
 		return deadline;
 	}
 
-	inline void finalize()
-	{
-		set_constrains();
-	}
-
 	inline size_t size() const
 	{
 		return task_count;
@@ -49,26 +44,12 @@ class Graph
 		return tasks[id];
 	}
 
-	inline const constrains_t &get_constrains() const
-	{
-		return constrains;
-	}
-
 	protected:
-
-	void set_constrains();
-
-	size_t count_dependents(const Task *task) const;
-	size_t count_dependents(const Task *task, bit_string_t &counted) const;
-	size_t count_dependencies(const Task *task) const;
-	size_t count_dependencies(const Task *task, bit_string_t &counted) const;
 
 	task_vector_t tasks;
 	size_t task_count;
 
 	double deadline;
-
-	constrains_t constrains;
 };
 
 class GraphBuilder: public Graph

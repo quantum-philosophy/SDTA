@@ -10,6 +10,7 @@
 #include "Task.h"
 #include "ListScheduler.h"
 #include "Hotspot.h"
+#include "Constrain.h"
 
 /******************************************************************************/
 /* eslabPop                                                                   */
@@ -135,7 +136,7 @@ GenericEvolution<CT, PT, ST>::GenericEvolution(
 	/* Constants */
 	tuning(_tuning), task_count(graph.task_count),
 	chromosome_length(task_count * (1 + (tuning.include_mapping ? 1 : 0))),
-	constrains(graph.get_constrains()),
+	constrains(Constrain::calculate(architecture, graph)),
 	sampling_interval(hotspot.sampling_interval())
 {
 	if (task_count == 0)
@@ -226,7 +227,8 @@ void GenericEvolution<CT, PT, ST>::populate(population_t &population,
 }
 
 template<class CT, class PT, class ST>
-fitness_t GenericEvolution<CT, PT, ST>::evaluate(const chromosome_t &chromosome)
+typename GenericEvolution<CT, PT, ST>::fitness_t
+GenericEvolution<CT, PT, ST>::evaluate(const chromosome_t &chromosome)
 {
 	if (tuning.include_mapping) {
 		eslabDualGeneEncoder<chromosome_t> dual(chromosome);
@@ -237,7 +239,7 @@ fitness_t GenericEvolution<CT, PT, ST>::evaluate(const chromosome_t &chromosome)
 		return evaluate_schedule(schedule);
 	}
 	else {
-		Scheduel schedule = ListScheduler::process(architecture,
+		Schedule schedule = ListScheduler::process(architecture,
 			graph, layout /* use the default one */, chromosome);
 
 		return evaluate_schedule(schedule);

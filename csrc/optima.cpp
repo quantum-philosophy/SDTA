@@ -103,7 +103,7 @@ void optimize(const string &system_config, const string &genetic_config,
 		 *
 		 */
 		if (mapping.empty())
-			mapping = Layout::calculate(architecture, graph);
+			mapping = Layout::calculate(*architecture, *graph);
 		else if (tuning.verbose)
 			cout << "Using external mapping." << endl;
 
@@ -111,14 +111,14 @@ void optimize(const string &system_config, const string &genetic_config,
 		 *
 		 */
 		if (priority.empty())
-			priority = Priority::calculate(architecture, graph);
+			priority = Priority::calculate(*architecture, *graph, mapping);
 		else if (tuning.verbose)
 			cout << "Using external priority." << endl;
 
 		/* 3. Compute a schedule.
 		 *
 		 */
-		global_schedule_t schedule = ListScheduler::process(
+		Schedule schedule = ListScheduler::process(
 			*architecture, *graph, mapping, priority);
 
 		/* 4. Assign a deadline.
@@ -141,7 +141,8 @@ void optimize(const string &system_config, const string &genetic_config,
 				<< "Start priority: " << print_t<rank_t>(priority) << endl
 				<< "Start schedule:" << endl << schedule << endl;
 
-			const constrains_t &constrains = graph->get_constrains();
+			const constrains_t constrains =
+				Constrain::calculate(*architecture, *graph);
 
 			size_t out = 0, task_count = graph->size();
 			for (size_t i = 0; i < task_count; i++)
@@ -159,7 +160,7 @@ void optimize(const string &system_config, const string &genetic_config,
 		/* 6. Obtain the initial measurements to compare with.
 		 *
 		 */
-		price_t price = schedule.evaluate(hotspot);
+		price_t price = schedule.evaluate(*hotspot);
 
 		if (tuning.verbose)
 			cout << "Initial lifetime: "

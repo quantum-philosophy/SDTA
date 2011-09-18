@@ -33,11 +33,7 @@ class Schedule
 
 	public:
 
-	Schedule(const Architecture &_architecture, const Graph &_graph) :
-		architecture(_architecture), graph(_graph),
-		processor_count(architecture->size()), task_count(graph->size()),
-		schedules(std::vector<LocalSchedule>(processor_count)),
-		mapping(mapping_t(task_count), -1), duration(0) {}
+	Schedule(const Architecture &_architecture, const Graph &_graph);
 
 	inline size_t size() const
 	{
@@ -69,4 +65,6 @@ class Schedule
 	priority_t calc_priority() const;
 };
 
-std::ostream &operator<< (std::ostream &o, const global_schedule_t &schedule);
+std::ostream &operator<< (std::ostream &o, const Schedule &schedule);
+
+#endif

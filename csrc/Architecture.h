@@ -20,8 +20,6 @@ class Architecture
 	Architecture() : processor_count(0) {}
 
 	void add_processor(Processor *processor);
-	void assign_tasks(task_vector_t &tasks, const mapping_t &mapping) const;
-	void order_tasks(task_vector_t &tasks, const std::vector<tid_t> &order) const;
 
 	inline size_t size() const
 	{
@@ -31,10 +29,6 @@ class Architecture
 	inline const Processor *operator[] (pid_t id) const
 	{
 		return processors[id];
-	}
-
-	inline void finalize()
-	{
 	}
 
 	protected:

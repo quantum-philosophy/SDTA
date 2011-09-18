@@ -11,8 +11,8 @@ class ListScheduler
 
 	ListScheduler() {}
 
-	static global_schedule_t process(const Architecture *architecture,
-		const Graph *graph, const layout_t layout, const priority_t &priority);
+	static Schedule process(const Architecture &architecture,
+		const Graph &graph, const layout_t &layout, const priority_t &priority);
 
 	private:
 
