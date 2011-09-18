@@ -125,6 +125,18 @@ void optimize(const string &system_config, const string &genetic_config,
 
 		graph->assign_schedule(schedule);
 
+		if (tuning.verbose) {
+			const constrains_t &constrains = graph->get_constrains();
+
+			size_t out = 0, task_count = graph->size();
+			for (size_t i = 0; i < task_count; i++)
+				if (priority[i] < constrains[i].min ||
+					priority[i] > constrains[i].max) out++;
+
+			if (out > 0)
+				cout << "Out of range priorities: " << out << endl;
+		}
+
 		/* 4. Assign a deadline.
 		 *
 		 */

@@ -35,7 +35,7 @@ include_directories (
 # * UNCONSTRAINED - the genes do not have any constrains.
 # * DETERMINISTIC_LIST_SCHEDULER - the LS chooses the first one between peers.
 #
-set(CMAKE_CXX_FLAGS "-Wall -Wno-sign-compare -O3 -DDETERMINISTIC_LIST_SCHEDULER")
+set(CMAKE_CXX_FLAGS "-Wall -Wno-sign-compare -O3")
 
 add_library(libeo STATIC IMPORTED)
 set_property(

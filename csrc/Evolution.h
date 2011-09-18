@@ -389,10 +389,8 @@ class eslabTransform: public eoTransform<CT>
 };
 
 template<class CT, class PT = eslabPop<CT> >
-class eslabNPtsBitCrossover : public eoQuadOp<CT>
+class eslabCrossover: public eoQuadOp<CT>
 {
-	size_t points;
-
 	double min_rate;
 	double scale;
 	double exponent;
@@ -401,35 +399,135 @@ class eslabNPtsBitCrossover : public eoQuadOp<CT>
 
 	public:
 
-	eslabNPtsBitCrossover(size_t _points, double _min_rate, double _scale,
-		double _exponent, GenericEvolutionStats<CT, PT> &_stats);
+	eslabCrossover(double _min_rate, double _scale, double _exponent,
+		GenericEvolutionStats<CT, PT> &_stats) :
 
-	bool operator()(CT &one, CT &another);
+		min_rate(_min_rate), scale(_scale), exponent(_exponent), stats(_stats)
+	{
+		if (min_rate < 0 || min_rate > 1)
+			std::runtime_error("The mutation minimal rate is invalid.");
+	}
+
+	bool operator()(CT &one, CT &another)
+	{
+		double rate = stats.mutation_rate = std::max(min_rate,
+			scale * std::exp(exponent * (double)stats.generations));
+
+		return perform(one, another, rate);
+	}
+
+	protected:
+
+	virtual bool perform(CT &one, CT &another, double rate) = 0;
 };
 
 template<class CT, class PT = eslabPop<CT> >
-class eslabUniformRangeMutation: public eoMonOp<CT>
+class eslabNPtsBitCrossover: public eslabCrossover<CT, PT>
+{
+	size_t points;
+
+	public:
+
+	eslabNPtsBitCrossover(size_t _points, double _min_rate, double _scale,
+		double _exponent, GenericEvolutionStats<CT, PT> &_stats) :
+
+		eslabCrossover<CT, PT>(_min_rate, _scale, _exponent, _stats),
+		points(_points)
+	{
+		if (points < 1)
+			std::runtime_error("The number of crossover points is invalid.");
+	}
+
+	protected:
+
+	virtual bool perform(CT &one, CT &another, double rate);
+};
+
+template<class CT, class PT = eslabPop<CT> >
+class eslabPeerCrossover: public eslabCrossover<CT, PT>
 {
 	const constrains_t &constrains;
+
+	public:
+
+	eslabPeerCrossover(const constrains_t &_constrains, double _min_rate,
+		double _scale, double _exponent, GenericEvolutionStats<CT, PT> &_stats) :
+
+		eslabCrossover<CT, PT>(_min_rate, _scale, _exponent, _stats),
+		constrains(_constrains) {}
+
+	protected:
+
+	bool perform(CT &one, CT &another, double rate);
+};
+
+template<class CT, class PT = eslabPop<CT> >
+class eslabMutation: public eoMonOp<CT>
+{
 	double min_rate;
 	double scale;
 	double exponent;
 
 	GenericEvolutionStats<CT, PT> &stats;
+
+	public:
+
+	eslabMutation(double _min_rate, double _scale, double _exponent,
+		GenericEvolutionStats<CT, PT> &_stats) :
+
+		min_rate(_min_rate), scale(_scale), exponent(_exponent), stats(_stats)
+	{
+		if (min_rate < 0 || min_rate > 1)
+			std::runtime_error("The mutation minimal rate is invalid.");
+	}
+
+	bool operator()(CT &chromosome)
+	{
+		double rate = stats.mutation_rate = std::max(min_rate,
+			scale * std::exp(exponent * (double)stats.generations));
+
+		return perform(chromosome, rate);
+	}
+
+	protected:
+
+	virtual bool perform(CT &chromosome, double rate) = 0;
+};
+
+template<class CT, class PT = eslabPop<CT> >
+class eslabUniformRangeMutation: public eslabMutation<CT, PT>
+{
+	const constrains_t &constrains;
 
 	public:
 
 	eslabUniformRangeMutation(const constrains_t &_constrains, double _min_rate,
 		double _scale, double _exponent, GenericEvolutionStats<CT, PT> &_stats) :
 
-		constrains(_constrains), min_rate(_min_rate), scale(_scale),
-		exponent(_exponent), stats(_stats)
-	{
-		if (min_rate < 0 || min_rate > 1)
-			std::runtime_error("The mutation minimal rate is invalid.");
-	}
+		eslabMutation<CT, PT>(_min_rate, _scale, _exponent, _stats),
+		constrains(_constrains) {}
 
-	bool operator()(CT& chromosome);
+	protected:
+
+	bool perform(CT &chromosome, double rate);
+};
+
+template<class CT, class PT = eslabPop<CT> >
+class eslabPeerMutation: public eslabMutation<CT, PT>
+{
+	const constrains_t &constrains;
+
+	public:
+
+	eslabPeerMutation(const constrains_t &_constrains, double _min_rate,
+		double _scale, double _exponent, GenericEvolutionStats<CT, PT> &_stats) :
+
+		eslabMutation<CT, PT>(_min_rate, _scale, _exponent, _stats),
+		constrains(_constrains) {}
+
+	protected:
+
+	bool perform(CT &chromosome, double rate);
 };
 
 template<class CT>

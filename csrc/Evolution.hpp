@@ -261,36 +261,18 @@ void eslabTransform<CT>::operator()(population_t &population)
 /******************************************************************************/
 
 template<class CT, class PT>
-eslabNPtsBitCrossover<CT, PT>::eslabNPtsBitCrossover(size_t _points,
-	double _min_rate, double _scale, double _exponent,
-	GenericEvolutionStats<CT, PT> &_stats) :
-
-	points(_points), min_rate(_min_rate), scale(_scale),
-	exponent(_exponent), stats(_stats)
+bool eslabNPtsBitCrossover<CT, PT>::perform(CT &one, CT &another, double rate)
 {
-	if (points < 1)
-		std::runtime_error("The number of crossover points is invalid.");
-
-	if (min_rate < 0 || min_rate > 1)
-		std::runtime_error("The crossover minimal rate is invalid.");
-}
-
-template<class CT, class PT>
-bool eslabNPtsBitCrossover<CT, PT>::operator()(CT &one, CT &another)
-{
-	double rate;
-
-	rate = stats.crossover_rate = std::max(min_rate,
-		scale * std::exp(exponent * (double)stats.generations));
-
 	if (!rng.flip(rate)) return false;
 
 	size_t i;
 	size_t size = one.size();
 	size_t select_points = points;
 
+#ifndef SHALLOW_CHECK
 	if (size != another.size())
 		throw std::runtime_error("The chromosomes have different size.");
+#endif
 
 	std::vector<bool> turn_points(size, false);
 
@@ -320,17 +302,47 @@ bool eslabNPtsBitCrossover<CT, PT>::operator()(CT &one, CT &another)
 }
 
 /******************************************************************************/
+/* eslabPeerCrossover                                                         */
+/******************************************************************************/
+
+template<class CT, class PT>
+bool eslabPeerCrossover<CT, PT>::perform(CT &one, CT &another, double rate)
+{
+	if (!rng.flip(rate)) return false;
+
+	size_t first, peer, peer_count, size = one.size();
+
+#ifndef SHALLOW_CHECK
+	if (size != another.size())
+		throw std::runtime_error("The chromosomes have different size.");
+#endif
+
+	first = eo::random(size);
+	peer_count = constrains[first].peers.size();
+
+	rank_t rank;
+
+	rank = one[first];
+	one[first] = another[first];
+	another[first] = rank;
+
+	for (size_t i = 0; i < peer_count; i++) {
+		peer = constrains[first].peers[i];
+		rank = one[peer];
+		one[peer] = another[peer];
+		another[peer] = rank;
+	}
+
+	return true;
+}
+
+/******************************************************************************/
 /* eslabUniformRangeMutation                                                  */
 /******************************************************************************/
 
 template<class CT, class PT>
-bool eslabUniformRangeMutation<CT, PT>::operator()(CT &chromosome)
+bool eslabUniformRangeMutation<CT, PT>::perform(CT &chromosome, double rate)
 {
-	double rate;
-
-	rate = stats.mutation_rate = std::max(min_rate,
-		scale * std::exp(exponent * (double)stats.generations));
-
 	size_t size = chromosome.size();
 	bool changed = false;
 
@@ -341,6 +353,31 @@ bool eslabUniformRangeMutation<CT, PT>::operator()(CT &chromosome)
 		}
 
 	return changed;
+}
+
+/******************************************************************************/
+/* eslabPeerMutation                                                          */
+/******************************************************************************/
+
+template<class CT, class PT>
+bool eslabPeerMutation<CT, PT>::perform(CT &chromosome, double rate)
+{
+	if (!rng.flip(rate)) return false;
+
+	size_t index, peer_count, size = chromosome.size();
+
+	do {
+		index = eo::random(size);
+		peer_count = constrains[index].peers.size();
+	} while (peer_count == 0);
+
+	size_t peer = eo::random(peer_count);
+
+	rank_t rank = chromosome[peer];
+	chromosome[peer] = chromosome[index];
+	chromosome[index] = rank;
+
+	return true;
 }
 
 /******************************************************************************/
