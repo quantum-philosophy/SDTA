@@ -6,6 +6,7 @@
 class Architecture
 {
 	friend class Graph;
+	friend class ListScheduler;
 
 	template<class CT, class PT, class ST>
 	friend class GenericEvolution;

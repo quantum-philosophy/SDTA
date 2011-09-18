@@ -63,6 +63,35 @@ class layout_t: public std::vector<rank_t>
 typedef std::vector<rank_t> layout_t;
 #endif
 
+struct ScheduleItem
+{
+	tid_t id;
+	double start;
+	double duration;
+
+	ScheduleItem(tid_t _id, double _start, double _duration) :
+		id(_id), start(_start), duration(_duration) {}
+};
+
+typedef std::vector<ScheduleItem> Schedule;
+
+class GlobalSchedule
+{
+	const size_t processor_count;
+	std::vector<Schedule> schedules;
+
+	public:
+
+	GlobalSchedule(size_t _processor_count) :
+		processor_count(_processor_count),
+		schedules(std::vector<Schedule>(_processor_count)) {}
+
+	inline void append(pid_t pid, tid_t tid, double start, double duration)
+	{
+		schedules[pid].push_back(ScheduleItem(tid, start, duration));
+	}
+};
+
 typedef std::vector<bool> bit_string_t;
 
 struct constrain_t
