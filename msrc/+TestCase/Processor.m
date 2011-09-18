@@ -42,6 +42,10 @@ classdef Processor < handle
       pe.typeCount = pe.typeCount + 1;
     end
 
+    function duration = calculateDuration(pe, type)
+      duration = pe.nc(type) / pe.frequency;
+    end
+
     function inspect(pe)
       fprintf('Processor: %s %d\n', pe.name, pe.id);
       fprintf('  Frequency: %.2f GHz\n', pe.frequency / 1e9);

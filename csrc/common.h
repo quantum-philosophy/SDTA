@@ -77,6 +77,8 @@ typedef std::vector<ScheduleItem> Schedule;
 
 class GlobalSchedule
 {
+	friend std::ostream &operator<< (std::ostream &o, const GlobalSchedule &schedule);
+
 	const size_t processor_count;
 	std::vector<Schedule> schedules;
 
@@ -86,11 +88,34 @@ class GlobalSchedule
 		processor_count(_processor_count),
 		schedules(std::vector<Schedule>(_processor_count)) {}
 
+	inline size_t size() const { return processor_count; }
+	inline const Schedule &operator[](pid_t pid) const { return schedules[pid]; }
+
 	inline void append(pid_t pid, tid_t tid, double start, double duration)
 	{
 		schedules[pid].push_back(ScheduleItem(tid, start, duration));
 	}
+
+	inline double duration() const
+	{
+		double duration = 0;
+		size_t task_count;
+
+		for (pid_t pid = 0; pid < processor_count; pid++) {
+			task_count = schedules[pid].size();
+
+			if (task_count == 0) continue;
+
+			const ScheduleItem &item = schedules[pid][task_count - 1];
+
+			duration = std::max(duration, item.start + item.duration);
+		}
+
+		return duration;
+	}
 };
+
+std::ostream &operator<< (std::ostream &o, const GlobalSchedule &schedule);
 
 typedef std::vector<bool> bit_string_t;
 

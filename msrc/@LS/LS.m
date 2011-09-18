@@ -77,5 +77,103 @@ classdef LS < handle
 
       graph.assignSchedule(schedule, priority);
     end
+
+    function schedule = process(processors, graph, layout, priority)
+      tasks = graph.tasks;
+
+      taskCount = length(tasks);
+      processorCount = length(processors);
+
+      processorTime = zeros(1, processorCount);
+      taskTime = zeros(1, taskCount);
+
+      % Obtain roots and sort them according to their priority
+      ids = graph.getRootIds();
+      [ dummy, I ] = sort(priority(ids));
+      ids = ids(I);
+
+      pool = cell(1, processorCount);
+
+      processed = zeros(1, taskCount);
+      scheduled = zeros(1, taskCount);
+
+      for id = ids
+        pid = layout(id);
+        pool{pid} = [ pool{pid}, id ];
+        processed(id) = 1;
+      end
+
+      schedule = cell(1, processorCount);
+
+      while (true)
+        empty = true;
+
+        for pid = 1:processorCount
+          if isempty(pool{pid}), continue; end
+          empty = false;
+
+          processorPool = pool{pid};
+          id = processorPool(1);
+          pool{pid} = processorPool(2:end);
+
+          processor = processors{pid};
+          task = tasks{id};
+
+          start = max(processorTime(pid), taskTime(id));
+          duration = processor.calculateDuration(task.type);
+          finish = start + duration;
+
+          processorTime(pid) = finish;
+
+          schedule{pid} = [ schedule{pid}; id, start, duration ];
+          scheduled(id) = true;
+
+          % Append new tasks, but only ready ones, and ensure absence
+          % of repetitions
+          for child = task.children
+            child = child{1};
+            cid = child.id;
+
+            taskTime(cid) = max(taskTime(cid), finish);
+
+            % Do not do again
+            if processed(cid), continue; end
+
+            % All parents should be scheduled
+            ready = true;
+            for parent = child.parents
+              parent = parent{1};
+              if ~scheduled(parent.id)
+                ready = false;
+                break;
+              end
+            end
+
+            % Is it ready or should we wait for another parent?
+            if ~ready, continue; end
+
+            % We need to insert it in the right place in order to keep
+            % the pool sorted by priority
+            index = 1;
+            childPriority = priority(cid);
+            childPool = pool{layout(cid)};
+            for eid = childPool
+              if priority(eid) > childPriority, break; end
+              index = index + 1;
+            end
+            if index > length(childPool), childPool(end + 1) = cid;
+            elseif index == 1, childPool = [ cid, childPool ];
+            else childPool = [ childPool(1:index - 1), cid, childPool(index:end) ];
+            end
+            pool{layout(cid)} = childPool;
+
+            % We are done with it
+            processed(cid) = 1;
+          end
+        end
+
+        if empty, break; end
+      end
+    end
   end
 end

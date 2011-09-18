@@ -88,7 +88,6 @@ std::ostream &operator<< (std::ostream &o, const Task *task)
 
 	o	<< std::setw(4) << task->id << " ( "
 		<< std::setw(4) << (task->processor ? task->processor->id : -1) << " : "
-		<< std::setw(4) << task->type << " : "
 		<< std::setw(8) << task->start << " : "
 		<< std::setw(8) << task->duration << " ) -> [ ";
 

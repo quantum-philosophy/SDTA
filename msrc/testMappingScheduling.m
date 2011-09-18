@@ -26,3 +26,9 @@ graph.assignDeadline(Constants.deadlineFactor * graph.duration);
 
 graph.inspect();
 graph.draw();
+
+schedule = LS.process(pes, graph, mapping, graph.priority);
+graph.assignDistributedSchedule(schedule);
+
+graph.inspect();
+graph.draw();

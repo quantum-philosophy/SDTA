@@ -60,7 +60,6 @@ GlobalSchedule ListScheduler::process(const Architecture *architecture,
 			id = pull(pool[pid], priority);
 			task = tasks[id];
 
-			pid = layout[id];
 			processor = processors[pid];
 
 			/* Calculate its start time and duration */

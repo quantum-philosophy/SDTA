@@ -162,6 +162,11 @@ void optimize(const string &system_config, const string &genetic_config,
 				cout << "Out of range priorities: " << out << endl;
 
 			cout << endl;
+
+			GlobalSchedule s = ListScheduler::process(architecture,
+				graph, mapping, priority);
+
+			cout << s << endl;
 		}
 
 		hotspot = new Hotspot(floorplan_config, thermal_config);

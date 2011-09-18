@@ -9,7 +9,7 @@ class ListScheduler
 
 	ListScheduler() {}
 
-	GlobalSchedule process(const Architecture *architecture,
+	static GlobalSchedule process(const Architecture *architecture,
 		const Graph *graph, const layout_t layout, const priority_t &priority);
 
 	static schedule_t process(const Graph *graph, const priority_t &priority);

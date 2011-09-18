@@ -48,6 +48,17 @@ classdef Task < handle
       task.successor = [];
     end
 
+    function shift(task, start, duration)
+      task.asap = -Inf;
+      task.alap = Inf;
+      task.mobility = 0;
+      task.ancestor = [];
+      task.successor = [];
+
+      task.start = start;
+      task.duration = duration;
+    end
+
     function resetMapping(task)
       task.start = -Inf;
       task.ancestor = [];

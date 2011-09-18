@@ -387,7 +387,6 @@ std::ostream &operator<< (std::ostream &o, const Graph *graph)
 	o	<< "  "
 		<< std::setw(4) << "id" << " ( "
 		<< std::setw(4) << "proc" << " : "
-		<< std::setw(4) << "type" << " : "
 		<< std::setw(8) << "start" << " : "
 		<< std::setw(8) << "duration" << " ) -> [ children ]" << std::endl;
 

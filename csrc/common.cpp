@@ -240,3 +240,34 @@ std::ostream &operator<< (std::ostream &o, const constrain_t &constrain)
 
 	return o;
 }
+
+std::ostream &operator<< (std::ostream &o, const GlobalSchedule &global_schedule)
+{
+	size_t processor_count = global_schedule.size();
+
+	o
+		<< "Global schedule: " << std::endl
+		<< "  Duration: " << global_schedule.duration() << std::endl
+		<< "  "
+			<< std::setw(4) << "id" << " ( "
+			<< std::setw(4) << "proc" << " : "
+			<< std::setw(8) << "start" << " : "
+			<< std::setw(8) << "duration" << " )" << std::endl;
+
+	for (pid_t pid = 0; pid < processor_count; pid++) {
+		const Schedule &schedule = global_schedule[pid];
+		size_t task_count = schedule.size();
+
+		for (size_t i = 0; i < task_count; i++) {
+			const ScheduleItem &item = schedule[i];
+
+			o	<< "  "
+				<< std::setw(4) << item.id << " ( "
+				<< std::setw(4) << pid << " : "
+				<< std::setw(8) << item.start << " : "
+				<< std::setw(8) << item.duration << " )" << std::endl;
+		}
+	}
+
+	return o;
+}

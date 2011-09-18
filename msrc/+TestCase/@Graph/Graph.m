@@ -110,6 +110,31 @@ classdef Graph < handle
       tasks = graph.tasks(ids);
     end
 
+    function assignDistributedSchedule(graph, schedule)
+      graph.schedule = [];
+      graph.priority = [];
+      graph.isScheduled = true;
+
+      graph.ordinalSchedule = zeros(1, length(graph.tasks));
+
+      for i = 1:length(schedule)
+        localSchedule = schedule{i};
+        for j = 1:size(localSchedule, 1)
+          id = localSchedule(j, 1);
+          start = localSchedule(j, 2);
+          duration = localSchedule(j, 3);
+          task = graph.tasks{id};
+
+          graph.ordinalSchedule(id) = j;
+
+          task.shift(start, duration);
+        end
+      end
+
+      % Assign the actual duration
+      graph.duration = graph.calculateDuration();
+    end
+
     function assignSchedule(graph, schedule, priority)
       if ~graph.isMapped, error('Should be mapped'); end
       if nargin < 3, [ dummy, priority ] = sort(schedule); end
