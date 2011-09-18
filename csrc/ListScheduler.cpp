@@ -24,15 +24,14 @@ schedule_t ListScheduler::process(const Graph *graph, const priority_t &priority
 	 */
 	for (id = 0; id < task_count; id++)
 		if (graph->tasks[id]->is_root()) {
-			insert_into_pool(pool, id, priority);
+			push(pool, priority, id);
 			processed[id] = true;
 		}
 
 	while (!pool.empty()) {
 		/* The pool is always sorted by priority */
-		id = pool.front();
+		id = pull(pool, priority);
 		Task *task = graph->tasks[id];
-		pool.pop_front();
 
 		/* Append to the schedule */
 		schedule[index++] = id;
@@ -58,7 +57,7 @@ schedule_t ListScheduler::process(const Graph *graph, const priority_t &priority
 				}
 			if (!ready) continue;
 
-			insert_into_pool(pool, child->id, priority);
+			push(pool, priority, child->id);
 			processed[child->id] = true;
 		}
 	}
@@ -66,34 +65,57 @@ schedule_t ListScheduler::process(const Graph *graph, const priority_t &priority
 	return schedule;
 }
 
-inline void ListScheduler::insert_into_pool(list_schedule_t &pool, tid_t id,
-	const priority_t &priority)
+inline void ListScheduler::push(list_schedule_t &pool, const priority_t &priority, tid_t id)
 {
-	size_t equal = 0;
 	list_schedule_t::iterator it;
-	rank_t new_priority = priority[id], another_priority;
+	rank_t new_priority = priority[id];
 
-	/* Find a place */
-	for (it = pool.begin(); it != pool.end(); it++) {
-		another_priority = priority[*it];
+	for (it = pool.begin(); it != pool.end(); it++)
+		if (new_priority < priority[*it]) break;
 
-		/* Looking for a lower priority (larger number) */
-		if (new_priority < another_priority) break;
-		else if (new_priority == another_priority) {
-			equal++;
+	pool.insert(it, id);
+}
+
+inline tid_t ListScheduler::pull(list_schedule_t &pool, const priority_t &priority)
+{
+#ifndef SHALLOW_CHECK
+	if (pool.empty())
+		throw std::runtime_error("The pool is empty.");
+#endif
+
+	tid_t id;
+
+	/* The first one always has the highest priority, although,
+	 * it might not be alone.
+	 */
+	list_schedule_t::iterator it = pool.begin();
+
+#ifndef DETERMINISTIC_LIST_SCHEDULER
+	size_t peers, i, choice;
+	rank_t highest_priority = priority[*it];
+
+	for (it++, peers = 0; it != pool.end(); it++) {
+		if (priority[*it] == highest_priority) {
+			peers++;
 			continue;
 		}
+		else if (priority[*it] > highest_priority) break;
 
 #ifndef SHALLOW_CHECK
-		if (equal > 0)
-			throw std::runtime_error("Something went wrong with the LS.");
+		throw std::runtime_error("The pool is broken.");
 #endif
 	}
 
-	/* Insert! */
-#ifndef DETERMINISTIC_LIST_SCHEDULER
-	size_t go_back = Random::number(equal + 1);
-	for (size_t i = 0; i < go_back; i++) it--;
+	it = pool.begin();
+
+	if (peers > 0) {
+		choice = Random::number(peers + 1);
+		for (i = 0; i < choice; i++) it++;
+	}
 #endif
-	pool.insert(it, id);
+
+	id = *it;
+	pool.erase(it);
+
+	return id;
 }

@@ -158,7 +158,7 @@ void parse(istream &in, ostream &out)
 	vector<unsigned long int> ngate;
 
 	/* Types */
-	size_t type_count;
+	size_t type_count = 0;
 	vector<vector<double> > ceff;
 	vector<vector<unsigned long int> > nc;
 

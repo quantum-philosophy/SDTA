@@ -397,9 +397,6 @@ std::ostream &operator<< (std::ostream &o, const Graph *graph)
 	o << "  Rank constrains: "
 		<< print_t<constrain_t>(graph->constrains) << std::endl;
 
-	if (!graph->schedule.empty())
-		o << "  Schedule: " << print_t<int>(graph->schedule);
-
 	return o;
 }
 

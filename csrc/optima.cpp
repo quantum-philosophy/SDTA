@@ -125,18 +125,6 @@ void optimize(const string &system_config, const string &genetic_config,
 
 		graph->assign_schedule(schedule);
 
-		if (tuning.verbose) {
-			const constrains_t &constrains = graph->get_constrains();
-
-			size_t out = 0, task_count = graph->size();
-			for (size_t i = 0; i < task_count; i++)
-				if (priority[i] < constrains[i].min ||
-					priority[i] > constrains[i].max) out++;
-
-			if (out > 0)
-				cout << "Out of range priorities: " << out << endl;
-		}
-
 		/* 4. Assign a deadline.
 		 *
 		 */
@@ -157,9 +145,24 @@ void optimize(const string &system_config, const string &genetic_config,
 			graph->reorder_tasks(schedule);
 		}
 
-		if (tuning.verbose)
-			cout << graph << endl << architecture
-				<< "Start priority: " << print_t<rank_t>(priority) << endl;
+		if (tuning.verbose) {
+			cout << graph << endl << architecture << endl
+				<< "Start mapping: " << print_t<pid_t>(mapping) << endl
+				<< "Start priority: " << print_t<rank_t>(priority) << endl
+				<< "Start schedule: " << print_t<tid_t>(schedule) << endl;
+
+			const constrains_t &constrains = graph->get_constrains();
+
+			size_t out = 0, task_count = graph->size();
+			for (size_t i = 0; i < task_count; i++)
+				if (priority[i] < constrains[i].min ||
+					priority[i] > constrains[i].max) out++;
+
+			if (out > 0)
+				cout << "Out of range priorities: " << out << endl;
+
+			cout << endl;
+		}
 
 		hotspot = new Hotspot(floorplan_config, thermal_config);
 

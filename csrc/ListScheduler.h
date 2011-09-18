@@ -13,8 +13,8 @@ class ListScheduler
 
 	private:
 
-	static inline void insert_into_pool(list_schedule_t &pool, tid_t id,
-		const priority_t &priority);
+	static inline void push(list_schedule_t &pool, const priority_t &priority, tid_t id);
+	static inline tid_t pull(list_schedule_t &pool, const priority_t &priority);
 };
 
 #endif
