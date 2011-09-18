@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "Priority.h"
 #include "Architecture.h"
 #include "Graph.h"
