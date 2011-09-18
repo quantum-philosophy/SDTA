@@ -325,8 +325,8 @@ class Evolution
 {
 	public:
 
-	virtual EvolutionStats &solve(const priority_t &priority,
-		const layout_t &layout = layout_t()) = 0;
+	virtual EvolutionStats &solve(const layout_t &layout,
+		const priority_t &priority);
 };
 
 template<class CT, class PT, class ST>
@@ -339,27 +339,29 @@ class GenericEvolution: public Evolution
 	typedef ST stats_t;
 	typedef typename chromosome_t::Fitness fitness_t;
 
-	GenericEvolution(Architecture *_architecture, Graph *_graph, Hotspot *_hotspot,
+	GenericEvolution(const Architecture &_architecture,
+		const Graph &_graph, const Hotspot &_hotspot,
 		const EvolutionTuning &_tuning = EvolutionTuning());
 
 	void update(std::istream &stream);
 
-	stats_t &solve(const priority_t &priority,
-		const layout_t &layout = layout_t());
+	stats_t &solve(const layout_t &layout, const priority_t &priority);
 
 	protected:
 
-	void populate(population_t &population, priority_t priority, layout_t layout);
+	void populate(population_t &population,
+		const layout_t &layout, const priority_t &priority);
 
-	virtual fitness_t evaluate(const chromosome_t &chromosome) = 0;
+	virtual fitness_t evaluate_schedule(const Schedule &schedule) = 0;
 	virtual void evaluate_chromosome(chromosome_t &chromosome) = 0;
 	virtual void process(population_t &population,
 		eslabCheckPoint<chromosome_t> &checkpoint,
 		eoTransform<chromosome_t> &transform) = 0;
 
-	Architecture *architecture;
-	Graph *graph;
-	Hotspot *hotspot;
+	const Architecture &architecture;
+	const Graph &graph;
+	const Hotspot &hotspot;
+	layout_t layout;
 
 	stats_t stats;
 

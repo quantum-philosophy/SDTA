@@ -126,16 +126,17 @@ void GenericEvolutionStats<CT, PT>::display(std::ostream &o) const
 /******************************************************************************/
 
 template<class CT, class PT, class ST>
-GenericEvolution<CT, PT, ST>::GenericEvolution(Architecture *_architecture,
-	Graph *_graph, Hotspot *_hotspot, const EvolutionTuning &_tuning) :
+GenericEvolution<CT, PT, ST>::GenericEvolution(
+	const Architecture &_architecture, const Graph &_graph,
+	const Hotspot &_hotspot, const EvolutionTuning &_tuning) :
 
 	architecture(_architecture), graph(_graph), hotspot(_hotspot),
 
 	/* Constants */
-	tuning(_tuning), task_count(graph->task_count),
+	tuning(_tuning), task_count(graph.task_count),
 	chromosome_length(task_count * (1 + (tuning.include_mapping ? 1 : 0))),
-	constrains(graph->get_constrains()),
-	sampling_interval(hotspot->sampling_interval())
+	constrains(graph.get_constrains()),
+	sampling_interval(hotspot.sampling_interval())
 {
 	if (task_count == 0)
 		throw std::runtime_error("The graph is empty.");
@@ -144,9 +145,14 @@ GenericEvolution<CT, PT, ST>::GenericEvolution(Architecture *_architecture,
 }
 
 template<class CT, class PT, class ST>
-ST &GenericEvolution<CT, PT, ST>::solve(const priority_t &priority,
-	const layout_t &layout)
+ST &GenericEvolution<CT, PT, ST>::solve(const layout_t &layout,
+	const priority_t &priority)
 {
+	/* Save the default layout in case the mapping part
+	 * is not included, and we are varying only schedules.
+	 */
+	this->layout = layout;
+
 	population_t population;
 
 	/* Continue */
@@ -158,7 +164,7 @@ ST &GenericEvolution<CT, PT, ST>::solve(const priority_t &priority,
 	checkpoint.add(stats);
 
 	/* Create */
-	populate(population, priority, layout);
+	populate(population, layout, priority);
 
 	/* TODO: Get rid of... */ stats();
 
@@ -178,25 +184,20 @@ ST &GenericEvolution<CT, PT, ST>::solve(const priority_t &priority,
 
 template<class CT, class PT, class ST>
 void GenericEvolution<CT, PT, ST>::populate(population_t &population,
-	priority_t priority, layout_t layout)
+	const layout_t &layout, const priority_t &priority)
 {
 	size_t i, j;
 	size_t create_count;
 
 	population.clear();
 
+	/* The mapping part (though may not be included) */
+	if (layout.size() != task_count)
+		throw std::runtime_error("The layout vector has bad dimensions.");
+
 	/* The scheduling part */
 	if (priority.size() != task_count)
 		throw std::runtime_error("The priority vector has bad dimensions.");
-
-	/* The mapping part */
-	if (tuning.include_mapping) {
-		if (layout.empty())
-			layout = graph->calc_layout();
-
-		if (layout.size() != task_count)
-			throw std::runtime_error("The layout vector has bad dimensions.");
-	}
 
 	chromosome_t chromosome;
 
@@ -221,6 +222,25 @@ void GenericEvolution<CT, PT, ST>::populate(population_t &population,
 		chromosome.invalidate();
 		evaluate_chromosome(chromosome);
 		population.push_back(chromosome);
+	}
+}
+
+template<class CT, class PT, class ST>
+fitness_t GenericEvolution<CT, PT, ST>::evaluate(const chromosome_t &chromosome)
+{
+	if (tuning.include_mapping) {
+		eslabDualGeneEncoder<chromosome_t> dual(chromosome);
+
+		Schedule schedule = ListScheduler::process(architecture,
+			graph, dual.layout(), dual.priority());
+
+		return evaluate_schedule(schedule);
+	}
+	else {
+		Scheduel schedule = ListScheduler::process(architecture,
+			graph, layout /* use the default one */, chromosome);
+
+		return evaluate_schedule(schedule);
 	}
 }
 

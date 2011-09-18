@@ -21,11 +21,21 @@ class Architecture
 
 	void add_processor(Processor *processor);
 	void assign_tasks(task_vector_t &tasks, const mapping_t &mapping) const;
-	void order_tasks(task_vector_t &tasks, const schedule_t &schedule) const;
+	void order_tasks(task_vector_t &tasks, const std::vector<tid_t> &order) const;
 
-	inline size_t size() const { return processor_count; }
+	inline size_t size() const
+	{
+		return processor_count;
+	}
 
-	inline const Processor *operator[] (pid_t id) const { return processors[id]; }
+	inline const Processor *operator[] (pid_t id) const
+	{
+		return processors[id];
+	}
+
+	inline void finalize()
+	{
+	}
 
 	protected:
 
@@ -33,7 +43,7 @@ class Architecture
 	size_t processor_count;
 };
 
-class ArchitectureBuilder : public Architecture
+class ArchitectureBuilder: public Architecture
 {
 	public:
 

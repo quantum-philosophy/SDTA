@@ -7,42 +7,48 @@
 #include "Graph.h"
 #include "Processor.h"
 #include "Architecture.h"
+#include "Schedule.h"
 
-void DynamicPower::compute(const Graph *graph, double sampling_interval,
-	matrix_t &dynamic_power)
+void DynamicPower::compute(const Architecture &architecture,
+	const Graph &graph, const Schedule &schedule,
+	double sampling_interval, matrix_t &power);
 {
-	const Architecture *architecture = graph->architecture;
+	pid_t pid;
+	const processor_vector_t &processors = architecture.processors;
+	const task_vector_t &tasks = graph.tasks;
 
-	if (!architecture)
-		throw std::runtime_error("The graph should be mapped.");
-
-	size_t task_count = graph->task_count;
-	size_t processor_count = architecture->processor_count;
-	size_t step_count = ceil(graph->deadline / sampling_interval);
+	size_t processor_count = architecture.size();
+	size_t step_count = ceil(graph.get_deadline() / sampling_interval);
 
 	dynamic_power.resize(step_count, processor_count);
 	double *ptr = dynamic_power.pointer();
+
+	size_t task_count;
+	const Processor *processor;
 
 	/* Here we build a profile for the whole time period of the graph
 	 * including its actual duration (only tasks) plus the gap to
 	 * the deadline.
 	 */
 
-	const Task *task;
-	size_t i, j, start, end, pid;
-	for (i = 0; i < task_count; i++) {
-		task = graph->tasks[i];
-		pid = task->processor->id;
+	for (pid = 0; pid < processor_count; pid++) {
+		const LocalSchedule &local_schedule = schedule[pid];
+		task_count = local_schedule.size();
+		processor = processors[pid];
 
-    	start = floor(task->start / sampling_interval);
-		end = floor((task->start + task->duration) / sampling_interval);
+		for (i = 0; i < task_count; i++) {
+			const ScheduleItem &item = local_schedule[i];
+
+			start = floor(item.start / sampling_interval);
+			end = floor((item.start + item.duration) / sampling_interval);
+			power = processor->calc_power(tasks[item.id]->type);
 
 #ifndef SHALLOW_CHECK
-		if (end >= step_count)
-			throw std::runtime_error("The duration of the task is too long.");
+			if (end >= step_count)
+				throw std::runtime_error("The duration of the task is too long.");
 #endif
-
-		for (j = start; j < end && j < step_count; j++)
-			ptr[j * processor_count + pid] = task->power;
+			for (j = start; j < end && j < step_count; j++)
+				ptr[j * processor_count + pid] = power;
+		}
 	}
 }

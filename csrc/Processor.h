@@ -30,7 +30,10 @@ class Processor
 
 	void add_type(unsigned long int nc, double ceff);
 
-	inline size_t size() const { return type_count; }
+	inline size_t size() const
+	{
+		return type_count;
+	}
 
 	inline double calc_duration(unsigned int type) const
 	{

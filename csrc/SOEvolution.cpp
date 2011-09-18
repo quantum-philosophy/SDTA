@@ -34,7 +34,7 @@ void SOEvolution::process(population_t &population,
 
 	checkpoint.reset();
 
-	eslabSOLocalSearchAlgorithm<chromosome_t> ls(*graph, checkpoint, evaluator);
+	eslabSOLocalSearchAlgorithm<chromosome_t> ls(graph, checkpoint, evaluator);
 
 	ls(population);
 
@@ -47,23 +47,11 @@ void SOEvolution::evaluate_chromosome(chromosome_t &chromosome)
 }
 
 SOEvolution::fitness_t
-SOEvolution::evaluate(const chromosome_t &chromosome)
+SOEvolution::evaluate_schedule(const Schedule &schedule)
 {
-	if (tuning.include_mapping) {
-		eslabDualGeneEncoder<chromosome_t> dual(chromosome);
-
-		graph->assign_mapping(dual.layout());
-		schedule_t schedule = ListScheduler::process(graph, dual.priority());
-		graph->assign_schedule(schedule);
-	}
-	else {
-		schedule_t schedule = ListScheduler::process(graph, chromosome);
-		graph->assign_schedule(schedule);
-	}
-
 	fitness_t fitness;
 
-	if (graph->duration > graph->deadline) {
+	if (schedule.get_duration() > deadline) {
 		stats.miss_deadline();
 
 		fitness = std::numeric_limits<fitness_t>::min();
@@ -71,18 +59,9 @@ SOEvolution::evaluate(const chromosome_t &chromosome)
 	else {
 		stats.evaluate();
 
-		matrix_t dynamic_power, temperature, total_power;
-
-		/* The graph is rescheduled now, obtain the dynamic power profile */
-		DynamicPower::compute(graph, sampling_interval, dynamic_power);
-
-		/* Now, we can get the temperature profile, and the total power profile
-		 * including the leakage part.
-		 */
-		(void)hotspot->solve(graph->architecture,
-			dynamic_power, temperature, total_power);
-
-		fitness = Lifetime::predict(temperature, sampling_interval);
+		/* TODO: eliminate calculation of the energy consumption */
+		price_t price = schedule.evaluate(hotspot);
+		fitness = price.lifetime;
 	}
 
 	return fitness;

@@ -22,49 +22,30 @@ class Task
 	task_vector_t parents;
 	task_vector_t children;
 
-	/* On the same core */
-	const Processor *processor;
-	Task *ancestor;
-	Task *successor;
-
-	/* Assigned on mapping */
-	double duration;	/* Execution time */
-	double power; 		/* Consuming power */
-
-	double start;		/* Actual start time (mapped and scheduled) */
-
 	public:
 
 	Task(unsigned int _type) :
-		id(-1), type(_type), ancestor(NULL), successor(NULL),
-		duration(0), power(0), start(-1) {}
+		id(-1), type(_type), ancestor(NULL), successor(NULL) {}
 
-	void assign_processor(const Processor *processor);
-
-	/* In the graph */
-	inline void add_parent(Task *task) { parents.push_back(task); }
-	inline void add_child(Task *task) { children.push_back(task); }
-
-	/* On the same core */
-	inline void set_ancestor(Task *task) { ancestor = task; }
-	inline void set_successor(Task *task) { successor = task; }
-	inline void set_order(Task *_ancestor = NULL, Task *_successor = NULL)
+	inline void add_parent(Task *task)
 	{
-		ancestor = _ancestor;
-		successor = _successor;
-		start = -1;
+		parents.push_back(task);
 	}
 
-	inline bool is_leaf() const { return children.empty(); }
-	inline bool is_root() const { return parents.empty(); }
+	inline void add_child(Task *task)
+	{
+		children.push_back(task);
+	}
 
-	private:
+	inline bool is_leaf() const
+	{
+		return children.empty();
+	}
 
-	void propagate_start(double time);
-
-	void collect_asap(vector_t &asap, double time) const;
-	void collect_alap(vector_t &alap, double time) const;
-	void collect_depth(std::vector<int> &depth, int level) const;
+	inline bool is_root() const
+	{
+		return parents.empty();
+	}
 };
 
 #endif

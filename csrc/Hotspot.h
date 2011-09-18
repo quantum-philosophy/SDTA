@@ -48,7 +48,7 @@ class Hotspot
 
 	void solve(const matrix_t &m_power, matrix_t &m_temperature);
 
-	size_t solve(const Architecture *architecture,
+	size_t solve(const Architecture &architecture,
 		const matrix_t &m_dynamic_power, matrix_t &m_temperature,
 		matrix_t &m_total_power, double tol = Hotspot::tol,
 		size_t maxit = Hotspot::maxit);
@@ -57,12 +57,12 @@ class Hotspot
 
 	private:
 
-	static void inject_leakage(const Architecture *architecture,
+	static void inject_leakage(const Architecture &architecture,
 		size_t processor_count, size_t step_count, const double *dynamic_power,
 		const double *temperature, double *total_power);
 
 	/* Initial leakage with the ambient temperature */
-	static void inject_leakage(const Architecture *architecture,
+	static void inject_leakage(const Architecture &architecture,
 		size_t processor_count, size_t step_count, const double *dynamic_power,
 		double temperature, double *total_power);
 };

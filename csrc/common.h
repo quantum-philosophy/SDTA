@@ -14,12 +14,16 @@ typedef double rank_t;
 typedef int rank_t;
 #endif
 
+typedef int tid_t;
+typedef int pid_t;
+
 class Task;
 class Graph;
 
 class Processor;
 class Architecture;
 
+class Schedule;
 class ListScheduler;
 
 class DynamicPower;
@@ -29,15 +33,7 @@ class Lifetime;
 template<class CT, class PT, class ST>
 class GenericEvolution;
 
-typedef int tid_t;
-typedef std::vector<tid_t> schedule_t;
-typedef std::list<tid_t> list_schedule_t;
 typedef std::vector<Task *> task_vector_t;
-typedef std::list<Task *> task_list_t;
-typedef std::vector<rank_t> priority_t;
-
-typedef int pid_t;
-typedef std::vector<pid_t> mapping_t;
 typedef std::vector<Processor *> processor_vector_t;
 
 #ifdef REAL_RANK
@@ -63,61 +59,29 @@ class layout_t: public std::vector<rank_t>
 typedef std::vector<rank_t> layout_t;
 #endif
 
-struct ScheduleItem
-{
-	tid_t id;
-	double start;
-	double duration;
+typedef std::vector<pid_t> mapping_t;
 
-	ScheduleItem(tid_t _id, double _start, double _duration) :
-		id(_id), start(_start), duration(_duration) {}
-};
-
-typedef std::vector<ScheduleItem> Schedule;
-
-class GlobalSchedule
-{
-	friend std::ostream &operator<< (std::ostream &o, const GlobalSchedule &schedule);
-
-	const size_t processor_count;
-	std::vector<Schedule> schedules;
-
-	public:
-
-	GlobalSchedule(size_t _processor_count) :
-		processor_count(_processor_count),
-		schedules(std::vector<Schedule>(_processor_count)) {}
-
-	inline size_t size() const { return processor_count; }
-	inline const Schedule &operator[](pid_t pid) const { return schedules[pid]; }
-
-	inline void append(pid_t pid, tid_t tid, double start, double duration)
-	{
-		schedules[pid].push_back(ScheduleItem(tid, start, duration));
-	}
-
-	inline double duration() const
-	{
-		double duration = 0;
-		size_t task_count;
-
-		for (pid_t pid = 0; pid < processor_count; pid++) {
-			task_count = schedules[pid].size();
-
-			if (task_count == 0) continue;
-
-			const ScheduleItem &item = schedules[pid][task_count - 1];
-
-			duration = std::max(duration, item.start + item.duration);
-		}
-
-		return duration;
-	}
-};
-
-std::ostream &operator<< (std::ostream &o, const GlobalSchedule &schedule);
+typedef std::vector<rank_t> priority_t;
 
 typedef std::vector<bool> bit_string_t;
+
+/******************************************************************************/
+/* Evaluation                                                                 */
+/******************************************************************************/
+
+struct price_t
+{
+	double lifetime;
+	double energy;
+
+	price_t() : lifetime(0), energy(0) {}
+	price_t(double _lifetime, double _energy) :
+		lifetime(_lifetime), energy(_energy) {}
+};
+
+/******************************************************************************/
+/* Constrains                                                                 */
+/******************************************************************************/
 
 struct constrain_t
 {
@@ -137,6 +101,10 @@ struct constrain_t
 
 typedef std::vector<constrain_t> constrains_t;
 
+/******************************************************************************/
+/* System                                                                     */
+/******************************************************************************/
+
 struct system_t
 {
 	std::vector<unsigned int> type;
@@ -149,22 +117,15 @@ struct system_t
 	std::vector<std::vector<double> > ceff;
 
 	mapping_t mapping;
-	schedule_t schedule;
 	priority_t priority;
 	double deadline;
 
 	system_t(const std::string &filename);
 };
 
-struct price_t
-{
-	double lifetime;
-	double energy;
-
-	price_t() : lifetime(0), energy(0) {}
-	price_t(double _lifetime, double _energy) :
-		lifetime(_lifetime), energy(_energy) {}
-};
+/******************************************************************************/
+/* Calculations                                                               */
+/******************************************************************************/
 
 typedef std::vector<double> vector_t;
 
@@ -213,6 +174,10 @@ class matrix_t: public std::vector<double>
 	inline size_t cols() const { return m_cols; }
 };
 
+/******************************************************************************/
+/* Output                                                                     */
+/******************************************************************************/
+
 template<class T>
 struct print_t
 {
@@ -239,6 +204,10 @@ std::ostream &operator<< (std::ostream &o, const print_t<T> &print)
 std::ostream &operator<< (std::ostream &o, const price_t &price);
 std::ostream &operator<< (std::ostream &o, const constrain_t &constrain);
 
+/******************************************************************************/
+/* Comparisons                                                                */
+/******************************************************************************/
+
 template<class T>
 class Comparator
 {
@@ -250,6 +219,10 @@ class Comparator
 		return first.first < second.first;
 	}
 };
+
+/******************************************************************************/
+/* Random generator                                                           */
+/******************************************************************************/
 
 class Random
 {
@@ -270,6 +243,10 @@ class Random
 		return double(range) * uniform();
 	}
 };
+
+/******************************************************************************/
+/* Helpers                                                                    */
+/******************************************************************************/
 
 class Helper
 {

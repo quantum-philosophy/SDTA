@@ -3,16 +3,16 @@
 
 #include "common.h"
 
+typedef std::list<tid_t> list_schedule_t;
+
 class ListScheduler
 {
 	public:
 
 	ListScheduler() {}
 
-	static GlobalSchedule process(const Architecture *architecture,
+	static global_schedule_t process(const Architecture *architecture,
 		const Graph *graph, const layout_t layout, const priority_t &priority);
-
-	static schedule_t process(const Graph *graph, const priority_t &priority);
 
 	private:
 

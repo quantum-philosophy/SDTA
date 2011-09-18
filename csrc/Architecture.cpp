@@ -19,7 +19,8 @@ void Architecture::assign_tasks(task_vector_t &tasks, const mapping_t &mapping) 
 		tasks[id]->assign_processor(processors[mapping[id]]);
 }
 
-void Architecture::order_tasks(task_vector_t &tasks, const schedule_t &schedule) const
+void Architecture::order_tasks(task_vector_t &tasks,
+	const std::vector<tid_t> &order) const
 {
 	pid_t pid;
 	Task *successor, *ancestor;
@@ -27,7 +28,7 @@ void Architecture::order_tasks(task_vector_t &tasks, const schedule_t &schedule)
 
 	size_t task_count = tasks.size();
 	for (size_t i = 0; i < task_count; i++) {
-		successor = tasks[schedule[i]];
+		successor = tasks[order[i]];
 		pid = successor->processor->id;
 		ancestor = last_ones[pid];
 
@@ -98,6 +99,8 @@ ArchitectureBuilder::ArchitectureBuilder(const std::vector<double> &frequency,
 		for (size_t i = 0; i < type_count; i++)
 			processor->add_type(nc[id][i], ceff[id][i]);
 	}
+
+	finalize();
 }
 
 ArchitectureBuilder::~ArchitectureBuilder()

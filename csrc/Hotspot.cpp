@@ -194,7 +194,7 @@ void Hotspot::solve(const matrix_t &m_power, matrix_t &m_temperature)
 			temperature[k] = Y[i][j] * sinvC[j] + am;
 }
 
-size_t Hotspot::solve(const Architecture *architecture,
+size_t Hotspot::solve(const Architecture &architecture,
 	const matrix_t &m_dynamic_power, matrix_t &m_temperature,
 	matrix_t &m_total_power, double tol, size_t maxit)
 {
@@ -356,7 +356,7 @@ size_t Hotspot::solve(const Architecture *architecture,
 	return it;
 }
 
-void Hotspot::inject_leakage(const Architecture *architecture,
+void Hotspot::inject_leakage(const Architecture &architecture,
 	size_t processor_count, size_t step_count, const double *dynamic_power,
 	const double *temperature, double *total_power)
 {
@@ -376,7 +376,7 @@ void Hotspot::inject_leakage(const Architecture *architecture,
 	double temp, favg, voltage;
 	unsigned long int ngate;
 
-	const processor_vector_t &processors = architecture->processors;
+	const processor_vector_t &processors = architecture.processors;
 
 	for (i = 0, k = 0; i < step_count; i++) {
 		for (j = 0; j < processor_count; j++, k++) {
@@ -393,7 +393,7 @@ void Hotspot::inject_leakage(const Architecture *architecture,
 	}
 }
 
-void Hotspot::inject_leakage(const Architecture *architecture,
+void Hotspot::inject_leakage(const Architecture &architecture,
 	size_t processor_count, size_t step_count, const double *dynamic_power,
 	double temperature, double *total_power)
 {
@@ -401,7 +401,7 @@ void Hotspot::inject_leakage(const Architecture *architecture,
 	double favg, voltage;
 	unsigned long int ngate;
 
-	const processor_vector_t &processors = architecture->processors;
+	const processor_vector_t &processors = architecture.processors;
 
 	for (i = 0, k = 0; i < step_count; i++) {
 		for (j = 0; j < processor_count; j++, k++) {

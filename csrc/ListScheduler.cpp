@@ -5,8 +5,9 @@
 #include "Processor.h"
 #include "Graph.h"
 #include "Task.h"
+#include "Schedule.h"
 
-GlobalSchedule ListScheduler::process(const Architecture *architecture,
+Schedule ListScheduler::process(const Architecture *architecture,
 	const Graph *graph, const layout_t layout, const priority_t &priority)
 {
 	size_t task_count = graph->task_count;
@@ -38,7 +39,7 @@ GlobalSchedule ListScheduler::process(const Architecture *architecture,
 	std::vector<double> task_time(task_count, 0);
 	std::vector<list_schedule_t> pool(processor_count);
 
-	GlobalSchedule schedule(processor_count);
+	Schedule schedule(architecture, graph);
 
 	for (id = 0; id < task_count; id++) {
 		task = tasks[id];
@@ -95,60 +96,6 @@ GlobalSchedule ListScheduler::process(const Architecture *architecture,
 			}
 		}
 	} while(!empty);
-
-	return schedule;
-}
-
-schedule_t ListScheduler::process(const Graph *graph, const priority_t &priority)
-{
-	tid_t id;
-	size_t index = 0, task_count = graph->task_count;
-
-#ifndef SHALLOW_CHECK
-	if (priority.size() != task_count)
-		throw std::runtime_error("The priority vector is bad.");
-#endif
-
-	list_schedule_t pool;
-	schedule_t schedule(task_count);
-	std::vector<bool> scheduled(task_count, false);
-	std::vector<bool> processed(task_count, false);
-
-	/* Obtain all roots and place them into the list according to
-	 * their priority (the lower number, the higher priority).
-	 */
-	for (id = 0; id < task_count; id++)
-		if (graph->tasks[id]->is_root()) {
-			push(pool, priority, id);
-			processed[id] = true;
-		}
-
-	while (!pool.empty()) {
-		/* The pool is always sorted by priority */
-		id = pull(pool, priority);
-		Task *task = graph->tasks[id];
-
-		/* Append to the schedule */
-		schedule[index++] = id;
-		scheduled[id] = true;
-
-		/* Append new tasks, but only ready ones, and ensure absence
-		 * of any repetitions.
-		 */
-		size_t children_count = task->children.size();
-		for (size_t i = 0; i < children_count; i++) {
-			Task *child = task->children[i];
-
-			/* Prevent from doing it once again */
-			if (processed[child->id]) continue;
-
-			/* All parents should be scheduled */
-			if (!ready(child, scheduled)) continue;
-
-			push(pool, priority, child->id);
-			processed[child->id] = true;
-		}
-	}
 
 	return schedule;
 }

@@ -66,15 +66,16 @@ class SOEvolution:
 
 	public:
 
-	SOEvolution(Architecture *_architecture, Graph *_graph,
-		Hotspot *_hotspot, const EvolutionTuning &_tuning = EvolutionTuning()) :
+	SOEvolution(const Architecture &_architecture,
+		const Graph &_graph, const Hotspot &_hotspot,
+		const EvolutionTuning &_tuning = EvolutionTuning()) :
 
 		GenericEvolution<chromosome_t, population_t, stats_t>(_architecture,
 			_graph, _hotspot, _tuning), evaluator(this) {}
 
 	protected:
 
-	fitness_t evaluate(const chromosome_t &chromosome);
+	fitness_t evaluate_schedule(const Schedule &schedule);
 	void evaluate_chromosome(chromosome_t &chromosome);
 	void process(population_t &population,
 		eslabCheckPoint<chromosome_t> &checkpoint,

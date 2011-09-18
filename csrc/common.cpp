@@ -40,7 +40,6 @@ system_t::system_t(const std::string &filename)
 	ceff.clear();
 
 	mapping.clear();
-	schedule.clear();
 	priority.clear();
 	deadline = 0;
 
@@ -153,14 +152,6 @@ system_t::system_t(const std::string &filename)
 			for (i = 0; i < cols; i++)
 				file >> mapping[i];
 		}
-		else if (name == "schedule") {
-			if (rows != 1)
-				throw std::runtime_error("The schedule should be a vector.");
-
-			schedule.resize(cols);
-			for (i = 0; i < cols; i++)
-				file >> schedule[i];
-		}
 		else if (name == "priority") {
 			if (rows != 1)
 				throw std::runtime_error("The priority should be a vector.");
@@ -209,9 +200,6 @@ system_t::system_t(const std::string &filename)
 	if (!mapping.empty() && mapping.size() != task_count)
 		throw std::runtime_error("The size of the mapping vector is wrong.");
 
-	if (!schedule.empty() && schedule.size() != task_count)
-		throw std::runtime_error("The size of the schedule vector is wrong.");
-
 	if (!priority.empty() && priority.size() != task_count)
 		throw std::runtime_error("The size of the priority vector is wrong.");
 
@@ -237,37 +225,6 @@ std::ostream &operator<< (std::ostream &o, const constrain_t &constrain)
 			<< constrain.min << ", "
 			<< constrain.max
 		<< "}";
-
-	return o;
-}
-
-std::ostream &operator<< (std::ostream &o, const GlobalSchedule &global_schedule)
-{
-	size_t processor_count = global_schedule.size();
-
-	o
-		<< "Global schedule: " << std::endl
-		<< "  Duration: " << global_schedule.duration() << std::endl
-		<< "  "
-			<< std::setw(4) << "id" << " ( "
-			<< std::setw(4) << "proc" << " : "
-			<< std::setw(8) << "start" << " : "
-			<< std::setw(8) << "duration" << " )" << std::endl;
-
-	for (pid_t pid = 0; pid < processor_count; pid++) {
-		const Schedule &schedule = global_schedule[pid];
-		size_t task_count = schedule.size();
-
-		for (size_t i = 0; i < task_count; i++) {
-			const ScheduleItem &item = schedule[i];
-
-			o	<< "  "
-				<< std::setw(4) << item.id << " ( "
-				<< std::setw(4) << pid << " : "
-				<< std::setw(8) << item.start << " : "
-				<< std::setw(8) << item.duration << " )" << std::endl;
-		}
-	}
 
 	return o;
 }

@@ -74,23 +74,11 @@ void MOEvolution::evaluate_chromosome(chromosome_t &chromosome)
 }
 
 MOEvolution::fitness_t
-MOEvolution::evaluate(const chromosome_t &chromosome)
+MOEvolution::evaluate_schedule(const Schedule &schedule)
 {
-	if (tuning.include_mapping) {
-		eslabDualGeneEncoder<chromosome_t> dual(chromosome);
-
-		graph->assign_mapping(dual.layout());
-		schedule_t schedule = ListScheduler::process(graph, dual.priority());
-		graph->assign_schedule(schedule);
-	}
-	else {
-		schedule_t schedule = ListScheduler::process(graph, chromosome);
-		graph->assign_schedule(schedule);
-	}
-
 	fitness_t fitness;
 
-	if (graph->duration > graph->deadline) {
+	if (schedule.get_duration() > deadline) {
 		stats.miss_deadline();
 
 		fitness[LIFETIME_OBJECTIVE] = std::numeric_limits<double>::min();
@@ -99,7 +87,7 @@ MOEvolution::evaluate(const chromosome_t &chromosome)
 	else {
 		stats.evaluate();
 
-		price_t price = graph->evaluate(hotspot);
+		price_t price = schedule.evaluate(hotspot);
 		fitness[LIFETIME_OBJECTIVE] = price.lifetime;
 		fitness[ENERGY_OBJECTIVE] = price.energy;
 	}

@@ -9,6 +9,9 @@
 #include "CommandLine.h"
 #include "Graph.h"
 #include "Architecture.h"
+#include "Schedule.h"
+#include "Layout.h"
+#include "Priority.h"
 #include "ListScheduler.h"
 #include "SOEvolution.h"
 #include "MOEvolution.h"
@@ -93,7 +96,6 @@ void optimize(const string &system_config, const string &genetic_config,
 		 */
 
 		mapping_t mapping = system.mapping;
-		schedule_t schedule = system.schedule;
 		priority_t priority = system.priority;
 		double deadline = system.deadline;
 
@@ -101,55 +103,43 @@ void optimize(const string &system_config, const string &genetic_config,
 		 *
 		 */
 		if (mapping.empty())
-			mapping = graph->calc_layout(architecture);
+			mapping = Layout::calculate(architecture, graph);
 		else if (tuning.verbose)
 			cout << "Using external mapping." << endl;
-
-		graph->assign_mapping(architecture, mapping);
 
 		/* 2. Calculate a priority vector based on the task mobility.
 		 *
 		 */
 		if (priority.empty())
-			priority = graph->calc_priority();
+			priority = Priority::calculate(architecture, graph);
 		else if (tuning.verbose)
 			cout << "Using external priority." << endl;
 
 		/* 3. Compute a schedule.
 		 *
 		 */
-		if (schedule.empty())
-			schedule = ListScheduler::process(graph, priority);
-		else if (tuning.verbose)
-			cout << "Using external schedule." << endl;
-
-		graph->assign_schedule(schedule);
+		global_schedule_t schedule = ListScheduler::process(
+			*architecture, *graph, mapping, priority);
 
 		/* 4. Assign a deadline.
 		 *
 		 */
 		if (deadline == 0)
-			deadline = tuning.deadline_ratio * graph->get_duration();
+			deadline = tuning.deadline_ratio * schedule.get_duration();
 		else if (tuning.verbose)
 			cout << "Using external deadline." << endl;
-
-		graph->assign_deadline(deadline);
 
 		/* 5. Reorder the tasks if requested.
 		 *
 		 */
-		if (tuning.reorder_tasks) {
-			if (tuning.verbose)
-				cout << "Reordering the tasks according to the first schedule." << endl;
-
-			graph->reorder_tasks(schedule);
-		}
+		if (tuning.reorder_tasks)
+			throw std::runtime_error("Not implemented yet.");
 
 		if (tuning.verbose) {
 			cout << graph << endl << architecture << endl
 				<< "Start mapping: " << print_t<pid_t>(mapping) << endl
 				<< "Start priority: " << print_t<rank_t>(priority) << endl
-				<< "Start schedule: " << print_t<tid_t>(schedule) << endl;
+				<< "Start schedule:" << endl << schedule << endl;
 
 			const constrains_t &constrains = graph->get_constrains();
 
@@ -162,11 +152,6 @@ void optimize(const string &system_config, const string &genetic_config,
 				cout << "Out of range priorities: " << out << endl;
 
 			cout << endl;
-
-			GlobalSchedule s = ListScheduler::process(architecture,
-				graph, mapping, priority);
-
-			cout << s << endl;
 		}
 
 		hotspot = new Hotspot(floorplan_config, thermal_config);
@@ -174,7 +159,7 @@ void optimize(const string &system_config, const string &genetic_config,
 		/* 6. Obtain the initial measurements to compare with.
 		 *
 		 */
-		price_t price = graph->evaluate(hotspot);
+		price_t price = schedule.evaluate(hotspot);
 
 		if (tuning.verbose)
 			cout << "Initial lifetime: "
@@ -185,17 +170,17 @@ void optimize(const string &system_config, const string &genetic_config,
 
 		for (size_t i = 0; i < repeat; i++) {
 			if (tuning.multiobjective) {
-				scheduler = new MOEvolution(architecture,
-					graph, hotspot, tuning);
+				scheduler = new MOEvolution(*architecture,
+					*graph, *hotspot, tuning);
 			}
 			else {
-				scheduler = new SOEvolution(architecture,
-					graph, hotspot, tuning);
+				scheduler = new SOEvolution(*architecture,
+					*graph, *hotspot, tuning);
 			}
 
 			clock_t begin = clock();
 
-			EvolutionStats &stats = scheduler->solve(priority);
+			EvolutionStats &stats = scheduler->solve(mapping, priority);
 
 			clock_t end = clock();
 			double elapsed = (double)(end - begin) / CLOCKS_PER_SEC;
