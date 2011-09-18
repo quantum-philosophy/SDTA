@@ -46,7 +46,6 @@ std::ostream &operator<< (std::ostream &o, const Schedule &schedule)
 	size_t processor_count = schedule.size();
 
 	o
-		<< "Global schedule: " << std::endl
 		<< "  Duration: " << schedule.get_duration() << std::endl
 		<< "  "
 			<< std::setw(4) << "id" << " ( "

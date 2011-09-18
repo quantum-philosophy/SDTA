@@ -129,6 +129,8 @@ void optimize(const string &system_config, const string &genetic_config,
 		else if (tuning.verbose)
 			cout << "Using external deadline." << endl;
 
+		graph->set_deadline(deadline);
+
 		/* 5. Reorder the tasks if requested.
 		 *
 		 */

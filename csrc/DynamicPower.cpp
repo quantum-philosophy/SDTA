@@ -20,12 +20,17 @@ void DynamicPower::compute(const Architecture &architecture,
 	size_t processor_count = architecture.size();
 	size_t step_count = ceil(graph.get_deadline() / sampling_interval);
 
+#ifndef SHALLOW_CHECK
+	if (step_count == 0)
+		throw std::runtime_error("The number of steps is zero.");
+#endif
+
 	dynamic_power.resize(step_count, processor_count);
 	double *ptr = dynamic_power.pointer();
 
-	size_t i, j, task_count;
+	size_t i, j, task_count, start, end;
 	const Processor *processor;
-	double start, end, power;
+	double power;
 
 	/* Here we build a profile for the whole time period of the graph
 	 * including its actual duration (only tasks) plus the gap to
