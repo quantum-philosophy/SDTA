@@ -88,7 +88,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	mex_matrix_to_c(dynamic_power.pointer(), _dynamic_power,
 		step_count, processor_count);
 
-	size_t it = hotspot.solve(&architecture, dynamic_power,
+	size_t it = hotspot.solve(architecture, dynamic_power,
 		temperature, total_power, tol, maxit);
 
 	if (it < 0)

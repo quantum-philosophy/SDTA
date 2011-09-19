@@ -84,6 +84,11 @@ classdef LS < handle
       taskCount = length(tasks);
       processorCount = length(processors);
 
+      if nargin < 4 || isempty(priority)
+        priority = zeros(1, taskCount);
+        for i = 1:taskCount, priority(i) = graph.tasks{i}.mobility; end
+      end
+
       processorTime = zeros(1, processorCount);
       taskTime = zeros(1, taskCount);
 

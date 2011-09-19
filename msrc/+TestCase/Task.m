@@ -49,9 +49,6 @@ classdef Task < handle
     end
 
     function shift(task, start, duration)
-      task.asap = -Inf;
-      task.alap = Inf;
-      task.mobility = 0;
       task.ancestor = [];
       task.successor = [];
 

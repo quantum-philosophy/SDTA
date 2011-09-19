@@ -26,7 +26,12 @@ fprintf('%10s%15s%15s\n', 'Solution', 'Lifetime, TU', '+ %');
 for i = 1:solutionCount
   priority = solutions{i};
 
-  LS.schedule(graph, priority);
+  schedule = LS.process(graph.pes, graph, graph.mapping, priority);
+  graph.assignDistributedSchedule(schedule);
+
+  Utils.inspectVector('Priority', priority);
+  Utils.inspectVector('Schedule', graph.schedule - 1);
+  fprintf('Deadline: %f\n', graph.deadline);
 
   powerProfile = Power.calculateDynamicProfile(graph);
 

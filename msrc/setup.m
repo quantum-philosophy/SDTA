@@ -22,7 +22,8 @@ function [ graph, hotspot, powerProfile ] = setup(name)
   graph.assignMapping(pes, mapping);
 
   % LS scheduling
-  LS.schedule(graph);
+  schedule = LS.process(pes, graph, mapping);
+  graph.assignDistributedSchedule(schedule);
 
   graph.assignDeadline(Constants.deadlineFactor * graph.duration);
 
