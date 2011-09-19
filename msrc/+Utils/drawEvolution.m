@@ -18,7 +18,7 @@ function drawEvolution(file, multi, point, full)
     if full
       line(lifetime(:), energy(:), ...
         'Line', 'None', 'Marker', 'x', 'Color', 'k');
-      labels{end + 1} = [ 'History (', num2str(generations), ' generations)' ];
+      labels{end + 1} = 'History';
 
       line(lifetime(end, :), energy(end, :), ...
         'Line', 'None', 'Marker', 'o', 'Color', 'r');
@@ -83,7 +83,7 @@ function drawEvolution(file, multi, point, full)
 
       line(steps(:), evolution(:), ...
         'Line', 'None', 'Marker', 'x', 'Color', 'k');
-      labels{end + 1} = [ 'History (', num2str(generations), ' generations)' ];
+      labels{end + 1} = 'History';
     end
 
     evolutionLine = max(evolution, [], 2);
