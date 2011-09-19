@@ -66,6 +66,56 @@ typedef std::vector<rank_t> priority_t;
 typedef std::vector<bool> bit_string_t;
 
 /******************************************************************************/
+/* Random generator                                                           */
+/******************************************************************************/
+
+class Random
+{
+	static bool verbose;
+	static int seed;
+
+	public:
+
+	static void set_seed(int seed, bool verbose = false)
+	{
+		Random::seed = seed;
+		Random::verbose = verbose;
+	}
+
+	static int get_seed()
+	{
+		int seed = Random::seed;
+
+		if (seed < 0) seed = time(NULL);
+
+		if (verbose)
+			std::cout << "Chosen seed: " << seed << std::endl;
+
+		return seed;
+	}
+
+	static void reseed()
+	{
+		srand(get_seed());
+	}
+
+	static inline double uniform(double range = 1.0)
+	{
+		return range * (double)rand() / (double)RAND_MAX;
+	}
+
+	static inline int number(int range)
+	{
+		return double(range) * uniform();
+	}
+
+	static bool flip(double p)
+	{
+		return uniform() < p;
+	}
+};
+
+/******************************************************************************/
 /* Evaluation                                                                 */
 /******************************************************************************/
 
@@ -98,7 +148,14 @@ struct constrain_t
 		return min <= what && what <= max;
 	}
 
-	rank_t random() const;
+	inline rank_t random() const
+	{
+		/* We want to have a number in [min, max]
+		 * (including the right side of the interval), so +1.
+		 * Will do even if rank_t is not an integer type.
+		 */
+		return min + Random::number(1 + max - min);
+	}
 };
 
 typedef std::vector<constrain_t> constrains_t;
@@ -219,30 +276,6 @@ class Comparator
 		const std::pair<double, T> &second)
 	{
 		return first.first < second.first;
-	}
-};
-
-/******************************************************************************/
-/* Random generator                                                           */
-/******************************************************************************/
-
-class Random
-{
-	public:
-
-	static void seed(int what)
-	{
-		srand(what);
-	}
-
-	static inline double uniform(double range = 1.0)
-	{
-		return range * (double)rand() / (double)RAND_MAX;
-	}
-
-	static inline int number(int range)
-	{
-		return double(range) * uniform();
 	}
 };
 

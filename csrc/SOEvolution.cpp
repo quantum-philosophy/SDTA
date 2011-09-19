@@ -14,7 +14,7 @@ void SOEvolution::process(population_t &population,
 	eoTransform<chromosome_t> &transform)
 {
 	/* Select */
-	eoDetTournamentSelect<chromosome_t> select_one(tuning.tournament_size);
+	eslabTournamentSelect<chromosome_t> select_one(tuning.tournament_size);
 	eoSelectPerc<chromosome_t> select(select_one);
 
 	/* Replace = Merge + Reduce */
@@ -33,12 +33,14 @@ void SOEvolution::process(population_t &population,
 
 	ga(population);
 
+	/*
 	checkpoint.reset();
 
 	eslabSOLocalSearchAlgorithm<chromosome_t> ls(constrains,
 		checkpoint, evaluator);
 
 	ls(population);
+	*/
 
 	stats.best_chromosome = population.best_element();
 }

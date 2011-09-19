@@ -141,8 +141,6 @@ GenericEvolution<CT, PT, ST>::GenericEvolution(
 {
 	if (task_count == 0)
 		throw std::runtime_error("The graph is empty.");
-
-	rng.reseed(tuning.seed);
 }
 
 template<class CT, class PT, class ST>
@@ -285,7 +283,7 @@ void eslabTransform<CT>::operator()(population_t &population)
 template<class CT, class PT>
 bool eslabNPtsBitCrossover<CT, PT>::perform(CT &one, CT &another, double rate)
 {
-	if (!rng.flip(rate)) return false;
+	if (!Random::flip(rate)) return false;
 
 	size_t i;
 	size_t size = one.size();
@@ -299,7 +297,7 @@ bool eslabNPtsBitCrossover<CT, PT>::perform(CT &one, CT &another, double rate)
 	std::vector<bool> turn_points(size, false);
 
 	do {
-		i = 1 + rng.random(size - 1);
+		i = 1 + Random::number(size - 1);
 
 		if (turn_points[i]) continue;
 		else {
@@ -330,7 +328,7 @@ bool eslabNPtsBitCrossover<CT, PT>::perform(CT &one, CT &another, double rate)
 template<class CT, class PT>
 bool eslabPeerCrossover<CT, PT>::perform(CT &one, CT &another, double rate)
 {
-	if (!rng.flip(rate)) return false;
+	if (!Random::flip(rate)) return false;
 
 	size_t first, peer, peer_count, size = one.size();
 
@@ -369,7 +367,7 @@ bool eslabUniformRangeMutation<CT, PT>::perform(CT &chromosome, double rate)
 	bool changed = false;
 
 	for (size_t i = 0; i < size; i++)
-		if (rng.flip(rate)) {
+		if (Random::flip(rate)) {
 			changed = true;
 			chromosome[i] = constrains[i].random();
 		}
@@ -384,7 +382,7 @@ bool eslabUniformRangeMutation<CT, PT>::perform(CT &chromosome, double rate)
 template<class CT, class PT>
 bool eslabPeerMutation<CT, PT>::perform(CT &chromosome, double rate)
 {
-	if (!rng.flip(rate)) return false;
+	if (!Random::flip(rate)) return false;
 
 	size_t index, peer_count, size = chromosome.size();
 

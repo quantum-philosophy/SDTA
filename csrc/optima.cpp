@@ -66,15 +66,10 @@ void optimize(const string &system_config, const string &genetic_config,
 	EvolutionTuning tuning(genetic_config);
 	tuning.update(tuning_stream);
 
-	if (tuning.seed < 0) {
-		tuning.seed = time(NULL);
-		if (tuning.verbose)
-			std::cout << "Chosen seed: " << tuning.seed << std::endl;
-	}
-	Random::seed(tuning.seed);
-
 	if (tuning.verbose)
 		cout << tuning << endl;
+
+	Random::set_seed(tuning.seed, tuning.verbose);
 
 	size_t repeat = tuning.repeat < 0 ? 1 : tuning.repeat;
 
@@ -172,6 +167,8 @@ void optimize(const string &system_config, const string &genetic_config,
 				<< price.energy << endl;
 
 		for (size_t i = 0; i < repeat; i++) {
+			Random::reseed();
+
 			if (tuning.multiobjective) {
 				scheduler = new MOEvolution(*architecture,
 					*graph, *hotspot, tuning);

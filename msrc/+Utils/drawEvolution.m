@@ -103,11 +103,11 @@ function drawEvolution(file, multi, point, full)
 
     line([ 1, generations ], [ maxLifetime, maxLifetime ], ...
       'Line', '--', 'Color', 'k');
-    labels{end + 1} = [ 'Max lifetime (', num2str(maxLifetime), ' time units)' ];
+    labels{end + 1} = [ 'Max lifetime (', num2str(maxLifetime), ')' ];
 
     line([ generations, generations ], [ 0, maxLifetime ], ...
       'Line', '-.', 'Color', 'k');
-    labels{end + 1} = [ 'Max generations (', num2str(generations), ')' ];
+    labels{end + 1} = [ 'Last generation (', num2str(generations), ')' ];
 
     if isempty(point)
       title([ 'GA (max ', num2str(maxLifetime), ')' ]);

@@ -8,14 +8,8 @@
 
 #include "common.h"
 
-rank_t constrain_t::random() const
-{
-	/* We want to have a number in [min, max]
-	 * (including the right side of the interval), so +1.
-	 * Will do even if rank_t is not an integer type.
-	 */
-	return min + Random::number(1 + max - min);
-}
+bool Random::verbose = false;
+int Random::seed = -1;
 
 system_t::system_t(const std::string &filename)
 {
