@@ -414,7 +414,7 @@ class eslabCrossover: public eoQuadOp<CT>
 
 	bool operator()(CT &one, CT &another)
 	{
-		double rate = stats.mutation_rate = std::max(min_rate,
+		double rate = stats.crossover_rate = std::max(min_rate,
 			scale * std::exp(exponent * (double)stats.generations));
 
 		return perform(one, another, rate);
