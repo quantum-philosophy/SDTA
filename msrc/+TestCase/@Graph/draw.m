@@ -13,7 +13,10 @@ function draw(graph, createFigure)
 
   last = max(graph.deadline, graph.duration);
 
-  height = 0.8;
+  taskPower = Power.calculateTask(graph);
+  taskPower = taskPower ./ max(taskPower);
+
+  maxHeight = 0.8;
   for i = 1:peCount
     pe = graph.pes{i};
 
@@ -26,6 +29,7 @@ function draw(graph, createFigure)
     y = [ y0 ];
     for id = schedule
       task = graph.tasks{id};
+      height = maxHeight * taskPower(id);
 
       x(end + 1) = task.start;
       y(end + 1) = y0;
@@ -39,7 +43,7 @@ function draw(graph, createFigure)
       x(end + 1) = task.start + task.duration;
       y(end + 1) = y0;
 
-      text(task.start, y0 + 0.5 * height, sprintf('  %d', id));
+      text(task.start, y0 + 0.5 * maxHeight, sprintf('  %d', id));
     end
 
     x(end + 1) = last;

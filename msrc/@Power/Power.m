@@ -40,6 +40,11 @@ classdef Power < handle
     end
 
     function profile = calculateDynamicProfile(graph)
+      taskPower = Power.calculateTask(graph);
+      profile = Power.distributePower(graph, taskPower);
+    end
+
+    function taskPower = calculateTask(graph)
       taskPower = zeros(1, length(graph.tasks));
 
       for pe = graph.pes
@@ -51,8 +56,6 @@ classdef Power < handle
             pe.ceff(task.type), pe.frequency, pe.voltage);
         end
       end
-
-      profile = Power.distributePower(graph, taskPower);
     end
 
     function profile = calculateStaticProfile(pes, T)

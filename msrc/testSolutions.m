@@ -10,7 +10,7 @@ maxit = 10;
 solutions = {};
 
 solutions{end + 1} = [];
-solutions{end + 1} = [ 0, 1, 8, 2, 5, 5, 4, 12, 27, 7, 22, 9, 12, 33, 14, 4, 18, 18, 14, 29, 31, 31, 33, 46, 28, 37, 47, 32, 37, 52, 26, 44, 43, 45, 45, 47, 26, 38, 40, 52, 49, 27, 34, 44, 51, 26, 19, 45, 35, 37, 52, 30, 54, 45, 48, 13, 55, 56, 41 ];
+solutions{end + 1} = [ 0, 1, 7, 4, 10, 10, 11, 4, 8, 6, 26, 27, 9, 25, 16, 4, 22, 20, 11, 14, 37, 19, 43, 34, 32, 15, 20, 37, 44, 43, 25, 21, 40, 17, 27, 38, 47, 22, 30, 28, 48, 50, 4, 28, 50, 26, 37, 39, 42, 34, 45, 49, 57, 55, 31, 50, 52, 57, 48 ];
 
 solutionCount = length(solutions);
 
@@ -20,7 +20,7 @@ solutionCount = length(solutions);
 
 mttf = [];
 
-figure;
+drawing = figure;
 
 fprintf('%10s%15s%15s\n', 'Solution', 'Lifetime, TU', '+ %');
 for i = 1:solutionCount
@@ -29,16 +29,16 @@ for i = 1:solutionCount
   schedule = LS.process(graph.pes, graph, graph.mapping, priority);
   graph.assignDistributedSchedule(schedule);
 
-  Utils.inspectVector('Priority', priority);
-  Utils.inspectVector('Schedule', graph.schedule - 1);
-  fprintf('Deadline: %f\n', graph.deadline);
-
   powerProfile = Power.calculateDynamicProfile(graph);
 
   T = hotspot.solveCondensedEquationWithLeakage(...
     powerProfile, vdd, ngate, tol, maxit);
 
+  Utils.drawSimulation(graph, powerProfile, T);
+
   mttf(end + 1) = Lifetime.predictCombined(T);
+
+  figure(drawing);
 
   subplot(solutionCount, 2, 2 * i - 1);
   x = ((1:size(powerProfile, 1)) - 1) * Constants.samplingInterval;
