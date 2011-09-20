@@ -30,7 +30,11 @@ class Schedule
 
 	public:
 
-	Schedule(const Architecture &_architecture, const Graph &_graph);
+	Schedule(size_t _processor_count, size_t _task_count) :
+
+		processor_count(_processor_count), task_count(_task_count),
+		schedules(std::vector<LocalSchedule>(processor_count)),
+		mapping(mapping_t(task_count, -1)), duration(0) {}
 
 	inline size_t size() const
 	{

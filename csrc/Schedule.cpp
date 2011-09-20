@@ -1,16 +1,4 @@
-#include <iomanip>
-
 #include "Schedule.h"
-#include "Architecture.h"
-#include "Processor.h"
-#include "Graph.h"
-#include "Task.h"
-
-Schedule::Schedule(const Architecture &_architecture, const Graph &_graph) :
-
-	processor_count(_architecture.size()), task_count(_graph.size()),
-	schedules(std::vector<LocalSchedule>(processor_count)),
-	mapping(mapping_t(task_count, -1)), duration(0) {}
 
 std::ostream &operator<< (std::ostream &o, const Schedule &schedule)
 {
