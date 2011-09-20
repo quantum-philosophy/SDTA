@@ -4,7 +4,7 @@ clear all;
 clc;
 rng(0);
 
-[ graph, hotspot, dynamicPowerProfile ] = setup('001_060');
+[ graph, hotspot, dynamicPowerProfile ] = setup('004_010');
 [ steps, cores ] = size(dynamicPowerProfile);
 
 x = ((1:steps) - 1) * Constants.samplingInterval;
@@ -20,6 +20,8 @@ if true
 else
   T = hotspot.solveCondensedEquation(dynamicPowerProfile);
 end
+
+Lifetime.drawCycles(T);
 
 tic
 mttf = Lifetime.predictMultiple(T);

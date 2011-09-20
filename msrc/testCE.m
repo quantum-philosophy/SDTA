@@ -4,7 +4,7 @@ clear all;
 clc;
 rng(0);
 
-[ graph, hotspot, powerProfile ] = setup('004_060');
+[ graph, hotspot, powerProfile ] = setup('004_010');
 
 graph.inspect();
 

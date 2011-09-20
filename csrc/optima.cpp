@@ -140,13 +140,6 @@ void optimize(const string &system_config, const string &genetic_config,
 		Evaluation evaluation(*architecture, *graph, *hotspot);
 		price_t price = evaluation.process(schedule);
 
-		if (tuning.verbose)
-			cout << "Initial lifetime: "
-				<< setiosflags(ios::fixed) << setprecision(2)
-				<< price.lifetime << endl
-				<< "Initial energy: "
-				<< price.energy << endl;
-
 		const constrains_t constrains =
 			Constrain::calculate(*architecture, *graph);
 		size_t task_count = graph->size();
@@ -155,7 +148,8 @@ void optimize(const string &system_config, const string &genetic_config,
 			cout << graph << endl << architecture << endl
 				<< "Start mapping: " << print_t<pid_t>(mapping) << endl
 				<< "Start priority: " << print_t<rank_t>(priority) << endl
-				<< "Start schedule:" << endl << schedule << endl;
+				<< "Start schedule:" << endl << schedule
+				<< print_t<constrain_t>(constrains) << endl;
 
 			size_t out = 0;
 			for (size_t i = 0; i < task_count; i++)
@@ -165,7 +159,11 @@ void optimize(const string &system_config, const string &genetic_config,
 			if (out > 0)
 				cout << "Out of range priorities: " << out << endl;
 
-			cout << endl;
+			cout << "Initial lifetime: "
+				<< setiosflags(ios::fixed) << setprecision(2)
+				<< price.lifetime << endl
+				<< "Initial energy: "
+				<< price.energy << endl << endl;
 		}
 
 		size_t chromosome_length = tuning.include_mapping ?

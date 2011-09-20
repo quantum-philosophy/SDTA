@@ -35,6 +35,9 @@ double Lifetime::calc_damage(const matrix_t &temperature)
 
 		size_t cycle_count = amplitudes.size();
 		for (j = 0; j < cycle_count; j++) {
+			/* Skip cycles that do not cause any damage */
+			if (amplitudes[j] <= dT0) continue;
+
 			/* Maximal temperatures during each cycle */
 			tmax = means[j] + amplitudes[j] / 2.0;
 

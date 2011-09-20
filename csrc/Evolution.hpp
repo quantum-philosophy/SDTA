@@ -336,7 +336,7 @@ bool eslabPeerMutation<CT, PT>::perform(CT &chromosome, double rate)
 }
 
 /******************************************************************************/
-/* eslabLeaarning                                                             */
+/* eslabLearning                                                              */
 /******************************************************************************/
 
 template<class CT, class PT>
