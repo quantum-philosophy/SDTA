@@ -315,6 +315,7 @@ bool eslabUniformRangeMutation<CT, PT>::perform(CT &chromosome, double rate)
 		prev = chromosome[i];
 		do next = constrain.random(); while (prev == next);
 
+		chromosome[i] = next;
 		changed = true;
 	}
 
