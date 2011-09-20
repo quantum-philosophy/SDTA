@@ -224,8 +224,10 @@ void eslabTransform<CT>::operator()(population_t &population)
 /******************************************************************************/
 
 template<class CT, class PT>
-void eslabNPtsBitCrossover<CT, PT>::perform(CT &one, CT &another)
+bool eslabNPtsBitCrossover<CT, PT>::perform(CT &one, CT &another, double rate)
 {
+	if (!Random::flip(rate)) return false;
+
 	size_t i;
 	size_t size = one.size();
 	size_t select_points = points;
@@ -258,11 +260,15 @@ void eslabNPtsBitCrossover<CT, PT>::perform(CT &one, CT &another)
 			another[i] = tmp;
 		}
 	}
+
+	return true;
 }
 
 template<class CT, class PT>
-void eslabPeerCrossover<CT, PT>::perform(CT &one, CT &another)
+bool eslabPeerCrossover<CT, PT>::perform(CT &one, CT &another, double rate)
 {
+	if (!Random::flip(rate)) return false;
+
 	size_t first, peer, peer_count, size = one.size();
 
 #ifndef SHALLOW_CHECK
@@ -285,6 +291,8 @@ void eslabPeerCrossover<CT, PT>::perform(CT &one, CT &another)
 		one[peer] = another[peer];
 		another[peer] = rank;
 	}
+
+	return true;
 }
 
 /******************************************************************************/
@@ -292,28 +300,30 @@ void eslabPeerCrossover<CT, PT>::perform(CT &one, CT &another)
 /******************************************************************************/
 
 template<class CT, class PT>
-void eslabUniformRangeMutation<CT, PT>::perform(CT &chromosome)
+bool eslabUniformRangeMutation<CT, PT>::perform(CT &chromosome, double rate)
 {
 	size_t size = chromosome.size();
-	size_t pos;
+	bool changed = false;
+	rank_t prev, next;
 
-	/* Find a gene with several options */
-	do { pos = Random::number(size); }
-	while (constrains[pos].tight());
+	/* Normalization */
+	rate = rate / (double)size;
 
-	rank_t last = chromosome[pos], next;
+	for (size_t i = 0; i < size; i++) {
+		const constrain_t &constrain = constrains[i];
+		if (constrain.tight() || !Random::flip(rate)) continue;
 
-	const constrain_t &constrain = constrains[pos];
+		prev = chromosome[i];
+		do next = constrain.random(); while (prev == next);
 
-	/* Find a different rank */
-	do { next = constrain.random(); }
-	while (next == last);
+		changed = true;
+	}
 
-	chromosome[pos] = next;
+	return changed;
 }
 
 template<class CT, class PT>
-void eslabPeerMutation<CT, PT>::perform(CT &chromosome)
+bool eslabPeerMutation<CT, PT>::perform(CT &chromosome, double rate)
 {
 	size_t index, peer_count, size = chromosome.size();
 
@@ -327,6 +337,8 @@ void eslabPeerMutation<CT, PT>::perform(CT &chromosome)
 	rank_t rank = chromosome[peer];
 	chromosome[peer] = chromosome[index];
 	chromosome[index] = rank;
+
+	return true;
 }
 
 /******************************************************************************/

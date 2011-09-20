@@ -417,16 +417,12 @@ class eslabCrossover: public eoQuadOp<CT>
 		double rate = stats.crossover_rate = std::max(min_rate,
 			scale * std::exp(exponent * (double)stats.generations));
 
-		if (!Random::flip(rate)) return false;
-
-		perform(one, another);
-
-		return true;
+		return perform(one, another, rate);
 	}
 
 	protected:
 
-	virtual void perform(CT &one, CT &another) = 0;
+	virtual bool perform(CT &one, CT &another, double rate) = 0;
 };
 
 template<class CT, class PT = eslabPop<CT> >
@@ -448,7 +444,7 @@ class eslabNPtsBitCrossover: public eslabCrossover<CT, PT>
 
 	protected:
 
-	void perform(CT &one, CT &another);
+	bool perform(CT &one, CT &another, double rate);
 };
 
 template<class CT, class PT = eslabPop<CT> >
@@ -466,7 +462,7 @@ class eslabPeerCrossover: public eslabCrossover<CT, PT>
 
 	protected:
 
-	void perform(CT &one, CT &another);
+	bool perform(CT &one, CT &another, double rate);
 };
 
 template<class CT, class PT = eslabPop<CT> >
@@ -494,16 +490,12 @@ class eslabMutation: public eoMonOp<CT>
 		double rate = stats.mutation_rate = std::max(min_rate,
 			scale * std::exp(exponent * (double)stats.generations));
 
-		if (!Random::flip(rate)) return false;
-
-		perform(chromosome);
-
-		return true;
+		return perform(chromosome, rate);
 	}
 
 	protected:
 
-	virtual void perform(CT &chromosome) = 0;
+	virtual bool perform(CT &chromosome, double rate) = 0;
 };
 
 template<class CT, class PT = eslabPop<CT> >
@@ -521,7 +513,7 @@ class eslabUniformRangeMutation: public eslabMutation<CT, PT>
 
 	protected:
 
-	void perform(CT &chromosome);
+	bool perform(CT &chromosome, double rate);
 };
 
 template<class CT, class PT = eslabPop<CT> >
@@ -539,7 +531,7 @@ class eslabPeerMutation: public eslabMutation<CT, PT>
 
 	protected:
 
-	void perform(CT &chromosome);
+	bool perform(CT &chromosome, double rate);
 };
 
 template<class CT, class PT = eslabPop<CT> >
