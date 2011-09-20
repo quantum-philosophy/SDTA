@@ -46,18 +46,20 @@ double eslabPop<CT>::diversity() const
 
 	if (!population_size) return 0;
 
-	size_t i, j, k;
-	size_t count = 0;
+	double value = 0;
+	size_t i, j, k, count, total = 0;
 	size_t chromosome_length = self[0].size();
 
 	for (i = 0; i < population_size - 1; i++)
-		for (j = i + 1; j < population_size; j++)
-			for (k = 0; k < chromosome_length; k++)
+		for (j = i + 1; j < population_size; j++) {
+			for (count = 0, k = 0; k < chromosome_length; k++)
 				if (self[i][k] != self[j][k]) count++;
 
-	return (double)count /
-		((double)population_size * ((double)population_size - 1) / 2.0) /
-		(double)chromosome_length;
+			value += count;
+			total++;
+		}
+
+	return value / (double)total / (double)chromosome_length;
 }
 
 /******************************************************************************/
@@ -305,9 +307,6 @@ bool eslabUniformRangeMutation<CT, PT>::perform(CT &chromosome, double rate)
 	size_t size = chromosome.size();
 	bool changed = false;
 	rank_t prev, next;
-
-	/* Normalization */
-	rate = rate / (double)size;
 
 	for (size_t i = 0; i < size; i++) {
 		const constrain_t &constrain = constrains[i];

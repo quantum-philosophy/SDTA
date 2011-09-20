@@ -80,6 +80,9 @@ void SOEvolutionStats::process()
 	width = population_size -
 		(executions - last_executions) + 1;
 
+	size_t unique = population->unique();
+	double diversity = population->diversity();
+
 	std::cout
 		<< std::setw(width) << " "
 		<< std::setprecision(2)
@@ -93,8 +96,9 @@ void SOEvolutionStats::process()
 			<< std::setw(6) << mutation_rate
 		<< " } "
 		<< "[ "
-			<< std::setw(4) << population->unique() << "/"
+			<< std::setw(4) << unique << "/"
 			<< population_size
+			<< " (" << std::setprecision(2) << diversity << ")"
 		<< " ]"
 		<< std::endl
 		<< std::setw(4) << generations << ": ";
