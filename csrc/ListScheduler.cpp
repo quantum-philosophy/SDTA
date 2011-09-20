@@ -1,5 +1,3 @@
-#include <stdexcept>
-
 #include "ListScheduler.h"
 #include "Architecture.h"
 #include "Processor.h"

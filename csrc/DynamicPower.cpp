@@ -1,7 +1,3 @@
-#include <stdexcept>
-#include <string.h>
-#include <math.h>
-
 #include "DynamicPower.h"
 #include "Task.h"
 #include "Graph.h"

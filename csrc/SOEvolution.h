@@ -1,7 +1,6 @@
 #ifndef __SO_EVOLUTION_H__
 #define __SO_EVOLUTION_H__
 
-#include <cmath>
 #include "common.h"
 #include "Evolution.h"
 

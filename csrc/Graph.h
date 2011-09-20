@@ -2,7 +2,6 @@
 #define __GRAPH_H__
 
 #include "common.h"
-#include <stdexcept>
 
 class Graph
 {

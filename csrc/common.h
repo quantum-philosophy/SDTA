@@ -1,12 +1,16 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
-#include <iostream>
-#include <fstream>
+#include <stdexcept>
 #include <vector>
 #include <list>
 #include <utility>
 #include <limits>
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <iomanip>
+#include <cmath>
 #include <stdlib.h>
 
 #ifdef REAL_RANK

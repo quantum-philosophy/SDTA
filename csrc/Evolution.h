@@ -11,11 +11,6 @@
 
 #include <ga/eoBitOp.h>
 
-#include <map>
-#include <iostream>
-#include <iomanip>
-#include <string>
-
 #include "common.h"
 #include "Schedule.h"
 #include "ListScheduler.h"

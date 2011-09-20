@@ -1,14 +1,3 @@
-#include <stdexcept>
-#include <limits>
-#include <iomanip>
-#include <sstream>
-#include <fstream>
-#include <iomanip>
-#include <ctime>
-
-#include "Graph.h"
-#include "Task.h"
-#include "Hotspot.h"
 #include "Constrain.h"
 
 /******************************************************************************/

@@ -1,8 +1,6 @@
 #include "Processor.h"
 #include "Architecture.h"
 
-#include <stdexcept>
-#include <string>
 #include <nr3.h>
 #include <eigen_sym.h>
 
