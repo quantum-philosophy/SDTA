@@ -1,15 +1,28 @@
 #ifndef __SO_EVOLUTION_H__
 #define __SO_EVOLUTION_H__
 
-#include <cmath>
 #include "common.h"
 #include "Evolution.h"
 
+class eslabSOChromosome: public eslabChromosome<double>,
 #ifdef REAL_RANK
-typedef eoReal<double> eslabSOChromosome;
+	public eoReal<double>
 #else
-typedef eoInt<double> eslabSOChromosome;
+	public eoInt<double>
 #endif
+{
+	public:
+
+	typedef double fitness_t;
+
+#ifdef REAL_RANK
+	eslabSOChromosome() : eoReal<double>() {}
+	eslabSOChromosome(size_t _size) : eoReal<double>(_size) {}
+#else
+	eslabSOChromosome() : eoInt<double>() {}
+	eslabSOChromosome(size_t _size) : eoInt<double>(_size) {}
+#endif
+};
 
 class eslabSOPop: public eslabPop<eslabSOChromosome>
 {
@@ -49,35 +62,37 @@ class SOEvolution:
 	{
 		public:
 
-		evaluate_t(SOEvolution *_ls) :
-			eoEvalFunc<chromosome_t>(), ls(_ls) {}
+		evaluate_t(SOEvolution &_evolution) :
+			eoEvalFunc<chromosome_t>(), evolution(_evolution) {}
 
-		virtual void operator()(chromosome_t &chromosome)
+		void operator()(chromosome_t &chromosome)
 		{
-			if (chromosome.invalid())
-				chromosome.fitness(ls->evaluate(chromosome));
+			evolution.assess(chromosome);
 		}
 
 		private:
 
-		SOEvolution *ls;
+		SOEvolution &evolution;
 	};
-
-	evaluate_t evaluator;
 
 	public:
 
-	SOEvolution(const Architecture &_architecture,
-		const Graph &_graph, const Hotspot &_hotspot,
-		const EvolutionTuning &_tuning = EvolutionTuning()) :
+	SOEvolution(size_t _chromosome_length, const Evaluation &_evaluation,
+		const EvolutionTuning &_tuning, const constrains_t &_constrains) :
 
-		GenericEvolution<chromosome_t, population_t, stats_t>(_architecture,
-			_graph, _hotspot, _tuning), evaluator(this) {}
+		GenericEvolution<chromosome_t, population_t, stats_t>(
+			_chromosome_length, _evaluation, _tuning, _constrains) {}
 
 	protected:
 
-	fitness_t evaluate_schedule(const Schedule &schedule);
-	void evaluate_chromosome(chromosome_t &chromosome);
+	fitness_t evaluate(const chromosome_t &chromosome);
+
+	inline void assess(chromosome_t &chromosome)
+	{
+		if (chromosome.invalid())
+			chromosome.fitness(evaluate(chromosome));
+	}
+
 	void process(population_t &population,
 		eslabCheckPoint<chromosome_t> &checkpoint,
 		eoTransform<chromosome_t> &transform);
@@ -133,29 +148,6 @@ class eslabSOGeneticAlgorithm: public eslabAlgorithm<CT>
 	eoSelect<chromosome_t> &select;
 	eoTransform<chromosome_t> &transform;
 	eoReplacement<chromosome_t> &replace;
-};
-
-template<class CT>
-class eslabSOLocalSearchAlgorithm: public eslabAlgorithm<CT>
-{
-	public:
-
-	typedef CT chromosome_t;
-	typedef eoPop<chromosome_t> population_t;
-
-	eslabSOLocalSearchAlgorithm(const constrains_t &_constrains,
-		eoContinue<chromosome_t> &_continuator,
-		eoEvalFunc<chromosome_t> &_evaluate_one) :
-
-		eslabAlgorithm<CT>(_continuator, _evaluate_one),
-		constrains(_constrains) {}
-
-	void operator()(population_t &population);
-
-	private:
-
-	const constrains_t &constrains;
-	const chromosome_t &select(population_t &population) const;
 };
 
 template <class CT>

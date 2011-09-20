@@ -1,15 +1,3 @@
-#include <stdexcept>
-#include <limits>
-#include <iomanip>
-#include <sstream>
-#include <fstream>
-#include <iomanip>
-#include <ctime>
-
-#include "Graph.h"
-#include "Task.h"
-#include "ListScheduler.h"
-#include "Hotspot.h"
 #include "Constrain.h"
 
 /******************************************************************************/
@@ -127,23 +115,6 @@ void GenericEvolutionStats<CT, PT>::display(std::ostream &o) const
 /******************************************************************************/
 
 template<class CT, class PT, class ST>
-GenericEvolution<CT, PT, ST>::GenericEvolution(
-	const Architecture &_architecture, const Graph &_graph,
-	const Hotspot &_hotspot, const EvolutionTuning &_tuning) :
-
-	architecture(_architecture), graph(_graph), hotspot(_hotspot),
-
-	/* Constants */
-	tuning(_tuning), task_count(graph.task_count),
-	chromosome_length(task_count * (1 + (tuning.include_mapping ? 1 : 0))),
-	constrains(Constrain::calculate(architecture, graph)),
-	sampling_interval(hotspot.sampling_interval())
-{
-	if (task_count == 0)
-		throw std::runtime_error("The graph is empty.");
-}
-
-template<class CT, class PT, class ST>
 ST &GenericEvolution<CT, PT, ST>::solve(const layout_t &layout,
 	const priority_t &priority)
 {
@@ -190,14 +161,6 @@ void GenericEvolution<CT, PT, ST>::populate(population_t &population,
 
 	population.clear();
 
-	/* The mapping part (though may not be included) */
-	if (layout.size() != task_count)
-		throw std::runtime_error("The layout vector has bad dimensions.");
-
-	/* The scheduling part */
-	if (priority.size() != task_count)
-		throw std::runtime_error("The priority vector has bad dimensions.");
-
 	chromosome_t chromosome;
 
 	if (tuning.include_mapping)
@@ -205,7 +168,7 @@ void GenericEvolution<CT, PT, ST>::populate(population_t &population,
 	else
 		chromosome = eslabMonoGeneEncoder<chromosome_t>(priority);
 
-	evaluate_chromosome(chromosome);
+	assess(chromosome);
 
 	/* Fill the first part with uniform chromosomes */
 	create_count = tuning.uniform_ratio * tuning.population_size;
@@ -219,28 +182,8 @@ void GenericEvolution<CT, PT, ST>::populate(population_t &population,
 			chromosome[j] = constrains[j].random();
 
 		chromosome.invalidate();
-		evaluate_chromosome(chromosome);
+		assess(chromosome);
 		population.push_back(chromosome);
-	}
-}
-
-template<class CT, class PT, class ST>
-typename GenericEvolution<CT, PT, ST>::fitness_t
-GenericEvolution<CT, PT, ST>::evaluate(const chromosome_t &chromosome)
-{
-	if (tuning.include_mapping) {
-		eslabDualGeneEncoder<chromosome_t> dual(chromosome);
-
-		Schedule schedule = ListScheduler::process(architecture,
-			graph, dual.layout(), dual.priority());
-
-		return evaluate_schedule(schedule);
-	}
-	else {
-		Schedule schedule = ListScheduler::process(architecture,
-			graph, layout /* use the default one */, chromosome);
-
-		return evaluate_schedule(schedule);
 	}
 }
 
@@ -277,7 +220,7 @@ void eslabTransform<CT>::operator()(population_t &population)
 }
 
 /******************************************************************************/
-/* eslabNPtsBitCrossover                                                      */
+/* eslabCrossover                                                             */
 /******************************************************************************/
 
 template<class CT, class PT>
@@ -321,10 +264,6 @@ bool eslabNPtsBitCrossover<CT, PT>::perform(CT &one, CT &another, double rate)
 	return true;
 }
 
-/******************************************************************************/
-/* eslabPeerCrossover                                                         */
-/******************************************************************************/
-
 template<class CT, class PT>
 bool eslabPeerCrossover<CT, PT>::perform(CT &one, CT &another, double rate)
 {
@@ -357,7 +296,7 @@ bool eslabPeerCrossover<CT, PT>::perform(CT &one, CT &another, double rate)
 }
 
 /******************************************************************************/
-/* eslabUniformRangeMutation                                                  */
+/* eslabMutation                                                              */
 /******************************************************************************/
 
 template<class CT, class PT>
@@ -374,10 +313,6 @@ bool eslabUniformRangeMutation<CT, PT>::perform(CT &chromosome, double rate)
 
 	return changed;
 }
-
-/******************************************************************************/
-/* eslabPeerMutation                                                          */
-/******************************************************************************/
 
 template<class CT, class PT>
 bool eslabPeerMutation<CT, PT>::perform(CT &chromosome, double rate)
@@ -398,6 +333,16 @@ bool eslabPeerMutation<CT, PT>::perform(CT &chromosome, double rate)
 	chromosome[index] = rank;
 
 	return true;
+}
+
+/******************************************************************************/
+/* eslabLeaarning                                                             */
+/******************************************************************************/
+
+template<class CT, class PT>
+bool eslabLearning<CT, PT>::operator()(chromosome_t &chromosome)
+{
+	return false;
 }
 
 /******************************************************************************/

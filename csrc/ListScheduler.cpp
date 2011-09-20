@@ -1,5 +1,3 @@
-#include <stdexcept>
-
 #include "ListScheduler.h"
 #include "Architecture.h"
 #include "Processor.h"
@@ -10,8 +8,8 @@
 Schedule ListScheduler::process(const Architecture &architecture,
 	const Graph &graph, const layout_t &layout, const priority_t &priority)
 {
-	size_t task_count = graph.task_count;
 	size_t processor_count = architecture.processor_count;
+	size_t task_count = graph.task_count;
 
 #ifndef SHALLOW_CHECK
 	if (priority.size() != task_count)
@@ -39,7 +37,7 @@ Schedule ListScheduler::process(const Architecture &architecture,
 	std::vector<double> task_time(task_count, 0);
 	std::vector<list_schedule_t> pool(processor_count);
 
-	Schedule schedule(architecture, graph);
+	Schedule schedule(processor_count, task_count);
 
 	for (id = 0; id < task_count; id++) {
 		task = tasks[id];

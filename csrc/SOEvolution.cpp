@@ -13,6 +13,8 @@ void SOEvolution::process(population_t &population,
 	eslabCheckPoint<chromosome_t> &checkpoint,
 	eoTransform<chromosome_t> &transform)
 {
+	evaluate_t evaluator(*this);
+
 	/* Select */
 	eslabTournamentSelect<chromosome_t> select_one(tuning.tournament_size);
 	eoSelectPerc<chromosome_t> select(select_one);
@@ -33,42 +35,26 @@ void SOEvolution::process(population_t &population,
 
 	ga(population);
 
-	/*
-	checkpoint.reset();
-
-	eslabSOLocalSearchAlgorithm<chromosome_t> ls(constrains,
-		checkpoint, evaluator);
-
-	ls(population);
-	*/
-
 	stats.best_chromosome = population.best_element();
 }
 
-void SOEvolution::evaluate_chromosome(chromosome_t &chromosome)
-{
-	evaluator(chromosome);
-}
-
 SOEvolution::fitness_t
-SOEvolution::evaluate_schedule(const Schedule &schedule)
+SOEvolution::evaluate(const chromosome_t &chromosome)
 {
-	fitness_t fitness;
+	price_t price;
 
-	if (schedule.get_duration() > graph.get_deadline()) {
-		stats.miss_deadline();
-
-		fitness = std::numeric_limits<fitness_t>::min();
+	if (tuning.include_mapping) {
+		eslabDualGeneEncoder<chromosome_t> dual(chromosome);
+		price = evaluation.process(dual.layout(), dual.priority(), true);
 	}
 	else {
-		stats.evaluate();
-
-		/* TODO: eliminate calculation of the energy consumption */
-		price_t price = schedule.evaluate(hotspot);
-		fitness = price.lifetime;
+		price = evaluation.process(layout, chromosome, true);
 	}
 
-	return fitness;
+	if (price.lifetime < 0) stats.miss_deadline();
+	else stats.evaluate();
+
+	return price.lifetime;
 }
 
 /******************************************************************************/

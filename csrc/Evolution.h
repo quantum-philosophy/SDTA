@@ -11,12 +11,13 @@
 
 #include <ga/eoBitOp.h>
 
-#include <map>
-#include <iostream>
-#include <iomanip>
-#include <string>
-
 #include "common.h"
+#include "Schedule.h"
+#include "ListScheduler.h"
+#include "Evaluation.h"
+
+template<class FT>
+class eslabChromosome {};
 
 template<class CT>
 class eslabGeneEncoder
@@ -141,7 +142,7 @@ class eslabPop: public eoPop<CT>
 {
 	public:
 
-	typedef typename eoPop<CT>::Fitness fitness_t;
+	typedef typename CT::fitness_t fitness_t;
 
 	size_t unique() const;
 	double diversity() const;
@@ -193,7 +194,6 @@ class EvolutionTuning
 	bool verbose;
 	std::string dump_evolution;
 
-	EvolutionTuning() { defaults(); }
 	EvolutionTuning(const std::string &filename);
 
 	void update(std::istream &stream);
@@ -214,7 +214,7 @@ class eslabContinue: public eoContinue<CT>
 };
 
 template<class CT>
-class eslabCheckPoint : public eoContinue<CT>
+class eslabCheckPoint: public eoContinue<CT>
 {
 	public:
 
@@ -337,13 +337,20 @@ class GenericEvolution: public Evolution
 	typedef CT chromosome_t;
 	typedef	PT population_t;
 	typedef ST stats_t;
-	typedef typename chromosome_t::Fitness fitness_t;
+	typedef typename chromosome_t::fitness_t fitness_t;
 
-	GenericEvolution(const Architecture &_architecture,
-		const Graph &_graph, const Hotspot &_hotspot,
-		const EvolutionTuning &_tuning = EvolutionTuning());
+	GenericEvolution(size_t _chromosome_length,
+		const Evaluation &_evaluation,
+		const EvolutionTuning &_tuning,
+		const constrains_t &_constrains) :
 
-	void update(std::istream &stream);
+		chromosome_length(_chromosome_length),
+		evaluation(_evaluation), tuning(_tuning),
+		constrains(_constrains)
+	{
+		if (chromosome_length == 0)
+			throw std::runtime_error("The length cannot be zero.");
+	}
 
 	stats_t &solve(const layout_t &layout, const priority_t &priority);
 
@@ -352,26 +359,19 @@ class GenericEvolution: public Evolution
 	void populate(population_t &population, const layout_t &layout,
 		const priority_t &priority);
 
-	fitness_t evaluate(const chromosome_t &chromosome);
-
-	virtual fitness_t evaluate_schedule(const Schedule &schedule) = 0;
-	virtual void evaluate_chromosome(chromosome_t &chromosome) = 0;
+	virtual fitness_t evaluate(const chromosome_t &chromosome) = 0;
+	virtual void assess(chromosome_t &chromosome) = 0;
 	virtual void process(population_t &population,
 		eslabCheckPoint<chromosome_t> &checkpoint,
 		eoTransform<chromosome_t> &transform) = 0;
 
-	const Architecture &architecture;
-	const Graph &graph;
-	const Hotspot &hotspot;
-	layout_t layout;
-
-	stats_t stats;
-
-	const EvolutionTuning tuning;
-	const size_t task_count;
 	const size_t chromosome_length;
+	const Evaluation evaluation;
+	const EvolutionTuning tuning;
 	const constrains_t constrains;
-	const double sampling_interval;
+
+	layout_t layout;
+	stats_t stats;
 };
 
 template<class CT>
@@ -534,13 +534,26 @@ class eslabPeerMutation: public eslabMutation<CT, PT>
 	bool perform(CT &chromosome, double rate);
 };
 
+template<class CT, class PT = eslabPop<CT> >
+class eslabLearning: public eoMonOp<CT>
+{
+	public:
+
+	typedef CT chromosome_t;
+	typedef PT population_t;
+
+	eslabLearning() {}
+
+	bool operator()(chromosome_t &chromosome);
+};
+
 template<class CT>
 class eslabEvolutionMonitor: public eoMonitor
 {
 	public:
 
 	typedef eoPop<CT> population_t;
-	typedef typename eoPop<CT>::Fitness fitness_t;
+	typedef typename CT::fitness_t fitness_t;
 
 	eslabEvolutionMonitor(population_t &_population, const std::string &filename);
 
@@ -588,7 +601,7 @@ class eslabStallContinue: public eslabContinue<CT>
 
 	typedef CT chromosome_t;
 	typedef PT population_t;
-	typedef typename CT::Fitness fitness_t;
+	typedef typename CT::fitness_t fitness_t;
 
 	eslabStallContinue(size_t _min_generations, size_t _stall_generations) :
 		min_generations(_min_generations), stall_generations(_stall_generations)

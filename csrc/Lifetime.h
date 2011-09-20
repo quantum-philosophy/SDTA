@@ -1,8 +1,6 @@
 #ifndef __LIFETIME_H__
 #define __LIFETIME_H__
 
-#include <utility>
-
 #include "common.h"
 
 typedef std::pair<unsigned int, double> peak_t;

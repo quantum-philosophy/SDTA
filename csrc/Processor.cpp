@@ -1,5 +1,3 @@
-#include <iomanip>
-
 #include "Processor.h"
 
 void Processor::add_type(unsigned long int nc, double ceff)

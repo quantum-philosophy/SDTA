@@ -7,17 +7,17 @@
 #include <time.h>
 
 #include "CommandLine.h"
-#include "Graph.h"
+
 #include "Architecture.h"
+#include "Graph.h"
+#include "Hotspot.h"
 #include "Schedule.h"
 #include "Layout.h"
 #include "Priority.h"
 #include "ListScheduler.h"
+#include "Evaluation.h"
 #include "SOEvolution.h"
 #include "MOEvolution.h"
-#include "DynamicPower.h"
-#include "Lifetime.h"
-#include "Hotspot.h"
 
 using namespace std;
 
@@ -132,16 +132,32 @@ void optimize(const string &system_config, const string &genetic_config,
 		if (tuning.reorder_tasks)
 			throw std::runtime_error("Not implemented yet.");
 
+		hotspot = new Hotspot(floorplan_config, thermal_config);
+
+		/* 6. Obtain the initial measurements to compare with.
+		 *
+		 */
+		Evaluation evaluation(*architecture, *graph, *hotspot);
+		price_t price = evaluation.process(schedule);
+
+		if (tuning.verbose)
+			cout << "Initial lifetime: "
+				<< setiosflags(ios::fixed) << setprecision(2)
+				<< price.lifetime << endl
+				<< "Initial energy: "
+				<< price.energy << endl;
+
+		const constrains_t constrains =
+			Constrain::calculate(*architecture, *graph);
+		size_t task_count = graph->size();
+
 		if (tuning.verbose) {
 			cout << graph << endl << architecture << endl
 				<< "Start mapping: " << print_t<pid_t>(mapping) << endl
 				<< "Start priority: " << print_t<rank_t>(priority) << endl
 				<< "Start schedule:" << endl << schedule << endl;
 
-			const constrains_t constrains =
-				Constrain::calculate(*architecture, *graph);
-
-			size_t out = 0, task_count = graph->size();
+			size_t out = 0;
 			for (size_t i = 0; i < task_count; i++)
 				if (priority[i] < constrains[i].min ||
 					priority[i] > constrains[i].max) out++;
@@ -152,31 +168,18 @@ void optimize(const string &system_config, const string &genetic_config,
 			cout << endl;
 		}
 
-		hotspot = new Hotspot(floorplan_config, thermal_config);
-
-		/* 6. Obtain the initial measurements to compare with.
-		 *
-		 */
-		price_t price = schedule.evaluate(*hotspot);
-
-		if (tuning.verbose)
-			cout << "Initial lifetime: "
-				<< setiosflags(ios::fixed) << setprecision(2)
-				<< price.lifetime << endl
-				<< "Initial energy: "
-				<< price.energy << endl;
+		size_t chromosome_length = tuning.include_mapping ?
+			2 * task_count : task_count;
 
 		for (size_t i = 0; i < repeat; i++) {
 			Random::reseed();
 
-			if (tuning.multiobjective) {
-				scheduler = new MOEvolution(*architecture,
-					*graph, *hotspot, tuning);
-			}
-			else {
-				scheduler = new SOEvolution(*architecture,
-					*graph, *hotspot, tuning);
-			}
+			if (tuning.multiobjective)
+				scheduler = new MOEvolution(chromosome_length,
+					evaluation, tuning, constrains);
+			else
+				scheduler = new SOEvolution(chromosome_length,
+					evaluation, tuning, constrains);
 
 			clock_t begin = clock();
 

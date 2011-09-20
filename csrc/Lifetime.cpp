@@ -1,6 +1,3 @@
-#include <stdexcept>
-#include <math.h>
-
 #include "Lifetime.h"
 #include "Architecture.h"
 #include "Hotspot.h"

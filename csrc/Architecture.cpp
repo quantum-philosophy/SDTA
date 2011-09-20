@@ -1,6 +1,3 @@
-#include <stdexcept>
-#include <iomanip>
-
 #include "Architecture.h"
 #include "Processor.h"
 #include "Task.h"
