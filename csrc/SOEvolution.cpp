@@ -41,21 +41,20 @@ void SOEvolution::process(population_t &population,
 SOEvolution::fitness_t
 SOEvolution::evaluate(const chromosome_t &chromosome)
 {
-	fitness_t fitness;
-	Schedule schedule = calc_schedule(chromosome);
+	price_t price;
 
-	if (schedule.get_duration() > graph.get_deadline()) {
-		stats.miss_deadline();
-
-		fitness = std::numeric_limits<fitness_t>::min();
+	if (tuning.include_mapping) {
+		eslabDualGeneEncoder<chromosome_t> dual(chromosome);
+		price = evaluation.process(dual.layout(), dual.priority(), true);
 	}
 	else {
-		stats.evaluate();
-
-		fitness = schedule.lifetime(hotspot);
+		price = evaluation.process(layout, chromosome, true);
 	}
 
-	return fitness;
+	if (price.lifetime < 0) stats.miss_deadline();
+	else stats.evaluate();
+
+	return price.lifetime;
 }
 
 /******************************************************************************/

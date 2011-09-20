@@ -74,22 +74,22 @@ void MOEvolution::process(population_t &population,
 MOEvolution::fitness_t
 MOEvolution::evaluate(const chromosome_t &chromosome)
 {
-	fitness_t fitness;
-	Schedule schedule = calc_schedule(chromosome);
+	price_t price;
 
-	if (schedule.get_duration() > graph.get_deadline()) {
-		stats.miss_deadline();
-
-		fitness[LIFETIME_OBJECTIVE] = std::numeric_limits<double>::min();
-		fitness[ENERGY_OBJECTIVE] = std::numeric_limits<double>::max();
+	if (tuning.include_mapping) {
+		eslabDualGeneEncoder<chromosome_t> dual(chromosome);
+		price = evaluation.process(dual.layout(), dual.priority());
 	}
 	else {
-		stats.evaluate();
-
-		price_t price = schedule.evaluate(hotspot);
-		fitness[LIFETIME_OBJECTIVE] = price.lifetime;
-		fitness[ENERGY_OBJECTIVE] = price.energy;
+		price = evaluation.process(layout, chromosome);
 	}
+
+	if (price.lifetime < 0) stats.miss_deadline();
+	else stats.evaluate();
+
+	fitness_t fitness;
+	fitness[LIFETIME_OBJECTIVE] = price.lifetime;
+	fitness[ENERGY_OBJECTIVE] = price.energy;
 
 	return fitness;
 }

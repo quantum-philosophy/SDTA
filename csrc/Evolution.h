@@ -19,6 +19,7 @@
 #include "common.h"
 #include "Schedule.h"
 #include "ListScheduler.h"
+#include "Evaluation.h"
 
 template<class FT>
 class eslabChromosome {};
@@ -198,7 +199,6 @@ class EvolutionTuning
 	bool verbose;
 	std::string dump_evolution;
 
-	EvolutionTuning() { defaults(); }
 	EvolutionTuning(const std::string &filename);
 
 	void update(std::istream &stream);
@@ -344,27 +344,20 @@ class GenericEvolution: public Evolution
 	typedef ST stats_t;
 	typedef typename chromosome_t::fitness_t fitness_t;
 
-	GenericEvolution(const Architecture &_architecture,
-		const Graph &_graph, const Hotspot &_hotspot,
-		const EvolutionTuning &_tuning = EvolutionTuning());
+	GenericEvolution(size_t _chromosome_length,
+		const Evaluation &_evaluation,
+		const EvolutionTuning &_tuning,
+		const constrains_t &_constrains) :
 
-	void update(std::istream &stream);
+		chromosome_length(_chromosome_length),
+		evaluation(_evaluation), tuning(_tuning),
+		constrains(_constrains)
+	{
+		if (chromosome_length == 0)
+			throw std::runtime_error("The length cannot be zero.");
+	}
 
 	stats_t &solve(const layout_t &layout, const priority_t &priority);
-
-	inline Schedule calc_schedule(const chromosome_t &chromosome) const
-	{
-		if (tuning.include_mapping) {
-			eslabDualGeneEncoder<chromosome_t> dual(chromosome);
-
-			return ListScheduler::process(architecture, graph,
-				dual.layout(), dual.priority());
-		}
-		else {
-			return ListScheduler::process(architecture, graph,
-				layout /* use the default one */, chromosome);
-		}
-	}
 
 	protected:
 
@@ -377,18 +370,13 @@ class GenericEvolution: public Evolution
 		eslabCheckPoint<chromosome_t> &checkpoint,
 		eoTransform<chromosome_t> &transform) = 0;
 
-	const Architecture &architecture;
-	const Graph &graph;
-	const Hotspot &hotspot;
-	layout_t layout;
-
-	stats_t stats;
-
-	const EvolutionTuning tuning;
-	const size_t task_count;
 	const size_t chromosome_length;
+	const Evaluation evaluation;
+	const EvolutionTuning tuning;
 	const constrains_t constrains;
-	const double sampling_interval;
+
+	layout_t layout;
+	stats_t stats;
 };
 
 template<class CT>

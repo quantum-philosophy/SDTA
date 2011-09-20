@@ -126,23 +126,6 @@ void GenericEvolutionStats<CT, PT>::display(std::ostream &o) const
 /******************************************************************************/
 
 template<class CT, class PT, class ST>
-GenericEvolution<CT, PT, ST>::GenericEvolution(
-	const Architecture &_architecture, const Graph &_graph,
-	const Hotspot &_hotspot, const EvolutionTuning &_tuning) :
-
-	architecture(_architecture), graph(_graph), hotspot(_hotspot),
-
-	/* Constants */
-	tuning(_tuning), task_count(graph.task_count),
-	chromosome_length(task_count * (1 + (tuning.include_mapping ? 1 : 0))),
-	constrains(Constrain::calculate(architecture, graph)),
-	sampling_interval(hotspot.sampling_interval())
-{
-	if (task_count == 0)
-		throw std::runtime_error("The graph is empty.");
-}
-
-template<class CT, class PT, class ST>
 ST &GenericEvolution<CT, PT, ST>::solve(const layout_t &layout,
 	const priority_t &priority)
 {
@@ -188,14 +171,6 @@ void GenericEvolution<CT, PT, ST>::populate(population_t &population,
 	size_t create_count;
 
 	population.clear();
-
-	/* The mapping part (though may not be included) */
-	if (layout.size() != task_count)
-		throw std::runtime_error("The layout vector has bad dimensions.");
-
-	/* The scheduling part */
-	if (priority.size() != task_count)
-		throw std::runtime_error("The priority vector has bad dimensions.");
 
 	chromosome_t chromosome;
 

@@ -78,12 +78,11 @@ class SOEvolution:
 
 	public:
 
-	SOEvolution(const Architecture &_architecture,
-		const Graph &_graph, const Hotspot &_hotspot,
-		const EvolutionTuning &_tuning = EvolutionTuning()) :
+	SOEvolution(size_t _chromosome_length, const Evaluation &_evaluation,
+		const EvolutionTuning &_tuning, const constrains_t &_constrains) :
 
-		GenericEvolution<chromosome_t, population_t, stats_t>(_architecture,
-			_graph, _hotspot, _tuning) {}
+		GenericEvolution<chromosome_t, population_t, stats_t>(
+			_chromosome_length, _evaluation, _tuning, _constrains) {}
 
 	protected:
 

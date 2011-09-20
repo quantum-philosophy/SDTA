@@ -20,9 +20,6 @@ class Schedule
 	friend std::ostream &operator<< (std::ostream &o,
 		const Schedule &schedule);
 
-	const Architecture &architecture;
-	const Graph &graph;
-
 	const size_t processor_count;
 	const size_t task_count;
 
@@ -59,11 +56,6 @@ class Schedule
 	{
 		return duration;
 	}
-
-	double lifetime(const Hotspot &hotspot) const;
-	price_t evaluate(const Hotspot &hotspot) const;
-
-	priority_t calc_priority() const;
 };
 
 std::ostream &operator<< (std::ostream &o, const Schedule &schedule);
