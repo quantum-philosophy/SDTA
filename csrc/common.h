@@ -135,8 +135,7 @@ struct price_t
 
 	static price_t invalid()
 	{
-		return price_t(std::numeric_limits<double>::min(),
-			std::numeric_limits<double>::max());
+		return price_t(0, std::numeric_limits<double>::max());
 	}
 };
 
@@ -166,6 +165,11 @@ struct constrain_t
 		 * Will do even if rank_t is not an integer type.
 		 */
 		return min + Random::number(1 + max - min);
+	}
+
+	inline bool tight() const
+	{
+		return max == min;
 	}
 };
 

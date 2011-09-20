@@ -84,7 +84,7 @@ MOEvolution::evaluate(const chromosome_t &chromosome)
 		price = evaluation.process(layout, chromosome);
 	}
 
-	if (price.lifetime < 0) stats.miss_deadline();
+	if (price.lifetime <= 0) stats.miss_deadline();
 	else stats.evaluate();
 
 	fitness_t fitness;

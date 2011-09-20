@@ -51,7 +51,7 @@ SOEvolution::evaluate(const chromosome_t &chromosome)
 		price = evaluation.process(layout, chromosome, true);
 	}
 
-	if (price.lifetime < 0) stats.miss_deadline();
+	if (price.lifetime <= 0) stats.miss_deadline();
 	else stats.evaluate();
 
 	return price.lifetime;

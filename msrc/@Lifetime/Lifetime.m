@@ -236,9 +236,14 @@ classdef Lifetime < handle
       % Contains full cycles (1.0) and half cycles (0.5)
       cycles = rainflow(3, :);
 
+      dT = dT - Lifetime.dT0;
+      dT(find(dT < 0)) = 0;
+
       % Number of cycles to failure for each stress level [3]
-      N = Lifetime.Atc .* (dT - Lifetime.dT0).^(-Lifetime.q) .* ...
+      N = Lifetime.Atc .* dT.^(-Lifetime.q) .* ...
         exp(Lifetime.Eatc ./ (Lifetime.k * Tmax));
+
+      N = N(find(N));
 
       % Count all detected cycles (even 0.5) as completed,
       % since we have cycling temperature fluctuations

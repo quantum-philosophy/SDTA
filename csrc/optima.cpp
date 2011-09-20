@@ -149,7 +149,7 @@ void optimize(const string &system_config, const string &genetic_config,
 				<< "Start mapping: " << print_t<pid_t>(mapping) << endl
 				<< "Start priority: " << print_t<rank_t>(priority) << endl
 				<< "Start schedule:" << endl << schedule
-				<< print_t<constrain_t>(constrains) << endl;
+				<< "Constrains: " << print_t<constrain_t>(constrains) << endl;
 
 			size_t out = 0;
 			for (size_t i = 0; i < task_count; i++)

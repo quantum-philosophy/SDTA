@@ -412,17 +412,21 @@ class eslabCrossover: public eoQuadOp<CT>
 			std::runtime_error("The mutation minimal rate is invalid.");
 	}
 
-	bool operator()(CT &one, CT &another)
+	inline bool operator()(CT &one, CT &another)
 	{
 		double rate = stats.crossover_rate = std::max(min_rate,
 			scale * std::exp(exponent * (double)stats.generations));
 
-		return perform(one, another, rate);
+		if (!Random::flip(rate)) return false;
+
+		perform(one, another);
+
+		return true;
 	}
 
 	protected:
 
-	virtual bool perform(CT &one, CT &another, double rate) = 0;
+	virtual void perform(CT &one, CT &another) = 0;
 };
 
 template<class CT, class PT = eslabPop<CT> >
@@ -444,7 +448,7 @@ class eslabNPtsBitCrossover: public eslabCrossover<CT, PT>
 
 	protected:
 
-	virtual bool perform(CT &one, CT &another, double rate);
+	void perform(CT &one, CT &another);
 };
 
 template<class CT, class PT = eslabPop<CT> >
@@ -462,7 +466,7 @@ class eslabPeerCrossover: public eslabCrossover<CT, PT>
 
 	protected:
 
-	bool perform(CT &one, CT &another, double rate);
+	void perform(CT &one, CT &another);
 };
 
 template<class CT, class PT = eslabPop<CT> >
@@ -485,17 +489,21 @@ class eslabMutation: public eoMonOp<CT>
 			std::runtime_error("The mutation minimal rate is invalid.");
 	}
 
-	bool operator()(CT &chromosome)
+	inline bool operator()(CT &chromosome)
 	{
 		double rate = stats.mutation_rate = std::max(min_rate,
 			scale * std::exp(exponent * (double)stats.generations));
 
-		return perform(chromosome, rate);
+		if (!Random::flip(rate)) return false;
+
+		perform(chromosome);
+
+		return true;
 	}
 
 	protected:
 
-	virtual bool perform(CT &chromosome, double rate) = 0;
+	virtual void perform(CT &chromosome) = 0;
 };
 
 template<class CT, class PT = eslabPop<CT> >
@@ -513,7 +521,7 @@ class eslabUniformRangeMutation: public eslabMutation<CT, PT>
 
 	protected:
 
-	bool perform(CT &chromosome, double rate);
+	void perform(CT &chromosome);
 };
 
 template<class CT, class PT = eslabPop<CT> >
@@ -531,7 +539,7 @@ class eslabPeerMutation: public eslabMutation<CT, PT>
 
 	protected:
 
-	bool perform(CT &chromosome, double rate);
+	void perform(CT &chromosome);
 };
 
 template<class CT, class PT = eslabPop<CT> >
