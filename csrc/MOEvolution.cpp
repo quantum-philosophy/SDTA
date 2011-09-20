@@ -49,6 +49,8 @@ price_t eslabMOPop::best_energy() const
 void MOEvolution::process(population_t &population,
 	eslabCheckPoint<chromosome_t> &checkpoint, eoTransform<chromosome_t> &transform)
 {
+	evaluate_t evaluator(*this);
+
 	eslabMOStallContinue stall_continue(tuning.min_generations,
 		tuning.stall_generations);
 	eslabMOEvolutionMonitor evolution_monitor(population, tuning.dump_evolution);
@@ -69,15 +71,11 @@ void MOEvolution::process(population_t &population,
 		stats.pareto_optima.push_back((price_t)population[i].objectiveVector());
 }
 
-void MOEvolution::evaluate_chromosome(chromosome_t &chromosome)
-{
-	evaluator(chromosome);
-}
-
 MOEvolution::fitness_t
-MOEvolution::evaluate_schedule(const Schedule &schedule)
+MOEvolution::evaluate(const chromosome_t &chromosome)
 {
 	fitness_t fitness;
+	Schedule schedule = calc_schedule(chromosome);
 
 	if (schedule.get_duration() > graph.get_deadline()) {
 		stats.miss_deadline();

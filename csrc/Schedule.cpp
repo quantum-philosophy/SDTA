@@ -17,6 +17,21 @@ Schedule::Schedule(const Architecture &_architecture, const Graph &_graph) :
 	schedules(std::vector<LocalSchedule>(processor_count)),
 	mapping(mapping_t(task_count, -1)), duration(0) {}
 
+double Schedule::lifetime(const Hotspot &hotspot) const
+{
+	double sampling_interval = hotspot.sampling_interval();
+
+	matrix_t dynamic_power, temperature, total_power;
+
+	DynamicPower::compute(architecture, graph, *this,
+		sampling_interval, dynamic_power);
+
+	(void)hotspot.solve(architecture, dynamic_power,
+		temperature, total_power);
+
+	return Lifetime::predict(temperature, sampling_interval);
+}
+
 price_t Schedule::evaluate(const Hotspot &hotspot) const
 {
 	double sampling_interval = hotspot.sampling_interval();

@@ -13,6 +13,8 @@ void SOEvolution::process(population_t &population,
 	eslabCheckPoint<chromosome_t> &checkpoint,
 	eoTransform<chromosome_t> &transform)
 {
+	evaluate_t evaluator(*this);
+
 	/* Select */
 	eslabTournamentSelect<chromosome_t> select_one(tuning.tournament_size);
 	eoSelectPerc<chromosome_t> select(select_one);
@@ -33,27 +35,14 @@ void SOEvolution::process(population_t &population,
 
 	ga(population);
 
-	/*
-	checkpoint.reset();
-
-	eslabSOLocalSearchAlgorithm<chromosome_t> ls(constrains,
-		checkpoint, evaluator);
-
-	ls(population);
-	*/
-
 	stats.best_chromosome = population.best_element();
 }
 
-void SOEvolution::evaluate_chromosome(chromosome_t &chromosome)
-{
-	evaluator(chromosome);
-}
-
 SOEvolution::fitness_t
-SOEvolution::evaluate_schedule(const Schedule &schedule)
+SOEvolution::evaluate(const chromosome_t &chromosome)
 {
 	fitness_t fitness;
+	Schedule schedule = calc_schedule(chromosome);
 
 	if (schedule.get_duration() > graph.get_deadline()) {
 		stats.miss_deadline();
@@ -63,9 +52,7 @@ SOEvolution::evaluate_schedule(const Schedule &schedule)
 	else {
 		stats.evaluate();
 
-		/* TODO: eliminate calculation of the energy consumption */
-		price_t price = schedule.evaluate(hotspot);
-		fitness = price.lifetime;
+		fitness = schedule.lifetime(hotspot);
 	}
 
 	return fitness;

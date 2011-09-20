@@ -29,17 +29,16 @@ class eslabObjectiveVector: public moeoRealObjectiveVector<eslabObjectiveVectorT
 	}
 };
 
-class eslabMOChromosome:
+class eslabMOChromosome: public eslabChromosome<eslabObjectiveVector>,
 #ifdef REAL_RANK
-	public moeoRealVector<eslabObjectiveVector,
+	public moeoRealVector<eslabObjectiveVector, double, double>
 #else
-	public moeoIntVector<eslabObjectiveVector,
+	public moeoIntVector<eslabObjectiveVector, double, double>
 #endif
-	/* Fitness */ double, /* Diversity */ double>
 {
 	public:
 
-	typedef eslabObjectiveVector Fitness;
+	typedef eslabObjectiveVector fitness_t;
 
 	eslabMOChromosome(size_t _size = 0) :
 #ifdef REAL_RANK
@@ -85,20 +84,17 @@ class MOEvolution:
 	{
 		public:
 
-		evaluate_t(MOEvolution *_ls) : ls(_ls) {}
+		evaluate_t(MOEvolution &_evolution) : evolution(_evolution) {}
 
 		void operator()(chromosome_t &chromosome)
 		{
-			if (chromosome.invalidObjectiveVector())
-				chromosome.objectiveVector(ls->evaluate(chromosome));
+			evolution.assess(chromosome);
 		}
 
 		private:
 
-		MOEvolution *ls;
+		MOEvolution &evolution;
 	};
-
-	evaluate_t evaluator;
 
 	public:
 
@@ -107,12 +103,18 @@ class MOEvolution:
 		const EvolutionTuning &_tuning = EvolutionTuning()) :
 
 		GenericEvolution<chromosome_t, population_t, stats_t>(_architecture,
-			_graph, _hotspot, _tuning), evaluator(this) {}
+			_graph, _hotspot, _tuning) {}
 
 	protected:
 
-	fitness_t evaluate_schedule(const Schedule &schedule);
-	void evaluate_chromosome(chromosome_t &chromosome);
+	fitness_t evaluate(const chromosome_t &chromosome);
+
+	inline void assess(chromosome_t &chromosome)
+	{
+		if (chromosome.invalidObjectiveVector())
+			chromosome.objectiveVector(evaluate(chromosome));
+	}
+
 	void process(population_t &population,
 		eslabCheckPoint<chromosome_t> &checkpoint,
 		eoTransform<chromosome_t> &transform);

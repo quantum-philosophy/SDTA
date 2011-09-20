@@ -60,6 +60,7 @@ class Schedule
 		return duration;
 	}
 
+	double lifetime(const Hotspot &hotspot) const;
 	price_t evaluate(const Hotspot &hotspot) const;
 
 	priority_t calc_priority() const;
