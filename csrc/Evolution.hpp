@@ -278,7 +278,7 @@ bool eslabPeerCrossover<CT, PT>::perform(CT &one, CT &another, double rate)
 		throw std::runtime_error("The chromosomes have different size.");
 #endif
 
-	first = eo::random(size);
+	first = Random::number(size);
 	peer_count = constrains[first].peers.size();
 
 	rank_t rank;
@@ -328,11 +328,11 @@ bool eslabPeerMutation<CT, PT>::perform(CT &chromosome, double rate)
 	size_t index, peer_count, size = chromosome.size();
 
 	do {
-		index = eo::random(size);
+		index = Random::number(size);
 		peer_count = constrains[index].peers.size();
 	} while (peer_count == 0);
 
-	size_t peer = eo::random(peer_count);
+	size_t peer = Random::number(peer_count);
 
 	rank_t rank = chromosome[peer];
 	chromosome[peer] = chromosome[index];

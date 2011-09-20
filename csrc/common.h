@@ -41,34 +41,37 @@ class GenericEvolution;
 typedef std::vector<Task *> task_vector_t;
 typedef std::vector<Processor *> processor_vector_t;
 
+typedef std::vector<rank_t> priority_t;
+
+typedef std::vector<bool> bit_string_t;
+
 #ifdef REAL_RANK
+class layout_t;
+class mapping_t;
+
+class mapping_t: public std::vector<pid_t>
+{
+	public:
+
+	mapping_t(size_t _size = 0) : std::vector<pid_t>(_size) {}
+	mapping_t(size_t _size, pid_t _init) : std::vector<pid_t>(_size, _init) {}
+
+	operator layout_t() const;
+};
+
 class layout_t: public std::vector<rank_t>
 {
 	public:
 
 	layout_t(size_t _size = 0) : std::vector<rank_t>(_size) {}
+	layout_t(size_t _size, rank_t _init) : std::vector<rank_t>(_size, _init) {}
 
-	operator mapping_t() const
-	{
-		size_t length = size();
-
-		mapping_t mapping(length);
-
-		for (size_t i = 0; i < length; i++)
-			mapping[i] = (*this)[i];
-
-		return mapping;
-	}
+	operator mapping_t() const;
 };
 #else
+typedef std::vector<pid_t> mapping_t;
 typedef std::vector<rank_t> layout_t;
 #endif
-
-typedef std::vector<pid_t> mapping_t;
-
-typedef std::vector<rank_t> priority_t;
-
-typedef std::vector<bool> bit_string_t;
 
 /******************************************************************************/
 /* Random generator                                                           */
@@ -160,11 +163,7 @@ struct constrain_t
 
 	inline rank_t random() const
 	{
-		/* We want to have a number in [min, max]
-		 * (including the right side of the interval), so +1.
-		 * Will do even if rank_t is not an integer type.
-		 */
-		return min + Random::number(1 + max - min);
+		return min + Random::uniform(max - min);
 	}
 
 	inline bool tight() const

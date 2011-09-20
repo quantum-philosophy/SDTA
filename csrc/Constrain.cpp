@@ -28,7 +28,7 @@ constrains_t Constrain::calculate(const Architecture &architecture,
 		/* Scheduling constrains */
 		constrains[id].peers.clear();
 		constrains[id].min = dependency_count;
-		constrains[id].max = task_count - dependent_count - 1;
+		constrains[id].max = task_count - dependent_count;
 
 		for (int i = 0; i < task_count; i++)
 			if (i != id && !dependents[i] && !dependencies[i])
@@ -36,13 +36,13 @@ constrains_t Constrain::calculate(const Architecture &architecture,
 #else
 		constrains[id].peers.clear();
 		constrains[id].min = 0;
-		constrains[id].max = task_count - 1;
+		constrains[id].max = task_count:
 #endif
 
 		/* Mapping constrains */
 		constrains[task_count + id].peers.clear();
 		constrains[task_count + id].min = 0;
-		constrains[task_count + id].max = processor_count - 1;
+		constrains[task_count + id].max = processor_count;
 	}
 
 	return constrains;

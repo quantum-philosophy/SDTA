@@ -11,6 +11,32 @@
 bool Random::verbose = false;
 int Random::seed = -1;
 
+#ifdef REAL_RANK
+mapping_t::operator layout_t() const
+{
+	size_t length = size();
+
+	layout_t layout(length);
+
+	for (size_t i = 0; i < length; i++)
+		layout[i] = (*this)[i];
+
+	return layout;
+}
+
+layout_t::operator mapping_t() const
+{
+	size_t length = size();
+
+	mapping_t mapping(length);
+
+	for (size_t i = 0; i < length; i++)
+		mapping[i] = (*this)[i];
+
+	return mapping;
+}
+#endif
+
 system_t::system_t(const std::string &filename)
 {
 	char c;
