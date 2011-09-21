@@ -1,5 +1,47 @@
 #include "Schedule.h"
 
+std::vector<size_t> Schedule::flatten() const
+{
+	std::vector<size_t> order(task_count);
+
+	size_t index = 0;
+
+	for (pid_t pid = 0; pid < processor_count; pid++) {
+		size_t count = schedules[pid].size();
+		for (size_t i = 0; i < count; i++)
+			order[index++] = schedules[pid][i].id;
+	}
+
+	if (index != task_count)
+		throw std::runtime_error("Cannot flatten the schedule.");
+
+	return order;
+}
+
+void Schedule::reorder(const std::vector<size_t> &order)
+{
+	size_t i, j, count;
+
+	if (order.size() != task_count)
+		throw std::runtime_error("Cannot reorder the schedule.");
+
+	for (pid_t pid = 0; pid < processor_count; pid++) {
+		count = schedules[pid].size();
+		for (i = 0; i < count; i++) {
+			ScheduleItem &item = schedules[pid][i];
+
+			for (j = 0; j < task_count; j++)
+				if (order[j] == item.id) {
+					item.id = j;
+					break;
+				}
+
+			if (j == task_count)
+				throw std::runtime_error("Cannot reorder the schedule.");
+		}
+	}
+}
+
 std::ostream &operator<< (std::ostream &o, const Schedule &schedule)
 {
 	size_t processor_count = schedule.size();

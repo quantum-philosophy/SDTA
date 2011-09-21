@@ -19,6 +19,21 @@ void Graph::add_link(Task *parent, Task *child)
 	child->add_parent(parent);
 }
 
+void Graph::reorder(const std::vector<size_t> &order)
+{
+	task_vector_t new_tasks(task_count);
+
+	if (order.size() != task_count)
+		throw std::runtime_error("The order is invalid.");
+
+	for (size_t i = 0; i < task_count; i++) {
+		new_tasks[i] = tasks[order[i]];
+		new_tasks[i]->id = i;
+	}
+
+	tasks = new_tasks;
+}
+
 std::ostream &operator<< (std::ostream &o, const Graph *graph)
 {
 	o	<< "Task Graph:" << std::endl

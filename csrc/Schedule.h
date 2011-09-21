@@ -60,6 +60,10 @@ class Schedule
 	{
 		return duration;
 	}
+
+	std::vector<size_t> flatten() const;
+
+	void reorder(const std::vector<size_t> &order);
 };
 
 std::ostream &operator<< (std::ostream &o, const Schedule &schedule);

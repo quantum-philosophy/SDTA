@@ -318,6 +318,23 @@ class Helper
 
 		stream.close();
 	}
+
+	template<class T>
+	static void permute(std::vector<T> &vector, const std::vector<size_t> &order)
+	{
+		size_t size = vector.size();
+
+		if (size != order.size())
+			throw std::runtime_error("Cannot permute the vector.");
+
+		std::vector<T> permuted(size);
+
+		for (size_t i = 0; i < size; i++)
+			permuted[i] = vector[order[i]];
+
+		for (size_t i = 0; i < size; i++)
+			vector[i] = permuted[i];
+	}
 };
 
 #endif

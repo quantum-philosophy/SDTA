@@ -43,6 +43,8 @@ class Graph
 		return tasks[id];
 	}
 
+	void reorder(const std::vector<size_t> &order);
+
 	protected:
 
 	task_vector_t tasks;

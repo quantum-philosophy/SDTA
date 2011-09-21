@@ -129,8 +129,19 @@ void optimize(const string &system_config, const string &genetic_config,
 		/* 5. Reorder the tasks if requested.
 		 *
 		 */
-		if (tuning.reorder_tasks)
-			throw std::runtime_error("Not implemented yet.");
+		size_t task_count = graph->size();
+
+		if (tuning.reorder_tasks) {
+			if (tuning.verbose)
+				cout << "Reordering the tasks." << endl;
+
+			vector<size_t> order = schedule.flatten();
+
+			graph->reorder(order);
+			Helper::permute<pid_t>(mapping, order);
+			Helper::permute<rank_t>(priority, order);
+			schedule.reorder(order);
+		}
 
 		hotspot = new Hotspot(floorplan_config, thermal_config);
 
@@ -142,7 +153,6 @@ void optimize(const string &system_config, const string &genetic_config,
 
 		const constrains_t constrains =
 			Constrain::calculate(*architecture, *graph);
-		size_t task_count = graph->size();
 
 		if (tuning.verbose) {
 			cout << graph << endl << architecture << endl
