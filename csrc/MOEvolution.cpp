@@ -71,29 +71,6 @@ void MOEvolution::process(population_t &population,
 		stats.pareto_optima.push_back((price_t)population[i].objectiveVector());
 }
 
-MOEvolution::fitness_t
-MOEvolution::evaluate(const chromosome_t &chromosome)
-{
-	price_t price;
-
-	if (tuning.include_mapping) {
-		eslabDualGeneEncoder<chromosome_t> dual(chromosome);
-		price = evaluation.process(dual.layout(), dual.priority());
-	}
-	else {
-		price = evaluation.process(layout, chromosome);
-	}
-
-	if (price.lifetime <= 0) stats.miss_deadline();
-	else stats.evaluate();
-
-	fitness_t fitness;
-	fitness[LIFETIME_OBJECTIVE] = price.lifetime;
-	fitness[ENERGY_OBJECTIVE] = price.energy;
-
-	return fitness;
-}
-
 /******************************************************************************/
 /* MOEvolutionStats                                                                 */
 /******************************************************************************/

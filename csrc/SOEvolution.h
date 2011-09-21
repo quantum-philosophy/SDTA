@@ -85,12 +85,26 @@ class SOEvolution:
 
 	protected:
 
-	fitness_t evaluate(const chromosome_t &chromosome);
-
 	inline void assess(chromosome_t &chromosome)
 	{
-		if (chromosome.invalid())
-			chromosome.fitness(evaluate(chromosome));
+		if (!chromosome.invalid()) return;
+
+		price_t price;
+
+		if (tuning.include_mapping) {
+			layout_t layout;
+			priority_t priority;
+			GeneEncoder::split(chromosome, layout, priority);
+			price = evaluation.process(layout, priority, true);
+		}
+		else {
+			price = evaluation.process(layout, chromosome, true);
+		}
+
+		if (price.lifetime <= 0) stats.miss_deadline();
+		else stats.evaluate();
+
+		chromosome.fitness(price.lifetime);
 	}
 
 	void process(population_t &population,

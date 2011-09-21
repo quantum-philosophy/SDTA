@@ -19,121 +19,58 @@
 template<class FT>
 class eslabChromosome {};
 
-template<class CT>
-class eslabGeneEncoder
+class GeneEncoder
 {
 	public:
 
-	inline const priority_t &priority() const { return m_priority; }
-	inline const CT &chromosome() const { return m_chromosome; }
-	inline operator CT() const { return m_chromosome; }
-
-	protected:
-
-	priority_t m_priority;
-	CT m_chromosome;
-};
-
-template<class CT>
-class eslabMonoGeneEncoder: public eslabGeneEncoder<CT>
-{
-	public:
-
-	eslabMonoGeneEncoder(const priority_t &_priority)
+	template<class CT, class ET>
+	static inline void encode(CT &chromosome, const ET &encoding)
 	{
-		encode(_priority);
-	}
+		size_t size = encoding.size();
 
-	eslabMonoGeneEncoder(const CT &_chromosome)
-	{
-		decode(_chromosome);
-	}
-
-	private:
-
-	using eslabGeneEncoder<CT>::m_priority;
-	using eslabGeneEncoder<CT>::m_chromosome;
-
-	inline void encode(const priority_t &_priority)
-	{
-		m_priority = _priority;
-
-		size_t size = _priority.size();
-
-		m_chromosome = CT(size);
+		chromosome.resize(size);
 
 		for (size_t i = 0; i < size; i++)
-			m_chromosome[i] = _priority[i];
+			chromosome[i] = encoding[i];
 	}
 
-	inline void decode(const CT &_chromosome)
+	template<class CT, class ET>
+	static inline void extend(CT &chromosome, const ET &encoding)
 	{
-		m_chromosome = _chromosome;
+		size_t offset = chromosome.size();
+		size_t size = encoding.size();
 
-		size_t size = _chromosome.size();
-
-		m_priority = priority_t(size);
+		chromosome.resize(offset + size);
 
 		for (size_t i = 0; i < size; i++)
-			m_priority[i] = _chromosome[i];
-	}
-};
-
-template<class CT>
-class eslabDualGeneEncoder: public eslabGeneEncoder<CT>
-{
-	layout_t m_layout;
-
-	public:
-
-	eslabDualGeneEncoder(const priority_t &_priority, const layout_t &_layout)
-	{
-		encode(_priority, _layout);
+			chromosome[offset + i] = encoding[i];
 	}
 
-	eslabDualGeneEncoder(const CT &_chromosome)
+	template<class CT, class ET1, class ET2>
+	static inline void split(const CT &chromosome, ET1 &chunk1, ET2 &chunk2,
+		size_t size1 = 0, size_t size2 = 0)
 	{
-		decode(_chromosome);
-	}
+		size_t length = chromosome.size();
 
-	inline const layout_t &layout() const { return m_layout; }
-
-	private:
-
-	using eslabGeneEncoder<CT>::m_priority;
-	using eslabGeneEncoder<CT>::m_chromosome;
-
-	inline void encode(const priority_t &_priority, const layout_t &_layout)
-	{
-		m_priority = _priority;
-		m_layout = _layout;
-
-		size_t half = _priority.size();
-
-		if (_layout.size() != half)
-			throw std::runtime_error("The layout is wrong.");
-
-		m_chromosome = CT(2 * half);
-
-		for (size_t i = 0; i < half; i++) {
-			m_chromosome[i] = _priority[i];
-			m_chromosome[half + i] = _layout[i];
+		if (size1 == 0) {
+			size1 = length / 2;
+			chunk1.resize(size1);
 		}
-	}
+		else if (size1 > length)
+			throw std::runtime_error("Cannot split.");
 
-	inline void decode(const CT &_chromosome)
-	{
-		m_chromosome = _chromosome;
-
-		size_t half = _chromosome.size() / 2;
-
-		m_priority = priority_t(half);
-		m_layout = layout_t(half);
-
-		for (size_t i = 0; i < half; i++) {
-			m_priority[i] = _chromosome[i];
-			m_layout[i] = _chromosome[half + i];
+		if (size2 == 0) {
+			size2 = length - size1;
+			chunk2.resize(size2);
 		}
+		else if (size1 + size2 > length)
+			throw std::runtime_error("Cannot split.");
+
+		for (size_t i = 0; i < size1; i++)
+			chunk1[i] = chromosome[i];
+
+		for (size_t i = 0; i < size2; i++)
+			chunk2[i] = chromosome[size1 + i];
 	}
 };
 
@@ -359,7 +296,6 @@ class GenericEvolution: public Evolution
 	void populate(population_t &population, const layout_t &layout,
 		const priority_t &priority);
 
-	virtual fitness_t evaluate(const chromosome_t &chromosome) = 0;
 	virtual void assess(chromosome_t &chromosome) = 0;
 	virtual void process(population_t &population,
 		eslabCheckPoint<chromosome_t> &checkpoint,

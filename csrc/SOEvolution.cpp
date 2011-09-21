@@ -16,7 +16,7 @@ void SOEvolution::process(population_t &population,
 	evaluate_t evaluator(*this);
 
 	/* Select */
-	eslabTournamentSelect<chromosome_t> select_one(tuning.tournament_size);
+	eslabRouletteSelect<chromosome_t> select_one;
 	eoSelectPerc<chromosome_t> select(select_one);
 
 	/* Replace = Merge + Reduce */
@@ -36,25 +36,6 @@ void SOEvolution::process(population_t &population,
 	ga(population);
 
 	stats.best_chromosome = population.best_element();
-}
-
-SOEvolution::fitness_t
-SOEvolution::evaluate(const chromosome_t &chromosome)
-{
-	price_t price;
-
-	if (tuning.include_mapping) {
-		eslabDualGeneEncoder<chromosome_t> dual(chromosome);
-		price = evaluation.process(dual.layout(), dual.priority(), true);
-	}
-	else {
-		price = evaluation.process(layout, chromosome, true);
-	}
-
-	if (price.lifetime <= 0) stats.miss_deadline();
-	else stats.evaluate();
-
-	return price.lifetime;
 }
 
 /******************************************************************************/

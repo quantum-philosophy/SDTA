@@ -165,10 +165,10 @@ void GenericEvolution<CT, PT, ST>::populate(population_t &population,
 
 	chromosome_t chromosome;
 
+	GeneEncoder::encode(chromosome, priority);
+
 	if (tuning.include_mapping)
-		chromosome = eslabDualGeneEncoder<chromosome_t>(priority, layout);
-	else
-		chromosome = eslabMonoGeneEncoder<chromosome_t>(priority);
+		GeneEncoder::extend(chromosome, layout);
 
 	assess(chromosome);
 
@@ -327,10 +327,19 @@ bool eslabPeerMutation<CT, PT>::perform(CT &chromosome, double rate)
 {
 	size_t index, peer_count, size = chromosome.size();
 
-	do {
+	while (true) {
 		index = Random::number(size);
+
+		/* We want to mutate */
+		if (constrains[index].tight()) continue;
+
 		peer_count = constrains[index].peers.size();
-	} while (peer_count == 0);
+
+		/* We really want to mutate */
+		if (!peer_count) continue;
+
+		break;
+	}
 
 	size_t peer = Random::number(peer_count);
 

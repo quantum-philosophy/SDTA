@@ -11,6 +11,9 @@
 
 price_t Evaluation::process(const Schedule &schedule, bool shallow) const
 {
+	if (schedule.get_duration() > graph.get_deadline())
+		return price_t::invalid();
+
 	double sampling_interval = hotspot.sampling_interval();
 
 	matrix_t dynamic_power, temperature, total_power;
@@ -40,9 +43,6 @@ price_t Evaluation::process(const layout_t &layout,
 {
 	Schedule schedule = ListScheduler::process(
 		architecture, graph, layout, priority);
-
-	if (schedule.get_duration() > graph.get_deadline())
-		return price_t::invalid();
 
 	return process(schedule, shallow);
 }

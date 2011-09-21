@@ -106,12 +106,30 @@ class MOEvolution:
 
 	protected:
 
-	fitness_t evaluate(const chromosome_t &chromosome);
-
 	inline void assess(chromosome_t &chromosome)
 	{
-		if (chromosome.invalidObjectiveVector())
-			chromosome.objectiveVector(evaluate(chromosome));
+		if (!chromosome.invalidObjectiveVector()) return;
+
+		price_t price;
+
+		if (tuning.include_mapping) {
+			layout_t layout;
+			priority_t priority;
+			GeneEncoder::split(chromosome, layout, priority);
+			price = evaluation.process(layout, priority);
+		}
+		else {
+			price = evaluation.process(layout, chromosome);
+		}
+
+		if (price.lifetime <= 0) stats.miss_deadline();
+		else stats.evaluate();
+
+		fitness_t fitness;
+		fitness[LIFETIME_OBJECTIVE] = price.lifetime;
+		fitness[ENERGY_OBJECTIVE] = price.energy;
+
+		chromosome.objectiveVector(fitness);
 	}
 
 	void process(population_t &population,
