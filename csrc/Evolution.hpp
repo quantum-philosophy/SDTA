@@ -215,8 +215,8 @@ void eslabTransform<CT>::operator()(population_t &population)
 /* Crossover                                                                  */
 /******************************************************************************/
 
-template<class CT, class PT>
-bool eslabNPtsBitCrossover<CT, PT>::perform(CT &one, CT &another, double rate)
+template<class CT>
+bool eslabNPtsBitCrossover<CT>::perform(CT &one, CT &another, double rate)
 {
 	if (!Random::flip(rate)) return false;
 
@@ -256,8 +256,8 @@ bool eslabNPtsBitCrossover<CT, PT>::perform(CT &one, CT &another, double rate)
 	return true;
 }
 
-template<class CT, class PT>
-bool eslabPeerCrossover<CT, PT>::perform(CT &one, CT &another, double rate)
+template<class CT>
+bool eslabPeerCrossover<CT>::perform(CT &one, CT &another, double rate)
 {
 	if (!Random::flip(rate)) return false;
 
@@ -291,8 +291,8 @@ bool eslabPeerCrossover<CT, PT>::perform(CT &one, CT &another, double rate)
 /* Mutation                                                                   */
 /******************************************************************************/
 
-template<class CT, class PT>
-bool eslabUniformRangeMutation<CT, PT>::perform(CT &chromosome, double rate)
+template<class CT>
+bool eslabUniformRangeMutation<CT>::perform(CT &chromosome, double rate)
 {
 	size_t size = chromosome.size();
 	bool changed = false;
@@ -312,8 +312,8 @@ bool eslabUniformRangeMutation<CT, PT>::perform(CT &chromosome, double rate)
 	return changed;
 }
 
-template<class CT, class PT>
-bool eslabPeerMutation<CT, PT>::perform(CT &chromosome, double rate)
+template<class CT>
+bool eslabPeerMutation<CT>::perform(CT &chromosome, double rate)
 {
 	rank_t rank;
 	int direction;
@@ -380,8 +380,8 @@ bool eslabPeerMutation<CT, PT>::perform(CT &chromosome, double rate)
 /* Training                                                                   */
 /******************************************************************************/
 
-template<class CT, class PT>
-bool eslabPeerTraining<CT, PT>::perform(CT &chromosome, double rate)
+template<class CT>
+bool eslabPeerTraining<CT>::perform(CT &chromosome, double rate)
 {
 	if (!Random::flip(rate)) return false;
 

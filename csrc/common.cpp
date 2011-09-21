@@ -10,6 +10,7 @@
 
 bool Random::verbose = false;
 int Random::seed = -1;
+double rate_t::dummy = 0;
 
 #ifdef REAL_RANK
 mapping_t::operator layout_t() const

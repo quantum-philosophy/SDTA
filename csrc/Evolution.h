@@ -297,19 +297,16 @@ class GenericEvolution: public Evolution
 /* Crossover                                                                  */
 /******************************************************************************/
 
-template<class CT, class PT>
+template<class CT>
 class eslabCrossover: public eoQuadOp<CT>
 {
 	public:
 
-	eslabCrossover(const rate_t &_rate,
-		GenericEvolutionStats<CT, PT> &_stats) :
-		rate(_rate), stats(_stats) {}
+	eslabCrossover(const rate_t &_rate) : rate(_rate) {}
 
 	inline bool operator()(CT &one, CT &another)
 	{
-		double current_rate = stats.crossover_rate = rate.get();
-		return perform(one, another, current_rate);
+		return perform(one, another, rate.get());
 	}
 
 	protected:
@@ -317,20 +314,17 @@ class eslabCrossover: public eoQuadOp<CT>
 	virtual bool perform(CT &one, CT &another, double rate) = 0;
 
 	const rate_t &rate;
-	GenericEvolutionStats<CT, PT> &stats;
 };
 
-template<class CT, class PT = eslabPop<CT> >
-class eslabNPtsBitCrossover: public eslabCrossover<CT, PT>
+template<class CT>
+class eslabNPtsBitCrossover: public eslabCrossover<CT>
 {
 	size_t points;
 
 	public:
 
-	eslabNPtsBitCrossover(size_t _points, const rate_t &_rate,
-		GenericEvolutionStats<CT, PT> &_stats) :
-
-		eslabCrossover<CT, PT>(_rate, _stats), points(_points)
+	eslabNPtsBitCrossover(size_t _points, const rate_t &_rate) :
+		eslabCrossover<CT>(_rate), points(_points)
 	{
 		if (points < 1)
 			std::runtime_error("The number of crossover points is invalid.");
@@ -341,17 +335,15 @@ class eslabNPtsBitCrossover: public eslabCrossover<CT, PT>
 	bool perform(CT &one, CT &another, double rate);
 };
 
-template<class CT, class PT = eslabPop<CT> >
-class eslabPeerCrossover: public eslabCrossover<CT, PT>
+template<class CT>
+class eslabPeerCrossover: public eslabCrossover<CT>
 {
 	const constrains_t &constrains;
 
 	public:
 
-	eslabPeerCrossover(const constrains_t &_constrains,
-		const rate_t &_rate, GenericEvolutionStats<CT, PT> &_stats) :
-
-		eslabCrossover<CT, PT>(_rate, _stats), constrains(_constrains) {}
+	eslabPeerCrossover(const constrains_t &_constrains, const rate_t &_rate) :
+		eslabCrossover<CT>(_rate), constrains(_constrains) {}
 
 	protected:
 
@@ -362,19 +354,16 @@ class eslabPeerCrossover: public eslabCrossover<CT, PT>
 /* Mutation                                                                   */
 /******************************************************************************/
 
-template<class CT, class PT = eslabPop<CT> >
+template<class CT>
 class eslabMutation: public eoMonOp<CT>
 {
 	public:
 
-	eslabMutation(const rate_t &_rate,
-		GenericEvolutionStats<CT, PT> &_stats) :
-		rate(_rate), stats(_stats) {}
+	eslabMutation(const rate_t &_rate) : rate(_rate) {}
 
 	inline bool operator()(CT &chromosome)
 	{
-		double current_rate = stats.mutation_rate = rate.get();
-		return perform(chromosome, current_rate);
+		return perform(chromosome, rate.get());
 	}
 
 	protected:
@@ -382,35 +371,30 @@ class eslabMutation: public eoMonOp<CT>
 	virtual bool perform(CT &chromosome, double rate) = 0;
 
 	const rate_t &rate;
-	GenericEvolutionStats<CT, PT> &stats;
 };
 
-template<class CT, class PT = eslabPop<CT> >
-class eslabUniformRangeMutation: public eslabMutation<CT, PT>
+template<class CT>
+class eslabUniformRangeMutation: public eslabMutation<CT>
 {
 	const constrains_t &constrains;
 
 	public:
 
-	eslabUniformRangeMutation(const constrains_t &_constrains,
-		const rate_t &_rate, GenericEvolutionStats<CT, PT> &_stats) :
-
-		eslabMutation<CT, PT>(_rate, _stats), constrains(_constrains) {}
+	eslabUniformRangeMutation(const constrains_t &_constrains, const rate_t &_rate) :
+		eslabMutation<CT>(_rate), constrains(_constrains) {}
 
 	protected:
 
 	bool perform(CT &chromosome, double rate);
 };
 
-template<class CT, class PT = eslabPop<CT> >
-class eslabPeerMutation: public eslabMutation<CT, PT>
+template<class CT>
+class eslabPeerMutation: public eslabMutation<CT>
 {
 	public:
 
-	eslabPeerMutation(const constrains_t &_constrains,
-		const rate_t &_rate, GenericEvolutionStats<CT, PT> &_stats) :
-
-		eslabMutation<CT, PT>(_rate, _stats), constrains(_constrains) {}
+	eslabPeerMutation(const constrains_t &_constrains, const rate_t &_rate) :
+		eslabMutation<CT>(_rate), constrains(_constrains) {}
 
 	protected:
 
@@ -423,19 +407,16 @@ class eslabPeerMutation: public eslabMutation<CT, PT>
 /* Training                                                                   */
 /******************************************************************************/
 
-template<class CT, class PT = eslabPop<CT> >
+template<class CT>
 class eslabTraining: public eoMonOp<CT>
 {
 	public:
 
-	eslabTraining(const rate_t &_rate,
-		GenericEvolutionStats<CT, PT> &_stats) :
-		rate(_rate), stats(_stats) {}
+	eslabTraining(const rate_t &_rate) : rate(_rate) {}
 
 	inline bool operator()(CT &chromosome)
 	{
-		double current_rate = stats.training_rate = rate.get();
-		return perform(chromosome, current_rate);
+		return perform(chromosome, rate.get());
 	}
 
 	protected:
@@ -446,21 +427,18 @@ class eslabTraining: public eoMonOp<CT>
 	}
 
 	const rate_t &rate;
-	GenericEvolutionStats<CT, PT> &stats;
 };
 
-template<class CT, class PT = eslabPop<CT> >
-class eslabPeerTraining: public eslabTraining<CT, PT>
+template<class CT>
+class eslabPeerTraining: public eslabTraining<CT>
 {
 	public:
 
-	eslabPeerTraining(const constrains_t &_constrains,
-		eoEvalFunc<CT> &_evaluate, size_t _max_lessons, size_t _max_stall,
-		const rate_t &_rate, GenericEvolutionStats<CT, PT> &_stats) :
+	eslabPeerTraining(const constrains_t &_constrains, eoEvalFunc<CT> &_evaluate,
+		size_t _max_lessons, size_t _max_stall, const rate_t &_rate) :
 
-		eslabTraining<CT, PT>(_rate, _stats),
-		constrains(_constrains), evaluate(_evaluate),
-		max_lessons(_max_lessons), max_stall(_max_stall) {}
+		eslabTraining<CT>(_rate), constrains(_constrains),
+		evaluate(_evaluate), max_lessons(_max_lessons), max_stall(_max_stall) {}
 
 	protected:
 

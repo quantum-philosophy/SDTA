@@ -57,21 +57,19 @@ void MOEvolution::process(population_t &population,
 	checkpoint.add(evolution_monitor);
 
 	/* Transform = Crossover + Mutate + Train */
-	rate_t crossover_rate(stats.generations, tuning.crossover_min_rate,
-		tuning.crossover_scale, tuning.crossover_exponent);
-	eslabNPtsBitCrossover<chromosome_t, population_t> crossover(
-		tuning.crossover_points, crossover_rate, stats);
+	rate_t crossover_rate(tuning.crossover_min_rate, tuning.crossover_scale,
+		tuning.crossover_exponent, stats.generations, stats.crossover_rate);
+	eslabNPtsBitCrossover<chromosome_t> crossover(
+		tuning.crossover_points, crossover_rate);
 
-	rate_t mutation_rate(stats.generations, tuning.mutation_min_rate,
-		tuning.mutation_scale, tuning.mutation_exponent);
-	eslabUniformRangeMutation<chromosome_t, population_t> mutate(
-		constrains, mutation_rate, stats);
+	rate_t mutation_rate(tuning.mutation_min_rate, tuning.mutation_scale,
+		tuning.mutation_exponent, stats.generations, stats.mutation_rate);
+	eslabUniformRangeMutation<chromosome_t> mutate(constrains, mutation_rate);
 
-	rate_t training_rate(stats.generations, tuning.training_min_rate,
-		tuning.training_scale, tuning.training_exponent);
-	eslabPeerTraining<chromosome_t, population_t> train(
-		constrains, evaluator, tuning.max_lessons, tuning.stall_lessons,
-		training_rate, stats);
+	rate_t training_rate(tuning.training_min_rate, tuning.training_scale,
+		tuning.training_exponent, stats.generations, stats.training_rate);
+	eslabPeerTraining<chromosome_t> train(constrains, evaluator,
+		tuning.max_lessons, tuning.stall_lessons, training_rate);
 
 	eslabTransform<chromosome_t> transform(crossover, mutate, train);
 

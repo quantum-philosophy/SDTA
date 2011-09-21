@@ -140,8 +140,10 @@ class GeneEncoder
 
 struct rate_t
 {
-	rate_t(const size_t &_step, double _min_rate, double _scale, double _exponent) :
-		step(_step), min_rate(_min_rate), scale(_scale), exponent(_exponent)
+	rate_t(double _min_rate, double _scale, double _exponent,
+		const size_t &_step, double &_keep = dummy) :
+		min_rate(_min_rate), scale(_scale), exponent(_exponent),
+		step(_step), keep(_keep)
 	{
 		if (min_rate < 0 || min_rate > 1)
 			std::runtime_error("The minimal rate is invalid.");
@@ -149,16 +151,19 @@ struct rate_t
 
 	inline double get() const
 	{
-		return std::max(min_rate,
+		return keep = std::max(min_rate,
 			scale * std::exp(exponent * (double)step));
 	}
 
 	private:
 
-	const volatile size_t &step;
 	const double min_rate;
 	const double scale;
 	const double exponent;
+	const volatile size_t &step;
+	double &keep;
+
+	static double dummy;
 };
 
 /******************************************************************************/
