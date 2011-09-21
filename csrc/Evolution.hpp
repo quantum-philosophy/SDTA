@@ -144,7 +144,7 @@ ST &GenericEvolution<CT, PT, ST>::solve(const layout_t &layout,
 	eslabNPtsBitCrossover<chromosome_t, population_t> crossover(
 		tuning.crossover_points, tuning.crossover_min_rate,
 		tuning.crossover_scale, tuning.crossover_exponent, stats);
-	eslabUniformRangeMutation<chromosome_t, population_t> mutate(
+	eslabPeerMutation<chromosome_t, population_t> mutate(
 		constrains, tuning.mutation_min_rate, tuning.mutation_scale,
 		tuning.mutation_exponent, stats);
 	eslabTransform<chromosome_t> transform(crossover, mutate);
@@ -325,29 +325,67 @@ bool eslabUniformRangeMutation<CT, PT>::perform(CT &chromosome, double rate)
 template<class CT, class PT>
 bool eslabPeerMutation<CT, PT>::perform(CT &chromosome, double rate)
 {
-	size_t index, peer_count, size = chromosome.size();
+	rank_t rank;
+	int direction;
+	bool changed = false;
+	size_t local_size, pos, peer_id;
 
-	while (true) {
-		index = Random::number(size);
+	const Schedule &schedule = chromosome.schedule();
+	size_t task_count = schedule.tasks();
 
-		/* We want to mutate */
-		if (constrains[index].tight()) continue;
+	/* In order to prevent switching back */
+	bit_string_t switched(task_count, false);
 
-		peer_count = constrains[index].peers.size();
+	/* Since this mutation affects two genes */
+	rate = rate / 2.0;
 
-		/* We really want to mutate */
-		if (!peer_count) continue;
+	for (tid_t id = 0; id < task_count; id++) {
+		/* If we have already modified this gene or we are unlucky, go on */
+		if (switched[id] || !Random::flip(rate)) continue;
 
-		break;
+		pid_t pid = schedule.map(id);
+		const LocalSchedule &local_schedule = schedule[pid];
+		local_size = local_schedule.size();
+
+		/* If the task is the only one on the core, skip */
+		if (local_size == 1) continue;
+
+		/* Find the position of the task in the local schedule */
+		for (pos = 0; pos < local_size; pos++)
+			if (local_schedule[pos].id == id) break;
+
+#ifndef SHALLOW_CHECK
+		if (pos == local_size)
+			throw std::runtime_error("Cannot find the task.");
+#endif
+
+		/* Choose the direction */
+		if (pos == 0) direction = +1;
+		else if (pos == local_size - 1) direction = -1;
+		else direction = Random::flip(0.5) ? +1 : -1;
+
+		const constrain_t &constrain = constrains[id];
+
+		/* Looking for a peer */
+		for (pos += direction; pos >= 0 && pos < local_size; pos += direction) {
+			peer_id = local_schedule[pos].id;
+			if (constrain.has_peer(peer_id) && !switched[peer_id]) {
+				/* Switch ranks between two peers */
+				rank = chromosome[id];
+				chromosome[id] = chromosome[peer_id];
+				chromosome[peer_id] = rank;
+
+				/* Remember which we have switched with */
+				switched[peer_id] = true;
+				switched[id] = true;
+
+				changed = true;
+				break;
+			}
+		}
 	}
 
-	size_t peer = Random::number(peer_count);
-
-	rank_t rank = chromosome[peer];
-	chromosome[peer] = chromosome[index];
-	chromosome[index] = rank;
-
-	return true;
+	return changed;
 }
 
 /******************************************************************************/

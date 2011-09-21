@@ -18,6 +18,10 @@ constrains_t Constrain::calculate(const Architecture &architecture,
 	for (tid_t id = 0; id < task_count; id++) {
 		task = graph[id];
 
+		constrains[id].peers = bit_string_t(2 * task_count, false);
+		constrains[task_count + id].peers = bit_string_t(2 * task_count, false);
+
+		/* Scheduling constrains */
 #ifndef UNCONSTRAINED
 		bit_string_t dependents(task_count, false);
 		dependent_count = count_dependents(task, dependents);
@@ -25,22 +29,18 @@ constrains_t Constrain::calculate(const Architecture &architecture,
 		bit_string_t dependencies(task_count, false);
 		dependency_count = count_dependencies(task, dependencies);
 
-		/* Scheduling constrains */
-		constrains[id].peers.clear();
-		constrains[id].min = dependency_count;
-		constrains[id].max = task_count - dependent_count;
-
 		for (int i = 0; i < task_count; i++)
 			if (i != id && !dependents[i] && !dependencies[i])
-				constrains[id].peers.push_back(i);
+				constrains[id].peers[i] = true;
+
+		constrains[id].min = dependency_count;
+		constrains[id].max = task_count - dependent_count;
 #else
-		constrains[id].peers.clear();
 		constrains[id].min = 0;
 		constrains[id].max = task_count:
 #endif
 
 		/* Mapping constrains */
-		constrains[task_count + id].peers.clear();
 		constrains[task_count + id].min = 0;
 		constrains[task_count + id].max = processor_count;
 	}

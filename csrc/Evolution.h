@@ -25,8 +25,13 @@ class eslabChromosome
 
 	inline void assess(const Schedule &schedule, const price_t &price)
 	{
-		this->schedule = schedule;
-		this->fit(price);
+		m_schedule = schedule;
+		fit(price);
+	}
+
+	inline const Schedule &schedule() const
+	{
+		return m_schedule;
 	}
 
 	virtual bool bad() const = 0;
@@ -35,7 +40,7 @@ class eslabChromosome
 
 	virtual void fit(const price_t &price) = 0;
 
-	Schedule schedule;
+	Schedule m_schedule;
 };
 
 template<class CT>

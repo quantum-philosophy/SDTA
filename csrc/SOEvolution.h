@@ -100,8 +100,8 @@ class SOEvolution:
 	{
 		if (!chromosome.invalid()) return;
 
-		if (tuning.include_mapping) evaluation.assess(chromosome);
-		else evaluation.assess(chromosome, layout);
+		if (tuning.include_mapping) evaluation.assess(chromosome, true);
+		else evaluation.assess(chromosome, layout, true);
 
 		if (chromosome.bad()) stats.miss_deadline();
 		else stats.evaluate();

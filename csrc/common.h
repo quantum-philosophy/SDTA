@@ -213,14 +213,9 @@ struct constrain_t
 {
 	rank_t max;
 	rank_t min;
-	std::vector<tid_t> peers;
+	bit_string_t peers;
 
 	constrain_t() : max(-1), min(-1) {}
-
-	inline bool include(rank_t what) const
-	{
-		return min <= what && what <= max;
-	}
 
 	inline rank_t random() const
 	{
@@ -230,6 +225,16 @@ struct constrain_t
 	inline bool tight() const
 	{
 		return max == min;
+	}
+
+	inline bool has_peer(size_t id) const
+	{
+#ifndef SHALLOW_CHECK
+		if (id >= peers.size())
+			throw std::runtime_error("Cannot find the peer.");
+#endif
+
+		return peers[id];
 	}
 };
 

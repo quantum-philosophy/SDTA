@@ -38,9 +38,24 @@ class Schedule
 		schedules(std::vector<LocalSchedule>(processor_count)),
 		mapping(mapping_t(task_count, -1)), duration(0) {}
 
-	inline size_t size() const
+	inline size_t processors() const
 	{
 		return processor_count;
+	}
+
+	inline size_t tasks() const
+	{
+		return task_count;
+	}
+
+	inline pid_t map(tid_t id) const
+	{
+#ifndef SHALLOW_CHECK
+		if (id >= mapping.size())
+			throw std::runtime_error("Cannot find the task.");
+#endif
+
+		return mapping[id];
 	}
 
 	inline const LocalSchedule &operator[](pid_t pid) const
