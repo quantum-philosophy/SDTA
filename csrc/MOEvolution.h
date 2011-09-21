@@ -74,8 +74,6 @@ class eslabMOPop: public eslabPop<eslabMOChromosome>
 
 class MOEvolutionStats: public GenericEvolutionStats<eslabMOChromosome, eslabMOPop>
 {
-	size_t last_executions;
-
 	public:
 
 	price_t best_lifetime;
@@ -87,7 +85,6 @@ class MOEvolutionStats: public GenericEvolutionStats<eslabMOChromosome, eslabMOP
 
 	protected:
 
-	void reset();
 	void process();
 };
 
@@ -134,8 +131,7 @@ class MOEvolution:
 	}
 
 	void process(population_t &population,
-		eslabCheckPoint<chromosome_t> &checkpoint,
-		eoTransform<chromosome_t> &transform);
+		eslabCheckPoint<chromosome_t> &checkpoint);
 };
 
 class eslabMOEvolutionMonitor: public eslabEvolutionMonitor<eslabMOChromosome>
@@ -155,9 +151,8 @@ class eslabMOStallContinue:
 
 	public:
 
-	eslabMOStallContinue(size_t _min_generations, size_t _stall_generations) :
-		eslabStallContinue<eslabMOChromosome, eslabMOPop>(
-			_min_generations, _stall_generations) {}
+	eslabMOStallContinue(size_t _stall_generations) :
+		eslabStallContinue<eslabMOChromosome, eslabMOPop>(_stall_generations) {}
 
 	void reset();
 

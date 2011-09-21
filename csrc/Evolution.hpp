@@ -1,7 +1,7 @@
 #include "Constrain.h"
 
 /******************************************************************************/
-/* eslabPop                                                                   */
+/* Population                                                                 */
 /******************************************************************************/
 
 template<class CT>
@@ -63,7 +63,7 @@ double eslabPop<CT>::diversity() const
 }
 
 /******************************************************************************/
-/* GenericEvolutionStats                                                      */
+/* Evolution Stats                                                            */
 /******************************************************************************/
 
 template<class CT, class PT>
@@ -72,15 +72,13 @@ void GenericEvolutionStats<CT, PT>::watch(population_t &_population, bool _silen
 	population = &_population;
 	silent = _silent;
 
-	if (!silent)
-		std::cout << "   0: ";
-
 	generations = 0;
 	evaluations = 0;
 	deadline_misses = 0;
 
 	crossover_rate = 0;
 	mutation_rate = 0;
+	training_rate = 0;
 
 	reset();
 }
@@ -113,7 +111,7 @@ void GenericEvolutionStats<CT, PT>::display(std::ostream &o) const
 }
 
 /******************************************************************************/
-/* GenericEvolution                                                           */
+/* Evolution                                                                  */
 /******************************************************************************/
 
 template<class CT, class PT, class ST>
@@ -138,18 +136,7 @@ ST &GenericEvolution<CT, PT, ST>::solve(const layout_t &layout,
 	/* Create */
 	populate(population, layout, priority);
 
-	/* TODO: Get rid of... */ stats();
-
-	/* Transform = Crossover + Mutate */
-	eslabNPtsBitCrossover<chromosome_t, population_t> crossover(
-		tuning.crossover_points, tuning.crossover_min_rate,
-		tuning.crossover_scale, tuning.crossover_exponent, stats);
-	eslabPeerMutation<chromosome_t, population_t> mutate(
-		constrains, tuning.mutation_min_rate, tuning.mutation_scale,
-		tuning.mutation_exponent, stats);
-	eslabTransform<chromosome_t> transform(crossover, mutate);
-
-	process(population, checkpoint, transform);
+	process(population, checkpoint);
 
 	return stats;
 }
@@ -190,12 +177,8 @@ void GenericEvolution<CT, PT, ST>::populate(population_t &population,
 }
 
 /******************************************************************************/
-/* eslabTransform                                                             */
+/* Transformation                                                             */
 /******************************************************************************/
-
-template<class CT>
-eslabTransform<CT>::eslabTransform(eoQuadOp<CT> &_crossover,
-	eoMonOp<CT> &_mutate) : crossover(_crossover), mutate(_mutate) {}
 
 template<class CT>
 void eslabTransform<CT>::operator()(population_t &population)
@@ -206,12 +189,15 @@ void eslabTransform<CT>::operator()(population_t &population)
 
 	bool changed;
 	std::vector<bool> changes(population_size, false);
+
+	/* 1. Crossover */
 	for (i = 0; i < crossover_count; i++) {
 		changed = crossover(population[2 * i], population[2 * i + 1]);
 		changes[2 * i] = changes[2 * i] || changed;
 		changes[2 * i + 1] = changes[2 * i + 1] || changed;
 	}
 
+	/* 2. Mutation */
 	for (i = 0; i < population_size; i++) {
 		changed = mutate(population[i]);
 		changes[i] = changes[i] || changed;
@@ -219,10 +205,14 @@ void eslabTransform<CT>::operator()(population_t &population)
 
 	for (i = 0; i < population_size; i++)
 		if (changes[i]) population[i].invalidate();
+
+	/* 3. Training */
+	for (i = 0; i < population_size; i++)
+		train(population[i]);
 }
 
 /******************************************************************************/
-/* eslabCrossover                                                             */
+/* Crossover                                                                  */
 /******************************************************************************/
 
 template<class CT, class PT>
@@ -298,7 +288,7 @@ bool eslabPeerCrossover<CT, PT>::perform(CT &one, CT &another, double rate)
 }
 
 /******************************************************************************/
-/* eslabMutation                                                              */
+/* Mutation                                                                   */
 /******************************************************************************/
 
 template<class CT, class PT>
@@ -336,9 +326,6 @@ bool eslabPeerMutation<CT, PT>::perform(CT &chromosome, double rate)
 	/* In order to prevent switching back */
 	bit_string_t switched(task_count, false);
 
-	/* Since this mutation affects two genes */
-	rate = rate / 2.0;
-
 	for (tid_t id = 0; id < task_count; id++) {
 		/* If we have already modified this gene or we are unlucky, go on */
 		if (switched[id] || !Random::flip(rate)) continue;
@@ -369,19 +356,20 @@ bool eslabPeerMutation<CT, PT>::perform(CT &chromosome, double rate)
 		/* Looking for a peer */
 		for (pos += direction; pos >= 0 && pos < local_size; pos += direction) {
 			peer_id = local_schedule[pos].id;
-			if (constrain.has_peer(peer_id) && !switched[peer_id]) {
-				/* Switch ranks between two peers */
-				rank = chromosome[id];
-				chromosome[id] = chromosome[peer_id];
-				chromosome[peer_id] = rank;
 
-				/* Remember which we have switched with */
-				switched[peer_id] = true;
-				switched[id] = true;
+			if (switched[peer_id] || !constrain.has_peer(peer_id)) continue;
 
-				changed = true;
-				break;
-			}
+			/* Switch ranks between two peers */
+			rank = chromosome[id];
+			chromosome[id] = chromosome[peer_id];
+			chromosome[peer_id] = rank;
+
+			/* Remember which we have switched with */
+			switched[peer_id] = true;
+			switched[id] = true;
+
+			changed = true;
+			break;
 		}
 	}
 
@@ -389,17 +377,105 @@ bool eslabPeerMutation<CT, PT>::perform(CT &chromosome, double rate)
 }
 
 /******************************************************************************/
-/* eslabLearning                                                              */
+/* Training                                                                   */
 /******************************************************************************/
 
 template<class CT, class PT>
-bool eslabLearning<CT, PT>::operator()(chromosome_t &chromosome)
+bool eslabPeerTraining<CT, PT>::perform(CT &chromosome, double rate)
 {
+	if (!Random::flip(rate)) return false;
+
+	evaluate(chromosome);
+
+	const Schedule &schedule = chromosome.schedule();
+	size_t task_count = schedule.tasks();
+
+	CT current_one = chromosome, best_one = chromosome;
+	typename CT::fitness_t current_fitness, best_fitness = chromosome.fitness();
+
+	/* In order to prevent switching back */
+	bit_string_t switched(task_count, false);
+
+	size_t lessons = 0, stall = 0;
+
+	while (stall < max_stall && lessons < max_lessons) {
+		tid_t id = Random::number(task_count);
+		pid_t pid = schedule.map(id);
+
+		const LocalSchedule &local_schedule = schedule[pid];
+		size_t local_size = local_schedule.size();
+
+		/* We want to teach something... */
+		if (local_size == 1) continue;
+
+		size_t pos = 0;
+
+		for (; pos < local_size; pos++)
+			if (local_schedule[pos].id == id) break;
+
+#ifndef SHALLOW_CHECK
+		if (pos == local_size)
+			throw std::runtime_error("Cannot find the task.");
+#endif
+
+		/* Choose the direction */
+		int direction;
+
+		if (pos == 0) direction = +1;
+		else if (pos == local_size - 1) direction = -1;
+		else direction = Random::flip(0.5) ? +1 : -1;
+
+		const constrain_t &constrain = constrains[id];
+
+		/* Looking for a peer */
+		bool found = false, improved = false;
+
+		rank_t rank = current_one[id];
+
+		for (pos += direction; pos >= 0 && pos < local_size; pos += direction) {
+			size_t peer_id = local_schedule[pos].id;
+
+			if (!constrain.has_peer(peer_id)) continue;
+			found = true;
+
+			/* Switch ranks between two peers */
+			current_one[id] = current_one[peer_id];
+			current_one[peer_id] = rank;
+
+			current_one.invalidate();
+			evaluate(current_one);
+			current_fitness = current_one.fitness();
+
+			if (best_fitness < current_fitness) {
+				best_fitness = current_fitness;
+				best_one = current_one;
+				improved = true;
+			}
+
+			/* Return back */
+			current_one[peer_id] = current_one[id];
+			current_one[id] = rank;
+		}
+
+		if (found) {
+			lessons++;
+
+			if (improved) stall = 0;
+			else stall++;
+		}
+	}
+
+	if (best_fitness > chromosome.fitness()) {
+		/* The lesson has learnt */
+		chromosome = best_one;
+		return true;
+	}
+
 	return false;
 }
 
 /******************************************************************************/
-/* eslabEvolutionMonitor                                                      */
+/* Monitoring                                                                 */
 /******************************************************************************/
 
 template<class CT>

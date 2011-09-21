@@ -75,7 +75,6 @@ class EvolutionTuning
 	size_t population_size;
 
 	/* Continue */
-	size_t min_generations;
 	size_t max_generations;
 	size_t stall_generations;
 
@@ -92,6 +91,13 @@ class EvolutionTuning
 	double mutation_min_rate;
 	double mutation_scale;
 	double mutation_exponent;
+
+	/* Train */
+	double training_min_rate;
+	double training_scale;
+	double training_exponent;
+	size_t max_lessons;
+	size_t stall_lessons;
 
 	/* Evolve */
 	double elitism_rate;
@@ -175,6 +181,10 @@ class eslabCheckPoint: public eoContinue<CT>
 	std::vector<eoMonitor *> monitors;
 };
 
+/******************************************************************************/
+/* Evolution Stats                                                            */
+/******************************************************************************/
+
 class EvolutionStats
 {
 	public:
@@ -198,6 +208,7 @@ class GenericEvolutionStats: public EvolutionStats, public eoMonitor
 
 	double crossover_rate;
 	double mutation_rate;
+	double training_rate;
 
 	GenericEvolutionStats() : population(NULL) {}
 
@@ -226,6 +237,10 @@ class GenericEvolutionStats: public EvolutionStats, public eoMonitor
 	population_t *population;
 	bool silent;
 };
+
+/******************************************************************************/
+/* Evolution                                                                  */
+/******************************************************************************/
 
 class Evolution
 {
@@ -267,8 +282,7 @@ class GenericEvolution: public Evolution
 
 	virtual void evaluate(chromosome_t &chromosome) = 0;
 	virtual void process(population_t &population,
-		eslabCheckPoint<chromosome_t> &checkpoint,
-		eoTransform<chromosome_t> &transform) = 0;
+		eslabCheckPoint<chromosome_t> &checkpoint) = 0;
 
 	const size_t chromosome_length;
 	const Evaluation evaluation;
@@ -279,55 +293,31 @@ class GenericEvolution: public Evolution
 	stats_t stats;
 };
 
-template<class CT>
-class eslabTransform: public eoTransform<CT>
-{
-	typedef eoPop<CT> population_t;
+/******************************************************************************/
+/* Crossover                                                                  */
+/******************************************************************************/
 
-	public:
-
-	eslabTransform(eoQuadOp<CT> &_crossover,
-		eoMonOp<CT> &_mutate);
-
-	void operator()(population_t &population);
-
-	private:
-
-	eoQuadOp<CT> &crossover;
-	eoMonOp<CT> &mutate;
-};
-
-template<class CT, class PT = eslabPop<CT> >
+template<class CT, class PT>
 class eslabCrossover: public eoQuadOp<CT>
 {
-	double min_rate;
-	double scale;
-	double exponent;
-
-	GenericEvolutionStats<CT, PT> &stats;
-
 	public:
 
-	eslabCrossover(double _min_rate, double _scale, double _exponent,
+	eslabCrossover(const rate_t &_rate,
 		GenericEvolutionStats<CT, PT> &_stats) :
-
-		min_rate(_min_rate), scale(_scale), exponent(_exponent), stats(_stats)
-	{
-		if (min_rate < 0 || min_rate > 1)
-			std::runtime_error("The mutation minimal rate is invalid.");
-	}
+		rate(_rate), stats(_stats) {}
 
 	inline bool operator()(CT &one, CT &another)
 	{
-		double rate = stats.crossover_rate = std::max(min_rate,
-			scale * std::exp(exponent * (double)stats.generations));
-
-		return perform(one, another, rate);
+		double current_rate = stats.crossover_rate = rate.get();
+		return perform(one, another, current_rate);
 	}
 
 	protected:
 
 	virtual bool perform(CT &one, CT &another, double rate) = 0;
+
+	const rate_t &rate;
+	GenericEvolutionStats<CT, PT> &stats;
 };
 
 template<class CT, class PT = eslabPop<CT> >
@@ -337,11 +327,10 @@ class eslabNPtsBitCrossover: public eslabCrossover<CT, PT>
 
 	public:
 
-	eslabNPtsBitCrossover(size_t _points, double _min_rate, double _scale,
-		double _exponent, GenericEvolutionStats<CT, PT> &_stats) :
+	eslabNPtsBitCrossover(size_t _points, const rate_t &_rate,
+		GenericEvolutionStats<CT, PT> &_stats) :
 
-		eslabCrossover<CT, PT>(_min_rate, _scale, _exponent, _stats),
-		points(_points)
+		eslabCrossover<CT, PT>(_rate, _stats), points(_points)
 	{
 		if (points < 1)
 			std::runtime_error("The number of crossover points is invalid.");
@@ -359,48 +348,41 @@ class eslabPeerCrossover: public eslabCrossover<CT, PT>
 
 	public:
 
-	eslabPeerCrossover(const constrains_t &_constrains, double _min_rate,
-		double _scale, double _exponent, GenericEvolutionStats<CT, PT> &_stats) :
+	eslabPeerCrossover(const constrains_t &_constrains,
+		const rate_t &_rate, GenericEvolutionStats<CT, PT> &_stats) :
 
-		eslabCrossover<CT, PT>(_min_rate, _scale, _exponent, _stats),
-		constrains(_constrains) {}
+		eslabCrossover<CT, PT>(_rate, _stats), constrains(_constrains) {}
 
 	protected:
 
 	bool perform(CT &one, CT &another, double rate);
 };
 
+/******************************************************************************/
+/* Mutation                                                                   */
+/******************************************************************************/
+
 template<class CT, class PT = eslabPop<CT> >
 class eslabMutation: public eoMonOp<CT>
 {
-	double min_rate;
-	double scale;
-	double exponent;
-
-	GenericEvolutionStats<CT, PT> &stats;
-
 	public:
 
-	eslabMutation(double _min_rate, double _scale, double _exponent,
+	eslabMutation(const rate_t &_rate,
 		GenericEvolutionStats<CT, PT> &_stats) :
-
-		min_rate(_min_rate), scale(_scale), exponent(_exponent), stats(_stats)
-	{
-		if (min_rate < 0 || min_rate > 1)
-			std::runtime_error("The mutation minimal rate is invalid.");
-	}
+		rate(_rate), stats(_stats) {}
 
 	inline bool operator()(CT &chromosome)
 	{
-		double rate = stats.mutation_rate = std::max(min_rate,
-			scale * std::exp(exponent * (double)stats.generations));
-
-		return perform(chromosome, rate);
+		double current_rate = stats.mutation_rate = rate.get();
+		return perform(chromosome, current_rate);
 	}
 
 	protected:
 
 	virtual bool perform(CT &chromosome, double rate) = 0;
+
+	const rate_t &rate;
+	GenericEvolutionStats<CT, PT> &stats;
 };
 
 template<class CT, class PT = eslabPop<CT> >
@@ -410,11 +392,10 @@ class eslabUniformRangeMutation: public eslabMutation<CT, PT>
 
 	public:
 
-	eslabUniformRangeMutation(const constrains_t &_constrains, double _min_rate,
-		double _scale, double _exponent, GenericEvolutionStats<CT, PT> &_stats) :
+	eslabUniformRangeMutation(const constrains_t &_constrains,
+		const rate_t &_rate, GenericEvolutionStats<CT, PT> &_stats) :
 
-		eslabMutation<CT, PT>(_min_rate, _scale, _exponent, _stats),
-		constrains(_constrains) {}
+		eslabMutation<CT, PT>(_rate, _stats), constrains(_constrains) {}
 
 	protected:
 
@@ -424,33 +405,102 @@ class eslabUniformRangeMutation: public eslabMutation<CT, PT>
 template<class CT, class PT = eslabPop<CT> >
 class eslabPeerMutation: public eslabMutation<CT, PT>
 {
-	const constrains_t &constrains;
-
 	public:
 
-	eslabPeerMutation(const constrains_t &_constrains, double _min_rate,
-		double _scale, double _exponent, GenericEvolutionStats<CT, PT> &_stats) :
+	eslabPeerMutation(const constrains_t &_constrains,
+		const rate_t &_rate, GenericEvolutionStats<CT, PT> &_stats) :
 
-		eslabMutation<CT, PT>(_min_rate, _scale, _exponent, _stats),
-		constrains(_constrains) {}
+		eslabMutation<CT, PT>(_rate, _stats), constrains(_constrains) {}
 
 	protected:
 
 	bool perform(CT &chromosome, double rate);
+
+	const constrains_t &constrains;
 };
 
+/******************************************************************************/
+/* Training                                                                   */
+/******************************************************************************/
+
 template<class CT, class PT = eslabPop<CT> >
-class eslabLearning: public eoMonOp<CT>
+class eslabTraining: public eoMonOp<CT>
 {
 	public:
 
-	typedef CT chromosome_t;
-	typedef PT population_t;
+	eslabTraining(const rate_t &_rate,
+		GenericEvolutionStats<CT, PT> &_stats) :
+		rate(_rate), stats(_stats) {}
 
-	eslabLearning() {}
+	inline bool operator()(CT &chromosome)
+	{
+		double current_rate = stats.training_rate = rate.get();
+		return perform(chromosome, current_rate);
+	}
 
-	bool operator()(chromosome_t &chromosome);
+	protected:
+
+	virtual inline bool perform(CT &chromosome, double rate)
+	{
+		return false;
+	}
+
+	const rate_t &rate;
+	GenericEvolutionStats<CT, PT> &stats;
 };
+
+template<class CT, class PT = eslabPop<CT> >
+class eslabPeerTraining: public eslabTraining<CT, PT>
+{
+	public:
+
+	eslabPeerTraining(const constrains_t &_constrains,
+		eoEvalFunc<CT> &_evaluate, size_t _max_lessons, size_t _max_stall,
+		const rate_t &_rate, GenericEvolutionStats<CT, PT> &_stats) :
+
+		eslabTraining<CT, PT>(_rate, _stats),
+		constrains(_constrains), evaluate(_evaluate),
+		max_lessons(_max_lessons), max_stall(_max_stall) {}
+
+	protected:
+
+	bool perform(CT &chromosome, double rate);
+
+	const constrains_t &constrains;
+	eoEvalFunc<CT> &evaluate;
+
+	size_t max_lessons;
+	size_t max_stall;
+};
+
+/******************************************************************************/
+/* Transformation                                                             */
+/******************************************************************************/
+
+template<class CT>
+class eslabTransform: public eoTransform<CT>
+{
+	typedef eoPop<CT> population_t;
+
+	public:
+
+	eslabTransform(eoQuadOp<CT> &_crossover, eoMonOp<CT> &_mutate,
+		eoMonOp<CT> &_train) :
+
+		crossover(_crossover), mutate(_mutate), train(_train) {}
+
+	void operator()(population_t &population);
+
+	private:
+
+	eoQuadOp<CT> &crossover;
+	eoMonOp<CT> &mutate;
+	eoMonOp<CT> &train;
+};
+
+/******************************************************************************/
+/* Monitoring                                                                 */
+/******************************************************************************/
 
 template<class CT>
 class eslabEvolutionMonitor: public eoMonitor
@@ -469,6 +519,10 @@ class eslabEvolutionMonitor: public eoMonitor
 	population_t &population;
 	std::ofstream stream;
 };
+
+/******************************************************************************/
+/* Continuation                                                               */
+/******************************************************************************/
 
 template<class CT>
 class eslabGenContinue: public eslabContinue<CT>
@@ -508,8 +562,8 @@ class eslabStallContinue: public eslabContinue<CT>
 	typedef PT population_t;
 	typedef typename CT::fitness_t fitness_t;
 
-	eslabStallContinue(size_t _min_generations, size_t _stall_generations) :
-		min_generations(_min_generations), stall_generations(_stall_generations)
+	eslabStallContinue(size_t _stall_generations) :
+		stall_generations(_stall_generations)
 	{
 		reset();
 	}
@@ -523,22 +577,15 @@ class eslabStallContinue: public eslabContinue<CT>
 		if (!population)
 			throw std::runtime_error("The population has a wrong type.");
 
-		if (steady_state) {
-			if (improved(*population)) last_improvement = generations;
-			else if (generations - last_improvement > stall_generations)
-				return false;
-		}
-		else if (generations > min_generations) {
-			steady_state = true;
-			last_improvement = generations;
-		}
+		if (improved(*population)) last_improvement = generations;
+		else if (generations - last_improvement > stall_generations)
+			return false;
 
 		return true;
 	}
 
 	virtual void reset()
 	{
-		steady_state = false;
 		generations = 0;
 		last_improvement = 0;
 	}
@@ -547,10 +594,7 @@ class eslabStallContinue: public eslabContinue<CT>
 
 	virtual bool improved(const population_t &population) = 0;
 
-	size_t min_generations;
 	size_t stall_generations;
-
-	bool steady_state;
 	size_t generations;
 	size_t last_improvement;
 };

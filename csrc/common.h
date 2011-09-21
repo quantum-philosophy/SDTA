@@ -135,6 +135,33 @@ class GeneEncoder
 };
 
 /******************************************************************************/
+/* Rate                                                                       */
+/******************************************************************************/
+
+struct rate_t
+{
+	rate_t(const size_t &_step, double _min_rate, double _scale, double _exponent) :
+		step(_step), min_rate(_min_rate), scale(_scale), exponent(_exponent)
+	{
+		if (min_rate < 0 || min_rate > 1)
+			std::runtime_error("The minimal rate is invalid.");
+	}
+
+	inline double get() const
+	{
+		return std::max(min_rate,
+			scale * std::exp(exponent * (double)step));
+	}
+
+	private:
+
+	const volatile size_t &step;
+	const double min_rate;
+	const double scale;
+	const double exponent;
+};
+
+/******************************************************************************/
 /* Random generator                                                           */
 /******************************************************************************/
 

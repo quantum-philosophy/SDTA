@@ -47,15 +47,33 @@ price_t eslabMOPop::best_energy() const
 /******************************************************************************/
 
 void MOEvolution::process(population_t &population,
-	eslabCheckPoint<chromosome_t> &checkpoint, eoTransform<chromosome_t> &transform)
+	eslabCheckPoint<chromosome_t> &checkpoint)
 {
 	evaluate_t evaluator(*this);
 
-	eslabMOStallContinue stall_continue(tuning.min_generations,
-		tuning.stall_generations);
+	eslabMOStallContinue stall_continue(tuning.stall_generations);
 	eslabMOEvolutionMonitor evolution_monitor(population, tuning.dump_evolution);
 	checkpoint.add(stall_continue);
 	checkpoint.add(evolution_monitor);
+
+	/* Transform = Crossover + Mutate + Train */
+	rate_t crossover_rate(stats.generations, tuning.crossover_min_rate,
+		tuning.crossover_scale, tuning.crossover_exponent);
+	eslabNPtsBitCrossover<chromosome_t, population_t> crossover(
+		tuning.crossover_points, crossover_rate, stats);
+
+	rate_t mutation_rate(stats.generations, tuning.mutation_min_rate,
+		tuning.mutation_scale, tuning.mutation_exponent);
+	eslabUniformRangeMutation<chromosome_t, population_t> mutate(
+		constrains, mutation_rate, stats);
+
+	rate_t training_rate(stats.generations, tuning.training_min_rate,
+		tuning.training_scale, tuning.training_exponent);
+	eslabPeerTraining<chromosome_t, population_t> train(
+		constrains, evaluator, tuning.max_lessons, tuning.stall_lessons,
+		training_rate, stats);
+
+	eslabTransform<chromosome_t> transform(crossover, mutate, train);
 
 	moeoNSGAII<chromosome_t> ga(checkpoint, evaluator, transform);
 
@@ -75,11 +93,6 @@ void MOEvolution::process(population_t &population,
 /* MOEvolutionStats                                                                 */
 /******************************************************************************/
 
-void MOEvolutionStats::reset()
-{
-	last_executions = 0;
-}
-
 void MOEvolutionStats::process()
 {
 	best_lifetime = population->best_lifetime();
@@ -88,15 +101,13 @@ void MOEvolutionStats::process()
 	if (silent) return;
 
 	size_t population_size = population->size();
-	size_t width = 0;
-	size_t executions = deadline_misses + evaluations;
-
-	width = population_size -
-		(executions - last_executions) + 1;
+	size_t unique = population->unique();
+	double diversity = population->diversity();
 
 	std::cout
-		<< std::setw(width) << " "
+		<< std::endl
 		<< std::setprecision(2)
+		<< std::setw(4) << generations
 		<< "( "
 			<< std::setw(10) << best_lifetime.lifetime
 		<< ", * ) "
@@ -106,12 +117,14 @@ void MOEvolutionStats::process()
 		<< std::setprecision(3)
 		<< "{ "
 			<< std::setw(6) << crossover_rate << " "
-			<< std::setw(6) << mutation_rate
+			<< std::setw(6) << mutation_rate << " "
+			<< std::setw(6) << training_rate
 		<< " }"
-		<< std::endl
-		<< std::setw(4) << generations << ": ";
-
-	last_executions = executions;
+		<< "[ "
+			<< std::setw(4) << unique << "/"
+			<< population_size
+			<< " (" << std::setprecision(2) << diversity << ")"
+		<< " ] :";
 }
 
 void MOEvolutionStats::display(std::ostream &o) const

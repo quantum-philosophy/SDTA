@@ -47,8 +47,6 @@ class eslabSOPop: public eslabPop<eslabSOChromosome>
 
 class SOEvolutionStats: public GenericEvolutionStats<eslabSOChromosome, eslabSOPop>
 {
-	size_t last_executions;
-
 	public:
 
 	double best_lifetime;
@@ -60,7 +58,6 @@ class SOEvolutionStats: public GenericEvolutionStats<eslabSOChromosome, eslabSOP
 
 	protected:
 
-	void reset();
 	void process();
 };
 
@@ -108,8 +105,7 @@ class SOEvolution:
 	}
 
 	void process(population_t &population,
-		eslabCheckPoint<chromosome_t> &checkpoint,
-		eoTransform<chromosome_t> &transform);
+		eslabCheckPoint<chromosome_t> &checkpoint);
 };
 
 template<class CT>
@@ -314,9 +310,8 @@ class eslabSOStallContinue:
 
 	public:
 
-	eslabSOStallContinue(size_t _min_generations, size_t _stall_generations) :
-		eslabStallContinue<eslabSOChromosome, eslabSOPop>(
-			_min_generations, _stall_generations) {}
+	eslabSOStallContinue(size_t _stall_generations) :
+		eslabStallContinue<eslabSOChromosome, eslabSOPop>(_stall_generations) {}
 
 	void reset();
 

@@ -10,8 +10,7 @@
 /******************************************************************************/
 
 void SOEvolution::process(population_t &population,
-	eslabCheckPoint<chromosome_t> &checkpoint,
-	eoTransform<chromosome_t> &transform)
+	eslabCheckPoint<chromosome_t> &checkpoint)
 {
 	evaluate_t evaluator(*this);
 
@@ -19,13 +18,31 @@ void SOEvolution::process(population_t &population,
 	eslabRouletteSelect<chromosome_t> select_one;
 	eoSelectPerc<chromosome_t> select(select_one);
 
+	/* Transform = Crossover + Mutate + Train */
+	rate_t crossover_rate(stats.generations, tuning.crossover_min_rate,
+		tuning.crossover_scale, tuning.crossover_exponent);
+	eslabNPtsBitCrossover<chromosome_t, population_t> crossover(
+		tuning.crossover_points, crossover_rate, stats);
+
+	rate_t mutation_rate(stats.generations, tuning.mutation_min_rate,
+		tuning.mutation_scale, tuning.mutation_exponent);
+	eslabPeerMutation<chromosome_t, population_t> mutate(
+		constrains, mutation_rate, stats);
+
+	rate_t training_rate(stats.generations, tuning.training_min_rate,
+		tuning.training_scale, tuning.training_exponent);
+	eslabPeerTraining<chromosome_t, population_t> train(
+		constrains, evaluator, tuning.max_lessons, tuning.stall_lessons,
+		training_rate, stats);
+
+	eslabTransform<chromosome_t> transform(crossover, mutate, train);
+
 	/* Replace = Merge + Reduce */
 	eslabElitismMerge<chromosome_t> merge(tuning.elitism_rate);
 	eslabReduce<chromosome_t> reduce;
 	eoMergeReduce<chromosome_t> replace(merge, reduce);
 
-	eslabSOStallContinue stall_continue(tuning.min_generations,
-		tuning.stall_generations);
+	eslabSOStallContinue stall_continue(tuning.stall_generations);
 	eslabSOEvolutionMonitor evolution_monitor(population, tuning.dump_evolution);
 	checkpoint.add(stall_continue);
 	checkpoint.add(evolution_monitor);
@@ -42,11 +59,6 @@ void SOEvolution::process(population_t &population,
 /* SOEvolutionStats                                                                 */
 /******************************************************************************/
 
-void SOEvolutionStats::reset()
-{
-	last_executions = 0;
-}
-
 void SOEvolutionStats::process()
 {
 	worst_lifetime = population->worse_element().fitness();
@@ -55,36 +67,28 @@ void SOEvolutionStats::process()
 	if (silent) return;
 
 	size_t population_size = population->size();
-	size_t width = 0;
-	size_t executions = deadline_misses + evaluations;
-
-	width = population_size -
-		(executions - last_executions) + 1;
-
 	size_t unique = population->unique();
 	double diversity = population->diversity();
 
 	std::cout
-		<< std::setw(width) << " "
+		<< std::endl
 		<< std::setprecision(2)
-		<< "( "
+		<< std::setw(4) << generations
+		<< " ( "
 			<< std::setw(10) << worst_lifetime << ", "
 			<< std::setw(10) << best_lifetime
 		<< " ) "
 		<< std::setprecision(3)
 		<< "{ "
 			<< std::setw(6) << crossover_rate << " "
-			<< std::setw(6) << mutation_rate
+			<< std::setw(6) << mutation_rate << " "
+			<< std::setw(6) << training_rate
 		<< " } "
 		<< "[ "
 			<< std::setw(4) << unique << "/"
 			<< population_size
 			<< " (" << std::setprecision(2) << diversity << ")"
-		<< " ]"
-		<< std::endl
-		<< std::setw(4) << generations << ": ";
-
-	last_executions = executions;
+		<< " ] :";
 }
 
 void SOEvolutionStats::display(std::ostream &o) const

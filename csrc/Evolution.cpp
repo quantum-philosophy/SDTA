@@ -28,7 +28,6 @@ void EvolutionTuning::defaults()
 	population_size = 25;
 
 	/* Continue */
-	min_generations = 0;
 	max_generations = 100;
 	stall_generations = 20;
 
@@ -45,6 +44,13 @@ void EvolutionTuning::defaults()
 	mutation_min_rate = 0.01;
 	mutation_scale = 1;
 	mutation_exponent = -0.05;
+
+	/* Train */
+	training_min_rate = 0.01;
+	training_scale = 1;
+	training_exponent = -0.05;
+	max_lessons = 50;
+	stall_lessons = 10;
 
 	/* Evolve */
 	elitism_rate = 0.5;
@@ -115,8 +121,6 @@ void EvolutionTuning::update(std::istream &main_stream)
 			stream >> population_size;
 
 		/* Continue */
-		else if (name == "min_generations")
-			stream >> min_generations;
 		else if (name == "max_generations")
 			stream >> max_generations;
 		else if (name == "stall_generations")
@@ -143,6 +147,18 @@ void EvolutionTuning::update(std::istream &main_stream)
 			stream >> mutation_scale;
 		else if (name == "mutation_exponent")
 			stream >> mutation_exponent;
+
+		/* Train */
+		else if (name == "training_min_rate")
+			stream >> training_min_rate;
+		else if (name == "training_scale")
+			stream >> training_scale;
+		else if (name == "training_exponent")
+			stream >> training_exponent;
+		else if (name == "max_lessons")
+			stream >> max_lessons;
+		else if (name == "stall_lessons")
+			stream >> stall_lessons;
 
 		/* Evolve */
 		else if (name == "elitism_rate")
@@ -187,7 +203,6 @@ void EvolutionTuning::display(std::ostream &o) const
 		<< "  Population size:         " << population_size << std::endl
 
 		/* Continue */
-		<< "  Minimum generations:     " << min_generations << std::endl
 		<< "  Maximum generations:     " << max_generations << std::endl
 		<< "  Stall generations:       " << stall_generations << std::endl
 
@@ -208,6 +223,15 @@ void EvolutionTuning::display(std::ostream &o) const
 		<< "  Mutation minimal rate:   " << mutation_min_rate << std::endl
 		<< "  Mutation scale:          " << mutation_scale << std::endl
 		<< "  Mutation exponent:       " << mutation_exponent << std::endl
+
+		/* Train */
+		<< std::setprecision(3)
+		<< "  Training minimal rate:   " << training_min_rate << std::endl
+		<< "  Training scale:          " << training_scale << std::endl
+		<< "  Training exponent:       " << training_exponent << std::endl
+		<< std::setprecision(0)
+		<< "  Maximum lessons:         " << max_lessons << std::endl
+		<< "  Stall lessons:           " << stall_lessons << std::endl
 
 		/* Evolve */
 		<< std::setprecision(3)
