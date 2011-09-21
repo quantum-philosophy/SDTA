@@ -46,6 +46,22 @@ class eslabMOChromosome: public eslabChromosome<eslabObjectiveVector>,
 #else
 		moeoIntVector<eslabObjectiveVector, double, double>(_size) {}
 #endif
+
+	inline bool bad() const
+	{
+		return objectiveVector()[LIFETIME_OBJECTIVE] <= 0;
+	}
+
+	protected:
+
+	inline void fit(const price_t &price)
+	{
+		eslabObjectiveVector fitness;
+		fitness[LIFETIME_OBJECTIVE] = price.lifetime;
+		fitness[ENERGY_OBJECTIVE] = price.energy;
+
+		this->objectiveVector(fitness);
+	}
 };
 
 class eslabMOPop: public eslabPop<eslabMOChromosome>
@@ -88,7 +104,7 @@ class MOEvolution:
 
 		void operator()(chromosome_t &chromosome)
 		{
-			evolution.assess(chromosome);
+			evolution.evaluate(chromosome);
 		}
 
 		private:
@@ -106,30 +122,15 @@ class MOEvolution:
 
 	protected:
 
-	inline void assess(chromosome_t &chromosome)
+	inline void evaluate(chromosome_t &chromosome)
 	{
 		if (!chromosome.invalidObjectiveVector()) return;
 
-		price_t price;
+		if (tuning.include_mapping) evaluation.assess(chromosome);
+		else evaluation.assess(chromosome, layout);
 
-		if (tuning.include_mapping) {
-			layout_t layout;
-			priority_t priority;
-			GeneEncoder::split(chromosome, layout, priority);
-			price = evaluation.process(layout, priority);
-		}
-		else {
-			price = evaluation.process(layout, chromosome);
-		}
-
-		if (price.lifetime <= 0) stats.miss_deadline();
+		if (chromosome.bad()) stats.miss_deadline();
 		else stats.evaluate();
-
-		fitness_t fitness;
-		fitness[LIFETIME_OBJECTIVE] = price.lifetime;
-		fitness[ENERGY_OBJECTIVE] = price.energy;
-
-		chromosome.objectiveVector(fitness);
 	}
 
 	void process(population_t &population,

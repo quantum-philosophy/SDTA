@@ -93,7 +93,8 @@ Schedule ListScheduler::process(const Architecture &architecture,
 				processed[cid] = true;
 			}
 		}
-	} while(!empty);
+	}
+	while(!empty);
 
 	return schedule;
 }

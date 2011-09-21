@@ -20,8 +20,8 @@ class Schedule
 	friend std::ostream &operator<< (std::ostream &o,
 		const Schedule &schedule);
 
-	const size_t processor_count;
-	const size_t task_count;
+	size_t processor_count;
+	size_t task_count;
 
 	std::vector<LocalSchedule> schedules;
 
@@ -29,6 +29,8 @@ class Schedule
 	double duration;
 
 	public:
+
+	Schedule() : processor_count(0), task_count(0), duration(0) {}
 
 	Schedule(size_t _processor_count, size_t _task_count) :
 

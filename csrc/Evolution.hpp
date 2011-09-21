@@ -170,7 +170,7 @@ void GenericEvolution<CT, PT, ST>::populate(population_t &population,
 	if (tuning.include_mapping)
 		GeneEncoder::extend(chromosome, layout);
 
-	assess(chromosome);
+	evaluate(chromosome);
 
 	/* Fill the first part with uniform chromosomes */
 	create_count = tuning.uniform_ratio * tuning.population_size;
@@ -184,7 +184,7 @@ void GenericEvolution<CT, PT, ST>::populate(population_t &population,
 			chromosome[j] = constrains[j].random();
 
 		chromosome.invalidate();
-		assess(chromosome);
+		evaluate(chromosome);
 		population.push_back(chromosome);
 	}
 }

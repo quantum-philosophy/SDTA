@@ -7,7 +7,6 @@
 #include "DynamicPower.h"
 #include "Lifetime.h"
 #include "Schedule.h"
-#include "ListScheduler.h"
 
 price_t Evaluation::process(const Schedule &schedule, bool shallow) const
 {
@@ -41,7 +40,7 @@ price_t Evaluation::process(const Schedule &schedule, bool shallow) const
 price_t Evaluation::process(const layout_t &layout,
 	const priority_t &priority, bool shallow) const
 {
-	Schedule schedule = ListScheduler::process(
+	const Schedule schedule = ListScheduler::process(
 		architecture, graph, layout, priority);
 
 	return process(schedule, shallow);

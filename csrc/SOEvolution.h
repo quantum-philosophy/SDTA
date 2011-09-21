@@ -15,13 +15,24 @@ class eslabSOChromosome: public eslabChromosome<double>,
 
 	typedef double fitness_t;
 
+	eslabSOChromosome(size_t _size = 0) :
 #ifdef REAL_RANK
-	eslabSOChromosome() : eoReal<double>() {}
-	eslabSOChromosome(size_t _size) : eoReal<double>(_size) {}
+		eoReal<double>(_size) {}
 #else
-	eslabSOChromosome() : eoInt<double>() {}
-	eslabSOChromosome(size_t _size) : eoInt<double>(_size) {}
+		eoInt<double>(_size) {}
 #endif
+
+	inline bool bad() const
+	{
+		return fitness() <= 0;
+	}
+
+	protected:
+
+	inline void fit(const price_t &price)
+	{
+		this->fitness(price.lifetime);
+	}
 };
 
 class eslabSOPop: public eslabPop<eslabSOChromosome>
@@ -67,7 +78,7 @@ class SOEvolution:
 
 		void operator()(chromosome_t &chromosome)
 		{
-			evolution.assess(chromosome);
+			evolution.evaluate(chromosome);
 		}
 
 		private:
@@ -85,26 +96,15 @@ class SOEvolution:
 
 	protected:
 
-	inline void assess(chromosome_t &chromosome)
+	inline void evaluate(chromosome_t &chromosome)
 	{
 		if (!chromosome.invalid()) return;
 
-		price_t price;
+		if (tuning.include_mapping) evaluation.assess(chromosome);
+		else evaluation.assess(chromosome, layout);
 
-		if (tuning.include_mapping) {
-			layout_t layout;
-			priority_t priority;
-			GeneEncoder::split(chromosome, layout, priority);
-			price = evaluation.process(layout, priority, true);
-		}
-		else {
-			price = evaluation.process(layout, chromosome, true);
-		}
-
-		if (price.lifetime <= 0) stats.miss_deadline();
+		if (chromosome.bad()) stats.miss_deadline();
 		else stats.evaluate();
-
-		chromosome.fitness(price.lifetime);
 	}
 
 	void process(population_t &population,
