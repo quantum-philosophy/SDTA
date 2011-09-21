@@ -21,7 +21,7 @@ void SOEvolution::process(population_t &population,
 
 	/* Replace = Merge + Reduce */
 	eslabElitismMerge<chromosome_t> merge(tuning.elitism_rate);
-	eoLinearTruncate<chromosome_t> reduce;
+	eslabReduce<chromosome_t> reduce;
 	eoMergeReduce<chromosome_t> replace(merge, reduce);
 
 	eslabSOStallContinue stall_continue(tuning.min_generations,

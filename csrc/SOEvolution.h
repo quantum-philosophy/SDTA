@@ -264,6 +264,25 @@ class eslabElitismMerge: public eoMerge<CT>
 	double rate;
 };
 
+template <class CT>
+class eslabReduce: public eoReduce<CT>
+{
+	public:
+
+	void operator()(eoPop<CT> &population, unsigned size)
+	{
+		int kill_count = population.size() - size;
+
+		if (kill_count < 0)
+			throw std::runtime_error("Cannot reduce such a small population.");
+
+		for (size_t i = 0; i < kill_count; i++) {
+			typename eoPop<CT>::iterator it = population.it_worse_element();
+			population.erase(it);
+		}
+	}
+};
+
 class eslabSOEvolutionMonitor: public eslabEvolutionMonitor<eslabSOChromosome>
 {
 	public:
