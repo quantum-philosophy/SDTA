@@ -135,8 +135,10 @@ void MOEvolutionStats::display(std::ostream &o) const
 		<< std::setprecision(2)
 		<< "  Best lifetime:   " << best_lifetime << std::endl
 		<< "  Best energy:     " << best_energy << std::endl
-
-		<< std::setprecision(2)
+#ifdef REAL_RANK
+#else
+		<< std::setprecision(0)
+#endif
 		<< "  Pareto optima:   " << print_t<price_t>(pareto_optima) << std::endl;
 }
 

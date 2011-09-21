@@ -26,7 +26,7 @@ void SOEvolution::process(population_t &population,
 
 	rate_t mutation_rate(stats.generations, tuning.mutation_min_rate,
 		tuning.mutation_scale, tuning.mutation_exponent);
-	eslabPeerMutation<chromosome_t, population_t> mutate(
+	eslabUniformRangeMutation<chromosome_t, population_t> mutate(
 		constrains, mutation_rate, stats);
 
 	rate_t training_rate(stats.generations, tuning.training_min_rate,
@@ -99,8 +99,10 @@ void SOEvolutionStats::display(std::ostream &o) const
 		<< std::setprecision(2)
 		<< "  Best lifetime:   " << best_lifetime << std::endl
 		<< "  Worst lifetime:  " << worst_lifetime << std::endl
-
+#ifdef REAL_RANK
+#else
 		<< std::setprecision(0)
+#endif
 		<< "  Best chromosome: " << print_t<rank_t>(best_chromosome) << std::endl;
 }
 

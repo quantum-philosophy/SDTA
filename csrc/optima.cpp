@@ -119,8 +119,13 @@ void optimize(const string &system_config, const string &genetic_config,
 		/* 4. Assign a deadline.
 		 *
 		 */
-		if (deadline == 0)
-			deadline = tuning.deadline_ratio * schedule.get_duration();
+		if (deadline == 0) {
+			priority_t deadline_priority =
+				Priority::calculate(*architecture, *graph, mapping);
+			Schedule deadline_schedule = ListScheduler::process(
+				*architecture, *graph, mapping, deadline_priority);
+			deadline = tuning.deadline_ratio * deadline_schedule.get_duration();
+		}
 		else if (tuning.verbose)
 			cout << "Using external deadline." << endl;
 

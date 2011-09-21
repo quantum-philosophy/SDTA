@@ -26,7 +26,11 @@ class Lifetime
 	 */
 
 	/* Activation energy [4], [5] */
+#ifndef FAKE_EVALUATION
 	static const double Eatc = 0.7; /* eV, typically ranges from 0.3 up to 1.5 */
+#else
+	static const double Eatc = 0.08;
+#endif
 
 	/* Boltzmann constant [6] */
 	static const double k = 8.61733248e-5; /* eV/K */

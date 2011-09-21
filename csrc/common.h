@@ -251,7 +251,7 @@ struct constrain_t
 
 	inline bool tight() const
 	{
-		return max == min;
+		return (max - min) <= 1;
 	}
 
 	inline bool has_peer(size_t id) const
