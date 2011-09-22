@@ -82,6 +82,14 @@ class Selection: public eoSelect<CT>
 			destination[i] = (*method)(source);
 	}
 
+	void append(const eoPop<CT> &source, eoPop<CT> &destination, size_t size)
+	{
+		method->setup(source);
+
+		for (size_t i = 0; i < size; i++)
+			destination.push_back((*method)(source));
+	}
+
 	private:
 
 	eoSelectOne<CT> *method;

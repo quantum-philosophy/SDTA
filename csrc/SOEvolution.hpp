@@ -5,20 +5,11 @@
 /******************************************************************************/
 
 template<class CT>
-eslabElitismMerge<CT>::eslabElitismMerge(double _rate) : rate(_rate)
-{
-	if (rate < 0)
-		std::runtime_error("The elitism rate is invalid.");
-}
-
-template<class CT>
-void eslabElitismMerge<CT>::operator()(const population_t &population,
+void ElitismMerge<CT>::operator()(const population_t &population,
 	population_t &offspring)
 {
-	size_t population_size, count;
-
-	population_size = population.size();
-	count = (rate < 1) ? (rate * population_size) : rate;
+	size_t population_size = population.size();
+	size_t count = (rate < 1) ? (rate * population_size) : rate;
 
 #ifndef SHALLOW_CHECK
 	if (count > population_size)
