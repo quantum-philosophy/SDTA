@@ -5,21 +5,12 @@ class Neighborhood
 {
 	public:
 
-	/* Find a peer... */
-	static tid_t peer(
-		/* ... of */
-		tid_t id,
-		/* ... in a schedule */
-		const Schedule &schedule,
-		/* ... with constrains */
-		const constrains_t &constrains,
-		/* ... excluding bad guys */
+	/* Find all peers... */
+	static void peers(tid_t id,
+		const Schedule &schedule, const constrains_t &constrains,
+		std::list<tid_t> &left, std::list<tid_t> &right,
 		const bit_string_t &exclude = bit_string_t())
 	{
-		size_t pos;
-		int direction;
-		tid_t peer_id;
-
 		pid_t pid = schedule.map(id);
 
 		const LocalSchedule &local_schedule = schedule[pid];
@@ -27,35 +18,72 @@ class Neighborhood
 
 		bool check = !exclude.empty();
 
-		/* If the task is the only one on the core, skip */
-		if (local_size == 1) return id;
-
-		/* Find the position of the task in the local schedule */
-		for (pos = 0; pos < local_size; pos++)
-			if (local_schedule[pos].id == id) break;
-
-#ifndef SHALLOW_CHECK
-		if (pos == local_size)
-			throw std::runtime_error("Cannot find the task.");
-#endif
-
-		/* Choose the direction */
-		if (pos == 0) direction = +1;
-		else if (pos == local_size - 1) direction = -1;
-		else direction = Random::flip(0.5) ? +1 : -1;
-
 		const constrain_t &constrain = constrains[id];
 
-		for (pos += direction; pos >= 0 && pos < local_size; pos += direction) {
-			peer_id = local_schedule[pos].id;
+		bool before = true;
+
+		left.clear();
+		right.clear();
+
+		for (size_t i = 0; i < local_size; i++) {
+			tid_t peer_id = local_schedule[i].id;
+
+			if (peer_id == id) {
+				before = false;
+				continue;
+			}
 
 			if ((check && !exclude[peer_id]) ||
 				!constrain.has_peer(peer_id)) continue;
 
-			return peer_id;
+			if (before) left.push_front(peer_id);
+			else right.push_back(peer_id);
+		}
+	}
+
+	/* Find one peer... */
+	static tid_t peer(tid_t id,
+		const Schedule &schedule, const constrains_t &constrains,
+		const bit_string_t &exclude = bit_string_t())
+	{
+		std::list<tid_t> left;
+		std::list<tid_t> right;
+
+		peers(id, schedule, constrains, left, right, exclude);
+
+		size_t left_count = left.size();
+		size_t right_count = right.size();
+
+		bool go_left = true;
+
+		if (left_count && right_count) {
+			/* Choose a random direction */
+			if (Random::flip(0.5)) go_left = false;
+		}
+		else if (right_count) {
+			/* Do not have another choice */
+			go_left = false;
+		}
+		else if (!left_count) {
+			/* Not found */
+			return id;
 		}
 
-		return id;
+		size_t steps;
+		std::list<tid_t>::iterator it;
+
+		if (go_left) {
+			it = left.begin();
+			steps = Random::number(left_count);
+		}
+		else {
+			it = right.begin();
+			steps = Random::number(right_count);
+		}
+
+		for (size_t i = 0; i < steps; i++) it++;
+
+		return *it;
 	}
 };
 

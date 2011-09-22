@@ -71,6 +71,8 @@ void EvolutionTuning::update(std::istream &main_stream)
 		/* Select */
 		else if (name == "selection")
 			stream >> selection.method;
+		else if (name == "selection_ratio")
+			stream >> selection.ratio;
 		else if (name == "tournament_size")
 			stream >> selection.tournament_size;
 
@@ -163,6 +165,8 @@ void EvolutionTuning::display(std::ostream &o) const
 
 		/* Select */
 		<< "  Selection:               " << selection.method << std::endl
+		<< std::setprecision(2)
+		<< "  Selection ratio:         " << selection.ratio << std::endl
 		<< std::setprecision(0)
 		<< "  Tournament size:         " << selection.tournament_size << std::endl
 		<< std::endl

@@ -4,10 +4,12 @@
 struct SelectionTuning
 {
 	std::string method;
+	double ratio;
 	size_t tournament_size;
 
 	SelectionTuning() :
 		method("tournament"),
+		ratio(1.0),
 		tournament_size(3) {}
 };
 

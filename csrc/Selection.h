@@ -53,6 +53,9 @@ class Selection: public eoSelect<CT>
 
 	Selection(const SelectionTuning &_tuning) : tuning(_tuning)
 	{
+		if (tuning.ratio < 0 || tuning.ratio > 1)
+			throw std::runtime_error("The selection ratio is invalid.");
+
 		if (tuning.method == "roulette")
 			method = new RouletteSelection<CT>();
 
@@ -69,7 +72,7 @@ class Selection: public eoSelect<CT>
 
 	void operator()(const eoPop<CT> &source, eoPop<CT> &destination)
 	{
-		size_t size = source.size();
+		size_t size = tuning.ratio * (double)source.size();
 
 		destination.resize(size);
 

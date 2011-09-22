@@ -36,6 +36,7 @@ bool Training<CT>::peer(CT &chromosome, double rate)
 
 		if (best_fitness < fitness) {
 			best_fitness = fitness;
+
 			stall = 0;
 		}
 		else {
@@ -48,8 +49,8 @@ bool Training<CT>::peer(CT &chromosome, double rate)
 		}
 	}
 
+	/* Has the lesson been learnt? */
 	if (best_fitness > chromosome.fitness()) {
-		/* The lesson has been learnt */
 		chromosome = current;
 		return true;
 	}
