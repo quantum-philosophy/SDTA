@@ -1,7 +1,7 @@
 #include "Mutation.h"
 
 template<class CT>
-bool eslabUniformRangeMutation<CT>::perform(CT &chromosome, double rate)
+bool Mutation<CT>::uniform(CT &chromosome, double rate)
 {
 	size_t size = chromosome.size();
 	bool changed = false;
@@ -22,7 +22,7 @@ bool eslabUniformRangeMutation<CT>::perform(CT &chromosome, double rate)
 }
 
 template<class CT>
-bool eslabPeerMutation<CT>::perform(CT &chromosome, double rate)
+bool Mutation<CT>::peer(CT &chromosome, double rate)
 {
 	rank_t rank;
 	int direction;

@@ -1,7 +1,7 @@
-#include "Transform.h"
+#include "Transformation.h"
 
 template<class CT>
-void eslabTransform<CT>::operator()(population_t &population)
+void Transformation<CT>::operator()(population_t &population)
 {
 	size_t i;
 	size_t population_size = population.size();

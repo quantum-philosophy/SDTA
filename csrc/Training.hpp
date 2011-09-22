@@ -1,7 +1,7 @@
 #include "Training.h"
 
 template<class CT>
-bool eslabPeerTraining<CT>::perform(CT &chromosome, double rate)
+bool Training<CT>::peer(CT &chromosome, double rate)
 {
 	if (!Random::flip(rate)) return false;
 
@@ -18,7 +18,7 @@ bool eslabPeerTraining<CT>::perform(CT &chromosome, double rate)
 
 	size_t lessons = 0, stall = 0;
 
-	while (stall < max_stall && lessons < max_lessons) {
+	while (stall < tuning.stall_lessons && lessons < tuning.max_lessons) {
 		tid_t id = Random::number(task_count);
 		pid_t pid = schedule.map(id);
 

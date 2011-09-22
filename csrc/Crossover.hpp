@@ -1,13 +1,36 @@
 #include "Crossover.h"
 
 template<class CT>
-bool eslabNPtsBitCrossover<CT>::perform(CT &one, CT &another, double rate)
+bool Crossover<CT>::uniform(CT &one, CT &another, double rate)
+{
+	if (!Random::flip(rate)) return false;
+
+	size_t i, size = one.size();
+
+#ifndef SHALLOW_CHECK
+	if (size != another.size())
+		throw std::runtime_error("The chromosomes have different size.");
+#endif
+
+	for (i = 0; i < size; i++) {
+		if (!Random::flip(0.5)) continue;
+
+		rank_t rank = one[i];
+		one[i] = another[i];
+		another[i] = rank;
+	}
+
+	return true;
+}
+
+template<class CT>
+bool Crossover<CT>::npoint(CT &one, CT &another, double rate)
 {
 	if (!Random::flip(rate)) return false;
 
 	size_t i;
 	size_t size = one.size();
-	size_t select_points = points;
+	size_t select_points = tuning.points;
 
 #ifndef SHALLOW_CHECK
 	if (size != another.size())
@@ -42,7 +65,7 @@ bool eslabNPtsBitCrossover<CT>::perform(CT &one, CT &another, double rate)
 }
 
 template<class CT>
-bool eslabPeerCrossover<CT>::perform(CT &one, CT &another, double rate)
+bool Crossover<CT>::peer(CT &one, CT &another, double rate)
 {
 	if (!Random::flip(rate)) return false;
 

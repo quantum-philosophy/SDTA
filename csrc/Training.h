@@ -2,47 +2,38 @@
 #define __TRAINING_H__
 
 template<class CT>
-class eslabTraining: public eoMonOp<CT>
+class Training: public eoMonOp<CT>
 {
-	public:
+	typedef bool (Training<CT>::*method_t)(CT &, double);
 
-	eslabTraining(const rate_t &_rate) : rate(_rate) {}
-
-	inline bool operator()(CT &chromosome)
-	{
-		return perform(chromosome, rate.get());
-	}
-
-	protected:
-
-	virtual inline bool perform(CT &chromosome, double rate)
-	{
-		return false;
-	}
-
-	const rate_t &rate;
-};
-
-template<class CT>
-class eslabPeerTraining: public eslabTraining<CT>
-{
-	public:
-
-	eslabPeerTraining(const constrains_t &_constrains, eoEvalFunc<CT> &_evaluate,
-		size_t _max_lessons, size_t _max_stall, const rate_t &_rate) :
-
-		eslabTraining<CT>(_rate), constrains(_constrains),
-		evaluate(_evaluate), max_lessons(_max_lessons), max_stall(_max_stall) {}
-
-	protected:
-
-	bool perform(CT &chromosome, double rate);
-
-	const constrains_t &constrains;
 	eoEvalFunc<CT> &evaluate;
+	const constrains_t &constrains;
+	const TrainingTuning &tuning;
+	const rate_t rate;
+	EvolutionStats &stats;
+	method_t method;
 
-	size_t max_lessons;
-	size_t max_stall;
+	public:
+
+	Training(eoEvalFunc<CT> &_evaluate, const constrains_t &_constrains,
+		const TrainingTuning &_tuning, EvolutionStats &_stats) :
+
+		evaluate(_evaluate), constrains(_constrains), tuning(_tuning),
+		rate(tuning.min_rate, tuning.scale, tuning.exponent, _stats.generations),
+		stats(_stats)
+	{
+		if (tuning.method == "peer") method = &Training::peer;
+		else throw std::runtime_error("The training method is unknown.");
+	}
+
+	inline bool operator()(CT &one)
+	{
+		return (this->*method)(one, stats.training_rate = rate.get());
+	}
+
+	private:
+
+	bool peer(CT &one, double rate);
 };
 
 #include "Training.hpp"

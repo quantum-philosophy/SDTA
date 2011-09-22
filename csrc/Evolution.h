@@ -1,247 +1,22 @@
 #ifndef __EVOLUTION_H__
 #define __EVOLUTION_H__
 
-#include <eo>
-
-#ifdef REAL_RANK
-#include <es.h>
-#else
-#include <eoInt.h>
-#endif
-
-#include <ga/eoBitOp.h>
-
 #include "common.h"
-#include "Schedule.h"
-#include "ListScheduler.h"
-#include "Evaluation.h"
+
+#include "Genetics.h"
+
+#include "EvolutionTuning.h"
+#include "EvolutionStats.h"
 
 #include "Crossover.h"
 #include "Mutation.h"
 #include "Training.h"
-#include "Transform.h"
+#include "Transformation.h"
 
-template<class FT>
-class eslabChromosome
-{
-	public:
-
-	typedef FT fitness_t;
-
-	inline void assess(const Schedule &schedule, const price_t &price)
-	{
-		m_schedule = schedule;
-		fit(price);
-	}
-
-	inline const Schedule &schedule() const
-	{
-		return m_schedule;
-	}
-
-	virtual bool bad() const = 0;
-
-	protected:
-
-	virtual void fit(const price_t &price) = 0;
-
-	Schedule m_schedule;
-};
+#include "Evaluation.h"
 
 template<class CT>
-class eslabPop: public eoPop<CT>
-{
-	public:
-
-	typedef typename CT::fitness_t fitness_t;
-
-	size_t unique() const;
-	double diversity() const;
-};
-
-class EvolutionTuning
-{
-	public:
-
-	/* Prepare */
-	int repeat;
-	double deadline_ratio;
-	bool reorder_tasks;
-	bool include_mapping;
-
-	/* Target */
-	bool multiobjective;
-
-	/* Randomize */
-	int seed;
-
-	/* Create */
-	double uniform_ratio;
-	size_t population_size;
-
-	/* Continue */
-	size_t max_generations;
-	size_t stall_generations;
-
-	/* Select */
-	size_t tournament_size;
-
-	/* Crossover */
-	double crossover_min_rate;
-	double crossover_scale;
-	double crossover_exponent;
-	size_t crossover_points;
-
-	/* Mutate */
-	double mutation_min_rate;
-	double mutation_scale;
-	double mutation_exponent;
-
-	/* Train */
-	double training_min_rate;
-	double training_scale;
-	double training_exponent;
-	size_t max_lessons;
-	size_t stall_lessons;
-
-	/* Evolve */
-	double elitism_rate;
-
-	/* Output */
-	bool verbose;
-	std::string dump_evolution;
-
-	EvolutionTuning(const std::string &filename);
-
-	void update(std::istream &stream);
-
-	void display(std::ostream &o) const;
-
-	protected:
-
-	void defaults();
-};
-
-template<class CT>
-class eslabContinue: public eoContinue<CT>
-{
-	public:
-
-	virtual void reset() = 0;
-};
-
-template<class CT>
-class eslabCheckPoint: public eoContinue<CT>
-{
-	public:
-
-	eslabCheckPoint(eslabContinue<CT> &continuator)
-	{
-		continuators.push_back(&continuator);
-	}
-
-	bool operator()(const eoPop<CT> &population)
-	{
-		size_t monitor_count, continuator_count, i;
-
-		monitor_count = monitors.size();
-		continuator_count = continuators.size();
-
-		for (i = 0; i < monitor_count; i++) (*monitors[i])();
-
-		bool go_on = true;
-
-		for (i = 0; i < continuator_count; i++)
-			if (!(*continuators[i])(population)) go_on = false;
-
-		/* Say goodbye */
-		if (!go_on) {
-			for (i = 0; i < monitor_count; i++)
-				monitors[i]->lastCall();
-		}
-
-		return go_on;
-	}
-
-	inline void add(eslabContinue<CT> &continuator)
-	{
-		continuators.push_back(&continuator);
-	}
-
-	inline void add(eoMonitor &monitor)
-	{
-		monitors.push_back(&monitor);
-	}
-
-	inline void reset()
-	{
-		size_t count = continuators.size();
-		for (size_t i = 0; i < count; i++)
-			continuators[i]->reset();
-	}
-
-	private:
-
-	std::vector<eslabContinue<CT> *> continuators;
-	std::vector<eoMonitor *> monitors;
-};
-
-/******************************************************************************/
-/* Evolution Stats                                                            */
-/******************************************************************************/
-
-class EvolutionStats
-{
-	public:
-
-	EvolutionStats() {}
-
-	virtual void display(std::ostream &o) const {}
-};
-
-template<class CT, class PT = eslabPop<CT> >
-class GenericEvolutionStats: public EvolutionStats, public eoMonitor
-{
-	public:
-
-	typedef CT chromosome_t;
-	typedef PT population_t;
-
-	size_t generations;
-	size_t evaluations;
-	size_t deadline_misses;
-
-	double crossover_rate;
-	double mutation_rate;
-	double training_rate;
-
-	GenericEvolutionStats() : population(NULL) {}
-
-	inline void evaluate()
-	{
-		if (!silent) std::cout << "." << std::flush;
-		evaluations++;
-	}
-
-	inline void miss_deadline()
-	{
-		if (!silent) std::cout << "!" << std::flush;
-		deadline_misses++;
-	}
-
-	void watch(population_t &_population, bool _silent = false);
-	eoMonitor& operator()();
-
-	virtual void display(std::ostream &o) const;
-
-	protected:
-
-	virtual void reset() {}
-	virtual void process() {}
-
-	population_t *population;
-	bool silent;
-};
+class eslabCheckPoint;
 
 /******************************************************************************/
 /* Evolution                                                                  */
@@ -285,6 +60,10 @@ class GenericEvolution: public Evolution
 	void populate(population_t &population, const layout_t &layout,
 		const priority_t &priority);
 
+	eoQuadOp<CT> *choose_crossover();
+	eoMonOp<CT> *choose_mutation();
+	eoMonOp<CT> *choose_training(eoEvalFunc<CT> &evaluator);
+
 	virtual void evaluate(chromosome_t &chromosome) = 0;
 	virtual void process(population_t &population,
 		eslabCheckPoint<chromosome_t> &checkpoint) = 0;
@@ -299,30 +78,16 @@ class GenericEvolution: public Evolution
 };
 
 /******************************************************************************/
-/* Monitoring                                                                 */
+/* Continuation                                                               */
 /******************************************************************************/
 
 template<class CT>
-class eslabEvolutionMonitor: public eoMonitor
+class eslabContinue: public eoContinue<CT>
 {
 	public:
 
-	typedef eoPop<CT> population_t;
-	typedef typename CT::fitness_t fitness_t;
-
-	eslabEvolutionMonitor(population_t &_population, const std::string &filename);
-
-	virtual eoMonitor& operator()() = 0;
-
-	protected:
-
-	population_t &population;
-	std::ofstream stream;
+	virtual void reset() = 0;
 };
-
-/******************************************************************************/
-/* Continuation                                                               */
-/******************************************************************************/
 
 template<class CT>
 class eslabGenContinue: public eslabContinue<CT>
@@ -399,8 +164,83 @@ class eslabStallContinue: public eslabContinue<CT>
 	size_t last_improvement;
 };
 
-std::ostream &operator<< (std::ostream &o, const EvolutionTuning &tuning);
-std::ostream &operator<< (std::ostream &o, const EvolutionStats &stats);
+/******************************************************************************/
+/* Monitoring                                                                 */
+/******************************************************************************/
+
+template<class CT>
+class eslabCheckPoint: public eoContinue<CT>
+{
+	public:
+
+	eslabCheckPoint(eslabContinue<CT> &continuator)
+	{
+		continuators.push_back(&continuator);
+	}
+
+	bool operator()(const eoPop<CT> &population)
+	{
+		size_t monitor_count, continuator_count, i;
+
+		monitor_count = monitors.size();
+		continuator_count = continuators.size();
+
+		for (i = 0; i < monitor_count; i++) (*monitors[i])();
+
+		bool go_on = true;
+
+		for (i = 0; i < continuator_count; i++)
+			if (!(*continuators[i])(population)) go_on = false;
+
+		/* Say goodbye */
+		if (!go_on) {
+			for (i = 0; i < monitor_count; i++)
+				monitors[i]->lastCall();
+		}
+
+		return go_on;
+	}
+
+	inline void add(eslabContinue<CT> &continuator)
+	{
+		continuators.push_back(&continuator);
+	}
+
+	inline void add(eoMonitor &monitor)
+	{
+		monitors.push_back(&monitor);
+	}
+
+	inline void reset()
+	{
+		size_t count = continuators.size();
+		for (size_t i = 0; i < count; i++)
+			continuators[i]->reset();
+	}
+
+	private:
+
+	std::vector<eslabContinue<CT> *> continuators;
+	std::vector<eoMonitor *> monitors;
+};
+
+template<class CT>
+class eslabEvolutionMonitor: public eoMonitor
+{
+	public:
+
+	typedef eoPop<CT> population_t;
+	typedef typename CT::fitness_t fitness_t;
+
+	eslabEvolutionMonitor(population_t &_population, const std::string &filename);
+
+	virtual eoMonitor& operator()() = 0;
+
+	protected:
+
+	population_t &population;
+	std::ofstream stream;
+};
 
 #include "Evolution.hpp"
 

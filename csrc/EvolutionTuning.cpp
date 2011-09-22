@@ -1,71 +1,13 @@
-#include <iomanip>
+#include <stdexcept>
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <iomanip>
 
-#include "Evolution.h"
+#include "EvolutionTuning.h"
 
-/******************************************************************************/
-/* EvolutionTuning                                                            */
-/******************************************************************************/
-
-void EvolutionTuning::defaults()
+void EvolutionTuning::update(const std::string &filename)
 {
-	/* Preparation */
-	repeat = -1;
-	deadline_ratio = 1.1;
-	reorder_tasks = false;
-	include_mapping = false;
-
-	/* Method */
-	multiobjective = false;
-
-	/* Randomness */
-	seed = -1;
-
-	/* Create */
-	uniform_ratio = 0.5;
-	population_size = 25;
-
-	/* Continue */
-	max_generations = 100;
-	stall_generations = 20;
-
-	/* Select */
-	tournament_size = 3;
-
-	/* Crossover */
-	crossover_min_rate = 0.5;
-	crossover_scale = 1;
-	crossover_exponent = 0;
-	crossover_points = 2;
-
-	/* Mutate */
-	mutation_min_rate = 0.01;
-	mutation_scale = 1;
-	mutation_exponent = -0.05;
-
-	/* Train */
-	training_min_rate = 0.01;
-	training_scale = 1;
-	training_exponent = -0.05;
-	max_lessons = 50;
-	stall_lessons = 10;
-
-	/* Evolve */
-	elitism_rate = 0.5;
-
-	/* Output */
-	verbose = false;
-	dump_evolution = std::string();
-}
-
-EvolutionTuning::EvolutionTuning(const std::string &filename)
-{
-	defaults();
-
-	if (filename.empty()) return;
-
 	std::ifstream file(filename.c_str());
 
 	if (!file.is_open())
@@ -127,38 +69,46 @@ void EvolutionTuning::update(std::istream &main_stream)
 			stream >> stall_generations;
 
 		/* Select */
+		else if (name == "selection")
+			stream >> selection.method;
 		else if (name == "tournament_size")
-			stream >> tournament_size;
+			stream >> selection.tournament_size;
 
 		/* Crossover */
+		else if (name == "crossover")
+			stream >> crossover.method;
 		else if (name == "crossover_min_rate")
-			stream >> crossover_min_rate;
+			stream >> crossover.min_rate;
 		else if (name == "crossover_scale")
-			stream >> crossover_scale;
+			stream >> crossover.scale;
 		else if (name == "crossover_exponent")
-			stream >> crossover_exponent;
+			stream >> crossover.exponent;
 		else if (name == "crossover_points")
-			stream >> crossover_points;
+			stream >> crossover.points;
 
 		/* Mutate */
+		else if (name == "mutation")
+			stream >> mutation.method;
 		else if (name == "mutation_min_rate")
-			stream >> mutation_min_rate;
+			stream >> mutation.min_rate;
 		else if (name == "mutation_scale")
-			stream >> mutation_scale;
+			stream >> mutation.scale;
 		else if (name == "mutation_exponent")
-			stream >> mutation_exponent;
+			stream >> mutation.exponent;
 
 		/* Train */
+		else if (name == "training")
+			stream >> training.method;
 		else if (name == "training_min_rate")
-			stream >> training_min_rate;
+			stream >> training.min_rate;
 		else if (name == "training_scale")
-			stream >> training_scale;
+			stream >> training.scale;
 		else if (name == "training_exponent")
-			stream >> training_exponent;
+			stream >> training.exponent;
 		else if (name == "max_lessons")
-			stream >> max_lessons;
+			stream >> training.max_lessons;
 		else if (name == "stall_lessons")
-			stream >> stall_lessons;
+			stream >> training.stall_lessons;
 
 		/* Evolve */
 		else if (name == "elitism_rate")
@@ -188,54 +138,68 @@ void EvolutionTuning::display(std::ostream &o) const
 		<< "  Deadline ratio:          " << deadline_ratio << std::endl
 		<< "  Reorder tasks:           " << reorder_tasks << std::endl
 		<< "  Consider mapping:        " << include_mapping << std::endl
+		<< std::endl
 
 		/* Target */
 		<< "  Multi-objective:         " << multiobjective << std::endl
+		<< std::endl
 
 		/* Randomize */
 		<< std::setprecision(0)
 		<< "  Seed:                    " << seed << std::endl
+		<< std::endl
 
 		/* Create */
 		<< std::setprecision(3)
 		<< "  Uniform ratio:           " << uniform_ratio << std::endl
 		<< std::setprecision(0)
 		<< "  Population size:         " << population_size << std::endl
+		<< std::endl
 
 		/* Continue */
 		<< "  Maximum generations:     " << max_generations << std::endl
 		<< "  Stall generations:       " << stall_generations << std::endl
+		<< std::endl
 
 		/* Select */
+		<< "  Selection:               " << selection.method << std::endl
 		<< std::setprecision(0)
-		<< "  Tournament size:         " << tournament_size << std::endl
+		<< "  Tournament size:         " << selection.tournament_size << std::endl
+		<< std::endl
 
 		/* Crossover */
+		<< "  Crossover:               " << crossover.method << std::endl
 		<< std::setprecision(3)
-		<< "  Crossover minimal rate:  " << crossover_min_rate << std::endl
-		<< "  Crossover scale:         " << crossover_scale << std::endl
-		<< "  Crossover exponent:      " << crossover_exponent << std::endl
+		<< "  Crossover minimal rate:  " << crossover.min_rate << std::endl
+		<< "  Crossover scale:         " << crossover.scale << std::endl
+		<< "  Crossover exponent:      " << crossover.exponent << std::endl
 		<< std::setprecision(0)
-		<< "  Crossover points:        " << crossover_points << std::endl
+		<< "  Crossover points:        " << crossover.points << std::endl
+		<< std::endl
 
 		/* Mutate */
+		<< "  Mutation:                " << mutation.method << std::endl
 		<< std::setprecision(3)
-		<< "  Mutation minimal rate:   " << mutation_min_rate << std::endl
-		<< "  Mutation scale:          " << mutation_scale << std::endl
-		<< "  Mutation exponent:       " << mutation_exponent << std::endl
+		<< "  Mutation minimal rate:   " << mutation.min_rate << std::endl
+		<< "  Mutation scale:          " << mutation.scale << std::endl
+		<< "  Mutation exponent:       " << mutation.exponent << std::endl
+		<< std::endl
 
 		/* Train */
+		<< "  Training:                " << training.method << std::endl
 		<< std::setprecision(3)
-		<< "  Training minimal rate:   " << training_min_rate << std::endl
-		<< "  Training scale:          " << training_scale << std::endl
-		<< "  Training exponent:       " << training_exponent << std::endl
+		<< "  Training minimal rate:   " << training.min_rate << std::endl
+		<< "  Training scale:          " << training.scale << std::endl
+		<< "  Training exponent:       " << training.exponent << std::endl
 		<< std::setprecision(0)
-		<< "  Maximum lessons:         " << max_lessons << std::endl
-		<< "  Stall lessons:           " << stall_lessons << std::endl
+		<< "  Maximum lessons:         " << training.max_lessons << std::endl
+		<< "  Stall lessons:           " << training.stall_lessons << std::endl
+		<< std::endl
 
 		/* Evolve */
 		<< std::setprecision(3)
 		<< "  Elitism rate:            " << elitism_rate << std::endl
+		<< std::endl
 
 		/* Output */
 		<< "  Verbose:                 " << verbose << std::endl
@@ -245,11 +209,6 @@ void EvolutionTuning::display(std::ostream &o) const
 std::ostream &operator<< (std::ostream &o, const EvolutionTuning &tuning)
 {
 	tuning.display(o);
-	return o;
-}
 
-std::ostream &operator<< (std::ostream &o, const EvolutionStats &stats)
-{
-	stats.display(o);
 	return o;
 }

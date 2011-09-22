@@ -7,7 +7,6 @@
 #include <time.h>
 
 #include "CommandLine.h"
-
 #include "Architecture.h"
 #include "Graph.h"
 #include "Hotspot.h"
@@ -15,17 +14,11 @@
 #include "Layout.h"
 #include "Priority.h"
 #include "ListScheduler.h"
-#include "Evaluation.h"
 #include "SOEvolution.h"
 #include "MOEvolution.h"
+#include "Evaluation.h"
 
 using namespace std;
-
-#define __DELETE(some) 			\
-	do { 						\
-		if (some) delete some; 	\
-		some = NULL;			\
-	} while(0)
 
 void optimize(const string &system_config, const string &genetic_config,
 	const string &floorplan_config, const string &thermal_config,

@@ -2,56 +2,41 @@
 #define __CROSSOVER_H__
 
 template<class CT>
-class eslabCrossover: public eoQuadOp<CT>
+class Crossover: public eoQuadOp<CT>
 {
+	typedef bool (Crossover<CT>::*method_t)(CT &, CT &, double);
+
+	const constrains_t &constrains;
+	const CrossoverTuning &tuning;
+	const rate_t rate;
+	EvolutionStats &stats;
+	method_t method;
+
 	public:
 
-	eslabCrossover(const rate_t &_rate) : rate(_rate) {}
+	Crossover(const constrains_t &_constrains,
+		const CrossoverTuning &_tuning, EvolutionStats &_stats) :
+
+		constrains(_constrains), tuning(_tuning),
+		rate(tuning.min_rate, tuning.scale, tuning.exponent, _stats.generations),
+		stats(_stats)
+	{
+		if (tuning.method == "uniform") method = &Crossover<CT>::uniform;
+		else if (tuning.method == "npoint") method = &Crossover<CT>::npoint;
+		else if (tuning.method == "peer") method = &Crossover<CT>::uniform;
+		else throw std::runtime_error("The crossover method is unknown.");
+	}
 
 	inline bool operator()(CT &one, CT &another)
 	{
-		return perform(one, another, rate.get());
+		return (this->*method)(one, another, stats.crossover_rate = rate.get());
 	}
 
-	protected:
+	private:
 
-	virtual bool perform(CT &one, CT &another, double rate) = 0;
-
-	const rate_t &rate;
-};
-
-template<class CT>
-class eslabNPtsBitCrossover: public eslabCrossover<CT>
-{
-	size_t points;
-
-	public:
-
-	eslabNPtsBitCrossover(size_t _points, const rate_t &_rate) :
-		eslabCrossover<CT>(_rate), points(_points)
-	{
-		if (points < 1)
-			std::runtime_error("The number of crossover points is invalid.");
-	}
-
-	protected:
-
-	bool perform(CT &one, CT &another, double rate);
-};
-
-template<class CT>
-class eslabPeerCrossover: public eslabCrossover<CT>
-{
-	const constrains_t &constrains;
-
-	public:
-
-	eslabPeerCrossover(const constrains_t &_constrains, const rate_t &_rate) :
-		eslabCrossover<CT>(_rate), constrains(_constrains) {}
-
-	protected:
-
-	bool perform(CT &one, CT &another, double rate);
+	bool uniform(CT &one, CT &another, double rate);
+	bool npoint(CT &one, CT &another, double rate);
+	bool peer(CT &one, CT &another, double rate);
 };
 
 #include "Crossover.hpp"

@@ -63,54 +63,6 @@ double eslabPop<CT>::diversity() const
 }
 
 /******************************************************************************/
-/* Evolution Stats                                                            */
-/******************************************************************************/
-
-template<class CT, class PT>
-void GenericEvolutionStats<CT, PT>::watch(population_t &_population, bool _silent)
-{
-	population = &_population;
-	silent = _silent;
-
-	generations = 0;
-	evaluations = 0;
-	deadline_misses = 0;
-
-	crossover_rate = 0;
-	mutation_rate = 0;
-	training_rate = 0;
-
-	reset();
-}
-
-template<class CT, class PT>
-eoMonitor &GenericEvolutionStats<CT, PT>::operator()()
-{
-	if (!population)
-		throw std::runtime_error("The population is not defined.");
-
-	generations++;
-
-	process();
-
-	return *this;
-}
-
-template<class CT, class PT>
-void GenericEvolutionStats<CT, PT>::display(std::ostream &o) const
-{
-	o
-		<< std::setiosflags(std::ios::fixed)
-
-		<< "Stats:" << std::endl
-
-		<< std::setprecision(0)
-		<< "  Generations:     " << generations << std::endl
-		<< "  Evaluations:     " << evaluations << std::endl
-		<< "  Deadline misses: " << deadline_misses << std::endl;
-}
-
-/******************************************************************************/
 /* Evolution                                                                  */
 /******************************************************************************/
 
