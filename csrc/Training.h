@@ -2,7 +2,7 @@
 #define __TRAINING_H__
 
 template<class CT>
-class Training: public eoMonOp<CT>
+class Training: public eoAlgo<CT>, public eoMonOp<CT>
 {
 	typedef bool (Training<CT>::*method_t)(CT &, double);
 
@@ -24,6 +24,18 @@ class Training: public eoMonOp<CT>
 	{
 		if (tuning.method == "peer") method = &Training::peer;
 		else throw std::runtime_error("The training method is unknown.");
+	}
+
+	inline void operator()(eoPop<CT> &population)
+	{
+		double current_rate = stats.training_rate = rate.get();
+
+		if (current_rate == 0) return;
+
+		size_t size = population.size();
+
+		for (size_t i = 0; i < size; i++)
+			(void)(this->*method)(population[i], current_rate);
 	}
 
 	inline bool operator()(CT &one)

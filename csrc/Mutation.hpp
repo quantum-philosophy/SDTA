@@ -1,4 +1,5 @@
 #include "Mutation.h"
+#include "Neighborhood.h"
 
 template<class CT>
 bool Mutation<CT>::uniform(CT &chromosome, double rate)
@@ -24,10 +25,7 @@ bool Mutation<CT>::uniform(CT &chromosome, double rate)
 template<class CT>
 bool Mutation<CT>::peer(CT &chromosome, double rate)
 {
-	rank_t rank;
-	int direction;
 	bool changed = false;
-	size_t local_size, pos, peer_id;
 
 	const Schedule &schedule = chromosome.schedule();
 	size_t task_count = schedule.tasks();
@@ -39,47 +37,21 @@ bool Mutation<CT>::peer(CT &chromosome, double rate)
 		/* If we have already modified this gene or we are unlucky, go on */
 		if (switched[id] || !Random::flip(rate)) continue;
 
-		pid_t pid = schedule.map(id);
-		const LocalSchedule &local_schedule = schedule[pid];
-		local_size = local_schedule.size();
+		tid_t peer_id = Neighborhood::peer(id, schedule, constrains, switched);
 
-		/* If the task is the only one on the core, skip */
-		if (local_size == 1) continue;
+		/* If cannot find, continue */
+		if (peer_id == id) continue;
 
-		/* Find the position of the task in the local schedule */
-		for (pos = 0; pos < local_size; pos++)
-			if (local_schedule[pos].id == id) break;
+		/* Switch ranks between two peers */
+		rank_t rank = chromosome[id];
+		chromosome[id] = chromosome[peer_id];
+		chromosome[peer_id] = rank;
 
-#ifndef SHALLOW_CHECK
-		if (pos == local_size)
-			throw std::runtime_error("Cannot find the task.");
-#endif
+		/* Remember which we have switched with */
+		switched[peer_id] = true;
+		switched[id] = true;
 
-		/* Choose the direction */
-		if (pos == 0) direction = +1;
-		else if (pos == local_size - 1) direction = -1;
-		else direction = Random::flip(0.5) ? +1 : -1;
-
-		const constrain_t &constrain = constrains[id];
-
-		/* Looking for a peer */
-		for (pos += direction; pos >= 0 && pos < local_size; pos += direction) {
-			peer_id = local_schedule[pos].id;
-
-			if (switched[peer_id] || !constrain.has_peer(peer_id)) continue;
-
-			/* Switch ranks between two peers */
-			rank = chromosome[id];
-			chromosome[id] = chromosome[peer_id];
-			chromosome[peer_id] = rank;
-
-			/* Remember which we have switched with */
-			switched[peer_id] = true;
-			switched[id] = true;
-
-			changed = true;
-			break;
-		}
+		changed = true;
 	}
 
 	return changed;

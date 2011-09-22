@@ -10,84 +10,47 @@ bool Training<CT>::peer(CT &chromosome, double rate)
 	const Schedule &schedule = chromosome.schedule();
 	size_t task_count = schedule.tasks();
 
-	CT current_one = chromosome, best_one = chromosome;
-	typename CT::fitness_t current_fitness, best_fitness = chromosome.fitness();
+	CT current = chromosome;
 
-	/* In order to prevent switching back */
-	bit_string_t switched(task_count, false);
+	typename CT::fitness_t fitness, best_fitness = chromosome.fitness();
 
 	size_t lessons = 0, stall = 0;
 
 	while (stall < tuning.stall_lessons && lessons < tuning.max_lessons) {
 		tid_t id = Random::number(task_count);
-		pid_t pid = schedule.map(id);
+		tid_t peer_id = Neighborhood::peer(id, schedule, constrains);
 
-		const LocalSchedule &local_schedule = schedule[pid];
-		size_t local_size = local_schedule.size();
+		/* If cannot find, continue */
+		if (peer_id == id) continue;
 
-		/* We want to teach something... */
-		if (local_size == 1) continue;
+		lessons++;
 
-		size_t pos = 0;
+		/* Switch ranks between two peers */
+		rank_t rank = current[id];
+		current[id] = current[peer_id];
+		current[peer_id] = rank;
+		current.invalidate();
 
-		for (; pos < local_size; pos++)
-			if (local_schedule[pos].id == id) break;
+		evaluate(current);
+		fitness = current.fitness();
 
-#ifndef SHALLOW_CHECK
-		if (pos == local_size)
-			throw std::runtime_error("Cannot find the task.");
-#endif
-
-		/* Choose the direction */
-		int direction;
-
-		if (pos == 0) direction = +1;
-		else if (pos == local_size - 1) direction = -1;
-		else direction = Random::flip(0.5) ? +1 : -1;
-
-		const constrain_t &constrain = constrains[id];
-
-		/* Looking for a peer */
-		bool found = false, improved = false;
-
-		rank_t rank = current_one[id];
-
-		for (pos += direction; pos >= 0 && pos < local_size; pos += direction) {
-			size_t peer_id = local_schedule[pos].id;
-
-			if (!constrain.has_peer(peer_id)) continue;
-			found = true;
-
-			/* Switch ranks between two peers */
-			current_one[id] = current_one[peer_id];
-			current_one[peer_id] = rank;
-
-			current_one.invalidate();
-			evaluate(current_one);
-			current_fitness = current_one.fitness();
-
-			if (best_fitness < current_fitness) {
-				best_fitness = current_fitness;
-				best_one = current_one;
-				improved = true;
-			}
-
-			/* Return back */
-			current_one[peer_id] = current_one[id];
-			current_one[id] = rank;
+		if (best_fitness < fitness) {
+			best_fitness = fitness;
+			stall = 0;
 		}
+		else {
+			/* Return back */
+			current[peer_id] = current[id];
+			current[id] = rank;
+			current.invalidate();
 
-		if (found) {
-			lessons++;
-
-			if (improved) stall = 0;
-			else stall++;
+			stall++;
 		}
 	}
 
 	if (best_fitness > chromosome.fitness()) {
-		/* The lesson has learnt */
-		chromosome = best_one;
+		/* The lesson has been learnt */
+		chromosome = current;
 		return true;
 	}
 
