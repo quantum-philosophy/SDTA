@@ -13,6 +13,17 @@
 
 #include "Schedule.h"
 
+class Chromosome
+{
+	public:
+
+	template<class CT>
+	static double distance(const CT &one, const CT &another);
+
+	template<class CT>
+	static bool equal(const CT &one, const CT &another);
+};
+
 template<class FT>
 class eslabChromosome
 {
@@ -50,5 +61,7 @@ class eslabPop: public eoPop<CT>
 	size_t unique() const;
 	double diversity() const;
 };
+
+#include "Genetics.hpp"
 
 #endif

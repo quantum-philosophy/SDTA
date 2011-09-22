@@ -199,6 +199,16 @@ class FulfillingReplacement: public eoReplacement<CT>
 	Selection<CT> &select;
 };
 
+template <class CT>
+class SimilarReplacement: public eoReplacement<CT>
+{
+	public:
+
+	SimilarReplacement() {}
+
+	void operator()(eoPop<CT> &parents, eoPop<CT> &offspring);
+};
+
 template<class CT>
 class ElitismMerge: public eoMerge<CT>
 {

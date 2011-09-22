@@ -1,68 +1,6 @@
 #include "Constrain.h"
 
 /******************************************************************************/
-/* Population                                                                 */
-/******************************************************************************/
-
-template<class CT>
-size_t eslabPop<CT>::unique() const
-{
-	const eslabPop<CT> &self = *this;
-	size_t population_size = self.size();
-
-	if (!population_size) return 0;
-
-	size_t i, j, k, count;
-	bool found;
-	size_t chromosome_length = self[0].size();
-	std::vector<bool> done(population_size, false);
-
-	count = 0;
-	for (i = 0; i < population_size; i++) {
-		if (done[i]) continue;
-		count++;
-
-		for (j = i + 1; j < population_size; j++) {
-			found = true;
-
-			for (k = 0; k < chromosome_length; k++)
-				if (self[i][k] != self[j][k]) {
-					found = false;
-					break;
-				}
-
-			if (found) done[j] = true;
-		}
-	}
-
-	return count;
-}
-
-template<class CT>
-double eslabPop<CT>::diversity() const
-{
-	const eslabPop<CT> &self = *this;
-	size_t population_size = self.size();
-
-	if (!population_size) return 0;
-
-	double value = 0;
-	size_t i, j, k, count, total = 0;
-	size_t chromosome_length = self[0].size();
-
-	for (i = 0; i < population_size - 1; i++)
-		for (j = i + 1; j < population_size; j++) {
-			for (count = 0, k = 0; k < chromosome_length; k++)
-				if (self[i][k] != self[j][k]) count++;
-
-			value += count;
-			total++;
-		}
-
-	return value / (double)total / (double)chromosome_length;
-}
-
-/******************************************************************************/
 /* Evolution                                                                  */
 /******************************************************************************/
 
