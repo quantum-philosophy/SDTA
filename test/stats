@@ -1,0 +1,77 @@
+#!/usr/bin/env ruby
+
+if ARGV.empty?
+  puts 'Need an argument...'
+  exit
+end
+
+number = '\s*(\d+(\.\d+)?)\s*'
+
+initial_lifetime = 0
+generations = []
+evaluations = []
+deadline_misses = []
+lifetime = []
+improvement = []
+times = []
+
+file = File.open(ARGV[0]) do |file|
+  while line = file.gets
+    case line
+    when /Initial lifetime: #{ number }/
+      initial_lifetime = $1.to_f
+    when /Generations: #{ number }/
+      generations.push $1.to_f
+    when /Evaluations: #{ number }/
+      evaluations.push $1.to_f
+    when /Deadline misses: #{ number }/
+      deadline_misses.push $1.to_f
+    when /Best lifetime: #{ number }/
+      lifetime.push $1.to_f
+    when /Improvement: #{ number }/
+      improvement.push $1.to_f
+    when /Time elapsed: #{ number }/
+      times.push $1.to_f
+    end
+  end
+end
+
+printf "Initial lifetime: %.2f\n", initial_lifetime
+printf "\n"
+
+printf "%5s%15s%15s%15s%15s%15s%15s\n", 'No', 'Generations', 'Evaluations',
+  'Deadline', 'Lifetime', '+, %', 'Time, s'
+
+(1..generations.length).each do |i|
+  printf "%5d%15d%15d%15d%15.2f%15.2f%15.2f\n", i,
+    generations[i]          || -1,
+    evaluations[i]          || -1,
+    deadline_misses[i]      || -1,
+    lifetime[i]             || -1,
+    improvement[i]          || -1,
+    times[i]                || -1
+end
+
+class Array
+  def sum
+    inject(0.0) { |result, el| result + el }
+  end
+
+  def mean
+    sum / size
+  end
+end
+
+printf "\n"
+
+printf "%5s%15d%15d%15d%15.2f%15.2f%15.2f\n", 'min',
+  generations.min, evaluations.min, deadline_misses.min, lifetime.min,
+  improvement.min, times.min
+
+printf "%5s%15d%15d%15d%15.2f%15.2f%15.2f\n", 'max',
+  generations.max, evaluations.max, deadline_misses.max, lifetime.max,
+  improvement.max, times.max
+
+printf "%5s%15d%15d%15d%15.2f%15.2f%15.2f\n", 'avg',
+  generations.mean, evaluations.mean, deadline_misses.mean, lifetime.mean,
+  improvement.mean, times.mean
