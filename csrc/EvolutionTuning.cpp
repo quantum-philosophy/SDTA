@@ -63,10 +63,12 @@ void EvolutionTuning::update(std::istream &main_stream)
 			stream >> population_size;
 
 		/* Continue */
+		else if (name == "min_generations")
+			stream >> continuation.min_generations;
 		else if (name == "max_generations")
-			stream >> max_generations;
+			stream >> continuation.max_generations;
 		else if (name == "stall_generations")
-			stream >> stall_generations;
+			stream >> continuation.stall_generations;
 
 		/* Select */
 		else if (name == "selection")
@@ -137,69 +139,71 @@ void EvolutionTuning::display(std::ostream &o) const
 		<< "Tuning:" << std::endl
 
 		/* Prepare */
-		<< "  Repeat:               " << repeat << std::endl
+		<< "  Repeat:                 " << repeat << std::endl
 		<< std::setprecision(3)
-		<< "  Deadline ratio:       " << deadline_ratio << std::endl
-		<< "  Reorder tasks:        " << reorder_tasks << std::endl
-		<< "  Consider mapping:     " << include_mapping << std::endl
+		<< "  Deadline ratio:         " << deadline_ratio << std::endl
+		<< "  Reorder tasks:          " << reorder_tasks << std::endl
+		<< "  Consider mapping:       " << include_mapping << std::endl
 		<< std::endl
 
 		/* Target */
-		<< "  Multi-objective:      " << multiobjective << std::endl
+		<< "  Multi-objective:        " << multiobjective << std::endl
 		<< std::endl
 
 		/* Randomize */
 		<< std::setprecision(0)
-		<< "  Seed:                 " << seed << std::endl
+		<< "  Seed:                   " << seed << std::endl
 		<< std::endl
 
 		/* Create */
 		<< std::setprecision(3)
-		<< "  Uniform ratio:        " << uniform_ratio << std::endl
+		<< "  Uniform ratio:          " << uniform_ratio << std::endl
 		<< std::setprecision(0)
-		<< "  Population size:      " << population_size << std::endl
+		<< "  Population size:        " << population_size << std::endl
 		<< std::endl
 
 		/* Continue */
-		<< "  Maximum generations:  " << max_generations << std::endl
-		<< "  Stall generations:    " << stall_generations << std::endl
+		<< "  Continuation:" << std::endl
+		<< "    Minimal generations:  " << continuation.min_generations << std::endl
+		<< "    Maximum generations:  " << continuation.max_generations << std::endl
+		<< "    Stall generations:    " << continuation.stall_generations << std::endl
 		<< std::endl
 
 		/* Select */
-		<< "  Selection:            " << selection.method << std::endl
+		<< "  Selection:              " << selection.method << std::endl
 		<< std::setprecision(2)
-		<< "    Ratio:              " << selection.ratio << std::endl
+		<< "    Ratio:                " << selection.ratio << std::endl
 		<< std::setprecision(0)
-		<< "    Tournament size:    " << selection.tournament_size << std::endl
+		<< "    Tournament size:      " << selection.tournament_size << std::endl
 		<< std::endl
 
 		/* Crossover */
-		<< "  Crossover:            " << crossover.method << std::endl
+		<< "  Crossover:              " << crossover.method << std::endl
 		<< std::setprecision(3)
-		<< "    Minimal rate:       " << crossover.min_rate << std::endl
-		<< "    Scale:              " << crossover.scale << std::endl
-		<< "    Exponent:           " << crossover.exponent << std::endl
+		<< "    Minimal rate:         " << crossover.min_rate << std::endl
+		<< "    Scale:                " << crossover.scale << std::endl
+		<< "    Exponent:             " << crossover.exponent << std::endl
 		<< std::setprecision(0)
-		<< "    Points:             " << crossover.points << std::endl
+		<< "    Points:               " << crossover.points << std::endl
 		<< std::endl
 
 		/* Mutate */
-		<< "  Mutation:             " << mutation.method << std::endl
+		<< "  Mutation:               " << mutation.method << std::endl
 		<< std::setprecision(3)
-		<< "    Minimal rate:       " << mutation.min_rate << std::endl
-		<< "    Scale:              " << mutation.scale << std::endl
-		<< "    Exponent:           " << mutation.exponent << std::endl
+		<< "    Minimal rate:         " << mutation.min_rate << std::endl
+		<< "    Scale:                " << mutation.scale << std::endl
+		<< "    Exponent:             " << mutation.exponent << std::endl
 		<< std::endl
 
 		/* Train */
-		<< "  Training:             " << training.method << std::endl
+		<< "  Training:               " << training.method << std::endl
 		<< std::setprecision(3)
-		<< "    Minimal rate:       " << training.min_rate << std::endl
-		<< "    Scale:              " << training.scale << std::endl
-		<< "    Exponent:           " << training.exponent << std::endl
+		<< "    Minimal rate:         " << training.min_rate << std::endl
+		<< "    Scale:                " << training.scale << std::endl
+		<< "    Exponent:             " << training.exponent << std::endl
 		<< std::setprecision(0)
-		<< "    Maximum lessons:    " << training.max_lessons << std::endl
-		<< "    Stall lessons:      " << training.stall_lessons << std::endl
+		<< "    Maximum lessons:      " << training.max_lessons << std::endl
+		<< "    Stall lessons:        " << training.stall_lessons << std::endl
 		<< std::endl
 
 		/* Evolve */

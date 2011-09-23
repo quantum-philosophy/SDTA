@@ -8,6 +8,8 @@
 #include "EvolutionTuning.h"
 #include "EvolutionStats.h"
 
+#include "Continuation.h"
+
 #include "Crossover.h"
 #include "Mutation.h"
 #include "Training.h"
@@ -78,93 +80,6 @@ class GenericEvolution: public Evolution
 };
 
 /******************************************************************************/
-/* Continuation                                                               */
-/******************************************************************************/
-
-template<class CT>
-class eslabContinue: public eoContinue<CT>
-{
-	public:
-
-	virtual void reset() = 0;
-};
-
-template<class CT>
-class eslabGenContinue: public eslabContinue<CT>
-{
-	public:
-
-	typedef CT chromosome_t;
-
-	eslabGenContinue(size_t _max_generations) :
-		max_generations(_max_generations) { reset(); }
-
-	virtual bool operator()(const eoPop<chromosome_t> &population)
-	{
-		generations++;
-
-		if (generations >= max_generations) return false;
-		return true;
-	}
-
-	virtual void reset()
-	{
-		generations = 0;
-	}
-
-	private:
-
-	size_t max_generations;
-	size_t generations;
-};
-
-template<class CT, class PT>
-class eslabStallContinue: public eslabContinue<CT>
-{
-	public:
-
-	typedef CT chromosome_t;
-	typedef PT population_t;
-	typedef typename CT::fitness_t fitness_t;
-
-	eslabStallContinue(size_t _stall_generations) :
-		stall_generations(_stall_generations)
-	{
-		reset();
-	}
-
-	bool operator()(const eoPop<CT> &_population)
-	{
-		generations++;
-
-		const PT *population = dynamic_cast<const population_t *>(&_population);
-
-		if (!population)
-			throw std::runtime_error("The population has a wrong type.");
-
-		if (improved(*population)) last_improvement = generations;
-		else if (generations - last_improvement > stall_generations)
-			return false;
-
-		return true;
-	}
-
-	virtual void reset()
-	{
-		generations = 0;
-		last_improvement = 0;
-	}
-
-	protected:
-
-	virtual bool improved(const population_t &population) = 0;
-
-	size_t stall_generations;
-	size_t generations;
-	size_t last_improvement;
-};
-
-/******************************************************************************/
 /* Monitoring                                                                 */
 /******************************************************************************/
 
@@ -173,7 +88,7 @@ class eslabCheckPoint: public eoContinue<CT>
 {
 	public:
 
-	eslabCheckPoint(eslabContinue<CT> &continuator)
+	eslabCheckPoint(eoContinue<CT> &continuator)
 	{
 		continuators.push_back(&continuator);
 	}
@@ -201,7 +116,7 @@ class eslabCheckPoint: public eoContinue<CT>
 		return go_on;
 	}
 
-	inline void add(eslabContinue<CT> &continuator)
+	inline void add(eoContinue<CT> &continuator)
 	{
 		continuators.push_back(&continuator);
 	}
@@ -211,16 +126,9 @@ class eslabCheckPoint: public eoContinue<CT>
 		monitors.push_back(&monitor);
 	}
 
-	inline void reset()
-	{
-		size_t count = continuators.size();
-		for (size_t i = 0; i < count; i++)
-			continuators[i]->reset();
-	}
-
 	private:
 
-	std::vector<eslabContinue<CT> *> continuators;
+	std::vector<eoContinue<CT> *> continuators;
 	std::vector<eoMonitor *> monitors;
 };
 

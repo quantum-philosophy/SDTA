@@ -172,23 +172,6 @@ class eslabSOEvolutionMonitor: public eslabEvolutionMonitor<eslabSOChromosome>
 	eoMonitor& operator()();
 };
 
-class eslabSOStallContinue:
-	public eslabStallContinue<eslabSOChromosome, eslabSOPop>
-{
-	fitness_t last_fitness;
-
-	public:
-
-	eslabSOStallContinue(size_t _stall_generations) :
-		eslabStallContinue<eslabSOChromosome, eslabSOPop>(_stall_generations) {}
-
-	void reset();
-
-	protected:
-
-	bool improved(const eslabSOPop &population);
-};
-
 #include "SOEvolution.hpp"
 
 #endif

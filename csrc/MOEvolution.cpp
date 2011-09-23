@@ -51,9 +51,7 @@ void MOEvolution::process(population_t &population,
 {
 	evaluate_t evaluator(*this);
 
-	eslabMOStallContinue stall_continue(tuning.stall_generations);
 	eslabMOEvolutionMonitor evolution_monitor(population, tuning.dump_evolution);
-	checkpoint.add(stall_continue);
 	checkpoint.add(evolution_monitor);
 
 	/* Transform = Crossover + Mutate + Train */
@@ -146,38 +144,4 @@ eoMonitor& eslabMOEvolutionMonitor::operator()()
 	stream << std::endl;
 
 	return *this;
-}
-
-/******************************************************************************/
-/* Continuation                                                               */
-/******************************************************************************/
-
-void eslabMOStallContinue::reset()
-{
-	eslabStallContinue<chromosome_t, population_t>::reset();
-
-	last_fitness.lifetime = std::numeric_limits<double>::min();
-	last_fitness.energy = std::numeric_limits<double>::max();
-}
-
-bool eslabMOStallContinue::improved(const population_t &population)
-{
-	bool result = false;
-
-	size_t population_size = population.size();
-
-	for (size_t i = 0; i < population_size; i++) {
-		price_t fitness = population[i].objectiveVector();
-
-		if (fitness.lifetime > last_fitness.lifetime) {
-			last_fitness.lifetime = fitness.lifetime;
-			result = true;
-		}
-		if (fitness.energy < last_fitness.energy) {
-			last_fitness.energy = fitness.energy;
-			result = true;
-		}
-	}
-
-	return result;
 }
