@@ -42,8 +42,8 @@ printf "\n"
 printf "%5s%15s%15s%15s%15s%15s%15s\n", 'No', 'Generations', 'Evaluations',
   'Deadline', 'Lifetime', '+, %', 'Time, s'
 
-(1..generations.length).each do |i|
-  printf "%5d%15d%15d%15d%15.2f%15.2f%15.2f\n", i,
+(0...generations.length).each do |i|
+  printf "%5d%15d%15d%15d%15.2f%15.2f%15.2f\n", i + 1,
     generations[i]          || -1,
     evaluations[i]          || -1,
     deadline_misses[i]      || -1,
