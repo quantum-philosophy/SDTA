@@ -25,9 +25,12 @@ void SOEvolution::process(population_t &population,
 	Transformation<chromosome_t> transform(crossover, mutate, train);
 
 	/* Replace = Merge + Reduce */
+	/*
 	ElitismMerge<chromosome_t> merge(tuning.elitism_rate);
 	KillerReduction<chromosome_t> reduce;
 	FulfillingReplacement<chromosome_t> replace(merge, reduce, select);
+	*/
+	SimilarReplacement<chromosome_t> replace;
 
 	eslabSOStallContinue stall_continue(tuning.stall_generations);
 	eslabSOEvolutionMonitor evolution_monitor(population, tuning.dump_evolution);

@@ -5,7 +5,10 @@ function drawEvolutionSet(prefix, multi, point, full)
 
   files = dir([ prefix, '/', 'evolution.txt_*' ]);
 
-  Utils.showEvolutionStats([ prefix, '/', 'evolution.log' ]);
+  try
+    Utils.showEvolutionStats([ prefix, '/', 'evolution.log' ]);
+  catch
+  end
 
   evolutionCount = length(files);
 
