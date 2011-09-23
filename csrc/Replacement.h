@@ -69,7 +69,7 @@ class ElitismMerge: public eoMerge<CT>
 	double rate;
 };
 
-template <class CT>
+template<class CT>
 class KillerReduction: public eoReduce<CT>
 {
 	public:
@@ -85,6 +85,44 @@ class KillerReduction: public eoReduce<CT>
 			typename eoPop<CT>::iterator it = population.it_worse_element();
 			population.erase(it);
 		}
+	}
+};
+
+template<class CT>
+class Replacement: public eoReplacement<CT>
+{
+	eoMerge<CT> *merge;
+	eoReduce<CT> *reduce;
+	eoReplacement<CT> *replace;
+
+	const ReplacementTuning &tuning;
+
+	public:
+
+	Replacement(Selection<CT> &select, const ReplacementTuning &_tuning) :
+		merge(NULL), reduce(NULL), replace(NULL), tuning(_tuning)
+	{
+		if (tuning.method == "elitism") {
+			merge = new ElitismMerge<CT>(tuning.elitism_rate);
+			reduce = new KillerReduction<CT>();
+			replace = new FulfillingReplacement<CT>(*merge, *reduce, select);
+		}
+		else if (tuning.method == "similarity") {
+			replace = new SimilarityReplacement<CT>();
+		}
+		else throw std::runtime_error("The replacement method is unknown.");
+	}
+
+	~Replacement()
+	{
+		__DELETE(merge);
+		__DELETE(reduce);
+		__DELETE(replace);
+	}
+
+	inline void operator()(eoPop<CT> &parents, eoPop<CT> &offspring)
+	{
+		(*replace)(parents, offspring);
 	}
 };
 

@@ -47,52 +47,51 @@ class TournamentSelection: public eoSelectOne<CT>
 template<class CT>
 class Selection: public eoSelect<CT>
 {
+	eoSelectOne<CT> *select;
+
 	const SelectionTuning &tuning;
 
 	public:
 
-	Selection(const SelectionTuning &_tuning) : tuning(_tuning)
+	Selection(const SelectionTuning &_tuning) :
+		select(NULL), tuning(_tuning)
 	{
 		if (tuning.ratio < 0 || tuning.ratio > 1)
 			throw std::runtime_error("The selection ratio is invalid.");
 
 		if (tuning.method == "roulette")
-			method = new RouletteSelection<CT>();
+			select = new RouletteSelection<CT>();
 
 		else if (tuning.method == "tournament")
-			method = new TournamentSelection<CT>(tuning.tournament_size);
+			select = new TournamentSelection<CT>(tuning.tournament_size);
 
 		else throw std::runtime_error("The selection method is unknown.");
 	}
 
 	~Selection()
 	{
-		delete method;
+		__DELETE(select);
 	}
 
-	void operator()(const eoPop<CT> &source, eoPop<CT> &destination)
+	inline void operator()(const eoPop<CT> &source, eoPop<CT> &destination)
 	{
 		size_t size = tuning.ratio * (double)source.size();
 
 		destination.resize(size);
 
-		method->setup(source);
+		select->setup(source);
 
 		for (size_t i = 0; i < size; i++)
-			destination[i] = (*method)(source);
+			destination[i] = (*select)(source);
 	}
 
-	void append(const eoPop<CT> &source, eoPop<CT> &destination, size_t size)
+	inline void append(const eoPop<CT> &source, eoPop<CT> &destination, size_t size)
 	{
-		method->setup(source);
+		select->setup(source);
 
 		for (size_t i = 0; i < size; i++)
-			destination.push_back((*method)(source));
+			destination.push_back((*select)(source));
 	}
-
-	private:
-
-	eoSelectOne<CT> *method;
 };
 
 #include "Selection.hpp"

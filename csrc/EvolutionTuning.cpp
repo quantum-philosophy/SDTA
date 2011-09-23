@@ -113,8 +113,10 @@ void EvolutionTuning::update(std::istream &main_stream)
 			stream >> training.stall_lessons;
 
 		/* Evolve */
+		else if (name == "replacement")
+			stream >> replacement.method;
 		else if (name == "elitism_rate")
-			stream >> elitism_rate;
+			stream >> replacement.elitism_rate;
 
 		/* Output */
 		else if (name == "verbose")
@@ -201,8 +203,9 @@ void EvolutionTuning::display(std::ostream &o) const
 		<< std::endl
 
 		/* Evolve */
-		<< std::setprecision(3)
-		<< "  Elitism rate:            " << elitism_rate << std::endl
+		<< "  Replacement:             " << replacement.method << std::endl
+		<< std::setprecision(2)
+		<< "  Elitism rate:            " << replacement.elitism_rate << std::endl
 		<< std::endl
 
 		/* Output */

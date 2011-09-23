@@ -61,6 +61,16 @@ struct TrainingTuning
 		stall_lessons(10) {}
 };
 
+struct ReplacementTuning
+{
+	std::string method;
+	double elitism_rate;
+
+	ReplacementTuning() :
+		method("elitism"),
+		elitism_rate(1) {}
+};
+
 class EvolutionTuning
 {
 	public:
@@ -89,9 +99,7 @@ class EvolutionTuning
 	CrossoverTuning crossover;
 	MutationTuning mutation;
 	TrainingTuning training;
-
-	/* Evolve */
-	double elitism_rate;
+	ReplacementTuning replacement;
 
 	/* Output */
 	bool verbose;
@@ -108,7 +116,6 @@ class EvolutionTuning
 		population_size(25),
 		max_generations(100),
 		stall_generations(20),
-		elitism_rate(0.5),
 		verbose(false),
 		dump_evolution("")
 	{
