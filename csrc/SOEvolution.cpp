@@ -30,7 +30,7 @@ void SOEvolution::process(population_t &population,
 	KillerReduction<chromosome_t> reduce;
 	FulfillingReplacement<chromosome_t> replace(merge, reduce, select);
 	*/
-	SimilarReplacement<chromosome_t> replace;
+	SimilarityReplacement<chromosome_t> replace;
 
 	eslabSOStallContinue stall_continue(tuning.stall_generations);
 	eslabSOEvolutionMonitor evolution_monitor(population, tuning.dump_evolution);
@@ -78,7 +78,7 @@ void SOEvolutionStats::process()
 			<< std::setw(4) << unique << "/"
 			<< population_size
 			<< " (" << std::setprecision(2) << diversity << ")"
-		<< " ] :";
+		<< " ] :" << std::flush;
 }
 
 void SOEvolutionStats::display(std::ostream &o) const

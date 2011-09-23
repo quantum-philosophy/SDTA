@@ -57,13 +57,13 @@ class GenericEvolutionStats: public EvolutionStats, public eoMonitor
 
 	inline void evaluate()
 	{
-		if (!silent) std::cout << "." << std::flush;
+		if (!silent) std::cout << ".";
 		evaluations++;
 	}
 
 	inline void miss_deadline()
 	{
-		if (!silent) std::cout << "!" << std::flush;
+		if (!silent) std::cout << "!";
 		deadline_misses++;
 	}
 

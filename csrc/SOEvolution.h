@@ -200,11 +200,11 @@ class FulfillingReplacement: public eoReplacement<CT>
 };
 
 template <class CT>
-class SimilarReplacement: public eoReplacement<CT>
+class SimilarityReplacement: public eoReplacement<CT>
 {
 	public:
 
-	SimilarReplacement() {}
+	SimilarityReplacement() {}
 
 	void operator()(eoPop<CT> &parents, eoPop<CT> &offspring);
 };

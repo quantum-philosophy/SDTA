@@ -62,7 +62,7 @@ void ElitismMerge<CT>::operator()(const population_t &population,
 /******************************************************************************/
 
 template<class CT>
-void SimilarReplacement<CT>::operator()(eoPop<CT> &parents, eoPop<CT> &offspring)
+void SimilarityReplacement<CT>::operator()(eoPop<CT> &parents, eoPop<CT> &offspring)
 {
 	size_t parent_size = parents.size();
 	size_t offspring_size = offspring.size();
@@ -71,11 +71,14 @@ void SimilarReplacement<CT>::operator()(eoPop<CT> &parents, eoPop<CT> &offspring
 	std::vector<size_t> places(parent_size);
 
 	double distance, min_distance;
-	size_t i, j, count;
+
+	int i;
+	size_t j, count;
 
 	offspring.sort();
 
-	for (i = 0; i < offspring_size; i++) {
+	/* Let the weakest choose first */
+	for (i = offspring_size - 1; i >= 0; i--) {
 		const CT &chromosome = offspring[i];
 		typename CT::fitness_t fitness = chromosome.fitness();
 
@@ -103,9 +106,9 @@ void SimilarReplacement<CT>::operator()(eoPop<CT> &parents, eoPop<CT> &offspring
 
 		if (!count) continue;
 
-		i = Random::number(count);
+		j = Random::number(count);
 
-		parents[places[i]] = chromosome;
-		replaced[places[i]] = true;
+		parents[places[j]] = chromosome;
+		replaced[places[j]] = true;
 	}
 }

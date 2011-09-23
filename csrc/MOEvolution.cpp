@@ -111,7 +111,7 @@ void MOEvolutionStats::process()
 			<< std::setw(4) << unique << "/"
 			<< population_size
 			<< " (" << std::setprecision(2) << diversity << ")"
-		<< " ] :";
+		<< " ] :" << std::flush;
 }
 
 void MOEvolutionStats::display(std::ostream &o) const
