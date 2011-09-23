@@ -10,8 +10,10 @@
 
 price_t Evaluation::process(const Schedule &schedule, bool shallow) const
 {
-	if (schedule.get_duration() > graph.get_deadline())
-		return price_t::invalid();
+	double difference = graph.get_deadline() - schedule.get_duration();
+
+	if (difference < 0)
+		return price_t(difference, std::numeric_limits<double>::max());
 
 	double sampling_interval = hotspot.sampling_interval();
 
