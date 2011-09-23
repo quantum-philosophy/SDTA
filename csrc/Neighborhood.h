@@ -33,7 +33,7 @@ class Neighborhood
 				continue;
 			}
 
-			if ((check && !exclude[peer_id]) ||
+			if ((check && exclude[peer_id]) ||
 				!constrain.has_peer(peer_id)) continue;
 
 			if (before) left.push_front(peer_id);

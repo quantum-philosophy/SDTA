@@ -2,39 +2,69 @@
 #define __MUTATION_H__
 
 template<class CT>
-class Mutation: public eoMonOp<CT>
+class UniformMutation: public eoMonOp<CT>
 {
-	typedef bool (Mutation<CT>::*method_t)(CT &, double);
-
 	const constrains_t &constrains;
-	const MutationTuning &tuning;
-	const rate_t rate;
-	EvolutionStats &stats;
-	method_t method;
+	const rate_t &rate;
 
 	public:
 
-	Mutation(const constrains_t &_constrains,
+	UniformMutation(const constrains_t &_constrains, const rate_t &_rate) :
+		constrains(_constrains), rate(_rate) {}
+
+	bool operator()(CT &one);
+};
+
+template<class CT>
+class PeerMutation: public eoMonOp<CT>
+{
+	const constrains_t &constrains;
+	const rate_t &rate;
+
+	public:
+
+	PeerMutation(const constrains_t &_constrains, const rate_t &_rate) :
+		constrains(_constrains), rate(_rate) {}
+
+	bool operator()(CT &one);
+};
+
+template<class CT>
+class Mutation: public eoMonOp<CT>
+{
+	eoMonOp<CT> *mutate;
+
+	const MutationTuning &tuning;
+	EvolutionStats &stats;
+	const rate_t rate;
+
+	public:
+
+	Mutation(const constrains_t &constrains,
 		const MutationTuning &_tuning, EvolutionStats &_stats) :
 
-		constrains(_constrains), tuning(_tuning),
-		rate(tuning.min_rate, tuning.scale, tuning.exponent, _stats.generations),
-		stats(_stats)
+		mutate(NULL), tuning(_tuning), stats(_stats),
+		rate(tuning.min_rate, tuning.scale, tuning.exponent, stats.generations)
 	{
-		if (tuning.method == "uniform") method = &Mutation<CT>::uniform;
-		else if (tuning.method == "peer") method = &Mutation<CT>::uniform;
+		if (tuning.method == "uniform")
+			mutate = new UniformMutation<CT>(constrains, rate);
+
+		else if (tuning.method == "peer")
+			mutate = new PeerMutation<CT>(constrains, rate);
+
 		else throw std::runtime_error("The mutation method is unknown.");
+	}
+
+	~Mutation()
+	{
+		__DELETE(mutate);
 	}
 
 	inline bool operator()(CT &one)
 	{
-		return (this->*method)(one, stats.mutation_rate = rate.get());
+		stats.mutation_rate = rate.get();
+		return (*mutate)(one);
 	}
-
-	private:
-
-	bool uniform(CT &one, double rate);
-	bool peer(CT &one, double rate);
 };
 
 #include "Mutation.hpp"

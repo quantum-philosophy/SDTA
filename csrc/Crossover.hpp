@@ -1,8 +1,10 @@
 #include "Crossover.h"
 
 template<class CT>
-bool Crossover<CT>::uniform(CT &one, CT &another, double rate)
+bool UniformCrossover<CT>::operator()(CT &one, CT &another)
 {
+	double rate = this->rate.get();
+
 	if (!Random::flip(rate)) return false;
 
 	size_t i, size = one.size();
@@ -24,13 +26,15 @@ bool Crossover<CT>::uniform(CT &one, CT &another, double rate)
 }
 
 template<class CT>
-bool Crossover<CT>::npoint(CT &one, CT &another, double rate)
+bool NPointCrossover<CT>::operator()(CT &one, CT &another)
 {
+	double rate = this->rate.get();
+
 	if (!Random::flip(rate)) return false;
 
 	size_t i;
 	size_t size = one.size();
-	size_t select_points = tuning.points;
+	size_t select_points = points;
 
 #ifndef SHALLOW_CHECK
 	if (size != another.size())
@@ -65,8 +69,10 @@ bool Crossover<CT>::npoint(CT &one, CT &another, double rate)
 }
 
 template<class CT>
-bool Crossover<CT>::peer(CT &one, CT &another, double rate)
+bool PeerCrossover<CT>::operator()(CT &one, CT &another)
 {
+	double rate = this->rate.get();
+
 	if (!Random::flip(rate)) return false;
 
 	size_t first, peer, peer_count, size = one.size();

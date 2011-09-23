@@ -2,50 +2,60 @@
 #define __TRAINING_H__
 
 template<class CT>
-class Training: public eoAlgo<CT>, public eoMonOp<CT>
+class PeerTraining: public eoMonOp<CT>
 {
-	typedef bool (Training<CT>::*method_t)(CT &, double);
-
+	size_t max_lessons;
+	size_t stall_lessons;
 	eoEvalFunc<CT> &evaluate;
 	const constrains_t &constrains;
-	const TrainingTuning &tuning;
-	const rate_t rate;
-	EvolutionStats &stats;
-	method_t method;
+	const rate_t &rate;
 
 	public:
 
-	Training(eoEvalFunc<CT> &_evaluate, const constrains_t &_constrains,
+	PeerTraining(size_t _max_lessons, size_t _stall_lessons,
+		eoEvalFunc<CT> &_evaluate, const constrains_t &_constrains,
+		const rate_t &_rate) :
+
+		max_lessons(_max_lessons), stall_lessons(_stall_lessons),
+		evaluate(_evaluate), constrains(_constrains), rate(_rate) {}
+
+	bool operator()(CT &one);
+};
+
+template<class CT>
+class Training: public eoMonOp<CT>
+{
+	eoMonOp<CT> *train;
+
+	const TrainingTuning &tuning;
+	EvolutionStats &stats;
+	const rate_t rate;
+
+	public:
+
+	Training(eoEvalFunc<CT> &_evaluate, const constrains_t &constrains,
 		const TrainingTuning &_tuning, EvolutionStats &_stats) :
 
-		evaluate(_evaluate), constrains(_constrains), tuning(_tuning),
-		rate(tuning.min_rate, tuning.scale, tuning.exponent, _stats.generations),
-		stats(_stats)
+		train(NULL), tuning(_tuning), stats(_stats),
+		rate(tuning.min_rate, tuning.scale, tuning.exponent, stats.generations)
 	{
-		if (tuning.method == "peer") method = &Training::peer;
+		if (tuning.method == "peer")
+			train = new PeerTraining<CT>(tuning.max_lessons,
+				tuning.stall_lessons, _evaluate, constrains, rate);
+
 		else throw std::runtime_error("The training method is unknown.");
 	}
 
-	inline void operator()(eoPop<CT> &population)
+	~Training()
 	{
-		double current_rate = stats.training_rate = rate.get();
-
-		if (current_rate == 0) return;
-
-		size_t size = population.size();
-
-		for (size_t i = 0; i < size; i++)
-			(void)(this->*method)(population[i], current_rate);
+		__DELETE(train);
 	}
 
 	inline bool operator()(CT &one)
 	{
-		return (this->*method)(one, stats.training_rate = rate.get());
+		stats.training_rate = rate.get();
+		return (*train)(one);
 	}
-
-	private:
-
-	bool peer(CT &one, double rate);
 };
 
 #include "Training.hpp"

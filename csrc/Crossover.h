@@ -2,41 +2,88 @@
 #define __CROSSOVER_H__
 
 template<class CT>
-class Crossover: public eoQuadOp<CT>
+class UniformCrossover: public eoQuadOp<CT>
 {
-	typedef bool (Crossover<CT>::*method_t)(CT &, CT &, double);
-
-	const constrains_t &constrains;
-	const CrossoverTuning &tuning;
-	const rate_t rate;
-	EvolutionStats &stats;
-	method_t method;
+	const rate_t &rate;
 
 	public:
 
-	Crossover(const constrains_t &_constrains,
+	UniformCrossover(const rate_t &_rate) : rate(_rate) {}
+
+	bool operator()(CT &one, CT &another);
+};
+
+template<class CT>
+class NPointCrossover: public eoQuadOp<CT>
+{
+	size_t points;
+	const rate_t &rate;
+
+	public:
+
+	NPointCrossover(size_t _points, const rate_t &_rate) :
+		points(_points), rate(_rate)
+	{
+		if (points < 1)
+			throw std::runtime_error("The number of crossover points should be at least one.");
+	}
+
+	bool operator()(CT &one, CT &another);
+};
+
+template<class CT>
+class PeerCrossover: public eoQuadOp<CT>
+{
+	const constrains_t &constrains;
+	const rate_t &rate;
+
+	public:
+
+	PeerCrossover(const constrains_t &_constrains, const rate_t &_rate) :
+		constrains(_constrains), rate(_rate) {}
+
+	bool operator()(CT &one, CT &another);
+};
+
+template<class CT>
+class Crossover: public eoQuadOp<CT>
+{
+	eoQuadOp<CT> *crossover;
+
+	const CrossoverTuning &tuning;
+	EvolutionStats &stats;
+	const rate_t rate;
+
+	public:
+
+	Crossover(const constrains_t &constrains,
 		const CrossoverTuning &_tuning, EvolutionStats &_stats) :
 
-		constrains(_constrains), tuning(_tuning),
-		rate(tuning.min_rate, tuning.scale, tuning.exponent, _stats.generations),
-		stats(_stats)
+		crossover(NULL), tuning(_tuning), stats(_stats),
+		rate(tuning.min_rate, tuning.scale, tuning.exponent, stats.generations)
 	{
-		if (tuning.method == "uniform") method = &Crossover<CT>::uniform;
-		else if (tuning.method == "npoint") method = &Crossover<CT>::npoint;
-		else if (tuning.method == "peer") method = &Crossover<CT>::uniform;
+		if (tuning.method == "uniform")
+			crossover = new UniformCrossover<CT>(rate);
+
+		else if (tuning.method == "npoint")
+			crossover = new NPointCrossover<CT>(tuning.points, rate);
+
+		else if (tuning.method == "peer")
+			crossover = new PeerCrossover<CT>(constrains, rate);
+
 		else throw std::runtime_error("The crossover method is unknown.");
+	}
+
+	~Crossover()
+	{
+		__DELETE(crossover);
 	}
 
 	inline bool operator()(CT &one, CT &another)
 	{
-		return (this->*method)(one, another, stats.crossover_rate = rate.get());
+		stats.crossover_rate = rate.get();
+		return (*crossover)(one, another);
 	}
-
-	private:
-
-	bool uniform(CT &one, CT &another, double rate);
-	bool npoint(CT &one, CT &another, double rate);
-	bool peer(CT &one, CT &another, double rate);
 };
 
 #include "Crossover.hpp"

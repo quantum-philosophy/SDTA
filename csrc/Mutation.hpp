@@ -2,8 +2,10 @@
 #include "Neighborhood.h"
 
 template<class CT>
-bool Mutation<CT>::uniform(CT &chromosome, double rate)
+bool UniformMutation<CT>::operator()(CT &chromosome)
 {
+	double rate = this->rate.get();
+
 	size_t size = chromosome.size();
 	bool changed = false;
 	rank_t prev, next;
@@ -23,8 +25,10 @@ bool Mutation<CT>::uniform(CT &chromosome, double rate)
 }
 
 template<class CT>
-bool Mutation<CT>::peer(CT &chromosome, double rate)
+bool PeerMutation<CT>::operator()(CT &chromosome)
 {
+	double rate = this->rate.get();
+
 	bool changed = false;
 
 	const Schedule &schedule = chromosome.schedule();

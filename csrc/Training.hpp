@@ -1,8 +1,10 @@
 #include "Training.h"
 
 template<class CT>
-bool Training<CT>::peer(CT &chromosome, double rate)
+bool PeerTraining<CT>::operator()(CT &chromosome)
 {
+	double rate = this->rate.get();
+
 	if (!Random::flip(rate)) return false;
 
 	evaluate(chromosome);
@@ -16,7 +18,7 @@ bool Training<CT>::peer(CT &chromosome, double rate)
 
 	size_t lessons = 0, stall = 0;
 
-	while (stall < tuning.stall_lessons && lessons < tuning.max_lessons) {
+	while (stall < stall_lessons && lessons < max_lessons) {
 		tid_t id = Random::number(task_count);
 		tid_t peer_id = Neighborhood::peer(id, schedule, constrains);
 
