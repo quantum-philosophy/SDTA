@@ -99,7 +99,7 @@ function drawEvolution(file, multi, point, full)
     end
 
     set(gca, 'XLim', [ 1, generations ]);
-    set(gca, 'YLim', [ minLifetime, maxLifetime ]);
+    set(gca, 'YLim', [ 0, maxLifetime ]);
 
     line([ 1, generations ], [ maxLifetime, maxLifetime ], ...
       'Line', '--', 'Color', 'k');
