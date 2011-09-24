@@ -174,17 +174,14 @@ void optimize(const string &system_config, const string &genetic_config,
 				<< price.energy << endl << endl;
 		}
 
-		size_t chromosome_length = tuning.include_mapping ?
-			2 * task_count : task_count;
-
 		for (size_t i = 0; i < repeat; i++) {
 			Random::reseed();
 
 			if (tuning.multiobjective)
-				evolution = new MOEvolution(chromosome_length,
+				evolution = new MOEvolution(*architecture, *graph,
 					evaluation, tuning, constrains);
 			else
-				evolution = new SOEvolution(chromosome_length,
+				evolution = new SOEvolution(*architecture, *graph,
 					evaluation, tuning, constrains);
 
 			clock_t begin = clock();

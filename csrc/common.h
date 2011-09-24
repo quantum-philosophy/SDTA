@@ -83,65 +83,6 @@ typedef std::vector<rank_t> layout_t;
 #endif
 
 /******************************************************************************/
-/* Gene encoder                                                               */
-/******************************************************************************/
-
-class GeneEncoder
-{
-	public:
-
-	template<class CT, class ET>
-	static inline void encode(CT &chromosome, const ET &encoding)
-	{
-		size_t size = encoding.size();
-
-		chromosome.resize(size);
-
-		for (size_t i = 0; i < size; i++)
-			chromosome[i] = encoding[i];
-	}
-
-	template<class CT, class ET>
-	static inline void extend(CT &chromosome, const ET &encoding)
-	{
-		size_t offset = chromosome.size();
-		size_t size = encoding.size();
-
-		chromosome.resize(offset + size);
-
-		for (size_t i = 0; i < size; i++)
-			chromosome[offset + i] = encoding[i];
-	}
-
-	template<class CT, class ET1, class ET2>
-	static inline void split(const CT &chromosome, ET1 &chunk1, ET2 &chunk2,
-		size_t size1 = 0, size_t size2 = 0)
-	{
-		size_t length = chromosome.size();
-
-		if (size1 == 0) {
-			size1 = length / 2;
-			chunk1.resize(size1);
-		}
-		else if (size1 > length)
-			throw std::runtime_error("Cannot split.");
-
-		if (size2 == 0) {
-			size2 = length - size1;
-			chunk2.resize(size2);
-		}
-		else if (size1 + size2 > length)
-			throw std::runtime_error("Cannot split.");
-
-		for (size_t i = 0; i < size1; i++)
-			chunk1[i] = chromosome[i];
-
-		for (size_t i = 0; i < size2; i++)
-			chunk2[i] = chromosome[size1 + i];
-	}
-};
-
-/******************************************************************************/
 /* Rate                                                                       */
 /******************************************************************************/
 

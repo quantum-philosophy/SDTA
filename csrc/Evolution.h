@@ -35,6 +35,9 @@ class Evolution
 template<class CT, class PT, class ST>
 class GenericEvolution: public Evolution
 {
+	const Architecture &architecture;
+	const Graph &graph;
+
 	public:
 
 	typedef CT chromosome_t;
@@ -42,14 +45,13 @@ class GenericEvolution: public Evolution
 	typedef ST stats_t;
 	typedef typename chromosome_t::fitness_t fitness_t;
 
-	GenericEvolution(size_t _chromosome_length,
-		const Evaluation &_evaluation,
-		const EvolutionTuning &_tuning,
-		const constrains_t &_constrains) :
+	GenericEvolution(const Architecture &_architecture,
+		const Graph &_graph, const Evaluation &_evaluation,
+		const EvolutionTuning &_tuning, const constrains_t &_constrains) :
 
-		chromosome_length(_chromosome_length),
-		evaluation(_evaluation), tuning(_tuning),
-		constrains(_constrains)
+		architecture(_architecture), graph(_graph),
+		chromosome_length((_tuning.include_mapping ? 2 : 1) * _graph.size()),
+		evaluation(_evaluation), tuning(_tuning), constrains(_constrains)
 	{
 		if (chromosome_length == 0)
 			throw std::runtime_error("The length cannot be zero.");
@@ -62,11 +64,8 @@ class GenericEvolution: public Evolution
 	void populate(population_t &population, const layout_t &layout,
 		const priority_t &priority);
 
-	eoQuadOp<CT> *choose_crossover();
-	eoMonOp<CT> *choose_mutation();
-	eoMonOp<CT> *choose_training(eoEvalFunc<CT> &evaluator);
-
 	virtual void evaluate(chromosome_t &chromosome) = 0;
+	virtual void evaluate(chromosome_t &chromosome, const Schedule &schedule) = 0;
 	virtual void process(population_t &population,
 		eslabCheckPoint<chromosome_t> &checkpoint) = 0;
 

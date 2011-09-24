@@ -12,9 +12,6 @@ Schedule ListScheduler::process(const layout_t &layout,
 	size_t task_count = tasks.size();
 
 #ifndef SHALLOW_CHECK
-	if (priority.size() != task_count)
-		throw std::runtime_error("The priority vector is bad.");
-
 	if (layout.size() != task_count)
 		throw std::runtime_error("The layout vector is bad.");
 #endif
@@ -177,6 +174,28 @@ tid_t StochasticListScheduler::pull(list_schedule_t &pool,
 		choice = Random::number(peers + 1);
 		for (i = 0; i < choice; i++) it++;
 	}
+
+	id = *it;
+	pool.erase(it);
+
+	return id;
+}
+
+void RandomListScheduler::push(list_schedule_t &pool,
+	const priority_t &dummy, tid_t id) const
+{
+	pool.push_back(id);
+}
+
+tid_t RandomListScheduler::pull(list_schedule_t &pool,
+	const priority_t &dummy) const
+{
+	tid_t id;
+
+	list_schedule_t::iterator it = pool.begin();
+
+	size_t choice = Random::number(pool.size());
+	for (size_t i = 0; i < choice; i++) it++;
 
 	id = *it;
 	pool.erase(it);

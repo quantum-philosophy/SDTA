@@ -2,6 +2,7 @@
 #define __EVALUATION_H__
 
 #include "common.h"
+#include "Genetics.h"
 #include "ListScheduler.h"
 
 class Evaluation
@@ -23,6 +24,14 @@ class Evaluation
 	price_t process(const Schedule &schedule, bool shallow = false) const;
 	price_t process(const layout_t &layout, const priority_t &priority,
 		bool shallow = false) const;
+
+	template<class CT>
+	void assess(CT &chromosome, const Schedule &schedule,
+		bool shallow = false) const
+	{
+		price_t price = process(schedule, shallow);
+		chromosome.assess(schedule, price);
+	}
 
 	template<class CT>
 	void assess(CT &chromosome, const layout_t &layout,

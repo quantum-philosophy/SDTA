@@ -35,7 +35,7 @@ template<class CT, class PT, class ST>
 void GenericEvolution<CT, PT, ST>::populate(population_t &population,
 	const layout_t &layout, const priority_t &priority)
 {
-	size_t i, j;
+	size_t i;
 	size_t create_count;
 
 	population.clear();
@@ -55,13 +55,13 @@ void GenericEvolution<CT, PT, ST>::populate(population_t &population,
 		population.push_back(chromosome);
 
 	/* Fill the second part with randomly generated chromosomes */
+	RandomListScheduler scheduler(architecture, graph);
 	create_count = tuning.population_size - create_count;
 	for (i = 0; i < create_count; i++) {
-		for (j = 0; j < chromosome_length; j++)
-			chromosome[j] = constrains[j].random();
-
 		chromosome.invalidate();
-		evaluate(chromosome);
+		Schedule schedule = scheduler.process(layout, priority_t());
+		evaluate(chromosome, schedule);
+		GeneEncoder::order(chromosome);
 		population.push_back(chromosome);
 	}
 }

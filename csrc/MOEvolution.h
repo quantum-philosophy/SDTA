@@ -54,7 +54,7 @@ class eslabMOChromosome: public eslabChromosome<eslabObjectiveVector>,
 
 	protected:
 
-	inline void fit(const price_t &price)
+	inline void assign_fitness(const price_t &price)
 	{
 		eslabObjectiveVector fitness;
 		fitness[LIFETIME_OBJECTIVE] = price.lifetime;
@@ -111,11 +111,12 @@ class MOEvolution:
 
 	public:
 
-	MOEvolution(size_t _chromosome_length, const Evaluation &_evaluation,
+	MOEvolution(const Architecture &_architecture,
+		const Graph &_graph, const Evaluation &_evaluation,
 		const EvolutionTuning &_tuning, const constrains_t &_constrains) :
 
 		GenericEvolution<chromosome_t, population_t, stats_t>(
-			_chromosome_length, _evaluation, _tuning, _constrains) {}
+			_architecture, _graph, _evaluation, _tuning, _constrains) {}
 
 	protected:
 
@@ -125,6 +126,17 @@ class MOEvolution:
 
 		if (tuning.include_mapping) evaluation.assess(chromosome);
 		else evaluation.assess(chromosome, layout);
+
+		if (chromosome.bad()) stats.miss_deadline();
+		else stats.evaluate();
+	}
+
+	inline void evaluate(chromosome_t &chromosome, const Schedule &schedule)
+	{
+		if (!chromosome.invalidObjectiveVector()) return;
+
+		if (tuning.include_mapping) evaluation.assess(chromosome, schedule);
+		else evaluation.assess(chromosome, schedule);
 
 		if (chromosome.bad()) stats.miss_deadline();
 		else stats.evaluate();
