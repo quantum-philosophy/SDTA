@@ -1,8 +1,8 @@
 #include "Schedule.h"
 
-std::vector<size_t> Schedule::flatten() const
+order_t Schedule::flatten() const
 {
-	std::vector<size_t> order(task_count);
+	order_t order(task_count);
 
 	size_t index = 0;
 
@@ -18,7 +18,7 @@ std::vector<size_t> Schedule::flatten() const
 	return order;
 }
 
-void Schedule::reorder(const std::vector<size_t> &order)
+void Schedule::reorder(const order_t &order)
 {
 	size_t i, j, count;
 

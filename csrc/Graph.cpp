@@ -19,7 +19,7 @@ void Graph::add_link(Task *parent, Task *child)
 	child->add_parent(parent);
 }
 
-void Graph::reorder(const std::vector<size_t> &order)
+void Graph::reorder(const order_t &order)
 {
 	task_vector_t new_tasks(task_count);
 

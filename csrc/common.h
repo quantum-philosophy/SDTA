@@ -52,6 +52,7 @@ typedef std::vector<Processor *> processor_vector_t;
 typedef std::vector<rank_t> priority_t;
 
 typedef std::vector<bool> bit_string_t;
+typedef std::vector<size_t> order_t;
 
 #ifdef REAL_RANK
 class layout_t;
@@ -415,7 +416,7 @@ class Helper
 	}
 
 	template<class T>
-	static void permute(std::vector<T> &vector, const std::vector<size_t> &order)
+	static void permute(std::vector<T> &vector, const order_t &order)
 	{
 		size_t size = vector.size();
 

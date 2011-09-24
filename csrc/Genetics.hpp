@@ -35,6 +35,17 @@ bool Chromosome::equal(const CT &one, const CT &another)
 }
 
 template<class CT>
+void Chromosome::order(CT &one)
+{
+	const Schedule &schedule = one.m_schedule;
+
+#ifndef SHALLOW_CHECK
+	if (schedule.empty())
+		throw std::runtime_error("The chromosome does not have a schedule.");
+#endif
+}
+
+template<class CT>
 size_t eslabPop<CT>::unique() const
 {
 	size_t population_size = this->size();
