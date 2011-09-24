@@ -74,19 +74,19 @@ class Schedule
 
 	inline void append(pid_t pid, tid_t tid, double start, double duration)
 	{
-		append_count++;
-
-#ifndef SHALLOW_CHECK
-		if (append_count > task_count)
-			throw std::runtime_error("There are too many tasks.");
-#endif
-
 		schedules[pid].push_back(ScheduleItem(tid, start, duration));
 
 		if (this->duration < start + duration)
 			this->duration = start + duration;
 
 		mapping[tid] = pid;
+
+#ifndef SHALLOW_CHECK
+		if (append_count + 1 > task_count)
+			throw std::runtime_error("There are too many tasks.");
+#endif
+
+		order[append_count++] = tid;
 	}
 
 	inline double get_duration() const

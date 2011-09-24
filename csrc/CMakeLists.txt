@@ -39,10 +39,9 @@ include_directories (
 # * REAL_RANK - ranking in doubles.
 # * SHALLOW_CHECK - eliminate excessive checks.
 # * UNCONSTRAINED - the genes do not have any constrains.
-# * DETERMINISTIC_LIST_SCHEDULER - the LS chooses the first one between peers.
 # * FAKE_EVALUATION - consider power instead of temperature.
 #
-set(CMAKE_CXX_FLAGS "-Wall -Wno-sign-compare -O3 -DREAL_RANK -DDETERMINISTIC_LIST_SCHEDULER")
+set(CMAKE_CXX_FLAGS "-Wall -Wno-sign-compare -O3 -DREAL_RANK")
 
 add_library(libeo STATIC IMPORTED)
 set_property(

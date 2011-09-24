@@ -69,7 +69,7 @@ void optimize(const string &system_config, const string &genetic_config,
 	Graph *graph = NULL;
 	Architecture *architecture = NULL;
 	Hotspot *hotspot = NULL;
-	Evolution *scheduler = NULL;
+	Evolution *evolution = NULL;
 
 	try {
 		graph = new GraphBuilder(system.type, system.link);
@@ -106,8 +106,8 @@ void optimize(const string &system_config, const string &genetic_config,
 		/* 3. Compute a schedule.
 		 *
 		 */
-		Schedule schedule = ListScheduler::process(
-			*architecture, *graph, mapping, priority);
+		DeterministicListScheduler scheduler(*architecture, *graph);
+		Schedule schedule = scheduler.process(mapping, priority);
 
 		/* 4. Assign a deadline.
 		 *
@@ -115,8 +115,8 @@ void optimize(const string &system_config, const string &genetic_config,
 		if (deadline == 0) {
 			priority_t deadline_priority =
 				Priority::calculate(*architecture, *graph, mapping);
-			Schedule deadline_schedule = ListScheduler::process(
-				*architecture, *graph, mapping, deadline_priority);
+			Schedule deadline_schedule = scheduler.process(mapping,
+				deadline_priority);
 			deadline = tuning.deadline_ratio * deadline_schedule.get_duration();
 		}
 		else if (tuning.verbose)
@@ -181,15 +181,15 @@ void optimize(const string &system_config, const string &genetic_config,
 			Random::reseed();
 
 			if (tuning.multiobjective)
-				scheduler = new MOEvolution(chromosome_length,
+				evolution = new MOEvolution(chromosome_length,
 					evaluation, tuning, constrains);
 			else
-				scheduler = new SOEvolution(chromosome_length,
+				evolution = new SOEvolution(chromosome_length,
 					evaluation, tuning, constrains);
 
 			clock_t begin = clock();
 
-			EvolutionStats &stats = scheduler->solve(mapping, priority);
+			EvolutionStats &stats = evolution->solve(mapping, priority);
 
 			clock_t end = clock();
 			double elapsed = (double)(end - begin) / CLOCKS_PER_SEC;
@@ -223,19 +223,19 @@ void optimize(const string &system_config, const string &genetic_config,
 			if (!tuning.dump_evolution.empty() && repeat > 1)
 				backup(tuning.dump_evolution, i);
 
-			__DELETE(scheduler);
+			__DELETE(evolution);
 		}
 	}
 	catch (exception &e) {
 		__DELETE(graph);
 		__DELETE(architecture);
 		__DELETE(hotspot);
-		__DELETE(scheduler);
+		__DELETE(evolution);
 		throw;
 	}
 
 	__DELETE(graph);
 	__DELETE(architecture);
 	__DELETE(hotspot);
-	__DELETE(scheduler);
+	__DELETE(evolution);
 }

@@ -5,11 +5,11 @@
 #include "Task.h"
 #include "Schedule.h"
 
-Schedule ListScheduler::process(const Architecture &architecture,
-	const Graph &graph, const layout_t &layout, const priority_t &priority)
+Schedule ListScheduler::process(const layout_t &layout,
+	const priority_t &priority) const
 {
-	size_t processor_count = architecture.processor_count;
-	size_t task_count = graph.task_count;
+	size_t processor_count = processors.size();
+	size_t task_count = tasks.size();
 
 #ifndef SHALLOW_CHECK
 	if (priority.size() != task_count)
@@ -18,9 +18,6 @@ Schedule ListScheduler::process(const Architecture &architecture,
 	if (layout.size() != task_count)
 		throw std::runtime_error("The layout vector is bad.");
 #endif
-
-	const task_vector_t &tasks = graph.tasks;
-	const processor_vector_t &processors = architecture.processors;
 
 	bool empty;
 	tid_t id, cid;
@@ -99,7 +96,18 @@ Schedule ListScheduler::process(const Architecture &architecture,
 	return schedule;
 }
 
-inline void ListScheduler::push(list_schedule_t &pool, const priority_t &priority, tid_t id)
+bool ListScheduler::ready(const Task *task, const bit_string_t &scheduled) const
+{
+	size_t parent_count = task->parents.size();
+
+	for (size_t i = 0; i < parent_count; i++)
+		if (!scheduled[task->parents[i]->id]) return false;
+
+	return true;
+}
+
+void DeterministicListScheduler::push(list_schedule_t &pool,
+	const priority_t &priority, tid_t id) const
 {
 	list_schedule_t::iterator it;
 	rank_t new_priority = priority[id];
@@ -110,13 +118,9 @@ inline void ListScheduler::push(list_schedule_t &pool, const priority_t &priorit
 	pool.insert(it, id);
 }
 
-inline tid_t ListScheduler::pull(list_schedule_t &pool, const priority_t &priority)
+tid_t DeterministicListScheduler::pull(list_schedule_t &pool,
+	const priority_t &priority) const
 {
-#ifndef SHALLOW_CHECK
-	if (pool.empty())
-		throw std::runtime_error("The pool is empty.");
-#endif
-
 	tid_t id;
 
 	/* The first one always has the highest priority, although,
@@ -124,7 +128,34 @@ inline tid_t ListScheduler::pull(list_schedule_t &pool, const priority_t &priori
 	 */
 	list_schedule_t::iterator it = pool.begin();
 
-#ifndef DETERMINISTIC_LIST_SCHEDULER
+	id = *it;
+	pool.erase(it);
+
+	return id;
+}
+
+void StochasticListScheduler::push(list_schedule_t &pool,
+	const priority_t &priority, tid_t id) const
+{
+	list_schedule_t::iterator it;
+	rank_t new_priority = priority[id];
+
+	for (it = pool.begin(); it != pool.end(); it++)
+		if (new_priority < priority[*it]) break;
+
+	pool.insert(it, id);
+}
+
+tid_t StochasticListScheduler::pull(list_schedule_t &pool,
+	const priority_t &priority) const
+{
+	tid_t id;
+
+	/* The first one always has the highest priority, although,
+	 * it might not be alone.
+	 */
+	list_schedule_t::iterator it = pool.begin();
+
 	size_t peers, i, choice;
 	rank_t highest_priority = priority[*it];
 
@@ -146,20 +177,9 @@ inline tid_t ListScheduler::pull(list_schedule_t &pool, const priority_t &priori
 		choice = Random::number(peers + 1);
 		for (i = 0; i < choice; i++) it++;
 	}
-#endif
 
 	id = *it;
 	pool.erase(it);
 
 	return id;
-}
-
-inline bool ListScheduler::ready(const Task *task, const bit_string_t &scheduled)
-{
-	size_t parent_count = task->parents.size();
-
-	for (size_t i = 0; i < parent_count; i++)
-		if (!scheduled[task->parents[i]->id]) return false;
-
-	return true;
 }
