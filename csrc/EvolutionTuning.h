@@ -1,6 +1,18 @@
 #ifndef __EVOLUTION_TUNING_H__
 #define __EVOLUTION_TUNING_H__
 
+struct ContinuationTuning
+{
+	size_t min_generations;
+	size_t max_generations;
+	size_t stall_generations;
+
+	ContinuationTuning() :
+		min_generations(0),
+		max_generations(500),
+		stall_generations(100) {}
+};
+
 struct SelectionTuning
 {
 	std::string method;
@@ -91,10 +103,7 @@ class EvolutionTuning
 	double uniform_ratio;
 	size_t population_size;
 
-	/* Continue */
-	size_t max_generations;
-	size_t stall_generations;
-
+	ContinuationTuning continuation;
 	SelectionTuning selection;
 	CrossoverTuning crossover;
 	MutationTuning mutation;
@@ -114,8 +123,6 @@ class EvolutionTuning
 		seed(-1),
 		uniform_ratio(0.5),
 		population_size(25),
-		max_generations(100),
-		stall_generations(20),
 		verbose(false),
 		dump_evolution("")
 	{

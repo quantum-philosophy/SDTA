@@ -133,7 +133,7 @@ void optimize(const string &system_config, const string &genetic_config,
 			if (tuning.verbose)
 				cout << "Reordering the tasks." << endl;
 
-			vector<size_t> order = schedule.flatten();
+			order_t order = schedule.flatten();
 
 			graph->reorder(order);
 			Helper::permute<pid_t>(mapping, order);

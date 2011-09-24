@@ -22,10 +22,13 @@ class Schedule
 
 	size_t processor_count;
 	size_t task_count;
+	size_t append_count;
 
 	std::vector<LocalSchedule> schedules;
 
 	mapping_t mapping;
+	order_t order;
+
 	double duration;
 
 	public:
@@ -34,9 +37,15 @@ class Schedule
 
 	Schedule(size_t _processor_count, size_t _task_count) :
 
-		processor_count(_processor_count), task_count(_task_count),
+		processor_count(_processor_count), task_count(_task_count), append_count(0),
 		schedules(std::vector<LocalSchedule>(processor_count)),
-		mapping(mapping_t(task_count, -1)), duration(0) {}
+		mapping(mapping_t(task_count, 0)), order(order_t(task_count, 0)),
+		duration(0) {}
+
+	inline bool empty() const
+	{
+		return append_count != task_count;
+	}
 
 	inline size_t processors() const
 	{
@@ -65,6 +74,13 @@ class Schedule
 
 	inline void append(pid_t pid, tid_t tid, double start, double duration)
 	{
+		append_count++;
+
+#ifndef SHALLOW_CHECK
+		if (append_count > task_count)
+			throw std::runtime_error("There are too many tasks.");
+#endif
+
 		schedules[pid].push_back(ScheduleItem(tid, start, duration));
 
 		if (this->duration < start + duration)
@@ -78,9 +94,9 @@ class Schedule
 		return duration;
 	}
 
-	std::vector<size_t> flatten() const;
+	order_t flatten() const;
 
-	void reorder(const std::vector<size_t> &order);
+	void reorder(const order_t &order);
 };
 
 std::ostream &operator<< (std::ostream &o, const Schedule &schedule);

@@ -144,21 +144,4 @@ class eslabMOEvolutionMonitor: public eslabEvolutionMonitor<eslabMOChromosome>
 	eoMonitor& operator()();
 };
 
-class eslabMOStallContinue:
-	public eslabStallContinue<eslabMOChromosome, eslabMOPop>
-{
-	price_t last_fitness;
-
-	public:
-
-	eslabMOStallContinue(size_t _stall_generations) :
-		eslabStallContinue<eslabMOChromosome, eslabMOPop>(_stall_generations) {}
-
-	void reset();
-
-	protected:
-
-	bool improved(const eslabMOPop &population);
-};
-
 #endif

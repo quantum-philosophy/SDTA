@@ -27,9 +27,7 @@ void SOEvolution::process(population_t &population,
 	/* Replace = Merge + Reduce */
 	Replacement<chromosome_t> replace(select, tuning.replacement);
 
-	eslabSOStallContinue stall_continue(tuning.stall_generations);
 	eslabSOEvolutionMonitor evolution_monitor(population, tuning.dump_evolution);
-	checkpoint.add(stall_continue);
 	checkpoint.add(evolution_monitor);
 
 	eslabSOGeneticAlgorithm<chromosome_t> ga(checkpoint, evaluator, select,
@@ -105,27 +103,4 @@ eoMonitor& eslabSOEvolutionMonitor::operator()()
 	stream << std::endl;
 
 	return *this;
-}
-
-/******************************************************************************/
-/* Continuation                                                               */
-/******************************************************************************/
-
-void eslabSOStallContinue::reset()
-{
-	eslabStallContinue<chromosome_t, population_t>::reset();
-	last_fitness = 0;
-}
-
-bool eslabSOStallContinue::improved(const population_t &population)
-{
-	bool result = false;
-
-	double current_fitness = population.best_lifetime();
-
-	if (current_fitness > last_fitness) result = true;
-
-	last_fitness = current_fitness;
-
-	return result;
 }

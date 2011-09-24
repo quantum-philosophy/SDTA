@@ -22,11 +22,16 @@ class Chromosome
 
 	template<class CT>
 	static bool equal(const CT &one, const CT &another);
+
+	template<class CT>
+	static void order(CT &one);
 };
 
 template<class FT>
 class eslabChromosome
 {
+	friend class Chromosome;
+
 	public:
 
 	typedef FT fitness_t;
