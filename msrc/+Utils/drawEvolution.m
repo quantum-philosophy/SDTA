@@ -1,4 +1,8 @@
 function drawEvolution(file, multi, point, full)
+  if nargin < 4, full = false; end
+  if nargin < 3, point = []; end
+  if nargin < 2, multi = false; end
+
   evolution = dlmread(file);
 
   labels = {};

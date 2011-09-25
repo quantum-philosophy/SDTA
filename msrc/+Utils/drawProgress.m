@@ -1,5 +1,12 @@
 function drawProgress(name, y)
-  title(name);
+  chunks = regexp(name, '^(.*), (.*)$', 'tokens');
+
+  if ~isempty(chunks)
+    title(chunks{1}{1});
+  else
+    title(name);
+  end
+
   xlabel('No');
   ylabel(name);
 

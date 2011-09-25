@@ -29,7 +29,7 @@ function showEvolutionStats(file)
         tokens = regexp(value, '([^%]+)%.*', 'tokens');
         improvement(end + 1) = str2num(tokens{1}{1});
       case 'Time elapsed'
-        time(end + 1) = str2num(value);
+        time(end + 1) = str2num(value) / 60;
       end
     end
 
@@ -45,23 +45,23 @@ function showEvolutionStats(file)
   for i = 1:count
     fprintf('%10d%15d%15d%15d%15.2f%15.2f%15.2f\n', ...
       i, generations(i), evaluations(i), deadline_misses(i), ...
-      lifetime(i), improvement(i), time(i)/60);
+      lifetime(i), improvement(i), time(i));
   end
 
   fprintf('\n');
 
   fprintf('%10s%15d%15d%15d%15.2f%15.2f%15.2f\n', 'min', ...
     min(generations), min(evaluations), min(deadline_misses), ...
-    min(lifetime), min(improvement), min(time/60));
+    min(lifetime), min(improvement), min(time));
 
   fprintf('%10s%15d%15d%15d%15.2f%15.2f%15.2f\n', 'max', ...
     max(generations), max(evaluations), max(deadline_misses), ...
-    max(lifetime), max(improvement), max(time/60));
+    max(lifetime), max(improvement), max(time));
 
   fprintf('%10s%15d%15d%15d%15.2f%15.2f%15.2f\n', 'mean', ...
     round(mean(generations)), round(mean(evaluations)), ...
     round(mean(deadline_misses)), mean(lifetime), ...
-    mean(improvement), mean(time/60));
+    mean(improvement), mean(time));
 
   figure;
   subplot(2, 3, 1);
@@ -74,11 +74,11 @@ function showEvolutionStats(file)
   Utils.drawProgress('Deadline misses', deadline_misses);
 
   subplot(2, 3, 4);
-  Utils.drawProgress('Lifetime', lifetime);
+  Utils.drawProgress('Lifetime, time units', lifetime);
 
   subplot(2, 3, 5);
-  Utils.drawProgress('Improvement', improvement);
+  Utils.drawProgress('Improvement, %', improvement);
 
   subplot(2, 3, 6);
-  Utils.drawProgress('Time', time);
+  Utils.drawProgress('Time, m', time);
 end
