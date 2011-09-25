@@ -7,7 +7,7 @@ function drawProgress(name, y)
     title(name);
   end
 
-  xlabel('No');
+  xlabel('Run');
   ylabel(name);
 
   mx = Utils.round2(max(y), 0.01);
@@ -28,5 +28,6 @@ function drawProgress(name, y)
   legend('Progress', ...
     [ 'Minimal (', num2str(mn), ')' ], ...
     [ 'Average (', num2str(av), ')' ], ...
-    [ 'Maximal (', num2str(mn), ')' ]);
+    [ 'Maximal (', num2str(mx), ')' ], ...
+    'Location', 'SouthEast');
 end

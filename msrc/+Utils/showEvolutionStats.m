@@ -1,4 +1,6 @@
-function showEvolutionStats(file)
+function showEvolutionStats(file, full)
+  if nargin < 2, full = false;
+
   fid = fopen(file);
 
   generations = [];
@@ -63,22 +65,37 @@ function showEvolutionStats(file)
     round(mean(deadline_misses)), mean(lifetime), ...
     mean(improvement), mean(time));
 
+  if full
+    rows = 2;
+    cols = 3;
+  else
+    rows = 2;
+    cols = 1;
+  end
+
+  n = 1;
+
   figure;
-  subplot(2, 3, 1);
-  Utils.drawProgress('Generations', generations);
 
-  subplot(2, 3, 2);
-  Utils.drawProgress('Evaluations', evaluations);
+  if full
+    subplot(rows, cols, n); n = n + 1;
+    Utils.drawProgress('Generations', generations);
 
-  subplot(2, 3, 3);
-  Utils.drawProgress('Deadline misses', deadline_misses);
+    subplot(rows, cols, n); n = n + 1;
+    Utils.drawProgress('Evaluations', evaluations);
 
-  subplot(2, 3, 4);
+    subplot(rows, cols, n); n = n + 1;
+    Utils.drawProgress('Deadline misses', deadline_misses);
+  end
+
+  subplot(rows, cols, n); n = n + 1;
   Utils.drawProgress('Lifetime, time units', lifetime);
 
-  subplot(2, 3, 5);
+  subplot(rows, cols, n); n = n + 1;
   Utils.drawProgress('Improvement, %', improvement);
 
-  subplot(2, 3, 6);
-  Utils.drawProgress('Time, m', time);
+  if full
+    subplot(rows, cols, n); n = n + 1;
+    Utils.drawProgress('Time, m', time);
+  end
 end
