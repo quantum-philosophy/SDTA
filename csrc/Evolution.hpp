@@ -15,18 +15,9 @@ ST &GenericEvolution<CT, PT, ST>::solve(const layout_t &layout,
 
 	population_t population;
 
-	/* Continue */
-	Continuation<chromosome_t> continuation(tuning.continuation);
-
-	/* Monitor */
-	eslabCheckPoint<chromosome_t> checkpoint(continuation);
-	stats.watch(population, !tuning.verbose);
-	checkpoint.add(stats);
-
-	/* Create */
 	populate(population, layout, priority);
 
-	process(population, checkpoint);
+	process(population);
 
 	return stats;
 }

@@ -2,7 +2,9 @@
 #define __SO_EVOLUTION_H__
 
 #include "common.h"
+
 #include "Evolution.h"
+#include "Continuation.h"
 #include "Selection.h"
 #include "Replacement.h"
 
@@ -123,8 +125,7 @@ class SOEvolution:
 		else stats.evaluate();
 	}
 
-	void process(population_t &population,
-		eslabCheckPoint<chromosome_t> &checkpoint);
+	void process(population_t &population);
 };
 
 template<class CT>
@@ -177,6 +178,33 @@ class eslabSOGeneticAlgorithm: public eslabAlgorithm<CT>
 	eoSelect<chromosome_t> &select;
 	eoTransform<chromosome_t> &transform;
 	eoReplacement<chromosome_t> &replace;
+};
+
+class SOContinuation: public Continuation<eslabSOChromosome>
+{
+	double last_lifetime;
+
+	public:
+
+	SOContinuation(const ContinuationTuning &_tuning) :
+		Continuation<eslabSOChromosome>(_tuning), last_lifetime(0) {}
+
+	protected:
+
+	inline bool improved(const eoPop<eslabSOChromosome> &_population)
+	{
+		const eslabSOPop *population =
+			dynamic_cast<const eslabSOPop *>(&_population);
+
+		double lifetime = population->best_lifetime();
+
+		if (lifetime > last_lifetime) {
+			last_lifetime = lifetime;
+			return true;
+		}
+
+		return false;
+	}
 };
 
 class eslabSOEvolutionMonitor: public eslabEvolutionMonitor<eslabSOChromosome>

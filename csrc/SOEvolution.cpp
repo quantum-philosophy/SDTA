@@ -10,9 +10,16 @@
 /* Evolution                                                                  */
 /******************************************************************************/
 
-void SOEvolution::process(population_t &population,
-	eslabCheckPoint<chromosome_t> &checkpoint)
+void SOEvolution::process(population_t &population)
 {
+	/* Continue */
+	SOContinuation continuation(tuning.continuation);
+
+	/* Monitor */
+	eslabCheckPoint<chromosome_t> checkpoint(continuation);
+	stats.watch(population, !tuning.verbose);
+	checkpoint.add(stats);
+
 	evaluate_t evaluator(*this);
 
 	/* Select */
@@ -52,7 +59,6 @@ void SOEvolutionStats::process()
 	size_t population_size = population->size();
 	size_t unique = population->unique();
 	double diversity = population->diversity();
-
 	size_t current_evaluations = evaluations - last_evaluations;
 	size_t current_deadline_misses = deadline_misses - last_deadline_misses;
 

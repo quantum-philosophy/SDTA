@@ -10,7 +10,6 @@ class Continuation: public eoContinue<CT>
 
 	size_t generations;
 	size_t stall_generations;
-	fitness_t last_fitness;
 
 	public:
 
@@ -26,11 +25,8 @@ class Continuation: public eoContinue<CT>
 		if (generations < tuning.min_generations) return true;
 		if (generations >= tuning.max_generations) return false;
 
-		fitness_t current_fitness = population.best_element().fitness();
-
-		if (current_fitness > last_fitness) {
+		if (improved(population)) {
 			stall_generations = 0;
-			last_fitness = current_fitness;
 			return true;
 		}
 
@@ -45,8 +41,11 @@ class Continuation: public eoContinue<CT>
 	{
 		generations = 0;
 		stall_generations = 0;
-		last_fitness = fitness_t();
 	}
+
+	protected:
+
+	virtual bool improved(const eoPop<CT> &population) = 0;
 };
 
 #endif

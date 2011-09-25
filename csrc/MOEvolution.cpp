@@ -46,9 +46,16 @@ price_t eslabMOPop::best_energy() const
 /* Evolution                                                                  */
 /******************************************************************************/
 
-void MOEvolution::process(population_t &population,
-	eslabCheckPoint<chromosome_t> &checkpoint)
+void MOEvolution::process(population_t &population)
 {
+	/* Continue */
+	MOContinuation continuation(tuning.continuation);
+
+	/* Monitor */
+	eslabCheckPoint<chromosome_t> checkpoint(continuation);
+	stats.watch(population, !tuning.verbose);
+	checkpoint.add(stats);
+
 	evaluate_t evaluator(*this);
 
 	eslabMOEvolutionMonitor evolution_monitor(population, tuning.dump_evolution);

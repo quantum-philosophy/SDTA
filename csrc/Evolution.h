@@ -66,8 +66,7 @@ class GenericEvolution: public Evolution
 
 	virtual void evaluate(chromosome_t &chromosome) = 0;
 	virtual void evaluate(chromosome_t &chromosome, const Schedule &schedule) = 0;
-	virtual void process(population_t &population,
-		eslabCheckPoint<chromosome_t> &checkpoint) = 0;
+	virtual void process(population_t &population) = 0;
 
 	const size_t chromosome_length;
 	const Evaluation evaluation;
