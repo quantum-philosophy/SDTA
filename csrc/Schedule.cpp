@@ -1,23 +1,5 @@
 #include "Schedule.h"
 
-order_t Schedule::flatten() const
-{
-	order_t order(task_count);
-
-	size_t index = 0;
-
-	for (pid_t pid = 0; pid < processor_count; pid++) {
-		size_t count = schedules[pid].size();
-		for (size_t i = 0; i < count; i++)
-			order[index++] = schedules[pid][i].id;
-	}
-
-	if (index != task_count)
-		throw std::runtime_error("Cannot flatten the schedule.");
-
-	return order;
-}
-
 void Schedule::reorder(const order_t &order)
 {
 	size_t i, j, count;

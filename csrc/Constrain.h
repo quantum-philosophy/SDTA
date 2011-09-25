@@ -8,7 +8,7 @@ class Constrain
 	public:
 
 	static constrains_t calculate(const Architecture &architecture,
-		const Graph &graph);
+		const Graph &graph, const layout_t &layout = layout_t());
 
 	private:
 

@@ -36,18 +36,18 @@ class Evolution
 template<class CT, class PT, class ST>
 class GenericEvolution: public Evolution
 {
-	const Architecture &architecture;
-	const Graph &graph;
-
 	protected:
 
-	const size_t chromosome_length;
+	const Architecture &architecture;
+	const Graph &graph;
 
 	const ListScheduler &scheduler;
 	const Evaluation &evaluation;
 
 	const EvolutionTuning tuning;
 	const constrains_t constrains;
+
+	const size_t chromosome_length;
 
 	public:
 
@@ -62,9 +62,9 @@ class GenericEvolution: public Evolution
 		const constrains_t &_constrains) :
 
 		architecture(_architecture), graph(_graph),
-		chromosome_length((_tuning.include_mapping ? 2 : 1) * _graph.size()),
 		scheduler(_scheduler), evaluation(_evaluation),
-		tuning(_tuning), constrains(_constrains)
+		tuning(_tuning), constrains(_constrains),
+		chromosome_length((constrains.fixed_layout() ? 1 : 2) * graph.size())
 	{
 		if (chromosome_length == 0)
 			throw std::runtime_error("The length cannot be zero.");
@@ -84,20 +84,20 @@ class GenericEvolution: public Evolution
 		price_t price;
 
 		if (chromosome.valid_schedule()) {
-			price = evaluation.process(chromosome.get_schedule(), true);
+			price = evaluation.process(chromosome.schedule, true);
 		}
-		else if (tuning.include_mapping) {
-			layout_t layout;
-			priority_t priority;
-
-			GeneEncoder::split(chromosome, layout, priority);
-			Schedule schedule = scheduler.process(layout, priority);
+		else if (constrains.fixed_layout()) {
+			Schedule schedule = scheduler.process(constrains.layout, chromosome);
 			chromosome.set_schedule(schedule);
 
 			price = evaluation.process(schedule, true);
 		}
 		else {
-			Schedule schedule = scheduler.process(layout, chromosome);
+			layout_t layout;
+			priority_t priority;
+
+			GeneEncoder::split(chromosome, layout, priority);
+			Schedule schedule = scheduler.process(layout, priority);
 			chromosome.set_schedule(schedule);
 
 			price = evaluation.process(schedule, true);
@@ -111,7 +111,6 @@ class GenericEvolution: public Evolution
 
 	virtual void process(population_t &population) = 0;
 
-	layout_t layout;
 	stats_t stats;
 };
 

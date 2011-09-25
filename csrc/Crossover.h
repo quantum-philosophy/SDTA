@@ -82,7 +82,14 @@ class Crossover: public eoQuadOp<CT>
 	inline bool operator()(CT &one, CT &another)
 	{
 		stats.crossover_rate = rate.get();
-		return (*crossover)(one, another);
+
+		if ((*crossover)(one, another)) {
+			one.set_invalid();
+			another.set_invalid();
+			return true;
+		}
+
+		return false;
 	}
 };
 

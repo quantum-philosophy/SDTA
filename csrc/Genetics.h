@@ -26,10 +26,16 @@ class Chromosome
 
 class GeneEncoder;
 
+template<class CT, class PT, class ST>
+class GenericEvolution;
+
 template<class FT>
 class eslabChromosome
 {
 	friend class GeneEncoder;
+
+	template<class CT, class PT, class ST>
+	friend class GenericEvolution;
 
 	protected:
 

@@ -54,7 +54,13 @@ class Training: public eoMonOp<CT>
 	inline bool operator()(CT &one)
 	{
 		stats.training_rate = rate.get();
-		return (*train)(one);
+
+		if ((*train)(one)) {
+			one.set_invalid();
+			return true;
+		}
+
+		return false;
 	}
 };
 
