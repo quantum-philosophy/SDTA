@@ -28,6 +28,8 @@ file = File.open(ARGV[0]) do |file|
       deadline_misses.push $1.to_f
     when /Best lifetime: #{ number }/
       lifetime.push $1.to_f
+    when /Best lifetime:\s*\(#{ number }, #{ number }\)/
+      lifetime.push $1.to_f
     when /Improvement: #{ number }/
       improvement.push $1.to_f
     when /Time elapsed: #{ number }/
