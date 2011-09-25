@@ -96,7 +96,7 @@ class GenericEvolution: public Evolution
 			layout_t layout;
 			priority_t priority;
 
-			GeneEncoder::split(chromosome, layout, priority);
+			GeneEncoder::split(chromosome, priority, layout);
 			Schedule schedule = scheduler.process(layout, priority);
 			chromosome.set_schedule(schedule);
 
