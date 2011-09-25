@@ -69,7 +69,7 @@ function showEvolutionStats(file, full)
     rows = 2;
     cols = 3;
   else
-    rows = 2;
+    rows = 3;
     cols = 1;
   end
 
@@ -77,10 +77,10 @@ function showEvolutionStats(file, full)
 
   figure;
 
-  if full
-    subplot(rows, cols, n); n = n + 1;
-    Utils.drawProgress('Generations', generations);
+  subplot(rows, cols, n); n = n + 1;
+  Utils.drawProgress('Generations', generations);
 
+  if full
     subplot(rows, cols, n); n = n + 1;
     Utils.drawProgress('Evaluations', evaluations);
 

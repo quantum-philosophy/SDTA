@@ -109,8 +109,7 @@ class GenericEvolution: public Evolution
 		else stats.evaluate();
 	}
 
-	virtual void process(population_t &population,
-		eslabCheckPoint<chromosome_t> &checkpoint) = 0;
+	virtual void process(population_t &population) = 0;
 
 	layout_t layout;
 	stats_t stats;

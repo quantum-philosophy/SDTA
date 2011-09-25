@@ -2,7 +2,9 @@
 #define __MO_EVOLUTION_H__
 
 #include <moeo>
+
 #include "Evolution.h"
+#include "Continuation.h"
 
 #define LIFETIME_OBJECTIVE  0
 #define ENERGY_OBJECTIVE 1
@@ -74,9 +76,14 @@ class MOEvolutionStats: public GenericEvolutionStats<eslabMOChromosome, eslabMOP
 	price_t best_lifetime;
 	price_t best_energy;
 
+	size_t last_evaluations;
+	size_t last_deadline_misses;
+
 	std::vector<price_t> pareto_optima;
 
 	void display(std::ostream &o) const;
+
+	MOEvolutionStats() : last_evaluations(0), last_deadline_misses(0) {}
 
 	protected:
 
@@ -116,8 +123,43 @@ class MOEvolution:
 
 	protected:
 
-	void process(population_t &population,
-		eslabCheckPoint<chromosome_t> &checkpoint);
+	void process(population_t &population);
+};
+
+class MOContinuation: public Continuation<eslabMOChromosome>
+{
+	double last_lifetime;
+	double last_energy;
+
+	public:
+
+	MOContinuation(const ContinuationTuning &_tuning) :
+		Continuation<eslabMOChromosome>(_tuning), last_lifetime(0),
+		last_energy(std::numeric_limits<double>::max()) {}
+
+	protected:
+
+	inline bool improved(const eoPop<eslabMOChromosome> &_population)
+	{
+		const eslabMOPop *population =
+			dynamic_cast<const eslabMOPop *>(&_population);
+
+		price_t lifetime = population->best_lifetime();
+
+		if (lifetime.lifetime > last_lifetime) {
+			last_lifetime = lifetime.lifetime;
+			return true;
+		}
+
+		price_t energy = population->best_energy();
+
+		if (energy.energy < last_energy) {
+			last_energy = energy.energy;
+			return true;
+		}
+
+		return false;
+	}
 };
 
 class eslabMOEvolutionMonitor: public eslabEvolutionMonitor<eslabMOChromosome>

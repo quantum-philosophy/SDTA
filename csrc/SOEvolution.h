@@ -2,7 +2,9 @@
 #define __SO_EVOLUTION_H__
 
 #include "common.h"
+
 #include "Evolution.h"
+#include "Continuation.h"
 #include "Selection.h"
 #include "Replacement.h"
 
@@ -49,9 +51,14 @@ class SOEvolutionStats: public GenericEvolutionStats<eslabSOChromosome, eslabSOP
 	double best_lifetime;
 	double worst_lifetime;
 
+	size_t last_evaluations;
+	size_t last_deadline_misses;
+
 	chromosome_t best_chromosome;
 
 	void display(std::ostream &o) const;
+
+	SOEvolutionStats() : last_evaluations(0), last_deadline_misses(0) {}
 
 	protected:
 
@@ -92,8 +99,7 @@ class SOEvolution:
 
 	protected:
 
-	void process(population_t &population,
-		eslabCheckPoint<chromosome_t> &checkpoint);
+	void process(population_t &population);
 };
 
 template<class CT>
@@ -146,6 +152,33 @@ class eslabSOGeneticAlgorithm: public eslabAlgorithm<CT>
 	eoSelect<chromosome_t> &select;
 	eoTransform<chromosome_t> &transform;
 	eoReplacement<chromosome_t> &replace;
+};
+
+class SOContinuation: public Continuation<eslabSOChromosome>
+{
+	double last_lifetime;
+
+	public:
+
+	SOContinuation(const ContinuationTuning &_tuning) :
+		Continuation<eslabSOChromosome>(_tuning), last_lifetime(0) {}
+
+	protected:
+
+	inline bool improved(const eoPop<eslabSOChromosome> &_population)
+	{
+		const eslabSOPop *population =
+			dynamic_cast<const eslabSOPop *>(&_population);
+
+		double lifetime = population->best_lifetime();
+
+		if (lifetime > last_lifetime) {
+			last_lifetime = lifetime;
+			return true;
+		}
+
+		return false;
+	}
 };
 
 class eslabSOEvolutionMonitor: public eslabEvolutionMonitor<eslabSOChromosome>

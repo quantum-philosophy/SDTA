@@ -8,8 +8,8 @@ function drawEvolution(file, multi, point, full)
   labels = {};
 
   if multi
-    xlabel('Lifetime');
-    ylabel('Energy');
+    xlabel('Lifetime, time units');
+    ylabel('Energy, J');
 
     [ generations, population ] = size(evolution);
     population = population / 2;
@@ -55,10 +55,12 @@ function drawEvolution(file, multi, point, full)
       'YLim', [ minEnergy, maxEnergy ]);
 
     line([ maxLifetime, maxLifetime ], [ 0, maxEnergy ], 'Line', '-.', 'Color', 'k');
-    labels{end + 1} = [ 'Max lifetime (', num2str(maxLifetime), ' time units)' ];
+    labels{end + 1} = [ 'Max lifetime (', ...
+      num2str(Utils.round2(maxLifetime, 0.01)), ')' ];
 
     line([ 0, maxLifetime ], [ minEnergy, minEnergy ], 'Line', '--', 'Color', 'k');
-    labels{end + 1} = [ 'Min energy (', num2str(minEnergy), ' J)' ];
+    labels{end + 1} = [ 'Min energy (', ...
+      num2str(Utils.round2(minEnergy, 0.01)), ')' ];
 
     if length(point) == 2
       percentLifetime = Utils.round2((maxLifetime/point(1) - 1) * 100, 0.01);
@@ -69,12 +71,12 @@ function drawEvolution(file, multi, point, full)
       percentLifetime = Utils.round2((maxLifetime/point(1) - 1) * 100, 0.01);
       title([ 'GA (LT ', num2str(persentLifetime), '%)' ]);
     else
-      title([ 'GA (max ', num2str(maxLifetime), ' TU with ', ...
-        num2str(withEnergy), ' J)' ]);
+      title([ 'GA (LT ', num2str(Utils.round2(maxLifetime, 0.01)), ', E ', ...
+        num2str(Utils.round2(withEnergy, 0.01)), ')' ]);
     end
   else
     xlabel('Generation');
-    ylabel('Lifetime');
+    ylabel('Lifetime, time units');
 
     [ generations, population ] = size(evolution);
 
@@ -103,7 +105,7 @@ function drawEvolution(file, multi, point, full)
     end
 
     set(gca, 'XLim', [ 1, generations ]);
-    set(gca, 'YLim', [ 0, maxLifetime ]);
+    set(gca, 'YLim', [ minLifetime, maxLifetime ]);
 
     line([ 1, generations ], [ maxLifetime, maxLifetime ], ...
       'Line', '--', 'Color', 'k');
@@ -114,7 +116,7 @@ function drawEvolution(file, multi, point, full)
     labels{end + 1} = [ 'Last generation (', num2str(generations), ')' ];
 
     if isempty(point)
-      title([ 'GA (max ', num2str(maxLifetime), ')' ]);
+      title([ 'GA (LT ', num2str(maxLifetime), ')' ]);
     else
       percentLifetime = Utils.round2((maxLifetime/point - 1) * 100, 0.01);
       title([ 'GA (+', num2str(percentLifetime), '%)' ]);

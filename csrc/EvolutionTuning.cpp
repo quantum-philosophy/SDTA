@@ -207,14 +207,14 @@ void EvolutionTuning::display(std::ostream &o) const
 		<< std::endl
 
 		/* Evolve */
-		<< "  Replacement:          " << replacement.method << std::endl
+		<< "  Replacement:            " << replacement.method << std::endl
 		<< std::setprecision(2)
-		<< "    Elitism rate:       " << replacement.elitism_rate << std::endl
+		<< "    Elitism rate:         " << replacement.elitism_rate << std::endl
 		<< std::endl
 
 		/* Output */
-		<< "  Verbose:              " << verbose << std::endl
-		<< "  Dump evolution:       " << dump_evolution << std::endl;
+		<< "  Verbose:                " << verbose << std::endl
+		<< "  Dump evolution:         " << dump_evolution << std::endl;
 }
 
 std::ostream &operator<< (std::ostream &o, const EvolutionTuning &tuning)
