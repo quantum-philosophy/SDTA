@@ -24,7 +24,7 @@ void Transformation<CT>::operator()(population_t &population)
 	}
 
 	for (i = 0; i < population_size; i++)
-		if (changes[i]) population[i].invalidate();
+		if (changes[i]) population[i].set_invalid();
 
 	/* 3. Training */
 	for (i = 0; i < population_size; i++)

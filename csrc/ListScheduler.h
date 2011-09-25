@@ -53,11 +53,11 @@ class StochasticListScheduler: public ListScheduler
 	tid_t pull(list_schedule_t &pool, const priority_t &priority) const;
 };
 
-class RandomListScheduler: public ListScheduler
+class RandomGeneratorListScheduler: public ListScheduler
 {
 	public:
 
-	RandomListScheduler(const Architecture &architecture,
+	RandomGeneratorListScheduler(const Architecture &architecture,
 		const Graph &graph) : ListScheduler(architecture, graph) {}
 
 	void push(list_schedule_t &pool, const priority_t &priority, tid_t id) const;

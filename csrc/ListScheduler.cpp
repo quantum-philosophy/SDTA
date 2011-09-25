@@ -181,13 +181,13 @@ tid_t StochasticListScheduler::pull(list_schedule_t &pool,
 	return id;
 }
 
-void RandomListScheduler::push(list_schedule_t &pool,
+void RandomGeneratorListScheduler::push(list_schedule_t &pool,
 	const priority_t &dummy, tid_t id) const
 {
 	pool.push_back(id);
 }
 
-tid_t RandomListScheduler::pull(list_schedule_t &pool,
+tid_t RandomGeneratorListScheduler::pull(list_schedule_t &pool,
 	const priority_t &dummy) const
 {
 	tid_t id;
