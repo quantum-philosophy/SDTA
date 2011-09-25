@@ -5,7 +5,7 @@
 #include "Processor.h"
 
 constrains_t Constrain::calculate(const Architecture &architecture,
-	const Graph &graph)
+	const Graph &graph, const layout_t &layout)
 {
 	size_t task_count = graph.size();
 	size_t processor_count = architecture.size();
@@ -13,7 +13,16 @@ constrains_t Constrain::calculate(const Architecture &architecture,
 	const Task *task;
 	size_t dependent_count, dependency_count;
 
+	bool fixed_layout = !layout.empty();
+
+#ifndef SHALLOW_CHECK
+	if (fixed_layout && layout.size() != task_count)
+		throw std::runtime_error("The layout is invalid.");
+#endif
+
 	constrains_t constrains(2 * task_count);
+
+	if (fixed_layout) constrains.set_layout(layout);
 
 	for (tid_t id = 0; id < task_count; id++) {
 		task = graph[id];
@@ -41,8 +50,14 @@ constrains_t Constrain::calculate(const Architecture &architecture,
 #endif
 
 		/* Mapping constrains */
-		constrains[task_count + id].min = 0;
-		constrains[task_count + id].max = processor_count;
+		if (fixed_layout) {
+			constrains[task_count + id].min = layout[id];
+			constrains[task_count + id].max = layout[id];
+		}
+		else {
+			constrains[task_count + id].min = 0;
+			constrains[task_count + id].max = processor_count;
+		}
 	}
 
 	return constrains;

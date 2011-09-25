@@ -26,14 +26,9 @@ class eslabSOChromosome: public eslabChromosome<double>,
 		eoInt<double>(_size) {}
 #endif
 
-	inline bool bad() const
-	{
-		return fitness() <= 0;
-	}
-
 	protected:
 
-	inline void assign_fitness(const price_t &price)
+	inline void set_fitness(const price_t &price)
 	{
 		this->fitness(price.lifetime);
 	}
@@ -95,35 +90,14 @@ class SOEvolution:
 	public:
 
 	SOEvolution(const Architecture &_architecture,
-		const Graph &_graph, const Evaluation &_evaluation,
-		const EvolutionTuning &_tuning, const constrains_t &_constrains) :
+		const Graph &_graph, const ListScheduler &_scheduler,
+		const Evaluation &_evaluation, const EvolutionTuning &_tuning,
+		const constrains_t &_constrains) :
 
 		GenericEvolution<chromosome_t, population_t, stats_t>(
-			_architecture, _graph, _evaluation, _tuning, _constrains) {}
+			_architecture, _graph, _scheduler, _evaluation, _tuning, _constrains) {}
 
 	protected:
-
-	inline void evaluate(chromosome_t &chromosome)
-	{
-		if (!chromosome.invalid()) return;
-
-		if (tuning.include_mapping) evaluation.assess(chromosome, true);
-		else evaluation.assess(chromosome, layout, true);
-
-		if (chromosome.bad()) stats.miss_deadline();
-		else stats.evaluate();
-	}
-
-	inline void evaluate(chromosome_t &chromosome, const Schedule &schedule)
-	{
-		if (!chromosome.invalid()) return;
-
-		if (tuning.include_mapping) evaluation.assess(chromosome, schedule, true);
-		else evaluation.assess(chromosome, schedule, true);
-
-		if (chromosome.bad()) stats.miss_deadline();
-		else stats.evaluate();
-	}
 
 	void process(population_t &population);
 };

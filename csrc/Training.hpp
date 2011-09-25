@@ -9,7 +9,7 @@ bool PeerTraining<CT>::operator()(CT &chromosome)
 
 	evaluate(chromosome);
 
-	const Schedule &schedule = chromosome.schedule();
+	const Schedule &schedule = chromosome.get_schedule();
 	size_t task_count = schedule.tasks();
 
 	CT current = chromosome;
@@ -31,7 +31,7 @@ bool PeerTraining<CT>::operator()(CT &chromosome)
 		rank_t rank = current[id];
 		current[id] = current[peer_id];
 		current[peer_id] = rank;
-		current.invalidate();
+		current.set_invalid();
 
 		evaluate(current);
 		fitness = current.fitness();
@@ -45,7 +45,7 @@ bool PeerTraining<CT>::operator()(CT &chromosome)
 			/* Return back */
 			current[peer_id] = current[id];
 			current[id] = rank;
-			current.invalidate();
+			current.set_invalid();
 
 			stall++;
 		}

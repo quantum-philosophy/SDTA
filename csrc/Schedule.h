@@ -77,8 +77,8 @@ class Schedule
 	{
 		schedules[pid].push_back(ScheduleItem(tid, start, duration));
 
-		if (this->duration < start + duration)
-			this->duration = start + duration;
+		double end = start + duration;
+		if (this->duration < end) this->duration = end;
 
 		mapping[tid] = pid;
 
@@ -95,7 +95,10 @@ class Schedule
 		return duration;
 	}
 
-	order_t flatten() const;
+	const order_t &get_order() const
+	{
+		return order;
+	}
 
 	void reorder(const order_t &order);
 };

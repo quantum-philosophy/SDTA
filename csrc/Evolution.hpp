@@ -8,11 +8,6 @@ template<class CT, class PT, class ST>
 ST &GenericEvolution<CT, PT, ST>::solve(const layout_t &layout,
 	const priority_t &priority)
 {
-	/* Save the default layout in case the mapping part
-	 * is not included, and we are varying only schedules.
-	 */
-	this->layout = layout;
-
 	population_t population;
 
 	populate(population, layout, priority);
@@ -35,7 +30,7 @@ void GenericEvolution<CT, PT, ST>::populate(population_t &population,
 
 	GeneEncoder::encode(chromosome, priority);
 
-	if (tuning.include_mapping)
+	if (!constrains.fixed_layout())
 		GeneEncoder::extend(chromosome, layout);
 
 	evaluate(chromosome);
@@ -46,13 +41,12 @@ void GenericEvolution<CT, PT, ST>::populate(population_t &population,
 		population.push_back(chromosome);
 
 	/* Fill the second part with randomly generated chromosomes */
-	RandomListScheduler scheduler(architecture, graph);
+	RandomGeneratorListScheduler scheduler(architecture, graph);
 	create_count = tuning.population_size - create_count;
 	for (i = 0; i < create_count; i++) {
-		chromosome.invalidate();
-		Schedule schedule = scheduler.process(layout, priority_t());
-		evaluate(chromosome, schedule);
+		chromosome.set_schedule(scheduler.process(layout, priority_t()));
 		GeneEncoder::order(chromosome);
+		evaluate(chromosome);
 		population.push_back(chromosome);
 	}
 }

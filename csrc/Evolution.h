@@ -15,6 +15,7 @@
 #include "Training.h"
 #include "Transformation.h"
 
+#include "ListScheduler.h"
 #include "Evaluation.h"
 
 template<class CT>
@@ -35,8 +36,18 @@ class Evolution
 template<class CT, class PT, class ST>
 class GenericEvolution: public Evolution
 {
+	protected:
+
 	const Architecture &architecture;
 	const Graph &graph;
+
+	const ListScheduler &scheduler;
+	const Evaluation &evaluation;
+
+	const EvolutionTuning tuning;
+	const constrains_t constrains;
+
+	const size_t chromosome_length;
 
 	public:
 
@@ -46,12 +57,14 @@ class GenericEvolution: public Evolution
 	typedef typename chromosome_t::fitness_t fitness_t;
 
 	GenericEvolution(const Architecture &_architecture,
-		const Graph &_graph, const Evaluation &_evaluation,
-		const EvolutionTuning &_tuning, const constrains_t &_constrains) :
+		const Graph &_graph, const ListScheduler &_scheduler,
+		const Evaluation &_evaluation, const EvolutionTuning &_tuning,
+		const constrains_t &_constrains) :
 
 		architecture(_architecture), graph(_graph),
-		chromosome_length((_tuning.include_mapping ? 2 : 1) * _graph.size()),
-		evaluation(_evaluation), tuning(_tuning), constrains(_constrains)
+		scheduler(_scheduler), evaluation(_evaluation),
+		tuning(_tuning), constrains(_constrains),
+		chromosome_length((constrains.fixed_layout() ? 1 : 2) * graph.size())
 	{
 		if (chromosome_length == 0)
 			throw std::runtime_error("The length cannot be zero.");
@@ -64,16 +77,40 @@ class GenericEvolution: public Evolution
 	void populate(population_t &population, const layout_t &layout,
 		const priority_t &priority);
 
-	virtual void evaluate(chromosome_t &chromosome) = 0;
-	virtual void evaluate(chromosome_t &chromosome, const Schedule &schedule) = 0;
+	inline void evaluate(chromosome_t &chromosome)
+	{
+		if (chromosome.valid()) return;
+
+		price_t price;
+
+		if (chromosome.valid_schedule()) {
+			price = evaluation.process(chromosome.schedule, true);
+		}
+		else if (constrains.fixed_layout()) {
+			Schedule schedule = scheduler.process(constrains.layout, chromosome);
+			chromosome.set_schedule(schedule);
+
+			price = evaluation.process(schedule, true);
+		}
+		else {
+			layout_t layout;
+			priority_t priority;
+
+			GeneEncoder::split(chromosome, priority, layout);
+			Schedule schedule = scheduler.process(layout, priority);
+			chromosome.set_schedule(schedule);
+
+			price = evaluation.process(schedule, true);
+		}
+
+		chromosome.set_price(price);
+
+		if (price.lifetime <= 0) stats.miss_deadline();
+		else stats.evaluate();
+	}
+
 	virtual void process(population_t &population) = 0;
 
-	const size_t chromosome_length;
-	const Evaluation evaluation;
-	const EvolutionTuning tuning;
-	const constrains_t constrains;
-
-	layout_t layout;
 	stats_t stats;
 };
 

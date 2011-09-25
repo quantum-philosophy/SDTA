@@ -13,9 +13,9 @@
 #include "Schedule.h"
 #include "Layout.h"
 #include "Priority.h"
-#include "ListScheduler.h"
 #include "SOEvolution.h"
 #include "MOEvolution.h"
+#include "ListScheduler.h"
 #include "Evaluation.h"
 
 using namespace std;
@@ -133,7 +133,7 @@ void optimize(const string &system_config, const string &genetic_config,
 			if (tuning.verbose)
 				cout << "Reordering the tasks." << endl;
 
-			order_t order = schedule.flatten();
+			order_t order = schedule.get_order();
 
 			graph->reorder(order);
 			Helper::permute<pid_t>(mapping, order);
@@ -149,8 +149,12 @@ void optimize(const string &system_config, const string &genetic_config,
 		Evaluation evaluation(*architecture, *graph, *hotspot);
 		price_t price = evaluation.process(schedule);
 
-		const constrains_t constrains =
-			Constrain::calculate(*architecture, *graph);
+		constrains_t constrains;
+
+		if (tuning.include_mapping)
+			constrains = Constrain::calculate(*architecture, *graph);
+		else
+			constrains = Constrain::calculate(*architecture, *graph, mapping);
 
 		if (tuning.verbose) {
 			cout << graph << endl << architecture << endl
@@ -179,10 +183,10 @@ void optimize(const string &system_config, const string &genetic_config,
 
 			if (tuning.multiobjective)
 				evolution = new MOEvolution(*architecture, *graph,
-					evaluation, tuning, constrains);
+					scheduler, evaluation, tuning, constrains);
 			else
 				evolution = new SOEvolution(*architecture, *graph,
-					evaluation, tuning, constrains);
+					scheduler, evaluation, tuning, constrains);
 
 			clock_t begin = clock();
 

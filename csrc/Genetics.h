@@ -26,33 +26,84 @@ class Chromosome
 
 class GeneEncoder;
 
+template<class CT, class PT, class ST>
+class GenericEvolution;
+
 template<class FT>
 class eslabChromosome
 {
 	friend class GeneEncoder;
 
-	public:
-
-	typedef FT fitness_t;
-
-	inline void assess(const Schedule &schedule, const price_t &price)
-	{
-		m_schedule = schedule;
-		assign_fitness(price);
-	}
-
-	inline const Schedule &schedule() const
-	{
-		return m_schedule;
-	}
-
-	virtual bool bad() const = 0;
+	template<class CT, class PT, class ST>
+	friend class GenericEvolution;
 
 	protected:
 
-	virtual void assign_fitness(const price_t &price) = 0;
+	bool invalid_schedule;
+	bool invalid_price;
 
-	Schedule m_schedule;
+	Schedule schedule;
+	price_t price;
+
+	public:
+
+	eslabChromosome() : invalid_schedule(true), invalid_price(true) {}
+
+	inline bool valid() const
+	{
+		return !invalid_schedule && !invalid_price;
+	}
+
+	inline void set_invalid()
+	{
+		invalid_schedule = true;
+		invalid_price = true;
+	}
+
+	inline bool valid_schedule() const
+	{
+		return !invalid_schedule;
+	}
+
+	inline void set_schedule(const Schedule &schedule)
+	{
+		this->schedule = schedule;
+		invalid_schedule = false;
+
+		/* Automatically invalidate the price */
+		invalid_price = true;
+	}
+
+	inline void set_price(const price_t &price)
+	{
+		this->price = price;
+		set_fitness(price);
+		invalid_price = false;
+	}
+
+	inline const Schedule &get_schedule() const
+	{
+#ifndef SHALLOW_CHECK
+		if (invalid_schedule)
+			throw std::runtime_error("The schedule is invalid.");
+#endif
+
+		return schedule;
+	}
+
+	inline const price_t &get_price() const
+	{
+#ifndef SHALLOW_CHECK
+		if (invalid_price)
+			throw std::runtime_error("The price is invalid.");
+#endif
+
+		return price;
+	}
+
+	protected:
+
+	virtual void set_fitness(const price_t &price) = 0;
 };
 
 template<class CT>
@@ -123,7 +174,7 @@ class GeneEncoder
 	template<class CT>
 	static inline void order(CT &chromosome)
 	{
-		const Schedule &schedule = chromosome.m_schedule;
+		const Schedule &schedule = chromosome.schedule;
 		const order_t &order = schedule.order;
 		const size_t task_count = schedule.task_count;
 

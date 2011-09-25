@@ -31,7 +31,7 @@ bool PeerMutation<CT>::operator()(CT &chromosome)
 
 	bool changed = false;
 
-	const Schedule &schedule = chromosome.schedule();
+	const Schedule &schedule = chromosome.get_schedule();
 	size_t task_count = schedule.tasks();
 
 	/* In order to prevent switching back */

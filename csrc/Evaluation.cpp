@@ -45,11 +45,3 @@ price_t Evaluation::process(const Schedule &schedule, bool shallow) const
 
 	return price_t(lifetime, energy);
 }
-
-price_t Evaluation::process(const layout_t &layout,
-	const priority_t &priority, bool shallow) const
-{
-	const Schedule schedule = scheduler.process(layout, priority);
-
-	return process(schedule, shallow);
-}

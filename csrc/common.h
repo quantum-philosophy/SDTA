@@ -180,6 +180,9 @@ struct price_t
 
 class Constrain;
 
+template<class CT, class PT, class ST>
+class GenericEvolution;
+
 struct constrain_t
 {
 	rank_t max;
@@ -209,7 +212,35 @@ struct constrain_t
 	}
 };
 
-typedef std::vector<constrain_t> constrains_t;
+class constrains_t: public std::vector<constrain_t>
+{
+	template<class CT, class PT, class ST>
+	friend class GenericEvolution;
+
+	bool m_fixed_layout;
+	layout_t layout;
+
+	public:
+
+	constrains_t(size_t _size = 0) :
+		std::vector<constrain_t>(_size), m_fixed_layout(false) {}
+
+	inline void set_layout(const layout_t &layout)
+	{
+		this->layout = layout;
+		m_fixed_layout = true;
+	}
+
+	inline const layout_t &get_layout() const
+	{
+		return layout;
+	}
+
+	inline bool fixed_layout() const
+	{
+		return m_fixed_layout;
+	}
+};
 
 /******************************************************************************/
 /* System                                                                     */

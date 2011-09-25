@@ -1,6 +1,8 @@
 #ifndef __MUTATION_H__
 #define __MUTATION_H__
 
+#include "ListScheduler.h"
+
 template<class CT>
 class UniformMutation: public eoMonOp<CT>
 {
@@ -40,8 +42,9 @@ class Mutation: public eoMonOp<CT>
 
 	public:
 
-	Mutation(const constrains_t &constrains,
-		const MutationTuning &_tuning, EvolutionStats &_stats) :
+	Mutation(const Architecture &architecture, const Graph &graph,
+		const constrains_t &constrains, const MutationTuning &_tuning,
+		EvolutionStats &_stats) :
 
 		mutate(NULL), tuning(_tuning), stats(_stats),
 		rate(tuning.min_rate, tuning.scale, tuning.exponent, stats.generations)
@@ -51,6 +54,10 @@ class Mutation: public eoMonOp<CT>
 
 		else if (tuning.method == "peer")
 			mutate = new PeerMutation<CT>(constrains, rate);
+
+		else if (tuning.method == "list_schedule")
+			mutate = new ListScheduleMutation<CT>(constrains, rate,
+				architecture, graph);
 
 		else throw std::runtime_error("The mutation method is unknown.");
 	}
@@ -63,7 +70,13 @@ class Mutation: public eoMonOp<CT>
 	inline bool operator()(CT &one)
 	{
 		stats.mutation_rate = rate.get();
-		return (*mutate)(one);
+
+		if ((*mutate)(one)) {
+			one.set_invalid();
+			return true;
+		}
+
+		return false;
 	}
 };
 
