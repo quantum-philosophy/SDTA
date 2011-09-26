@@ -1,9 +1,10 @@
 #include "ListScheduler.h"
 
 template<class CT>
-void ListScheduleMutation<CT>::push(pool_t &pool, const layout_t &layout,
-	const priority_t &priority, tid_t id, void *data) const
+void ListScheduleMutation<CT>::push(pool_t &pool, tid_t id) const
 {
+	const layout_t &layout = pool.layout;
+	const priority_t &priority = pool.priority;
 	list_schedule_t &local_pool = pool[layout[id]];
 
 	list_schedule_t::iterator it;
@@ -16,8 +17,7 @@ void ListScheduleMutation<CT>::push(pool_t &pool, const layout_t &layout,
 }
 
 template<class CT>
-tid_t ListScheduleMutation<CT>::pull(pool_t &pool, const layout_t &layout,
-	const priority_t &priority, pid_t pid, void *data) const
+tid_t ListScheduleMutation<CT>::pull(pool_t &pool, pid_t pid) const
 {
 	list_schedule_t &local_pool = pool[pid];
 
@@ -114,9 +114,10 @@ bool ListScheduleTraining<CT>::operator()(CT &chromosome)
 }
 
 template<class CT>
-void ListScheduleTraining<CT>::push(pool_t &pool, const layout_t &layout,
-	const priority_t &priority, tid_t id, void *data) const
+void ListScheduleTraining<CT>::push(pool_t &pool, tid_t id) const
 {
+	const layout_t &layout = pool.layout;
+	const priority_t &priority = pool.priority;
 	list_schedule_t &local_pool = pool[layout[id]];
 
 	list_schedule_t::iterator it;
@@ -129,12 +130,11 @@ void ListScheduleTraining<CT>::push(pool_t &pool, const layout_t &layout,
 }
 
 template<class CT>
-tid_t ListScheduleTraining<CT>::pull(pool_t &pool, const layout_t &layout,
-	const priority_t &priority, pid_t pid, void *_data) const
+tid_t ListScheduleTraining<CT>::pull(pool_t &pool, pid_t pid) const
 {
 	list_schedule_t &local_pool = pool[pid];
 
-	data_t *data = (data_t *)_data;
+	data_t *data = (data_t *)pool.data;
 
 	tid_t id;
 

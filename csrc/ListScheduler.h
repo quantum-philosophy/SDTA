@@ -8,7 +8,43 @@
 #include "Evaluation.h"
 
 typedef std::list<tid_t> list_schedule_t;
-typedef std::vector<list_schedule_t> pool_t;
+
+struct pool_t: public std::vector<list_schedule_t>
+{
+	const size_t processor_count;
+	const size_t task_count;
+
+	const layout_t &layout;
+	const priority_t &priority;
+
+	void *data;
+
+	const bool without_layout;
+	const bool without_priority;
+
+	vector_t processor_time;
+	vector_t task_time;
+
+	bit_string_t processed;
+	bit_string_t scheduled;
+
+	pool_t(size_t _processor_count, size_t _task_count,
+		const layout_t &_layout, const priority_t &_priority,
+		void *_data) :
+
+		std::vector<list_schedule_t>(_processor_count),
+		processor_count(_processor_count), task_count(_task_count),
+		layout(_layout), priority(_priority),
+		data(_data),
+
+		without_layout(layout.empty()), without_priority(_priority.empty()),
+
+		processor_time(_processor_count, 0),
+		task_time(_task_count, 0),
+
+		processed(_task_count, false),
+		scheduled(_task_count, false) {}
+};
 
 class ListScheduler
 {
@@ -27,12 +63,10 @@ class ListScheduler
 
 	protected:
 
-	virtual void push(pool_t &pool, const layout_t &layout,
-		const priority_t &priority, tid_t id, void *data) const = 0;
-	virtual tid_t pull(pool_t &pool, const layout_t &layout,
-		const priority_t &priority, pid_t pid, void *data) const = 0;
+	virtual void push(pool_t &pool, tid_t id) const = 0;
+	virtual tid_t pull(pool_t &pool, pid_t pid) const = 0;
 
-	bool ready(const Task *task, const bit_string_t &scheduled) const;
+	inline bool ready(const Task *task, const bit_string_t &scheduled) const;
 };
 
 class DeterministicListScheduler: public ListScheduler
@@ -44,10 +78,8 @@ class DeterministicListScheduler: public ListScheduler
 
 	protected:
 
-	void push(pool_t &pool, const layout_t &layout,
-		const priority_t &priority, tid_t id, void *data) const;
-	tid_t pull(pool_t &pool, const layout_t &layout,
-		const priority_t &priority, pid_t pid, void *data) const;
+	void push(pool_t &pool, tid_t id) const;
+	tid_t pull(pool_t &pool, pid_t pid) const;
 };
 
 class StochasticListScheduler: public ListScheduler
@@ -57,10 +89,8 @@ class StochasticListScheduler: public ListScheduler
 	StochasticListScheduler(const Architecture &architecture,
 		const Graph &graph) : ListScheduler(architecture, graph) {}
 
-	void push(pool_t &pool, const layout_t &layout,
-		const priority_t &priority, tid_t id, void *data) const;
-	tid_t pull(pool_t &pool, const layout_t &layout,
-		const priority_t &priority, pid_t pid, void *data) const;
+	void push(pool_t &pool, tid_t id) const;
+	tid_t pull(pool_t &pool, pid_t pid) const;
 };
 
 class RandomGeneratorListScheduler: public ListScheduler
@@ -70,10 +100,8 @@ class RandomGeneratorListScheduler: public ListScheduler
 	RandomGeneratorListScheduler(const Architecture &architecture,
 		const Graph &graph) : ListScheduler(architecture, graph) {}
 
-	void push(pool_t &pool, const layout_t &layout,
-		const priority_t &priority, tid_t id, void *data) const;
-	tid_t pull(pool_t &pool, const layout_t &layout,
-		const priority_t &priority, pid_t pid, void *data) const;
+	void push(pool_t &pool, tid_t id) const;
+	tid_t pull(pool_t &pool, pid_t pid) const;
 };
 
 template<class CT>
@@ -124,10 +152,8 @@ class ListScheduleMutation: public ListScheduler, public eoMonOp<CT>
 		return false;
 	}
 
-	void push(pool_t &pool, const layout_t &layout,
-		const priority_t &priority, tid_t id, void *data) const;
-	tid_t pull(pool_t &pool, const layout_t &layout,
-		const priority_t &priority, pid_t pid, void *data) const;
+	void push(pool_t &pool, tid_t id) const;
+	tid_t pull(pool_t &pool, pid_t pid) const;
 };
 
 template<class CT>
@@ -236,10 +262,8 @@ class ListScheduleTraining: public ListScheduler, public eoMonOp<CT>
 
 	bool operator()(CT &chromosome);
 
-	void push(pool_t &pool, const layout_t &layout,
-		const priority_t &priority, tid_t id, void *data) const;
-	tid_t pull(pool_t &pool, const layout_t &layout,
-		const priority_t &priority, pid_t pid, void *data) const;
+	void push(pool_t &pool, tid_t id) const;
+	tid_t pull(pool_t &pool, pid_t pid) const;
 };
 
 #include "ListScheduler.hpp"
