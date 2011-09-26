@@ -142,7 +142,7 @@ class ListScheduleMutation: public ListScheduler, public eoMonOp<CT>
 		}
 
 		chromosome.set_schedule(schedule);
-		GeneEncoder::order(chromosome);
+		GeneEncoder::reorder(chromosome);
 
 		/* NOTE: We always say that nothing has changed, since
 		 * the invalidation takes place in set_schedule. The purpose

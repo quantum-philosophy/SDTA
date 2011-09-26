@@ -23,6 +23,7 @@ void GenericEvolution<CT, PT, ST>::populate(population_t &population,
 {
 	size_t i;
 	size_t create_count;
+	bool fixed_layout = constrains.fixed_layout();
 
 	population.clear();
 
@@ -30,7 +31,7 @@ void GenericEvolution<CT, PT, ST>::populate(population_t &population,
 
 	GeneEncoder::encode(chromosome, priority);
 
-	if (!constrains.fixed_layout())
+	if (!fixed_layout)
 		GeneEncoder::extend(chromosome, layout);
 
 	evaluate(chromosome);
@@ -44,8 +45,16 @@ void GenericEvolution<CT, PT, ST>::populate(population_t &population,
 	RandomGeneratorListScheduler scheduler(architecture, graph);
 	create_count = tuning.population_size - create_count;
 	for (i = 0; i < create_count; i++) {
-		chromosome.set_schedule(scheduler.process(layout, priority_t()));
-		GeneEncoder::order(chromosome);
+		if (fixed_layout) {
+			chromosome.set_schedule(scheduler.process(layout, priority_t()));
+		}
+		else {
+			chromosome.set_schedule(scheduler.process(layout_t(), priority_t()));
+			GeneEncoder::reallocate(chromosome);
+		}
+
+		GeneEncoder::reorder(chromosome);
+
 		evaluate(chromosome);
 		population.push_back(chromosome);
 	}

@@ -182,10 +182,16 @@ tid_t StochasticListScheduler::pull(pool_t &pool, pid_t pid) const
 
 void RandomGeneratorListScheduler::push(pool_t &pool, tid_t id) const
 {
-	const layout_t &layout = pool.layout;
-	list_schedule_t &local_pool = pool[layout[id]];
-
-	local_pool.push_back(id);
+	if (pool.without_layout) {
+		pid_t pid = Random::number(pool.processor_count);
+		list_schedule_t &local_pool = pool[pid];
+		local_pool.push_back(id);
+	}
+	else {
+		const layout_t &layout = pool.layout;
+		list_schedule_t &local_pool = pool[layout[id]];
+		local_pool.push_back(id);
+	}
 }
 
 tid_t RandomGeneratorListScheduler::pull(pool_t &pool, pid_t pid) const

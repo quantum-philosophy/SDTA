@@ -172,7 +172,23 @@ class GeneEncoder
 	}
 
 	template<class CT>
-	static inline void order(CT &chromosome)
+	static inline void reallocate(CT &chromosome)
+	{
+		const Schedule &schedule = chromosome.schedule;
+		const mapping_t &mapping = schedule.mapping;
+		const size_t task_count = schedule.task_count;
+
+#ifndef SHALLOW_CHECK
+		if (2 * task_count != chromosome.size())
+			throw std::runtime_error("The chromosome is too short for reallocation.");
+#endif
+
+		for (size_t i = 0; i < task_count; i++)
+			chromosome[2 * i] = (rank_t)mapping[i];
+	}
+
+	template<class CT>
+	static inline void reorder(CT &chromosome)
 	{
 		const Schedule &schedule = chromosome.schedule;
 		const order_t &order = schedule.order;
