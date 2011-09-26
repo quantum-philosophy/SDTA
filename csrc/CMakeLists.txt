@@ -41,7 +41,7 @@ include_directories (
 # * UNCONSTRAINED - the genes do not have any constrains.
 # * FAKE_EVALUATION - consider power instead of temperature.
 #
-set(CMAKE_CXX_FLAGS "-Wall -Wno-sign-compare -O3 -DREAL_RANK")
+set(CMAKE_CXX_FLAGS "-Wall -Wno-sign-compare -O3")
 
 add_library(libeo STATIC IMPORTED)
 set_property(
