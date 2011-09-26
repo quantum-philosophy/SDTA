@@ -26,6 +26,9 @@ void eslabSOGeneticAlgorithm<CT>::operator()(population_t &population)
 		/* Evolve */
 		replace(population, offspring);
 
+		/* Train a bit? */
+		train(population);
+
 #ifndef SHALLOW_CHECK
 		if (population.size() != population_size)
 			throw std::runtime_error("The size of the population changes.");

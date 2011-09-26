@@ -7,17 +7,23 @@ void Transformation<CT>::operator()(population_t &population)
 	size_t population_size = population.size();
 	size_t crossover_count = population_size / 2;
 
-	/* NOTE: Every operator invalidates for itself */
+	bit_string_t changes(population_size, false);
+	bool changed;
 
 	/* 1. Crossover */
-	for (i = 0; i < crossover_count; i++)
-		(void)crossover(population[2 * i], population[2 * i + 1]);
+	for (i = 0; i < crossover_count; i++) {
+		changed = crossover(population[2 * i], population[2 * i + 1]);
+		changes[2 * i] = changed;
+		changes[2 * i + 1] = changed;
+	}
 
 	/* 2. Mutation */
-	for (i = 0; i < population_size; i++)
-		(void)mutate(population[i]);
+	for (i = 0; i < population_size; i++) {
+		changed = mutate(population[i]);
+		changes[i] = changes[i] || changed;
+	}
 
-	/* 3. Training */
+	/* 3. Invalidation */
 	for (i = 0; i < population_size; i++)
-		(void)train(population[i]);
+		if (changes[i]) population[i].set_invalid();
 }

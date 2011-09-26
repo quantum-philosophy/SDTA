@@ -70,13 +70,7 @@ class Mutation: public eoMonOp<CT>
 	inline bool operator()(CT &one)
 	{
 		stats.mutation_rate = rate.get();
-
-		if ((*mutate)(one)) {
-			one.set_invalid();
-			return true;
-		}
-
-		return false;
+		return (*mutate)(one);
 	}
 };
 

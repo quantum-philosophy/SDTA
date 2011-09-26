@@ -25,21 +25,24 @@ void SOEvolution::process(population_t &population)
 	/* Select */
 	Selection<chromosome_t> select(tuning.selection);
 
-	/* Transform = Crossover + Mutate + Train */
+	/* Transform = Crossover + Mutate */
 	Crossover<chromosome_t> crossover(constrains, tuning.crossover, stats);
 	Mutation<chromosome_t> mutate(architecture, graph, constrains,
 		tuning.mutation, stats);
-	Training<chromosome_t> train(evaluator, constrains, tuning.training, stats);
-	Transformation<chromosome_t> transform(crossover, mutate, train);
+	Transformation<chromosome_t> transform(crossover, mutate);
 
 	/* Replace = Merge + Reduce */
 	Replacement<chromosome_t> replace(select, tuning.replacement);
+
+	/* Train */
+	Training<chromosome_t> train(architecture, graph, constrains,
+		evaluation, evaluator, tuning.training, stats);
 
 	eslabSOEvolutionMonitor evolution_monitor(population, tuning.dump_evolution);
 	checkpoint.add(evolution_monitor);
 
 	eslabSOGeneticAlgorithm<chromosome_t> ga(checkpoint, evaluator, select,
-		transform, replace);
+		transform, replace, train);
 
 	ga(population);
 

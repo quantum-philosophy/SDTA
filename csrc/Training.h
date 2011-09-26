@@ -23,7 +23,7 @@ class PeerTraining: public eoMonOp<CT>
 };
 
 template<class CT>
-class Training: public eoMonOp<CT>
+class Training: public eoMonOp<CT>, public eoAlgo<CT>
 {
 	eoMonOp<CT> *train;
 
@@ -33,15 +33,22 @@ class Training: public eoMonOp<CT>
 
 	public:
 
-	Training(eoEvalFunc<CT> &_evaluate, const constrains_t &constrains,
-		const TrainingTuning &_tuning, EvolutionStats &_stats) :
+	Training(const Architecture &architecture, const Graph &graph,
+		const constrains_t &constrains, const Evaluation &evaluation,
+		eoEvalFunc<CT> &evaluate, const TrainingTuning &_tuning,
+		EvolutionStats &_stats) :
 
 		train(NULL), tuning(_tuning), stats(_stats),
 		rate(tuning.min_rate, tuning.scale, tuning.exponent, stats.generations)
 	{
 		if (tuning.method == "peer")
 			train = new PeerTraining<CT>(tuning.max_lessons,
-				tuning.stall_lessons, _evaluate, constrains, rate);
+				tuning.stall_lessons, evaluate, constrains, rate);
+
+		else if (tuning.method == "list_schedule")
+			train = new ListScheduleTraining<CT>(tuning.max_lessons,
+				tuning.stall_lessons, evaluation, constrains, rate,
+				architecture, graph);
 
 		else throw std::runtime_error("The training method is unknown.");
 	}
@@ -54,13 +61,15 @@ class Training: public eoMonOp<CT>
 	inline bool operator()(CT &one)
 	{
 		stats.training_rate = rate.get();
-
-		if ((*train)(one)) {
-			one.set_invalid();
-			return true;
-		}
-
+		(void)(*train)(one);
 		return false;
+	}
+
+	inline void operator()(eoPop<CT> &population)
+	{
+		stats.training_rate = rate.get();
+		size_t size = population.size();
+		for (size_t i = 0; i < size; i++) (*train)(population[i]);
 	}
 };
 

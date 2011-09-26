@@ -8,10 +8,8 @@ class Transformation: public eoTransform<CT>
 
 	public:
 
-	Transformation(eoQuadOp<CT> &_crossover, eoMonOp<CT> &_mutate,
-		eoMonOp<CT> &_train) :
-
-		crossover(_crossover), mutate(_mutate), train(_train) {}
+	Transformation(eoQuadOp<CT> &_crossover, eoMonOp<CT> &_mutate) :
+		crossover(_crossover), mutate(_mutate) {}
 
 	void operator()(population_t &population);
 
@@ -19,7 +17,6 @@ class Transformation: public eoTransform<CT>
 
 	eoQuadOp<CT> &crossover;
 	eoMonOp<CT> &mutate;
-	eoMonOp<CT> &train;
 };
 
 #include "Transformation.hpp"

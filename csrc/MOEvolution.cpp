@@ -61,12 +61,11 @@ void MOEvolution::process(population_t &population)
 	eslabMOEvolutionMonitor evolution_monitor(population, tuning.dump_evolution);
 	checkpoint.add(evolution_monitor);
 
-	/* Transform = Crossover + Mutate + Train */
+	/* Transform = Crossover + Mutate */
 	Crossover<chromosome_t> crossover(constrains, tuning.crossover, stats);
 	Mutation<chromosome_t> mutate(architecture, graph, constrains,
 		tuning.mutation, stats);
-	Training<chromosome_t> train(evaluator, constrains, tuning.training, stats);
-	Transformation<chromosome_t> transform(crossover, mutate, train);
+	Transformation<chromosome_t> transform(crossover, mutate);
 
 	moeoNSGAII<chromosome_t> ga(checkpoint, evaluator, transform);
 

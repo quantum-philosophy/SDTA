@@ -140,10 +140,12 @@ class eslabSOGeneticAlgorithm: public eslabAlgorithm<CT>
 		eoEvalFunc<chromosome_t> &_evaluate_one,
 		eoSelect<chromosome_t> &_select,
 		eoTransform<chromosome_t> &_transform,
-		eoReplacement<chromosome_t> &_replace) :
+		eoReplacement<chromosome_t> &_replace,
+		eoAlgo<chromosome_t> &_train) :
 
 		eslabAlgorithm<chromosome_t>(_continuator, _evaluate_one),
-		select(_select), transform(_transform), replace(_replace) {}
+		select(_select), transform(_transform), replace(_replace),
+		train(_train) {}
 
 	void operator()(population_t &population);
 
@@ -152,6 +154,7 @@ class eslabSOGeneticAlgorithm: public eslabAlgorithm<CT>
 	eoSelect<chromosome_t> &select;
 	eoTransform<chromosome_t> &transform;
 	eoReplacement<chromosome_t> &replace;
+	eoAlgo<chromosome_t> &train;
 };
 
 class SOContinuation: public Continuation<eslabSOChromosome>

@@ -11,6 +11,8 @@ typedef std::list<tid_t> list_schedule_t;
 
 class ListScheduler
 {
+	protected:
+
 	const processor_vector_t &processors;
 	const task_vector_t &tasks;
 
@@ -139,18 +141,92 @@ class ListScheduleTraining: public ListScheduler, public eoMonOp<CT>
 
 	struct data_t
 	{
-		double done;
-		size_t point;
+		data_t(size_t _size) : size(_size)
+		{
+			reset();
+		}
+
+		inline void reset()
+		{
+			count = 0;
+			branching = false;
+			branches = std::vector<size_t>(size, 0);
+			point = 0;
+		}
+
+		inline bool choose()
+		{
+			if (count == 0) {
+#ifndef SHALLOW_CHECK
+				throw std::runtime_error("Cannot choose.");
+#endif
+				return false;
+			}
+
+			size_t i, j, pos = Random::number(count);
+
+			for (i = 0, j = 0; i < size; i++)
+				if (branches[i] > 1) {
+					if (j == pos) break;
+					else j++;
+				}
+
+			branching = true;
+			trial = 0;
+			branch_point = i;
+
+			return true;
+		}
+
+		inline bool checkpoint(size_t number)
+		{
+#ifndef SHALLOW_CHECK
+			if (point >= size)
+				throw std::runtime_error("The data is broken.");
+#endif
+
+			if (branching) {
+				return branch_point == point++;
+			}
+			else {
+				if (number > 1) count++;
+				branches[point++] = number;
+				return false;
+			}
+		}
+
+		inline size_t direction() const
+		{
+			return trial;
+		}
+
+		inline bool next()
+		{
+			point = 0;
+			trial++;
+
+			if (trial < branches[branch_point]) return true;
+
+			return false;
+		}
+
+		private:
+
+		const size_t size;
+		size_t count;
+
+		bool branching;
+		std::vector<size_t> branches;
+		int point;
+		size_t branch_point;
 		size_t trial;
-		size_t switch_point;
 	};
 
 	public:
 
 	ListScheduleTraining(size_t _max_lessons, size_t _stall_lessons,
 		const Evaluation &_evaluation, const constrains_t &constrains,
-		const rate_t &_rate, const Architecture &architecture,
-		const Graph &graph) :
+		const rate_t &_rate, const Architecture &architecture, const Graph &graph) :
 
 		ListScheduler(architecture, graph),
 		max_lessons(_max_lessons), stall_lessons(_stall_lessons),
