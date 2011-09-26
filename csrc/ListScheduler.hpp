@@ -1,33 +1,37 @@
 #include "ListScheduler.h"
 
 template<class CT>
-void ListScheduleMutation<CT>::push(list_schedule_t &pool,
-	const priority_t &original_priority, tid_t id, void *data) const
+void ListScheduleMutation<CT>::push(pool_t &pool, const layout_t &layout,
+	const priority_t &priority, tid_t id, void *data) const
 {
+	list_schedule_t &local_pool = pool[layout[id]];
+
 	list_schedule_t::iterator it;
-	rank_t new_priority = original_priority[id];
+	rank_t new_priority = priority[id];
 
-	for (it = pool.begin(); it != pool.end(); it++)
-		if (new_priority < original_priority[*it]) break;
+	for (it = local_pool.begin(); it != local_pool.end(); it++)
+		if (new_priority < priority[*it]) break;
 
-	pool.insert(it, id);
+	local_pool.insert(it, id);
 }
 
 template<class CT>
-tid_t ListScheduleMutation<CT>::pull(list_schedule_t &pool,
-	const priority_t &original_priority, void *data) const
+tid_t ListScheduleMutation<CT>::pull(pool_t &pool, const layout_t &layout,
+	const priority_t &priority, pid_t pid, void *data) const
 {
+	list_schedule_t &local_pool = pool[pid];
+
 	tid_t id;
 
-	list_schedule_t::iterator it = pool.begin();
+	list_schedule_t::iterator it = local_pool.begin();
 
 	if (Random::flip(current_rate)) {
-		size_t choice = Random::number(pool.size());
+		size_t choice = Random::number(local_pool.size());
 		for (size_t i = 0; i < choice; i++) it++;
 	}
 
 	id = *it;
-	pool.erase(it);
+	local_pool.erase(it);
 
 	return id;
 }
@@ -110,29 +114,33 @@ bool ListScheduleTraining<CT>::operator()(CT &chromosome)
 }
 
 template<class CT>
-void ListScheduleTraining<CT>::push(list_schedule_t &pool,
-	const priority_t &original_priority, tid_t id, void *data) const
+void ListScheduleTraining<CT>::push(pool_t &pool, const layout_t &layout,
+	const priority_t &priority, tid_t id, void *data) const
 {
+	list_schedule_t &local_pool = pool[layout[id]];
+
 	list_schedule_t::iterator it;
-	rank_t new_priority = original_priority[id];
+	rank_t new_priority = priority[id];
 
-	for (it = pool.begin(); it != pool.end(); it++)
-		if (new_priority < original_priority[*it]) break;
+	for (it = local_pool.begin(); it != local_pool.end(); it++)
+		if (new_priority < priority[*it]) break;
 
-	pool.insert(it, id);
+	local_pool.insert(it, id);
 }
 
 template<class CT>
-tid_t ListScheduleTraining<CT>::pull(list_schedule_t &pool,
-	const priority_t &original_priority, void *_data) const
+tid_t ListScheduleTraining<CT>::pull(pool_t &pool, const layout_t &layout,
+	const priority_t &priority, pid_t pid, void *_data) const
 {
+	list_schedule_t &local_pool = pool[pid];
+
 	data_t *data = (data_t *)_data;
 
 	tid_t id;
 
-	list_schedule_t::iterator it = pool.begin();
+	list_schedule_t::iterator it = local_pool.begin();
 
-	size_t size = pool.size();
+	size_t size = local_pool.size();
 
 	if (data->checkpoint(size)) {
 		size_t direction = data->direction();
@@ -140,7 +148,7 @@ tid_t ListScheduleTraining<CT>::pull(list_schedule_t &pool,
 	}
 
 	id = *it;
-	pool.erase(it);
+	local_pool.erase(it);
 
 	return id;
 }

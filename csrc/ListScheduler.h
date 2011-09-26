@@ -8,6 +8,7 @@
 #include "Evaluation.h"
 
 typedef std::list<tid_t> list_schedule_t;
+typedef std::vector<list_schedule_t> pool_t;
 
 class ListScheduler
 {
@@ -26,10 +27,10 @@ class ListScheduler
 
 	protected:
 
-	virtual void push(list_schedule_t &pool, const priority_t &priority,
-		tid_t id, void *data) const = 0;
-	virtual tid_t pull(list_schedule_t &pool, const priority_t &priority,
-		void *data) const = 0;
+	virtual void push(pool_t &pool, const layout_t &layout,
+		const priority_t &priority, tid_t id, void *data) const = 0;
+	virtual tid_t pull(pool_t &pool, const layout_t &layout,
+		const priority_t &priority, pid_t pid, void *data) const = 0;
 
 	bool ready(const Task *task, const bit_string_t &scheduled) const;
 };
@@ -43,10 +44,10 @@ class DeterministicListScheduler: public ListScheduler
 
 	protected:
 
-	void push(list_schedule_t &pool, const priority_t &priority,
-		tid_t id, void *data) const;
-	tid_t pull(list_schedule_t &pool, const priority_t &priority,
-		void *data) const;
+	void push(pool_t &pool, const layout_t &layout,
+		const priority_t &priority, tid_t id, void *data) const;
+	tid_t pull(pool_t &pool, const layout_t &layout,
+		const priority_t &priority, pid_t pid, void *data) const;
 };
 
 class StochasticListScheduler: public ListScheduler
@@ -56,10 +57,10 @@ class StochasticListScheduler: public ListScheduler
 	StochasticListScheduler(const Architecture &architecture,
 		const Graph &graph) : ListScheduler(architecture, graph) {}
 
-	void push(list_schedule_t &pool, const priority_t &priority,
-		tid_t id, void *data) const;
-	tid_t pull(list_schedule_t &pool, const priority_t &priority,
-		void *data) const;
+	void push(pool_t &pool, const layout_t &layout,
+		const priority_t &priority, tid_t id, void *data) const;
+	tid_t pull(pool_t &pool, const layout_t &layout,
+		const priority_t &priority, pid_t pid, void *data) const;
 };
 
 class RandomGeneratorListScheduler: public ListScheduler
@@ -69,10 +70,10 @@ class RandomGeneratorListScheduler: public ListScheduler
 	RandomGeneratorListScheduler(const Architecture &architecture,
 		const Graph &graph) : ListScheduler(architecture, graph) {}
 
-	void push(list_schedule_t &pool, const priority_t &priority,
-		tid_t id, void *data) const;
-	tid_t pull(list_schedule_t &pool, const priority_t &priority,
-		void *data) const;
+	void push(pool_t &pool, const layout_t &layout,
+		const priority_t &priority, tid_t id, void *data) const;
+	tid_t pull(pool_t &pool, const layout_t &layout,
+		const priority_t &priority, pid_t pid, void *data) const;
 };
 
 template<class CT>
@@ -123,10 +124,10 @@ class ListScheduleMutation: public ListScheduler, public eoMonOp<CT>
 		return false;
 	}
 
-	void push(list_schedule_t &pool, const priority_t &priority,
-		tid_t id, void *data) const;
-	tid_t pull(list_schedule_t &pool, const priority_t &priority,
-		void *data) const;
+	void push(pool_t &pool, const layout_t &layout,
+		const priority_t &priority, tid_t id, void *data) const;
+	tid_t pull(pool_t &pool, const layout_t &layout,
+		const priority_t &priority, pid_t pid, void *data) const;
 };
 
 template<class CT>
@@ -235,10 +236,10 @@ class ListScheduleTraining: public ListScheduler, public eoMonOp<CT>
 
 	bool operator()(CT &chromosome);
 
-	void push(list_schedule_t &pool, const priority_t &priority,
-		tid_t id, void *data) const;
-	tid_t pull(list_schedule_t &pool, const priority_t &priority,
-		void *data) const;
+	void push(pool_t &pool, const layout_t &layout,
+		const priority_t &priority, tid_t id, void *data) const;
+	tid_t pull(pool_t &pool, const layout_t &layout,
+		const priority_t &priority, pid_t pid, void *data) const;
 };
 
 #include "ListScheduler.hpp"

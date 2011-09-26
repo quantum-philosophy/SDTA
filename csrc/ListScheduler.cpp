@@ -11,11 +11,6 @@ Schedule ListScheduler::process(const layout_t &layout,
 	size_t processor_count = processors.size();
 	size_t task_count = tasks.size();
 
-#ifndef SHALLOW_CHECK
-	if (layout.size() != task_count)
-		throw std::runtime_error("The layout vector is bad.");
-#endif
-
 	bool empty;
 	tid_t id, cid;
 	pid_t pid;
@@ -36,7 +31,7 @@ Schedule ListScheduler::process(const layout_t &layout,
 	for (id = 0; id < task_count; id++) {
 		task = tasks[id];
 		if (task->is_root()) {
-			push(pool[layout[id]], priority, id, data);
+			push(pool, layout, priority, id, data);
 			processed[id] = true;
 		}
 	}
@@ -50,7 +45,7 @@ Schedule ListScheduler::process(const layout_t &layout,
 			empty = false;
 
 			/* Get the next task */
-			id = pull(pool[pid], priority, data);
+			id = pull(pool, layout, priority, pid, data);
 			task = tasks[id];
 
 			processor = processors[pid];
@@ -83,7 +78,7 @@ Schedule ListScheduler::process(const layout_t &layout,
 				/* All parents should be scheduled */
 				if (!ready(child, scheduled)) continue;
 
-				push(pool[layout[cid]], priority, cid, data);
+				push(pool, layout, priority, cid, data);
 				processed[cid] = true;
 			}
 		}
@@ -103,60 +98,68 @@ bool ListScheduler::ready(const Task *task, const bit_string_t &scheduled) const
 	return true;
 }
 
-void DeterministicListScheduler::push(list_schedule_t &pool,
+void DeterministicListScheduler::push(pool_t &pool, const layout_t &layout,
 	const priority_t &priority, tid_t id, void *data) const
 {
+	list_schedule_t &local_pool = pool[layout[id]];
+
 	list_schedule_t::iterator it;
 	rank_t new_priority = priority[id];
 
-	for (it = pool.begin(); it != pool.end(); it++)
+	for (it = local_pool.begin(); it != local_pool.end(); it++)
 		if (new_priority < priority[*it]) break;
 
-	pool.insert(it, id);
+	local_pool.insert(it, id);
 }
 
-tid_t DeterministicListScheduler::pull(list_schedule_t &pool,
-	const priority_t &priority, void *data) const
+tid_t DeterministicListScheduler::pull(pool_t &pool, const layout_t &layout,
+	const priority_t &priority, pid_t pid, void *data) const
 {
+	list_schedule_t &local_pool = pool[pid];
+
 	tid_t id;
 
 	/* The first one always has the highest priority, although,
 	 * it might not be alone.
 	 */
-	list_schedule_t::iterator it = pool.begin();
+	list_schedule_t::iterator it = local_pool.begin();
 
 	id = *it;
-	pool.erase(it);
+	local_pool.erase(it);
 
 	return id;
 }
 
-void StochasticListScheduler::push(list_schedule_t &pool,
+void StochasticListScheduler::push(pool_t &pool, const layout_t &layout,
 	const priority_t &priority, tid_t id, void *data) const
 {
+	list_schedule_t &local_pool = pool[layout[id]];
+
 	list_schedule_t::iterator it;
 	rank_t new_priority = priority[id];
 
-	for (it = pool.begin(); it != pool.end(); it++)
+	for (it = local_pool.begin(); it != local_pool.end(); it++)
 		if (new_priority < priority[*it]) break;
 
-	pool.insert(it, id);
+	local_pool.insert(it, id);
 }
 
-tid_t StochasticListScheduler::pull(list_schedule_t &pool,
-	const priority_t &priority, void *data) const
+tid_t StochasticListScheduler::pull(pool_t &pool, const layout_t &layout,
+	const priority_t &priority, pid_t pid, void *data) const
 {
+	list_schedule_t &local_pool = pool[pid];
+
 	tid_t id;
 
 	/* The first one always has the highest priority, although,
 	 * it might not be alone.
 	 */
-	list_schedule_t::iterator it = pool.begin();
+	list_schedule_t::iterator it = local_pool.begin();
 
 	size_t peers, i, choice;
 	rank_t highest_priority = priority[*it];
 
-	for (it++, peers = 0; it != pool.end(); it++) {
+	for (it++, peers = 0; it != local_pool.end(); it++) {
 		if (priority[*it] == highest_priority) {
 			peers++;
 			continue;
@@ -168,7 +171,7 @@ tid_t StochasticListScheduler::pull(list_schedule_t &pool,
 #endif
 	}
 
-	it = pool.begin();
+	it = local_pool.begin();
 
 	if (peers > 0) {
 		choice = Random::number(peers + 1);
@@ -176,29 +179,33 @@ tid_t StochasticListScheduler::pull(list_schedule_t &pool,
 	}
 
 	id = *it;
-	pool.erase(it);
+	local_pool.erase(it);
 
 	return id;
 }
 
-void RandomGeneratorListScheduler::push(list_schedule_t &pool,
+void RandomGeneratorListScheduler::push(pool_t &pool, const layout_t &layout,
 	const priority_t &dummy, tid_t id, void *data) const
 {
-	pool.push_back(id);
+	list_schedule_t &local_pool = pool[layout[id]];
+
+	local_pool.push_back(id);
 }
 
-tid_t RandomGeneratorListScheduler::pull(list_schedule_t &pool,
-	const priority_t &dummy, void *data) const
+tid_t RandomGeneratorListScheduler::pull(pool_t &pool, const layout_t &layout,
+	const priority_t &dummy, pid_t pid, void *data) const
 {
+	list_schedule_t &local_pool = pool[pid];
+
 	tid_t id;
 
-	list_schedule_t::iterator it = pool.begin();
+	list_schedule_t::iterator it = local_pool.begin();
 
-	size_t choice = Random::number(pool.size());
+	size_t choice = Random::number(local_pool.size());
 	for (size_t i = 0; i < choice; i++) it++;
 
 	id = *it;
-	pool.erase(it);
+	local_pool.erase(it);
 
 	return id;
 }
