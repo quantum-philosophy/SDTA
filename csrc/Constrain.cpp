@@ -43,7 +43,7 @@ constrains_t Constrain::calculate(const Architecture &architecture,
 				constrains[id].peers[i] = true;
 
 		constrains[id].min = dependency_count;
-		constrains[id].max = task_count - dependent_count;
+		constrains[id].max = task_count - dependent_count - 1;
 #else
 		constrains[id].min = 0;
 		constrains[id].max = task_count:
