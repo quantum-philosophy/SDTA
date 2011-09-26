@@ -6,7 +6,7 @@
 #include "Schedule.h"
 
 Schedule ListScheduler::process(const layout_t &layout,
-	const priority_t &priority) const
+	const priority_t &priority, void *data) const
 {
 	size_t processor_count = processors.size();
 	size_t task_count = tasks.size();
@@ -36,7 +36,7 @@ Schedule ListScheduler::process(const layout_t &layout,
 	for (id = 0; id < task_count; id++) {
 		task = tasks[id];
 		if (task->is_root()) {
-			push(pool[layout[id]], priority, id);
+			push(pool[layout[id]], priority, id, data);
 			processed[id] = true;
 		}
 	}
@@ -50,7 +50,7 @@ Schedule ListScheduler::process(const layout_t &layout,
 			empty = false;
 
 			/* Get the next task */
-			id = pull(pool[pid], priority);
+			id = pull(pool[pid], priority, data);
 			task = tasks[id];
 
 			processor = processors[pid];
@@ -83,7 +83,7 @@ Schedule ListScheduler::process(const layout_t &layout,
 				/* All parents should be scheduled */
 				if (!ready(child, scheduled)) continue;
 
-				push(pool[layout[cid]], priority, cid);
+				push(pool[layout[cid]], priority, cid, data);
 				processed[cid] = true;
 			}
 		}
@@ -104,7 +104,7 @@ bool ListScheduler::ready(const Task *task, const bit_string_t &scheduled) const
 }
 
 void DeterministicListScheduler::push(list_schedule_t &pool,
-	const priority_t &priority, tid_t id) const
+	const priority_t &priority, tid_t id, void *data) const
 {
 	list_schedule_t::iterator it;
 	rank_t new_priority = priority[id];
@@ -116,7 +116,7 @@ void DeterministicListScheduler::push(list_schedule_t &pool,
 }
 
 tid_t DeterministicListScheduler::pull(list_schedule_t &pool,
-	const priority_t &priority) const
+	const priority_t &priority, void *data) const
 {
 	tid_t id;
 
@@ -132,7 +132,7 @@ tid_t DeterministicListScheduler::pull(list_schedule_t &pool,
 }
 
 void StochasticListScheduler::push(list_schedule_t &pool,
-	const priority_t &priority, tid_t id) const
+	const priority_t &priority, tid_t id, void *data) const
 {
 	list_schedule_t::iterator it;
 	rank_t new_priority = priority[id];
@@ -144,7 +144,7 @@ void StochasticListScheduler::push(list_schedule_t &pool,
 }
 
 tid_t StochasticListScheduler::pull(list_schedule_t &pool,
-	const priority_t &priority) const
+	const priority_t &priority, void *data) const
 {
 	tid_t id;
 
@@ -182,13 +182,13 @@ tid_t StochasticListScheduler::pull(list_schedule_t &pool,
 }
 
 void RandomGeneratorListScheduler::push(list_schedule_t &pool,
-	const priority_t &dummy, tid_t id) const
+	const priority_t &dummy, tid_t id, void *data) const
 {
 	pool.push_back(id);
 }
 
 tid_t RandomGeneratorListScheduler::pull(list_schedule_t &pool,
-	const priority_t &dummy) const
+	const priority_t &dummy, void *data) const
 {
 	tid_t id;
 
