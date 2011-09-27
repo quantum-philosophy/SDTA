@@ -11,6 +11,7 @@
 #include <string>
 #include <iomanip>
 #include <cmath>
+#include <algorithm>
 #include <stdlib.h>
 
 extern "C" {
@@ -408,6 +409,32 @@ class Helper
 
 		for (size_t i = 0; i < size; i++)
 			vector[i] = permuted[i];
+	}
+
+	template<class T>
+	static bool compare_pairs(const std::pair<double, T> &a,
+		const std::pair<double, T> &b)
+	{
+		return a.first < b.first;
+	}
+
+	template<class T>
+	static void prioritize(std::vector<T> &vector, const priority_t &priority)
+	{
+		size_t size = vector.size();
+
+		if (size != priority.size())
+			throw std::runtime_error("Cannot permute the vector.");
+
+		std::vector<std::pair<double, T> > permuted(size);
+
+		for (size_t i = 0; i < size; i++)
+			permuted[i] = std::pair<double, T>(priority[i], vector[i]);
+
+		std::stable_sort(permuted.begin(), permuted.end(), compare_pairs<T>);
+
+		for (size_t i = 0; i < size; i++)
+			vector[i] = permuted[i].second;
 	}
 };
 

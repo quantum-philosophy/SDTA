@@ -133,12 +133,29 @@ void optimize(const string &system_config, const string &genetic_config,
 			if (tuning.verbose)
 				cout << "Reordering the tasks." << endl;
 
-			order_t order = schedule.get_order();
+			/* Reordering according to the priority vector.
+			 * First, get a vector with increasing components by 1.
+			 */
+			order_t order(task_count);
+			for (size_t i = 0; i < task_count; i++) order[i] = i;
 
+			/* Reorder the vector according to the given priority */
+			Helper::prioritize(order, priority);
+
+			/* Now, we can reorder everything */
 			graph->reorder(order);
 			Helper::permute<pid_t>(mapping, order);
 			Helper::permute<rank_t>(priority, order);
 			schedule.reorder(order);
+
+			/* Since we are reordering according to the priority,
+			 * the priority vector should become 0, 1, ..., (N - 1).
+			 */
+#ifndef SHALLOW_CHECK
+			for (size_t i = 0; i < task_count; i++)
+				if (priority[i] != i)
+					throw runtime_error("The reordering does not work properly.");
+#endif
 		}
 
 		hotspot = new Hotspot(floorplan_config, thermal_config);
