@@ -182,16 +182,32 @@ tid_t StochasticListScheduler::pull(pool_t &pool, pid_t pid) const
 
 void RandomGeneratorListScheduler::push(pool_t &pool, tid_t id) const
 {
+	const layout_t &layout = pool.layout;
+	const priority_t &priority = pool.priority;
+
+	pid_t pid;
+
 	if (pool.without_layout) {
-		pid_t pid = Random::number(pool.processor_count);
-		list_schedule_t &local_pool = pool[pid];
-		local_pool.push_back(id);
+		/* Random mapping */
+		pid = Random::number(pool.processor_count);
 	}
 	else {
-		const layout_t &layout = pool.layout;
-		list_schedule_t &local_pool = pool[layout[id]];
-		local_pool.push_back(id);
+		/* Deterministic mapping */
+		pid = layout[id];
 	}
+
+	list_schedule_t &local_pool = pool[pid];
+	list_schedule_t::iterator it = local_pool.begin();
+
+	if (!pool.without_priority) {
+		/* Deterministic scheduling */
+		rank_t new_priority = priority[id];
+		for (it = local_pool.begin(); it != local_pool.end(); it++)
+			if (new_priority < priority[*it]) break;
+	}
+	/* else (Random scheduling) */
+
+	local_pool.insert(it, id);
 }
 
 tid_t RandomGeneratorListScheduler::pull(pool_t &pool, pid_t pid) const
@@ -202,8 +218,12 @@ tid_t RandomGeneratorListScheduler::pull(pool_t &pool, pid_t pid) const
 
 	list_schedule_t::iterator it = local_pool.begin();
 
-	size_t choice = Random::number(local_pool.size());
-	for (size_t i = 0; i < choice; i++) it++;
+	if (pool.without_priority) {
+		/* Random scheduling */
+		size_t choice = Random::number(local_pool.size());
+		for (size_t i = 0; i < choice; i++) it++;
+	}
+	/* else (Deterministic scheduling) */
 
 	id = *it;
 	local_pool.erase(it);

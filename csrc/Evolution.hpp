@@ -34,27 +34,39 @@ void GenericEvolution<CT, PT, ST>::populate(population_t &population,
 	if (!fixed_layout)
 		GeneEncoder::extend(chromosome, layout);
 
-	evaluate(chromosome);
+	Schedule schedule;
+	RandomGeneratorListScheduler scheduler(architecture, graph);
 
 	/* Fill the first part with uniform chromosomes */
 	create_count = tuning.uniform_ratio * tuning.population_size;
-	for (i = 0; i < create_count; i++)
+	for (i = 0; i < create_count; i++) {
+		if (fixed_layout) {
+			schedule = scheduler.process(layout, priority);
+			chromosome.set_schedule(schedule);
+		}
+		else {
+			schedule = scheduler.process(layout_t(), priority);
+			chromosome.set_schedule(schedule);
+			GeneEncoder::reallocate(chromosome);
+		}
+		GeneEncoder::reorder(chromosome);
+		evaluate(chromosome);
 		population.push_back(chromosome);
+	}
 
 	/* Fill the second part with randomly generated chromosomes */
-	RandomGeneratorListScheduler scheduler(architecture, graph);
 	create_count = tuning.population_size - create_count;
 	for (i = 0; i < create_count; i++) {
 		if (fixed_layout) {
-			chromosome.set_schedule(scheduler.process(layout, priority_t()));
+			schedule = scheduler.process(layout, priority_t());
+			chromosome.set_schedule(schedule);
 		}
 		else {
-			chromosome.set_schedule(scheduler.process(layout_t(), priority_t()));
+			schedule = scheduler.process(layout_t(), priority_t());
+			chromosome.set_schedule(schedule);
 			GeneEncoder::reallocate(chromosome);
 		}
-
 		GeneEncoder::reorder(chromosome);
-
 		evaluate(chromosome);
 		population.push_back(chromosome);
 	}
