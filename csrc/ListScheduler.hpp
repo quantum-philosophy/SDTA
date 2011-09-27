@@ -82,8 +82,8 @@ bool ListScheduleTraining<CT>::operator()(CT &chromosome)
 
 			if (best_price.lifetime < price.lifetime) {
 				/* We have found a better solution */
-				best_price = price;
 				best_schedule = schedule;
+				best_price = price;
 
 				improved = true;
 			}
@@ -109,6 +109,7 @@ bool ListScheduleTraining<CT>::operator()(CT &chromosome)
 
 	chromosome.set_schedule(best_schedule);
 	chromosome.set_price(best_price);
+	GeneEncoder::reorder(chromosome);
 
 	return true;
 }

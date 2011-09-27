@@ -50,7 +50,8 @@ const CT &TournamentSelection<CT>::operator()(const population_t &population)
 	size_t best = Random::number(population_size);
 	size_t i, next;
 
-	for (i = 0; i < size; i++) {
+	/* NOTE: Here we have 1, since we have already taken one above */
+	for (i = 1; i < size; i++) {
 		next = Random::number(population_size);
 		if (population[best].fitness() < population[next].fitness())
 			best = next;
