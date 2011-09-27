@@ -3,6 +3,7 @@ set (TINYMT_DIR ${VENDOR_DIR}/tinymt-1.0.1/tinymt)
 
 set (COMMON_SRCS
 	${TINYMT_DIR}/tinymt64.c
+	${CMAKE_CURRENT_SOURCE_DIR}/MD5Digest.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/common.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Task.cpp
@@ -29,7 +30,7 @@ set_property(SOURCE ${TINYMT_DIR}/tinymt64.c
 
 add_executable (optima optima.cpp ${COMMON_SRCS})
 
-target_link_libraries (optima libeo libmoeo libeoutils libhotspot)
+target_link_libraries (optima memcached libeo libmoeo libeoutils libhotspot)
 
 include_directories (
 	${PARADISEO_DIR}/paradiseo-eo/src
@@ -47,7 +48,7 @@ include_directories (
 # * UNCONSTRAINED - the genes do not have any constrains.
 # * FAKE_EVALUATION - consider power instead of temperature.
 #
-set(CMAKE_CXX_FLAGS "-Wall -Wno-sign-compare -O3")
+set(CMAKE_CXX_FLAGS "-Wall -Wno-sign-compare -O3 $ENV{CFLAGS}")
 
 add_library(libeo STATIC IMPORTED)
 set_property(

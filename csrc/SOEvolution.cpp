@@ -63,18 +63,24 @@ void SOEvolutionStats::process()
 	size_t population_size = population->size();
 	size_t unique = population->unique();
 	double diversity = population->diversity();
-	size_t current_evaluations = evaluations - last_evaluations;
-	size_t current_deadline_misses = deadline_misses - last_deadline_misses;
 
-	last_evaluations = evaluations;
-	last_deadline_misses = deadline_misses;
+	size_t current_cache_hits =
+		evaluation.cache_hits - last_cache_hits;
+	size_t current_cache_misses =
+		evaluation.cache_misses - last_cache_misses;
+	size_t current_deadline_misses =
+		evaluation.deadline_misses - last_deadline_misses;
+
+	last_cache_hits = evaluation.cache_hits;
+	last_cache_misses = evaluation.cache_misses;
+	last_deadline_misses = evaluation.deadline_misses;
 
 	std::cout
-		<< std::endl
 		<< std::setprecision(0)
 		<< std::setw(4) << generations
 		<< " [ "
-			<< std::setw(4) << current_evaluations << ", "
+			<< std::setw(4) << current_cache_hits << ", "
+			<< std::setw(4) << current_cache_misses << ", "
 			<< std::setw(4) << current_deadline_misses
 		<< " ]"
 		<< std::setprecision(3)
@@ -92,7 +98,7 @@ void SOEvolutionStats::process()
 		<< "[ "
 			<< std::setw(10) << worst_lifetime << ", "
 			<< std::setw(10) << best_lifetime
-		<< " ]" << std::flush;
+		<< " ]" << std::endl << std::flush;
 }
 
 void SOEvolutionStats::display(std::ostream &o) const
@@ -101,8 +107,8 @@ void SOEvolutionStats::display(std::ostream &o) const
 
 	o
 		<< std::setprecision(2)
-		<< "  Best lifetime:   " << best_lifetime << std::endl
-		<< "  Worst lifetime:  " << worst_lifetime << std::endl
+		<< "  Best lifetime:       " << best_lifetime << std::endl
+		<< "  Worst lifetime:      " << worst_lifetime << std::endl
 #ifdef REAL_RANK
 #else
 		<< std::setprecision(0)

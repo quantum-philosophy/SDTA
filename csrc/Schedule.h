@@ -18,6 +18,7 @@ typedef std::vector<ScheduleItem> LocalSchedule;
 class Schedule
 {
 	friend class GeneEncoder;
+	friend class Evaluation;
 	friend std::ostream &operator<< (std::ostream &o,
 		const Schedule &schedule);
 

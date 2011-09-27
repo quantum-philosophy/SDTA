@@ -42,7 +42,7 @@ class GenericEvolution: public Evolution
 	const Graph &graph;
 
 	const ListScheduler &scheduler;
-	const Evaluation &evaluation;
+	Evaluation &evaluation;
 
 	const EvolutionTuning tuning;
 	const constrains_t constrains;
@@ -58,13 +58,14 @@ class GenericEvolution: public Evolution
 
 	GenericEvolution(const Architecture &_architecture,
 		const Graph &_graph, const ListScheduler &_scheduler,
-		const Evaluation &_evaluation, const EvolutionTuning &_tuning,
+		Evaluation &_evaluation, const EvolutionTuning &_tuning,
 		const constrains_t &_constrains) :
 
 		architecture(_architecture), graph(_graph),
 		scheduler(_scheduler), evaluation(_evaluation),
 		tuning(_tuning), constrains(_constrains),
-		chromosome_length((constrains.fixed_layout() ? 1 : 2) * graph.size())
+		chromosome_length((constrains.fixed_layout() ? 1 : 2) * graph.size()),
+		stats(_evaluation)
 	{
 		if (chromosome_length == 0)
 			throw std::runtime_error("The length cannot be zero.");
@@ -104,9 +105,6 @@ class GenericEvolution: public Evolution
 		}
 
 		chromosome.set_price(price);
-
-		if (price.lifetime <= 0) stats.miss_deadline();
-		else stats.evaluate();
 	}
 
 	virtual void process(population_t &population) = 0;

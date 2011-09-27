@@ -22,19 +22,19 @@ typedef struct {
 
 static void MD5Init(MD5_CTX *);
 static void MD5Update(MD5_CTX *, unsigned char *, unsigned int);
-static void MD5Final(unsigned char [16], MD5_CTX *);
+static void MD5Final(char [MD5_LENGTH], MD5_CTX *);
 
 MD5Digest::MD5Digest(const char *input, int size)
 {
-	calc(input, size);
+	compute(input, size);
 }
 
-MD5Digest::MD5Digest(const std::vector<int> &vector)
+MD5Digest::MD5Digest(const std::vector<size_t> &vector)
 {
-	calc((const char *)&vector[0], sizeof(int) * vector.size());
+	compute((const char *)&vector[0], sizeof(size_t) * vector.size());
 }
 
-void MD5Digest::calc(const char *input, int size)
+void MD5Digest::compute(const char *input, int size)
 {
 	MD5_CTX context;
 	MD5Init(&context);
@@ -42,14 +42,9 @@ void MD5Digest::calc(const char *input, int size)
 	MD5Final(data, &context);
 }
 
-std::ostream &operator<< (std::ostream &o, const MD5Digest &digest)
-{
-	for (int i = 0; i < 16; i++) o << std::hex << (int)digest.data[i];
-	o << std::endl;
-}
-
 static void MD5Transform(UINT4 [4], unsigned char [64]);
 static void Encode(unsigned char *, UINT4 *, unsigned int);
+static void FinalEncode(char output[MD5_LENGTH_0], UINT4 *input);
 
 /* Constants for MD5Transform routine. */
 
@@ -160,7 +155,7 @@ static void MD5Update (MD5_CTX *context, unsigned char *input, unsigned int inpu
 
 /* MD5 finalization. Ends an MD5 message-digest operation, writing the
    the message digest and zeroing the context.*/
-static void MD5Final (unsigned char digest[16], MD5_CTX *context)
+static void MD5Final (char digest[MD5_LENGTH_0], MD5_CTX *context)
 {
 	unsigned char bits[8];
 	unsigned int index, padLen;
@@ -177,7 +172,7 @@ static void MD5Final (unsigned char digest[16], MD5_CTX *context)
 	MD5Update (context, bits, 8);
 
 	/* Store state in digest */
-	Encode (digest, context->state, 16);
+	FinalEncode (digest, context->state);
 
 	/* Zero sensitive information.*/
 	memset ((POINTER)context, 0, sizeof (*context));
@@ -288,4 +283,18 @@ static void Encode(unsigned char *output, UINT4 *input, unsigned int len)
 		output[j+2] = (unsigned char)((input[i] >> 16) & 0xff);
 		output[j+3] = (unsigned char)((input[i] >> 24) & 0xff);
 	}
+}
+
+static void FinalEncode(char output[MD5_LENGTH_0], UINT4 *input)
+{
+	unsigned int i, j;
+
+	for (i = 0, j = 0; j < MD5_LENGTH / 2; i++, j+=4) {
+		sprintf(output + (j    ) * 2, "%02x", (unsigned char)((input[i]      ) & 0xff));
+		sprintf(output + (j + 1) * 2, "%02x", (unsigned char)((input[i] >>  8) & 0xff));
+		sprintf(output + (j + 2) * 2, "%02x", (unsigned char)((input[i] >> 16) & 0xff));
+		sprintf(output + (j + 3) * 2, "%02x", (unsigned char)((input[i] >> 24) & 0xff));
+	}
+
+	output[MD5_LENGTH] = '\0';
 }

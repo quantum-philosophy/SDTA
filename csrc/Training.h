@@ -34,7 +34,7 @@ class Training: public eoMonOp<CT>, public eoAlgo<CT>
 	public:
 
 	Training(const Architecture &architecture, const Graph &graph,
-		const constrains_t &constrains, const Evaluation &evaluation,
+		const constrains_t &constrains, Evaluation &evaluation,
 		eoEvalFunc<CT> &evaluate, const TrainingTuning &_tuning,
 		EvolutionStats &_stats) :
 

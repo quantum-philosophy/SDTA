@@ -161,7 +161,7 @@ class ListScheduleTraining: public ListScheduler, public eoMonOp<CT>
 {
 	size_t max_lessons;
 	size_t stall_lessons;
-	const Evaluation &evaluation;
+	Evaluation &evaluation;
 	const bool fixed_layout;
 	const layout_t &layout;
 	const rate_t &rate;
@@ -252,7 +252,7 @@ class ListScheduleTraining: public ListScheduler, public eoMonOp<CT>
 	public:
 
 	ListScheduleTraining(size_t _max_lessons, size_t _stall_lessons,
-		const Evaluation &_evaluation, const constrains_t &constrains,
+		Evaluation &_evaluation, const constrains_t &constrains,
 		const rate_t &_rate, const Architecture &architecture, const Graph &graph) :
 
 		ListScheduler(architecture, graph),

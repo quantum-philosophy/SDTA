@@ -3,14 +3,13 @@
 
 #include "common.h"
 #include "Genetics.h"
+#include "Evaluation.h"
 
 class EvolutionStats
 {
 	public:
 
 	size_t generations;
-	size_t evaluations;
-	size_t deadline_misses;
 
 	double crossover_rate;
 	double mutation_rate;
@@ -24,8 +23,6 @@ class EvolutionStats
 	virtual inline void reset()
 	{
 		generations = 0;
-		evaluations = 0;
-		deadline_misses = 0;
 
 		crossover_rate = 0;
 		mutation_rate = 0;
@@ -43,8 +40,8 @@ class GenericEvolutionStats: public EvolutionStats, public eoMonitor
 	typedef CT chromosome_t;
 	typedef PT population_t;
 
-	GenericEvolutionStats() :
-		EvolutionStats(), population(NULL) {}
+	GenericEvolutionStats(const Evaluation &_evaluation) :
+		EvolutionStats(), evaluation(_evaluation), population(NULL) {}
 
 	void watch(const population_t &_population, bool _silent = false)
 	{
@@ -56,22 +53,15 @@ class GenericEvolutionStats: public EvolutionStats, public eoMonitor
 
 	eoMonitor& operator()();
 
-	inline void evaluate()
-	{
-		evaluations++;
-	}
-
-	inline void miss_deadline()
-	{
-		deadline_misses++;
-	}
-
 	protected:
 
 	virtual void process()
 	{
 	}
 
+	virtual void display(std::ostream &o) const;
+
+	const Evaluation &evaluation;
 	const population_t *population;
 	bool silent;
 };
