@@ -1,6 +1,7 @@
 #ifndef __EVOLUTION_STATS_H__
 #define __EVOLUTION_STATS_H__
 
+#include "common.h"
 #include "Genetics.h"
 
 class EvolutionStats

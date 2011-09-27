@@ -1,6 +1,8 @@
 #ifndef __MO_EVOLUTION_H__
 #define __MO_EVOLUTION_H__
 
+#include "common.h"
+
 #include <moeo>
 
 #include "Evolution.h"

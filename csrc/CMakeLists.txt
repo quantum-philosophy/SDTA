@@ -1,6 +1,8 @@
 set (PARADISEO_DIR ${VENDOR_DIR}/paradiseo)
+set (TINYMT_DIR ${VENDOR_DIR}/tinymt-1.0.1/tinymt)
 
 set (COMMON_SRCS
+	${TINYMT_DIR}/tinymt64.c
 	${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/common.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Task.cpp
@@ -22,6 +24,9 @@ set (COMMON_SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/Lifetime.cpp
 )
 
+set_property(SOURCE ${TINYMT_DIR}/tinymt64.c
+	APPEND PROPERTY COMPILE_FLAGS "-std=c99")
+
 add_executable (optima optima.cpp ${COMMON_SRCS})
 
 target_link_libraries (optima libeo libmoeo libeoutils libhotspot)
@@ -32,6 +37,7 @@ include_directories (
 	${PARADISEO_DIR}/paradiseo-moeo/src
 	${VENDOR_DIR}/numerical_recipes
 	${VENDOR_DIR}
+	${TINYMT_DIR}
 )
 
 # Available definitions:

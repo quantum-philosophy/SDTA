@@ -13,6 +13,11 @@
 #include <cmath>
 #include <stdlib.h>
 
+extern "C" {
+#define __STDC_CONSTANT_MACROS
+#include <tinymt64.h>
+}
+
 #define __DELETE(some) 			\
 	do { 						\
 		if (some) delete some; 	\
@@ -116,6 +121,7 @@ struct rate_t
 
 class Random
 {
+	static tinymt64_t tinymt;
 	static bool verbose;
 	static int seed;
 
@@ -141,17 +147,17 @@ class Random
 
 	static void reseed()
 	{
-		srand(get_seed());
+		tinymt64_init(&tinymt, get_seed());
 	}
 
 	static inline double uniform(double range = 1.0)
 	{
-		return range * (double)rand() / (double)RAND_MAX;
+		return range * tinymt64_generate_double(&tinymt);
 	}
 
 	static inline int number(int range)
 	{
-		return double(range) * uniform();
+		return (double)range * uniform();
 	}
 
 	static bool flip(double p)
