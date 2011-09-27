@@ -53,7 +53,7 @@ bool ListScheduleTraining<CT>::operator()(CT &chromosome)
 		priority = chromosome;
 	}
 	else {
-		GeneEncoder::split(chromosome, layout, priority);
+		GeneEncoder::split(chromosome, priority, layout);
 	}
 
 	Schedule schedule, best_schedule;
