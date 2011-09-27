@@ -84,7 +84,7 @@ Schedule ListScheduler::process(const layout_t &layout,
 			}
 		}
 	}
-	while(!empty);
+	while (!empty);
 
 	return schedule;
 }
