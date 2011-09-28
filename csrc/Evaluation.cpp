@@ -87,6 +87,12 @@ price_t MemcachedEvaluation::compute(const Schedule &schedule, bool shallow)
 
 		price = *value;
 		free(value);
+
+#ifdef VERIFY_CACHING
+		price_t real_price = Evaluation::compute(schedule, shallow);
+		if (price != real_price)
+			throw std::runtime_error("The caching is broken.");
+#endif
 	}
 	else {
 		price = Evaluation::compute(schedule, shallow);

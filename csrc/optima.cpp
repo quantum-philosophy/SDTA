@@ -176,7 +176,7 @@ void optimize(const string &system_config, const string &genetic_config,
 #endif
 		}
 
-		price_t price = evaluation->process(schedule);
+		price_t price = evaluation->process(schedule, !tuning.multiobjective);
 
 		constrains_t constrains;
 

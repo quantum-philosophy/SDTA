@@ -179,6 +179,13 @@ struct price_t
 	price_t() : lifetime(0), energy(0) {}
 	price_t(double _lifetime, double _energy) :
 		lifetime(_lifetime), energy(_energy) {}
+
+#ifdef VERIFY_CACHING
+	inline bool operator!=(const price_t &another)
+	{
+		return lifetime != another.lifetime || energy != another.energy;
+	}
+#endif
 };
 
 /******************************************************************************/

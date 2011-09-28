@@ -55,7 +55,6 @@ static void FinalEncode(char output[MD5_LENGTH_0], UINT4 *input);
 #define S43 15
 #define S44 21
 
-
 static unsigned char PADDING[64] = {
 	0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -279,12 +278,12 @@ static void FinalEncode(char output[MD5_LENGTH_0], UINT4 *input)
 {
 	unsigned int i, j;
 
-	for (i = 0, j = 0; j < MD5_LENGTH / 2; i++, j+=4) {
-		sprintf(output + (j    ) * 2, "%02x", (unsigned char)((input[i]      ) & 0xff));
-		sprintf(output + (j + 1) * 2, "%02x", (unsigned char)((input[i] >>  8) & 0xff));
-		sprintf(output + (j + 2) * 2, "%02x", (unsigned char)((input[i] >> 16) & 0xff));
-		sprintf(output + (j + 3) * 2, "%02x", (unsigned char)((input[i] >> 24) & 0xff));
-	}
+	for (i = 0, j = 0; j < MD5_LENGTH / 2; i++, j += 4)
+		sprintf(output + j * 2, "%02x%02x%02x%02x",
+			(unsigned char)((input[i]       ) & 0xff),
+			(unsigned char)((input[i] >>  8 ) & 0xff),
+			(unsigned char)((input[i] >> 16 ) & 0xff),
+			(unsigned char)((input[i] >> 24 ) & 0xff));
 
 	output[MD5_LENGTH] = '\0';
 }
