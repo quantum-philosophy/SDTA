@@ -1,6 +1,8 @@
 #ifndef __CROSSOVER_H__
 #define __CROSSOVER_H__
 
+#include "Helper.h"
+
 template<class CT>
 class UniformCrossover: public eoQuadOp<CT>
 {
@@ -48,41 +50,55 @@ class PeerCrossover: public eoQuadOp<CT>
 template<class CT>
 class Crossover: public eoQuadOp<CT>
 {
-	eoQuadOp<CT> *crossover;
-
 	const CrossoverTuning &tuning;
 	EvolutionStats &stats;
 	const rate_t rate;
+
+	method_list_t method_list;
+	std::vector<eoQuadOp<CT> *> methods;
 
 	public:
 
 	Crossover(const constrains_t &constrains,
 		const CrossoverTuning &_tuning, EvolutionStats &_stats) :
 
-		crossover(NULL), tuning(_tuning), stats(_stats),
+		tuning(_tuning), stats(_stats),
 		rate(tuning.min_rate, tuning.scale, tuning.exponent, stats.generations)
 	{
-		if (tuning.method == "uniform")
-			crossover = new UniformCrossover<CT>(rate);
+		method_list = Helper::method_list(_tuning.method);
+		size_t count = method_list.size();
 
-		else if (tuning.method == "npoint")
-			crossover = new NPointCrossover<CT>(tuning.points, rate);
+		if (count == 0)
+			throw std::runtime_error("The crossover method is not selected.");
 
-		else if (tuning.method == "peer")
-			crossover = new PeerCrossover<CT>(constrains, rate);
+		for (size_t i = 0; i < count; i++) {
+			eoQuadOp<CT> *one;
 
-		else throw std::runtime_error("The crossover method is unknown.");
+			if (method_list[i].name == "uniform")
+				one = new UniformCrossover<CT>(rate);
+
+			else if (method_list[i].name == "npoint")
+				one = new NPointCrossover<CT>(tuning.points, rate);
+
+			else if (method_list[i].name == "peer")
+				one = new PeerCrossover<CT>(constrains, rate);
+
+			else throw std::runtime_error("The crossover method is unknown.");
+
+			methods.push_back(one);
+		}
 	}
 
 	~Crossover()
 	{
-		__DELETE(crossover);
+		size_t count = methods.size();
+		for (size_t i = 0; i < count; i++) __DELETE(methods[i]);
 	}
 
 	inline bool operator()(CT &one, CT &another)
 	{
 		stats.crossover_rate = rate.get();
-		return (*crossover)(one, another);
+		return (*methods[method_list.choose()])(one, another);
 	}
 };
 

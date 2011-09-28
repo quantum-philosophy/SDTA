@@ -97,20 +97,29 @@ struct method_t
 struct method_list_t: private std::vector<method_t>
 {
 	double ratio;
+	size_t count;
 
-	method_list_t() : ratio(0) {}
+	method_list_t() : ratio(0), count(0) {}
 
 	inline void add(const method_t &method)
 	{
 		push_back(method);
 		ratio += method.ratio;
+		count++;
 	}
 
 	inline size_t choose() const
 	{
-		double roulette = Random::uniform(ratio);
 		size_t i = 0;
-		while ((roulette -= (*this)[i].ratio) > 0) i++;
+
+		if (count > 1) {
+			double roulette = Random::uniform(ratio);
+			while ((roulette -= (*this)[i].ratio) > 0) i++;
+		}
+#ifndef SHALLOW_CHECK
+		else if (!count) throw std::runtime_error("There are no methods.");
+#endif
+
 		return i;
 	}
 

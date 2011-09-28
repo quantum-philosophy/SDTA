@@ -82,8 +82,10 @@ void EvolutionTuning::update(std::istream &main_stream)
 			stream >> selection.tournament_size;
 
 		/* Crossover */
-		else if (name == "crossover")
-			stream >> crossover.method;
+		else if (name == "crossover") {
+			std::getline(stream, crossover.method);
+			Helper::chomp(crossover.method);
+		}
 		else if (name == "crossover_min_rate")
 			stream >> crossover.min_rate;
 		else if (name == "crossover_scale")

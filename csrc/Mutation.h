@@ -41,7 +41,6 @@ class Mutation: public eoMonOp<CT>
 
 	method_list_t method_list;
 	std::vector<eoMonOp<CT> *> methods;
-	size_t method_count;
 
 	public:
 
@@ -53,12 +52,12 @@ class Mutation: public eoMonOp<CT>
 		rate(tuning.min_rate, tuning.scale, tuning.exponent, stats.generations)
 	{
 		method_list = Helper::method_list(_tuning.method);
-		method_count = method_list.size();
+		size_t count = method_list.size();
 
-		if (method_count == 0)
+		if (count == 0)
 			throw std::runtime_error("The mutation method is not selected.");
 
-		for (size_t i = 0; i < method_count; i++) {
+		for (size_t i = 0; i < count; i++) {
 			eoMonOp<CT> *one;
 
 			if (method_list[i].name == "uniform")
@@ -79,7 +78,8 @@ class Mutation: public eoMonOp<CT>
 
 	~Mutation()
 	{
-		for (size_t i = 0; i < method_count; i++) __DELETE(methods[i]);
+		size_t count = methods.size();
+		for (size_t i = 0; i < count; i++) __DELETE(methods[i]);
 	}
 
 	inline bool operator()(CT &one)
