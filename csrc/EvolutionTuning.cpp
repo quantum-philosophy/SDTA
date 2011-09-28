@@ -5,6 +5,7 @@
 #include <iomanip>
 
 #include "EvolutionTuning.h"
+#include "Helper.h"
 
 void EvolutionTuning::update(const std::string &filename)
 {
@@ -93,8 +94,10 @@ void EvolutionTuning::update(std::istream &main_stream)
 			stream >> crossover.points;
 
 		/* Mutate */
-		else if (name == "mutation")
-			stream >> mutation.method;
+		else if (name == "mutation") {
+			std::getline(stream, mutation.method);
+			Helper::chomp(mutation.method);
+		}
 		else if (name == "mutation_min_rate")
 			stream >> mutation.min_rate;
 		else if (name == "mutation_scale")

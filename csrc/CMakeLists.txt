@@ -2,7 +2,6 @@ set (PARADISEO_DIR ${VENDOR_DIR}/paradiseo)
 set (TINYMT_DIR ${VENDOR_DIR}/tinymt-1.0.1/tinymt)
 
 set (COMMON_SRCS
-	${TINYMT_DIR}/tinymt64.c
 	${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/common.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Task.cpp
@@ -22,6 +21,8 @@ set (COMMON_SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/ListScheduler.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/DynamicPower.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Lifetime.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Random.cpp
+	${TINYMT_DIR}/tinymt64.c
 )
 
 set_property(SOURCE ${TINYMT_DIR}/tinymt64.c

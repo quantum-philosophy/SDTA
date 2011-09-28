@@ -8,10 +8,6 @@
 
 #include "common.h"
 
-tinymt64_t Random::tinymt;
-bool Random::verbose = false;
-int Random::seed = -1;
-
 #ifdef REAL_RANK
 mapping_t::operator layout_t() const
 {

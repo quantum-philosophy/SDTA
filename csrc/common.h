@@ -14,10 +14,7 @@
 #include <algorithm>
 #include <stdlib.h>
 
-extern "C" {
-#define __STDC_CONSTANT_MACROS
-#include <tinymt64.h>
-}
+#include "Random.h"
 
 #define __DELETE(some) 			\
 	do { 						\
@@ -88,6 +85,39 @@ typedef std::vector<pid_t> mapping_t;
 typedef std::vector<rank_t> layout_t;
 #endif
 
+struct method_t
+{
+	std::string name;
+	double ratio;
+
+	method_t(const std::string &_name, double _ratio) :
+		name(_name), ratio(_ratio) {}
+};
+
+struct method_list_t: private std::vector<method_t>
+{
+	double ratio;
+
+	method_list_t() : ratio(0) {}
+
+	inline void add(const method_t &method)
+	{
+		push_back(method);
+		ratio += method.ratio;
+	}
+
+	inline size_t choose() const
+	{
+		double roulette = Random::uniform(ratio);
+		size_t i = 0;
+		while ((roulette -= (*this)[i].ratio) > 0) i++;
+		return i;
+	}
+
+	using std::vector<method_t>::operator[];
+	using std::vector<method_t>::size;
+};
+
 /******************************************************************************/
 /* Rate                                                                       */
 /******************************************************************************/
@@ -114,57 +144,6 @@ struct rate_t
 	const double scale;
 	const double exponent;
 	const volatile size_t &step;
-};
-
-/******************************************************************************/
-/* Random generator                                                           */
-/******************************************************************************/
-
-class Random
-{
-	static tinymt64_t tinymt;
-	static bool verbose;
-	static int seed;
-
-	public:
-
-	static void set_seed(int seed, bool verbose = false)
-	{
-		Random::seed = seed;
-		Random::verbose = verbose;
-	}
-
-	static int get_seed()
-	{
-		int seed = Random::seed;
-
-		if (seed < 0) seed = time(NULL);
-
-		if (verbose)
-			std::cout << "Chosen seed: " << seed << std::endl;
-
-		return seed;
-	}
-
-	static void reseed()
-	{
-		tinymt64_init(&tinymt, get_seed());
-	}
-
-	static inline double uniform(double range = 1.0)
-	{
-		return range * tinymt64_generate_double(&tinymt);
-	}
-
-	static inline int number(int range)
-	{
-		return (double)range * uniform();
-	}
-
-	static bool flip(double p)
-	{
-		return uniform() < p;
-	}
 };
 
 /******************************************************************************/
@@ -372,90 +351,6 @@ class Comparator
 		const std::pair<double, T> &second)
 	{
 		return first.first < second.first;
-	}
-};
-
-/******************************************************************************/
-/* Helpers                                                                    */
-/******************************************************************************/
-
-class Helper
-{
-	public:
-
-	static void dump(const matrix_t &matrix, const char *filename)
-	{
-		std::ofstream stream(filename);
-
-		size_t rows = matrix.rows();
-		size_t cols = matrix.cols();
-
-		for (size_t i = 0; i < rows; i++) {
-			for (size_t j = 0; j < cols; j++) {
-				stream << matrix[i][j];
-				if (j + 1 < cols) stream << '\t';
-			}
-			stream << std::endl;
-		}
-
-		stream.close();
-	}
-
-	template<class T>
-	static void permute(std::vector<T> &vector, const order_t &order)
-	{
-		size_t size = vector.size();
-
-		if (size != order.size())
-			throw std::runtime_error("Cannot permute the vector.");
-
-		std::vector<T> permuted(size);
-
-		for (size_t i = 0; i < size; i++)
-			permuted[i] = vector[order[i]];
-
-		for (size_t i = 0; i < size; i++)
-			vector[i] = permuted[i];
-	}
-
-	template<class T>
-	static void permute(T *vector, const order_t &order)
-	{
-		size_t size = order.size();
-
-		std::vector<T> permuted(size);
-
-		for (size_t i = 0; i < size; i++)
-			permuted[i] = vector[order[i]];
-
-		for (size_t i = 0; i < size; i++)
-			vector[i] = permuted[i];
-	}
-
-	template<class T>
-	static bool compare_pairs(const std::pair<double, T> &a,
-		const std::pair<double, T> &b)
-	{
-		return a.first < b.first;
-	}
-
-	template<class T>
-	static void prioritize(std::vector<T> &vector, const priority_t &priority)
-	{
-		size_t size = vector.size();
-
-		if (size != priority.size())
-			throw std::runtime_error("Cannot permute the vector.");
-
-		std::vector<std::pair<double, T> > permuted(size);
-
-		for (size_t i = 0; i < size; i++)
-			permuted[i] = std::pair<double, T>(priority[i], vector[i]);
-
-		std::stable_sort(permuted.begin(), permuted.end(), compare_pairs<T>);
-
-		for (size_t i = 0; i < size; i++)
-			vector[i] = permuted[i].second;
 	}
 };
 
