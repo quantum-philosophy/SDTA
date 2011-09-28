@@ -22,6 +22,9 @@ void Schedule::reorder(const order_t &order)
 				throw std::runtime_error("Cannot reorder the schedule.");
 		}
 	}
+
+	Helper::permute(point_order(), order);
+	Helper::permute(point_mapping(), order);
 }
 
 std::ostream &operator<< (std::ostream &o, const Schedule &schedule)

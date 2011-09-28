@@ -165,18 +165,19 @@ void optimize(const string &system_config, const string &genetic_config,
 		 *
 		 */
 		if (tuning.cache.empty()) {
-			evaluation = new Evaluation(*architecture, *graph, *hotspot);
+			evaluation = new Evaluation(*architecture, *graph,
+				*hotspot, !tuning.include_mapping);
 		}
 		else {
 #ifndef WITHOUT_MEMCACHED
-			evaluation = new MemcachedEvaluation(tuning.cache,
-				*architecture, *graph, *hotspot);
+			evaluation = new MemcachedEvaluation(tuning.cache, tuning.multiobjective,
+				*architecture, *graph, *hotspot, !tuning.include_mapping);
 #else
 			throw runtime_error("The code is compiled without caching support.");
 #endif
 		}
 
-		price_t price = evaluation->process(schedule, !tuning.multiobjective);
+		price_t price = evaluation->process(schedule);
 
 		constrains_t constrains;
 

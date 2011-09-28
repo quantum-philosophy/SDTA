@@ -16,6 +16,8 @@ class Evaluation
 	const Graph &graph;
 	const Hotspot &hotspot;
 
+	const bool shallow;
+
 	public:
 
 	size_t evaluations;
@@ -23,16 +25,16 @@ class Evaluation
 	size_t cache_hits;
 
 	Evaluation(const Architecture &_architecture, const Graph &_graph,
-		const Hotspot &_hotspot) :
+		const Hotspot &_hotspot, bool _shallow) :
 
 		architecture(_architecture), graph(_graph), hotspot(_hotspot),
-		evaluations(0), deadline_misses(0), cache_hits(0) {}
+		shallow(_shallow), evaluations(0), deadline_misses(0), cache_hits(0) {}
 
-	price_t process(const Schedule &schedule, bool shallow = false);
+	price_t process(const Schedule &schedule);
 
 	protected:
 
-	virtual price_t compute(const Schedule &schedule, bool shallow);
+	virtual price_t compute(const Schedule &schedule);
 };
 
 std::ostream &operator<<(std::ostream &o, const Evaluation &e);
@@ -41,15 +43,16 @@ std::ostream &operator<<(std::ostream &o, const Evaluation &e);
 
 class MemcachedEvaluation: public Evaluation
 {
+	const bool extended;
 	memcached_st *memcache;
 
 	public:
 
-	MemcachedEvaluation(const std::string &config,
+	MemcachedEvaluation(const std::string &config, bool _extended,
 		const Architecture &_architecture, const Graph &_graph,
-		const Hotspot &_hotspot) :
+		const Hotspot &_hotspot, bool _shallow) :
 
-		Evaluation(_architecture, _graph, _hotspot)
+		Evaluation(_architecture, _graph, _hotspot, _shallow), extended(_extended)
 	{
 		memcache = memcached_create(NULL);
 
@@ -82,7 +85,7 @@ class MemcachedEvaluation: public Evaluation
 
 	protected:
 
-	price_t compute(const Schedule &schedule, bool shallow);
+	price_t compute(const Schedule &schedule);
 
 	price_t *recall(const Digest &key);
 	void remember(const Digest &key, const price_t &price);

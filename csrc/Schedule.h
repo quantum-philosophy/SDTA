@@ -3,6 +3,13 @@
 
 #include "common.h"
 
+#ifdef REAL_RANK
+#error Not implemented yet
+#else
+typedef int step_t;
+typedef std::vector<step_t> trace_t;
+#endif
+
 struct ScheduleItem
 {
 	tid_t id;
@@ -30,21 +37,23 @@ class Schedule
 
 	std::vector<LocalSchedule> schedules;
 
-	mapping_t mapping;
-	order_t order;
-
 	double duration;
+
+	/* The first half is for the schedule order,
+	 * the second one is for the mapping.
+	 */
+	size_t trace_length;
+	trace_t trace;
 
 	public:
 
-	Schedule() : processor_count(0), task_count(0), duration(0) {}
+	Schedule() : processor_count(0), task_count(0), append_count(0) {}
 
 	Schedule(size_t _processor_count, size_t _task_count) :
 
 		processor_count(_processor_count), task_count(_task_count), append_count(0),
-		schedules(std::vector<LocalSchedule>(processor_count)),
-		mapping(mapping_t(task_count, 0)), order(order_t(task_count, 0)),
-		duration(0) {}
+		schedules(std::vector<LocalSchedule>(processor_count)), duration(0),
+		trace_length(2 * task_count), trace(trace_length, 0) {}
 
 	inline bool empty() const
 	{
@@ -61,14 +70,34 @@ class Schedule
 		return task_count;
 	}
 
+	inline const step_t *point_order() const
+	{
+		return &trace[0];
+	}
+
+	inline const step_t *point_mapping() const
+	{
+		return &trace[task_count];
+	}
+
+	inline step_t *point_order()
+	{
+		return &trace[0];
+	}
+
+	inline step_t *point_mapping()
+	{
+		return &trace[task_count];
+	}
+
 	inline pid_t map(tid_t id) const
 	{
 #ifndef SHALLOW_CHECK
-		if (id >= mapping.size())
+		if (id >= task_count)
 			throw std::runtime_error("Cannot find the task.");
 #endif
 
-		return mapping[id];
+		return point_mapping()[id];
 	}
 
 	inline const LocalSchedule &operator[](pid_t pid) const
@@ -83,14 +112,14 @@ class Schedule
 		double end = start + duration;
 		if (this->duration < end) this->duration = end;
 
-		mapping[tid] = pid;
+		point_mapping()[tid] = pid;
 
 #ifndef SHALLOW_CHECK
 		if (append_count + 1 > task_count)
 			throw std::runtime_error("There are too many tasks.");
 #endif
 
-		order[append_count++] = tid;
+		point_order()[append_count++] = tid;
 	}
 
 	inline double get_duration() const
@@ -98,9 +127,14 @@ class Schedule
 		return duration;
 	}
 
-	const order_t &get_order() const
+	inline const priority_t get_priority() const
 	{
-		return order;
+		priority_t priority;
+
+		for (size_t i = 0; i < task_count; i++)
+			priority[trace[i]] = (rank_t)i;
+
+		return priority;
 	}
 
 	void reorder(const order_t &order);

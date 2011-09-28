@@ -8,7 +8,7 @@
 #include "Lifetime.h"
 #include "Schedule.h"
 
-price_t Evaluation::process(const Schedule &schedule, bool shallow)
+price_t Evaluation::process(const Schedule &schedule)
 {
 	evaluations++;
 
@@ -19,10 +19,10 @@ price_t Evaluation::process(const Schedule &schedule, bool shallow)
 		return price_t(difference, std::numeric_limits<double>::max());
 	}
 
-	return compute(schedule, shallow);
+	return compute(schedule);
 }
 
-price_t Evaluation::compute(const Schedule &schedule, bool shallow)
+price_t Evaluation::compute(const Schedule &schedule)
 {
 	double sampling_interval = hotspot.sampling_interval();
 
@@ -73,13 +73,10 @@ std::ostream &operator<<(std::ostream &o, const Evaluation &e)
 
 #ifndef WITHOUT_MEMCACHED
 
-price_t MemcachedEvaluation::compute(const Schedule &schedule, bool shallow)
+price_t MemcachedEvaluation::compute(const Schedule &schedule)
 {
-	const order_t &order = schedule.order;
-
-	Digest digest(
-		(const unsigned char *)&order[0],
-		sizeof(order_t::value_type) * order.size());
+	Digest digest((const unsigned char *)&schedule.trace[0],
+		sizeof(step_t) * (extended ? schedule.trace_length : schedule.task_count));
 
 	price_t price, *value;
 
@@ -90,13 +87,13 @@ price_t MemcachedEvaluation::compute(const Schedule &schedule, bool shallow)
 		free(value);
 
 #ifdef VERIFY_CACHING
-		price_t real_price = Evaluation::compute(schedule, shallow);
+		price_t real_price = Evaluation::compute(schedule);
 		if (price != real_price)
 			throw std::runtime_error("The caching is broken.");
 #endif
 	}
 	else {
-		price = Evaluation::compute(schedule, shallow);
+		price = Evaluation::compute(schedule);
 		remember(digest, price);
 	}
 

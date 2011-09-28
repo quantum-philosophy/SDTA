@@ -175,7 +175,7 @@ class GeneEncoder
 	static inline void reallocate(CT &chromosome)
 	{
 		const Schedule &schedule = chromosome.schedule;
-		const mapping_t &mapping = schedule.mapping;
+		const step_t * const mapping = schedule.point_mapping();
 		const size_t task_count = schedule.task_count;
 
 #ifndef SHALLOW_CHECK
@@ -191,7 +191,7 @@ class GeneEncoder
 	static inline void reorder(CT &chromosome)
 	{
 		const Schedule &schedule = chromosome.schedule;
-		const order_t &order = schedule.order;
+		const step_t * const order = schedule.point_order();
 		const size_t task_count = schedule.task_count;
 
 		for (size_t i = 0; i < task_count; i++)

@@ -67,7 +67,7 @@ bool ListScheduleTraining<CT>::operator()(CT &chromosome)
 	/* Collect all possible branches */
 	schedule = process(layout, priority, (void *)&data);
 
-	start_price = best_price = evaluation.process(schedule, true);
+	start_price = best_price = evaluation.process(schedule);
 
 	while (stall < stall_lessons && lessons < max_lessons) {
 		/* Choose one to inspect */
@@ -78,7 +78,7 @@ bool ListScheduleTraining<CT>::operator()(CT &chromosome)
 		/* Iterate through all branches */
 		while (data.next()) {
 			schedule = process(layout, priority, (void *)&data);
-			price = evaluation.process(schedule, true);
+			price = evaluation.process(schedule);
 
 			if (best_price.lifetime < price.lifetime) {
 				/* We have found a better solution */
@@ -94,9 +94,7 @@ bool ListScheduleTraining<CT>::operator()(CT &chromosome)
 		if (improved) {
 			stall = 0;
 
-			const order_t &order = best_schedule.get_order();
-			for (size_t i = 0; i < task_count; i++)
-				priority[order[i]] = (rank_t)i;
+			priority = best_schedule.get_priority();
 
 			/* Reset and recollect */
 			data.reset();

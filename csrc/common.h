@@ -419,6 +419,20 @@ class Helper
 	}
 
 	template<class T>
+	static void permute(T *vector, const order_t &order)
+	{
+		size_t size = order.size();
+
+		std::vector<T> permuted(size);
+
+		for (size_t i = 0; i < size; i++)
+			permuted[i] = vector[order[i]];
+
+		for (size_t i = 0; i < size; i++)
+			vector[i] = permuted[i];
+	}
+
+	template<class T>
 	static bool compare_pairs(const std::pair<double, T> &a,
 		const std::pair<double, T> &b)
 	{

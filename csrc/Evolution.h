@@ -85,13 +85,13 @@ class GenericEvolution: public Evolution
 		price_t price;
 
 		if (chromosome.valid_schedule()) {
-			price = evaluation.process(chromosome.schedule, true);
+			price = evaluation.process(chromosome.schedule);
 		}
 		else if (constrains.fixed_layout()) {
 			Schedule schedule = scheduler.process(constrains.layout, chromosome);
 			chromosome.set_schedule(schedule);
 
-			price = evaluation.process(schedule, true);
+			price = evaluation.process(schedule);
 		}
 		else {
 			layout_t layout;
@@ -101,7 +101,7 @@ class GenericEvolution: public Evolution
 			Schedule schedule = scheduler.process(layout, priority);
 			chromosome.set_schedule(schedule);
 
-			price = evaluation.process(schedule, true);
+			price = evaluation.process(schedule);
 		}
 
 		chromosome.set_price(price);
