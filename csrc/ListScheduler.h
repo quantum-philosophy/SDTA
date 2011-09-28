@@ -78,8 +78,8 @@ class DeterministicListScheduler: public ListScheduler
 
 	protected:
 
-	void push(pool_t &pool, tid_t id) const;
-	tid_t pull(pool_t &pool, pid_t pid) const;
+	virtual void push(pool_t &pool, tid_t id) const;
+	virtual tid_t pull(pool_t &pool, pid_t pid) const;
 };
 
 class StochasticListScheduler: public ListScheduler
@@ -105,7 +105,7 @@ class RandomGeneratorListScheduler: public ListScheduler
 };
 
 template<class CT>
-class ListScheduleMutation: public ListScheduler, public eoMonOp<CT>
+class ListScheduleMutation: public DeterministicListScheduler, public eoMonOp<CT>
 {
 	const bool fixed_layout;
 	const layout_t &layout;
@@ -118,7 +118,7 @@ class ListScheduleMutation: public ListScheduler, public eoMonOp<CT>
 	ListScheduleMutation(const constrains_t &constrains, const rate_t &_rate,
 		const Architecture &architecture, const Graph &graph) :
 
-		ListScheduler(architecture, graph),
+		DeterministicListScheduler(architecture, graph),
 		fixed_layout(constrains.fixed_layout()),
 		layout(constrains.get_layout()), rate(_rate) {}
 
@@ -152,12 +152,11 @@ class ListScheduleMutation: public ListScheduler, public eoMonOp<CT>
 		return false;
 	}
 
-	void push(pool_t &pool, tid_t id) const;
 	tid_t pull(pool_t &pool, pid_t pid) const;
 };
 
 template<class CT>
-class ListScheduleTraining: public ListScheduler, public eoMonOp<CT>
+class ListScheduleTraining: public DeterministicListScheduler, public eoMonOp<CT>
 {
 	size_t max_lessons;
 	size_t stall_lessons;
@@ -255,14 +254,13 @@ class ListScheduleTraining: public ListScheduler, public eoMonOp<CT>
 		Evaluation &_evaluation, const constrains_t &constrains,
 		const rate_t &_rate, const Architecture &architecture, const Graph &graph) :
 
-		ListScheduler(architecture, graph),
+		DeterministicListScheduler(architecture, graph),
 		max_lessons(_max_lessons), stall_lessons(_stall_lessons),
 		evaluation(_evaluation), fixed_layout(constrains.fixed_layout()),
 		layout(constrains.get_layout()), rate(_rate) {}
 
 	bool operator()(CT &chromosome);
 
-	void push(pool_t &pool, tid_t id) const;
 	tid_t pull(pool_t &pool, pid_t pid) const;
 };
 

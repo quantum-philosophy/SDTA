@@ -1,22 +1,6 @@
 #include "ListScheduler.h"
 
 template<class CT>
-void ListScheduleMutation<CT>::push(pool_t &pool, tid_t id) const
-{
-	const layout_t &layout = pool.layout;
-	const priority_t &priority = pool.priority;
-	list_schedule_t &local_pool = pool[layout[id]];
-
-	list_schedule_t::iterator it;
-	rank_t new_priority = priority[id];
-
-	for (it = local_pool.begin(); it != local_pool.end(); it++)
-		if (new_priority < priority[*it]) break;
-
-	local_pool.insert(it, id);
-}
-
-template<class CT>
 tid_t ListScheduleMutation<CT>::pull(pool_t &pool, pid_t pid) const
 {
 	list_schedule_t &local_pool = pool[pid];
@@ -110,22 +94,6 @@ bool ListScheduleTraining<CT>::operator()(CT &chromosome)
 	GeneEncoder::reorder(chromosome);
 
 	return true;
-}
-
-template<class CT>
-void ListScheduleTraining<CT>::push(pool_t &pool, tid_t id) const
-{
-	const layout_t &layout = pool.layout;
-	const priority_t &priority = pool.priority;
-	list_schedule_t &local_pool = pool[layout[id]];
-
-	list_schedule_t::iterator it;
-	rank_t new_priority = priority[id];
-
-	for (it = local_pool.begin(); it != local_pool.end(); it++)
-		if (new_priority < priority[*it]) break;
-
-	local_pool.insert(it, id);
 }
 
 template<class CT>
