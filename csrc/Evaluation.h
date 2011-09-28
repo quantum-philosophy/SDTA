@@ -6,7 +6,7 @@
 
 #ifndef WITHOUT_MEMCACHED
 #include <libmemcached/memcached.h>
-#include "MD5Digest.h"
+#include "Digest.h"
 #include <sstream>
 #endif
 
@@ -84,8 +84,8 @@ class MemcachedEvaluation: public Evaluation
 
 	price_t compute(const Schedule &schedule, bool shallow);
 
-	price_t *recall(const MD5Digest &key);
-	void remember(const MD5Digest &key, const price_t &price);
+	price_t *recall(const Digest &key);
+	void remember(const Digest &key, const price_t &price);
 };
 
 #endif

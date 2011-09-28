@@ -77,7 +77,7 @@ price_t MemcachedEvaluation::compute(const Schedule &schedule, bool shallow)
 {
 	const order_t &order = schedule.order;
 
-	MD5Digest digest(
+	Digest digest(
 		(const unsigned char *)&order[0],
 		sizeof(order_t::value_type) * order.size());
 
@@ -103,14 +103,14 @@ price_t MemcachedEvaluation::compute(const Schedule &schedule, bool shallow)
 	return price;
 }
 
-price_t *MemcachedEvaluation::recall(const MD5Digest &key)
+price_t *MemcachedEvaluation::recall(const Digest &key)
 {
 	char *value;
 	size_t read;
 	uint32_t flags;
 	memcached_return_t rc;
 
-	value = memcached_get(memcache, (const char *)key.data, MD5_LENGTH,
+	value = memcached_get(memcache, (const char *)key.data, Digest::LENGTH,
 		&read, &flags, &rc);
 
 	if (!value) return NULL;
@@ -121,11 +121,11 @@ price_t *MemcachedEvaluation::recall(const MD5Digest &key)
 	return (price_t *)value;
 }
 
-void MemcachedEvaluation::remember(const MD5Digest &key, const price_t &price)
+void MemcachedEvaluation::remember(const Digest &key, const price_t &price)
 {
 	memcached_return_t rc;
 
-	rc = memcached_set(memcache, (const char *)key.data, MD5_LENGTH,
+	rc = memcached_set(memcache, (const char *)key.data, Digest::LENGTH,
 		(const char *)&price, sizeof(price_t), (time_t)0, (uint32_t)0);
 
 	if (rc != MEMCACHED_SUCCESS)
