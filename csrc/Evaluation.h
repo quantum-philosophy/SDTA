@@ -7,6 +7,7 @@
 #ifndef WITHOUT_MEMCACHED
 #include <libmemcached/memcached.h>
 #include "MD5Digest.h"
+#include <sstream>
 #endif
 
 class Evaluation
@@ -50,10 +51,28 @@ class MemcachedEvaluation: public Evaluation
 
 		Evaluation(_architecture, _graph, _hotspot)
 	{
-		memcache = memcached(config.c_str(), config.length());
+		memcache = memcached_create(NULL);
 
 		if (!memcache)
 			throw std::runtime_error("Cannot allocate memcached.");
+
+		unsigned int port = 11211;
+		std::string hostname = "localhost";
+
+		if (!config.empty()) {
+			size_t found = config.find_first_of(":");
+
+			if (found != std::string::npos) {
+				hostname = config.substr(0, found);
+				std::stringstream stream(config.substr(found + 1));
+				stream >> port;
+				if (port <= 0)
+					throw std::runtime_error("Cannot read the port number.");
+			}
+			else hostname = config;
+		}
+
+		(void)memcached_server_add(memcache, hostname.c_str(), port);
 	}
 
 	~MemcachedEvaluation()
@@ -65,8 +84,8 @@ class MemcachedEvaluation: public Evaluation
 
 	price_t compute(const Schedule &schedule, bool shallow);
 
-	price_t *recall(const MD5Digest &key) const;
-	void remember(const MD5Digest &key, const price_t &price) const;
+	price_t *recall(const MD5Digest &key);
+	void remember(const MD5Digest &key, const price_t &price);
 };
 
 #endif

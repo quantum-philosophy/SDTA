@@ -103,7 +103,7 @@ price_t MemcachedEvaluation::compute(const Schedule &schedule, bool shallow)
 	return price;
 }
 
-price_t *MemcachedEvaluation::recall(const MD5Digest &key) const
+price_t *MemcachedEvaluation::recall(const MD5Digest &key)
 {
 	char *value;
 	size_t read;
@@ -121,7 +121,7 @@ price_t *MemcachedEvaluation::recall(const MD5Digest &key) const
 	return (price_t *)value;
 }
 
-void MemcachedEvaluation::remember(const MD5Digest &key, const price_t &price) const
+void MemcachedEvaluation::remember(const MD5Digest &key, const price_t &price)
 {
 	memcached_return_t rc;
 
