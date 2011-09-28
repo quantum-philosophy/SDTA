@@ -10,35 +10,19 @@
 
 price_t Evaluation::process(const Schedule &schedule, bool shallow)
 {
+	evaluations++;
+
 	double difference = graph.get_deadline() - schedule.get_duration();
 
 	if (difference < 0) {
 		deadline_misses++;
-
 		return price_t(difference, std::numeric_limits<double>::max());
 	}
 
-	MD5Digest digest(schedule.order);
-
-	price_t price, *value;
-
-	if ((value = recall(digest))) {
-		cache_hits++;
-
-		price = *value;
-		free(value);
-	}
-	else {
-		cache_misses++;
-
-		price = compute(schedule, shallow);
-		remember(digest, price);
-	}
-
-	return price;
+	return compute(schedule, shallow);
 }
 
-price_t Evaluation::compute(const Schedule &schedule, bool shallow) const
+price_t Evaluation::compute(const Schedule &schedule, bool shallow)
 {
 	double sampling_interval = hotspot.sampling_interval();
 
@@ -71,7 +55,48 @@ price_t Evaluation::compute(const Schedule &schedule, bool shallow) const
 	return price_t(lifetime, energy);
 }
 
-price_t *Evaluation::recall(const MD5Digest &key) const
+std::ostream &operator<<(std::ostream &o, const Evaluation &e)
+{
+	o
+		<< std::setiosflags(std::ios::fixed)
+		<< std::setprecision(0)
+		<< "Evaluations: " << e.evaluations << std::endl
+		<< "  Deadline misses: " << e.deadline_misses
+			<< " (" << double(e.deadline_misses) / double(e.evaluations) * 100
+			<< "%)" << std::endl
+		<< "  Cache hits: " << e.cache_hits
+			<< " (" << double(e.cache_hits) / double(e.evaluations) * 100
+			<< "%)" << std::endl;
+
+	return o;
+}
+
+#ifndef WITHOUT_MEMCACHED
+
+price_t MemcachedEvaluation::compute(const Schedule &schedule, bool shallow)
+{
+	const order_t &order = schedule.order;
+
+	MD5Digest digest((const char *)&order[0],
+		sizeof(order_t::value_type) * order.size());
+
+	price_t price, *value;
+
+	if ((value = recall(digest))) {
+		cache_hits++;
+
+		price = *value;
+		free(value);
+	}
+	else {
+		price = Evaluation::compute(schedule, shallow);
+		remember(digest, price);
+	}
+
+	return price;
+}
+
+price_t *MemcachedEvaluation::recall(const MD5Digest &key) const
 {
 	char *value;
 	size_t read;
@@ -89,7 +114,7 @@ price_t *Evaluation::recall(const MD5Digest &key) const
 	return (price_t *)value;
 }
 
-void Evaluation::remember(const MD5Digest &key, const price_t &price) const
+void MemcachedEvaluation::remember(const MD5Digest &key, const price_t &price) const
 {
 	memcached_return_t rc;
 
@@ -99,3 +124,5 @@ void Evaluation::remember(const MD5Digest &key, const price_t &price) const
 	if (rc != MEMCACHED_SUCCESS)
 		throw std::runtime_error("Cannot interact with memcached.");
 }
+
+#endif

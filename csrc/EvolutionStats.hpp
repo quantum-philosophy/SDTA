@@ -8,33 +8,43 @@ eoMonitor &GenericEvolutionStats<CT, PT>::operator()()
 
 	generations++;
 
-	process();
+	if (silent) return *this;
+
+	size_t population_size = population->size();
+	size_t unique = population->unique();
+	double diversity = population->diversity();
+
+	size_t current_evaluations =
+		evaluation.evaluations - last_evaluations;
+	size_t current_deadline_misses =
+		evaluation.deadline_misses - last_deadline_misses;
+	size_t current_cache_hits =
+		evaluation.cache_hits - last_cache_hits;
+
+	last_evaluations = evaluation.evaluations;
+	last_deadline_misses = evaluation.deadline_misses;
+	last_cache_hits = evaluation.cache_hits;
+
+	std::cout
+		<< std::endl
+		<< std::setprecision(0)
+		<< std::setw(4) << generations
+		<< " [ "
+			<< std::setw(4) << current_evaluations << ", "
+			<< std::setw(4) << current_deadline_misses << ", "
+			<< std::setw(4) << current_cache_hits
+		<< " ]"
+		<< std::setprecision(3)
+		<< "[ "
+			<< std::setw(6) << crossover_rate << " "
+			<< std::setw(6) << mutation_rate << " "
+			<< std::setw(6) << training_rate
+		<< " ]"
+		<< "[ "
+			<< std::setw(4) << unique << "/"
+			<< population_size
+			<< " (" << std::setprecision(2) << diversity << ")"
+		<< " ]";
 
 	return *this;
-}
-
-template<class CT, class PT>
-void GenericEvolutionStats<CT, PT>::display(std::ostream &o) const
-{
-	EvolutionStats::display(o);
-
-	size_t evaluations = evaluation.cache_hits + evaluation.cache_misses;
-	size_t total = evaluations + evaluation.deadline_misses;
-
-	o
-		<< std::setiosflags(std::ios::fixed)
-		<< std::setprecision(0)
-		<< "  Total chromosomes:   " << total << std::endl
-		<< "    Evaluations:       " << evaluations
-			<< " (" << double(evaluations) / double(total) * 100
-			<< "%)" << std::endl
-		<< "      Cache hits:      " << evaluation.cache_hits
-			<< " (" << double(evaluation.cache_hits) / double(total) * 100
-			<< "%)" << std::endl
-		<< "      Cache misses:    " << evaluation.cache_misses
-			<< " (" << double(evaluation.cache_misses) / double(total) * 100
-			<< "%)" << std::endl
-		<< "    Deadline misses:   " << evaluation.deadline_misses
-			<< " (" << double(evaluation.deadline_misses) / double(total) * 100
-			<< "%)" << std::endl;
 }

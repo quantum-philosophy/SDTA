@@ -18,7 +18,9 @@ typedef std::vector<ScheduleItem> LocalSchedule;
 class Schedule
 {
 	friend class GeneEncoder;
-	friend class Evaluation;
+#ifndef WITHOUT_MEMCACHED
+	friend class MemcachedEvaluation;
+#endif
 	friend std::ostream &operator<< (std::ostream &o,
 		const Schedule &schedule);
 

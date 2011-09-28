@@ -78,21 +78,14 @@ class MOEvolutionStats: public GenericEvolutionStats<eslabMOChromosome, eslabMOP
 	price_t best_lifetime;
 	price_t best_energy;
 
-	size_t last_cache_hits;
-	size_t last_cache_misses;
-	size_t last_deadline_misses;
-
 	std::vector<price_t> pareto_optima;
 
 	void display(std::ostream &o) const;
 
 	MOEvolutionStats(const Evaluation &_evaluation) :
-		GenericEvolutionStats<eslabMOChromosome, eslabMOPop>(_evaluation),
-		last_cache_hits(0), last_cache_misses(0), last_deadline_misses(0) {}
+		GenericEvolutionStats<eslabMOChromosome, eslabMOPop>(_evaluation) {}
 
-	protected:
-
-	void process();
+	virtual eoMonitor& operator()();
 };
 
 class MOEvolution:

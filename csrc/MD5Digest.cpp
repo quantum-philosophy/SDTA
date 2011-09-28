@@ -26,16 +26,6 @@ static void MD5Final(char [MD5_LENGTH], MD5_CTX *);
 
 MD5Digest::MD5Digest(const char *input, int size)
 {
-	compute(input, size);
-}
-
-MD5Digest::MD5Digest(const std::vector<size_t> &vector)
-{
-	compute((const char *)&vector[0], sizeof(size_t) * vector.size());
-}
-
-void MD5Digest::compute(const char *input, int size)
-{
 	MD5_CTX context;
 	MD5Init(&context);
 	MD5Update(&context, (unsigned char *)input, size);

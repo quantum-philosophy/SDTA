@@ -51,21 +51,14 @@ class SOEvolutionStats: public GenericEvolutionStats<eslabSOChromosome, eslabSOP
 	double best_lifetime;
 	double worst_lifetime;
 
-	size_t last_cache_hits;
-	size_t last_cache_misses;
-	size_t last_deadline_misses;
-
 	chromosome_t best_chromosome;
 
 	void display(std::ostream &o) const;
 
 	SOEvolutionStats(const Evaluation &_evaluation) :
-		GenericEvolutionStats<eslabSOChromosome, eslabSOPop>(_evaluation),
-		last_cache_hits(0), last_cache_misses(0), last_deadline_misses(0) {}
+		GenericEvolutionStats<eslabSOChromosome, eslabSOPop>(_evaluation) {}
 
-	protected:
-
-	void process();
+	virtual eoMonitor& operator()();
 };
 
 class SOEvolution:

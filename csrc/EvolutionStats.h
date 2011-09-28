@@ -41,7 +41,8 @@ class GenericEvolutionStats: public EvolutionStats, public eoMonitor
 	typedef PT population_t;
 
 	GenericEvolutionStats(const Evaluation &_evaluation) :
-		EvolutionStats(), evaluation(_evaluation), population(NULL) {}
+		EvolutionStats(), evaluation(_evaluation), population(NULL),
+		last_evaluations(0), last_deadline_misses(0), last_cache_hits(0) {}
 
 	void watch(const population_t &_population, bool _silent = false)
 	{
@@ -51,19 +52,19 @@ class GenericEvolutionStats: public EvolutionStats, public eoMonitor
 		silent = _silent;
 	}
 
-	eoMonitor& operator()();
+	virtual eoMonitor& operator()();
 
 	protected:
-
-	virtual void process()
-	{
-	}
-
-	virtual void display(std::ostream &o) const;
 
 	const Evaluation &evaluation;
 	const population_t *population;
 	bool silent;
+
+	private:
+
+	size_t last_evaluations;
+	size_t last_deadline_misses;
+	size_t last_cache_hits;
 };
 
 std::ostream &operator<< (std::ostream &o, const EvolutionStats &stats);

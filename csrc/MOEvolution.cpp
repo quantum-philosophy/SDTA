@@ -85,48 +85,16 @@ void MOEvolution::process(population_t &population)
 /* Evolution Stats                                                            */
 /******************************************************************************/
 
-void MOEvolutionStats::process()
+eoMonitor &MOEvolutionStats::operator()()
 {
+	GenericEvolutionStats<chromosome_t, population_t>::operator()();
+
 	best_lifetime = population->best_lifetime();
 	best_energy = population->best_energy();
 
-	if (silent) return;
-
-	size_t population_size = population->size();
-	size_t unique = population->unique();
-	double diversity = population->diversity();
-
-	size_t current_cache_hits =
-		evaluation.cache_hits - last_cache_hits;
-	size_t current_cache_misses =
-		evaluation.cache_misses - last_cache_misses;
-	size_t current_deadline_misses =
-		evaluation.deadline_misses - last_deadline_misses;
-
-	last_cache_hits = evaluation.cache_hits;
-	last_cache_misses = evaluation.cache_misses;
-	last_deadline_misses = evaluation.deadline_misses;
+	if (silent) return *this;
 
 	std::cout
-		<< std::endl
-		<< std::setprecision(0)
-		<< std::setw(4) << generations
-		<< " [ "
-			<< std::setw(4) << current_cache_hits << ", "
-			<< std::setw(4) << current_cache_misses << ", "
-			<< std::setw(4) << current_deadline_misses
-		<< " ]"
-		<< std::setprecision(3)
-		<< "[ "
-			<< std::setw(6) << crossover_rate << " "
-			<< std::setw(6) << mutation_rate << " "
-			<< std::setw(6) << training_rate
-		<< " ]"
-		<< "[ "
-			<< std::setw(4) << unique << "/"
-			<< population_size
-			<< " (" << std::setprecision(2) << diversity << ")"
-		<< " ]"
 		<< std::setprecision(2)
 		<< "[ "
 			<< "( "
@@ -136,6 +104,8 @@ void MOEvolutionStats::process()
 				<< std::setw(10) << best_energy.energy
 			<< " )"
 		<< " ]" << std::flush;
+
+	return *this;
 }
 
 void MOEvolutionStats::display(std::ostream &o) const
@@ -144,13 +114,13 @@ void MOEvolutionStats::display(std::ostream &o) const
 
 	o
 		<< std::setprecision(2)
-		<< "  Best lifetime:   " << best_lifetime << std::endl
-		<< "  Best energy:     " << best_energy << std::endl
+		<< "Best lifetime: " << best_lifetime << std::endl
+		<< "Best energy: " << best_energy << std::endl
 #ifdef REAL_RANK
 #else
 		<< std::setprecision(0)
 #endif
-		<< "  Pareto optima:   " << print_t<price_t>(pareto_optima) << std::endl;
+		<< "Pareto optima: " << print_t<price_t>(pareto_optima) << std::endl;
 }
 
 /******************************************************************************/

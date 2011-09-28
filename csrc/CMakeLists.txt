@@ -3,7 +3,6 @@ set (TINYMT_DIR ${VENDOR_DIR}/tinymt-1.0.1/tinymt)
 
 set (COMMON_SRCS
 	${TINYMT_DIR}/tinymt64.c
-	${CMAKE_CURRENT_SOURCE_DIR}/MD5Digest.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/common.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Task.cpp
@@ -23,6 +22,7 @@ set (COMMON_SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/ListScheduler.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/DynamicPower.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Lifetime.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/MD5Digest.cpp
 )
 
 set_property(SOURCE ${TINYMT_DIR}/tinymt64.c
@@ -47,6 +47,7 @@ include_directories (
 # * SHALLOW_CHECK - eliminate excessive checks.
 # * UNCONSTRAINED - the genes do not have any constrains.
 # * FAKE_EVALUATION - consider power instead of temperature.
+# * WITHOUT_MEMCACHED - do not mention memcached in the source code.
 #
 set(CMAKE_CXX_FLAGS "-Wall -Wno-sign-compare -O3 $ENV{CFLAGS}")
 

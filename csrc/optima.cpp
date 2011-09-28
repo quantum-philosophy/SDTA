@@ -70,6 +70,7 @@ void optimize(const string &system_config, const string &genetic_config,
 	Architecture *architecture = NULL;
 	Hotspot *hotspot = NULL;
 	Evolution *evolution = NULL;
+	Evaluation *evaluation = NULL;
 
 	try {
 		graph = new GraphBuilder(system.type, system.link);
@@ -163,8 +164,19 @@ void optimize(const string &system_config, const string &genetic_config,
 		/* 6. Obtain the initial measurements to compare with.
 		 *
 		 */
-		Evaluation evaluation(*architecture, *graph, *hotspot);
-		price_t price = evaluation.process(schedule);
+		if (tuning.cache.empty()) {
+			evaluation = new Evaluation(*architecture, *graph, *hotspot);
+		}
+		else {
+#ifndef WITHOUT_MEMCACHED
+			evaluation = new MemcachedEvaluation(tuning.cache,
+				*architecture, *graph, *hotspot);
+#else
+			throw runtime_error("The code is compiled without caching support.");
+#endif
+		}
+
+		price_t price = evaluation->process(schedule);
 
 		constrains_t constrains;
 
@@ -200,10 +212,10 @@ void optimize(const string &system_config, const string &genetic_config,
 
 			if (tuning.multiobjective)
 				evolution = new MOEvolution(*architecture, *graph,
-					scheduler, evaluation, tuning, constrains);
+					scheduler, *evaluation, tuning, constrains);
 			else
 				evolution = new SOEvolution(*architecture, *graph,
-					scheduler, evaluation, tuning, constrains);
+					scheduler, *evaluation, tuning, constrains);
 
 			clock_t begin = clock();
 
@@ -212,7 +224,7 @@ void optimize(const string &system_config, const string &genetic_config,
 			clock_t end = clock();
 			double elapsed = (double)(end - begin) / CLOCKS_PER_SEC;
 
-			cout << endl << stats << endl;
+			cout << endl << endl << stats << endl << *evaluation << endl;
 
 			cout << "Improvement: " << setiosflags(ios::fixed) << setprecision(2);
 
@@ -248,6 +260,7 @@ void optimize(const string &system_config, const string &genetic_config,
 		__DELETE(graph);
 		__DELETE(architecture);
 		__DELETE(hotspot);
+		__DELETE(evaluation);
 		__DELETE(evolution);
 		throw;
 	}
@@ -255,5 +268,6 @@ void optimize(const string &system_config, const string &genetic_config,
 	__DELETE(graph);
 	__DELETE(architecture);
 	__DELETE(hotspot);
+	__DELETE(evaluation);
 	__DELETE(evolution);
 }

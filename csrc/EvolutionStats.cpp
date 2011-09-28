@@ -7,8 +7,7 @@ void EvolutionStats::display(std::ostream &o) const
 	o
 		<< std::setiosflags(std::ios::fixed)
 		<< std::setprecision(0)
-		<< "Stats:" << std::endl
-		<< "  Generations:         " << generations << std::endl;
+		<< "Generations: " << generations << std::endl;
 }
 
 std::ostream &operator<< (std::ostream &o, const EvolutionStats &stats)
