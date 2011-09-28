@@ -22,7 +22,6 @@ set (COMMON_SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/ListScheduler.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/DynamicPower.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Lifetime.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/MD5Digest.cpp
 )
 
 set_property(SOURCE ${TINYMT_DIR}/tinymt64.c
@@ -30,7 +29,7 @@ set_property(SOURCE ${TINYMT_DIR}/tinymt64.c
 
 add_executable (optima optima.cpp ${COMMON_SRCS})
 
-target_link_libraries (optima memcached libeo libmoeo libeoutils libhotspot)
+target_link_libraries (optima crypto memcached libeo libmoeo libeoutils libhotspot)
 
 include_directories (
 	${PARADISEO_DIR}/paradiseo-eo/src
@@ -50,7 +49,7 @@ include_directories (
 # * WITHOUT_MEMCACHED - do not mention memcached in the source code.
 # * VERIFY_CACHING - check what we are reading from memcached.
 #
-set(CMAKE_CXX_FLAGS "-Wall -Wno-sign-compare -O3 $ENV{CFLAGS}")
+set(CMAKE_CXX_FLAGS "-Wall -Wno-deprecated-declarations -Wno-sign-compare -O3 $ENV{CFLAGS}")
 
 add_library(libeo STATIC IMPORTED)
 set_property(

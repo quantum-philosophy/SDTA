@@ -77,7 +77,8 @@ price_t MemcachedEvaluation::compute(const Schedule &schedule, bool shallow)
 {
 	const order_t &order = schedule.order;
 
-	MD5Digest digest((const char *)&order[0],
+	MD5Digest digest(
+		(const unsigned char *)&order[0],
 		sizeof(order_t::value_type) * order.size());
 
 	price_t price, *value;
