@@ -30,7 +30,7 @@ eoMonitor &GenericEvolutionStats<CT, PT>::operator()()
 		<< std::setprecision(0)
 		<< std::setw(4) << generations
 		<< " [ "
-			<< std::setw(4) << current_evaluations << ", "
+			<< std::setw(4) << current_evaluations - current_cache_hits << ", "
 			<< std::setw(4) << current_deadline_misses << ", "
 			<< std::setw(4) << current_cache_hits
 		<< " ]"

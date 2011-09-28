@@ -210,6 +210,7 @@ void optimize(const string &system_config, const string &genetic_config,
 
 		for (size_t i = 0; i < repeat; i++) {
 			Random::reseed();
+			evaluation->reset();
 
 			if (tuning.multiobjective)
 				evolution = new MOEvolution(*architecture, *graph,

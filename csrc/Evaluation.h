@@ -32,6 +32,13 @@ class Evaluation
 
 	price_t process(const Schedule &schedule);
 
+	inline void reset()
+	{
+		evaluations = 0;
+		deadline_misses = 0;
+		cache_hits = 0;
+	}
+
 	protected:
 
 	virtual price_t compute(const Schedule &schedule);
