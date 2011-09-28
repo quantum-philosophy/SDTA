@@ -127,12 +127,13 @@ class Schedule
 		return duration;
 	}
 
-	inline const priority_t get_priority() const
+	inline priority_t get_priority() const
 	{
-		priority_t priority;
+		priority_t priority(task_count);
+		const step_t * const order = point_order();
 
 		for (size_t i = 0; i < task_count; i++)
-			priority[trace[i]] = (rank_t)i;
+			priority[order[i]] = (rank_t)i;
 
 		return priority;
 	}
