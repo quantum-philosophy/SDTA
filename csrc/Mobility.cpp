@@ -11,37 +11,44 @@ vector_t Mobility::precise(const Architecture &architecture,
 {
 	tid_t id;
 	pid_t pid;
-	const Task *task;
 
+	size_t processor_count = architecture.size();
 	size_t task_count = graph.size();
+
 	vector_t duration(task_count);
 
-#ifndef SHALLOW_CHECK
 	if (task_count != mapping.size())
 		throw std::runtime_error("The mapping vector is invalid.");
-#endif
 
-	/* Calculate durations */
 	for (id = 0; id < task_count; id++) {
-		task = graph[id];
 		pid = mapping[id];
 
-#ifndef SHALLOW_CHECK
-		if (pid >= architecture.size())
+		if (pid >= processor_count)
 			throw std::runtime_error("The processor is invalid.");
-#endif
 
-		duration[id] = architecture[pid]->calc_duration(task->get_type());
+		duration[id] = architecture[pid]->calc_duration(graph[id]->get_type());
 	}
 
 	return calculate(architecture, graph, duration);
 }
 
-vector_t Mobility::uniform(const Architecture &architecture,
+vector_t Mobility::average(const Architecture &architecture,
 	const Graph &graph)
 {
+	tid_t id;
+	pid_t pid;
+
+	size_t processor_count = architecture.size();
 	size_t task_count = graph.size();
-	vector_t duration(task_count, 1);
+
+	vector_t duration(task_count, 0);
+
+	for (id = 0; id < task_count; id++)
+		for (pid = 0; pid < processor_count; pid++)
+			duration[id] += architecture[pid]->calc_duration(graph[id]->get_type());
+
+	for (id = 0; id < task_count; id++)
+		duration[id] /= double(processor_count);
 
 	return calculate(architecture, graph, duration);
 }
@@ -51,10 +58,8 @@ vector_t Mobility::calculate(const Architecture &architecture,
 {
 	size_t task_count = graph.size();
 
-#ifndef SHALLOW_CHECK
 	if (task_count != duration.size())
 		throw std::runtime_error("The duration vector is invalid.");
-#endif
 
 	tid_t id;
 	const Task *task;

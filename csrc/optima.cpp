@@ -88,21 +88,25 @@ void optimize(const string &system_config, const string &genetic_config,
 		priority_t priority = system.priority;
 		double deadline = system.deadline;
 
-		/* 1. Create and assign an even mapping.
+		/* 1. Calculate a priority vector based on the task mobility.
 		 *
-		 */
-		if (mapping.empty())
-			mapping = Layout::ordinal(*architecture, *graph);
-		else if (tuning.verbose)
-			cout << "Using external mapping." << endl;
-
-		/* 2. Calculate a priority vector based on the task mobility.
-		 *
+		 * NOTE: If the mapping is given, we are fine, the task mobility
+		 * will be calculated properly, but if we do not have mapping,
+		 * we do not know the execution time of the tasks, so, to deal
+		 * with the problem, we assume them to be equal.
 		 */
 		if (priority.empty())
 			priority = Priority::mobile(*architecture, *graph, mapping);
 		else if (tuning.verbose)
 			cout << "Using external priority." << endl;
+
+		/* 2. Create and assign an even mapping.
+		 *
+		 */
+		if (mapping.empty())
+			mapping = Layout::earliest(*architecture, *graph, priority);
+		else if (tuning.verbose)
+			cout << "Using external mapping." << endl;
 
 		/* 3. Compute a schedule.
 		 *
@@ -190,7 +194,7 @@ void optimize(const string &system_config, const string &genetic_config,
 			cout << graph << endl << architecture << endl
 				<< "Start mapping: " << print_t<pid_t>(mapping) << endl
 				<< "Start priority: " << print_t<rank_t>(priority) << endl
-				<< "Start schedule:" << endl << schedule
+				<< "Start schedule:" << endl << schedule << endl
 				<< "Constrains: " << print_t<constrain_t>(constrains) << endl;
 
 			size_t out = 0;
@@ -249,7 +253,8 @@ void optimize(const string &system_config, const string &genetic_config,
 			}
 
 			if (tuning.verbose)
-				cout << "Time elapsed: " << elapsed << endl << endl;
+				cout << "Time elapsed: " << setprecision(2)
+					<< (elapsed / 60.0) << " minutes" << endl << endl;
 
 			/* Make a back copy of the dump file */
 			if (!tuning.dump_evolution.empty() && repeat > 1)

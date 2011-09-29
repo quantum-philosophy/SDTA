@@ -15,7 +15,7 @@ priority_t Priority::mobile(const Architecture &architecture,
 	vector_t mobility;
 
 	if (mapping.empty())
-		mobility = Mobility::uniform(architecture, graph);
+		mobility = Mobility::average(architecture, graph);
 	else
 		mobility = Mobility::precise(architecture, graph, mapping);
 
