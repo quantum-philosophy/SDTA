@@ -44,6 +44,17 @@ class TournamentSelection: public eoSelectOne<CT>
 	const size_t size;
 };
 
+template <class CT>
+class UniformSelection: public eoSelectOne<CT>
+{
+	public:
+
+	inline const CT &operator()(const eoPop<CT> &population)
+	{
+		return population[Random::number(population.size())];
+	}
+};
+
 template<class CT>
 class Selection: public eoSelect<CT>
 {
@@ -64,6 +75,9 @@ class Selection: public eoSelect<CT>
 
 		else if (tuning.method == "tournament")
 			select = new TournamentSelection<CT>(tuning.tournament_size);
+
+		else if (tuning.method == "uniform")
+			select = new UniformSelection<CT>();
 
 		else throw std::runtime_error("The selection method is unknown.");
 	}
