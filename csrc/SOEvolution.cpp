@@ -55,7 +55,7 @@ void SOEvolution::process(population_t &population)
 
 eoMonitor &SOEvolutionStats::operator()()
 {
-	GenericEvolutionStats<chromosome_t, population_t>::operator()();
+	EvolutionStats<chromosome_t, population_t>::operator()();
 
 	worst_lifetime = population->worse_element().fitness();
 	best_lifetime = population->best_element().fitness();
@@ -74,7 +74,7 @@ eoMonitor &SOEvolutionStats::operator()()
 
 void SOEvolutionStats::display(std::ostream &o) const
 {
-	GenericEvolutionStats<chromosome_t, population_t>::display(o);
+	EvolutionStats<chromosome_t, population_t>::display(o);
 
 	o
 		<< std::setprecision(2)

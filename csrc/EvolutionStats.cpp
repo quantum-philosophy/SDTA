@@ -2,7 +2,7 @@
 
 #include "EvolutionStats.h"
 
-void EvolutionStats::display(std::ostream &o) const
+void BasicEvolutionStats::display(std::ostream &o) const
 {
 	o
 		<< std::setiosflags(std::ios::fixed)
@@ -10,7 +10,7 @@ void EvolutionStats::display(std::ostream &o) const
 		<< "Generations: " << generations << std::endl;
 }
 
-std::ostream &operator<< (std::ostream &o, const EvolutionStats &stats)
+std::ostream &operator<< (std::ostream &o, const BasicEvolutionStats &stats)
 {
 	stats.display(o);
 	return o;

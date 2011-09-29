@@ -44,7 +44,7 @@ class eslabSOPop: public eslabPop<eslabSOChromosome>
 	}
 };
 
-class SOEvolutionStats: public GenericEvolutionStats<eslabSOChromosome, eslabSOPop>
+class SOEvolutionStats: public EvolutionStats<eslabSOChromosome, eslabSOPop>
 {
 	public:
 
@@ -56,13 +56,13 @@ class SOEvolutionStats: public GenericEvolutionStats<eslabSOChromosome, eslabSOP
 	void display(std::ostream &o) const;
 
 	SOEvolutionStats(const Evaluation &_evaluation) :
-		GenericEvolutionStats<eslabSOChromosome, eslabSOPop>(_evaluation) {}
+		EvolutionStats<eslabSOChromosome, eslabSOPop>(_evaluation) {}
 
 	virtual eoMonitor& operator()();
 };
 
 class SOEvolution:
-	public GenericEvolution<eslabSOChromosome, eslabSOPop, SOEvolutionStats>
+	public Evolution<eslabSOChromosome, eslabSOPop, SOEvolutionStats>
 {
 	protected:
 
@@ -86,11 +86,11 @@ class SOEvolution:
 	public:
 
 	SOEvolution(const Architecture &_architecture,
-		const Graph &_graph, const ListScheduler &_scheduler,
+		const Graph &_graph, const BasicListScheduler &_scheduler,
 		Evaluation &_evaluation, const EvolutionTuning &_tuning,
 		const constrains_t &_constrains) :
 
-		GenericEvolution<chromosome_t, population_t, stats_t>(
+		Evolution<chromosome_t, population_t, stats_t>(
 			_architecture, _graph, _scheduler, _evaluation, _tuning, _constrains) {}
 
 	protected:

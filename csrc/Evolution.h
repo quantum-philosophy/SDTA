@@ -25,23 +25,23 @@ class eslabCheckPoint;
 /* Evolution                                                                  */
 /******************************************************************************/
 
-class Evolution
+class BasicEvolution
 {
 	public:
 
-	virtual EvolutionStats &solve(const layout_t &layout,
+	virtual BasicEvolutionStats &solve(const layout_t &layout,
 		const priority_t &priority) = 0;
 };
 
 template<class CT, class PT, class ST>
-class GenericEvolution: public Evolution
+class Evolution: public BasicEvolution
 {
 	protected:
 
 	const Architecture &architecture;
 	const Graph &graph;
 
-	const ListScheduler &scheduler;
+	const BasicListScheduler &scheduler;
 	Evaluation &evaluation;
 
 	const EvolutionTuning tuning;
@@ -56,8 +56,8 @@ class GenericEvolution: public Evolution
 	typedef ST stats_t;
 	typedef typename chromosome_t::fitness_t fitness_t;
 
-	GenericEvolution(const Architecture &_architecture,
-		const Graph &_graph, const ListScheduler &_scheduler,
+	Evolution(const Architecture &_architecture,
+		const Graph &_graph, const BasicListScheduler &_scheduler,
 		Evaluation &_evaluation, const EvolutionTuning &_tuning,
 		const constrains_t &_constrains) :
 

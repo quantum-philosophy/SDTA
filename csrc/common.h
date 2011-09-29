@@ -38,14 +38,14 @@ class Processor;
 class Architecture;
 
 class Schedule;
-class ListScheduler;
+class BasicListScheduler;
 
 class DynamicPower;
 class Hotspot;
 class Lifetime;
 
 template<class CT, class PT, class ST>
-class GenericEvolution;
+class Evolution;
 
 class Evaluation;
 
@@ -182,9 +182,6 @@ struct price_t
 
 class Constrain;
 
-template<class CT, class PT, class ST>
-class GenericEvolution;
-
 struct constrain_t
 {
 	rank_t max;
@@ -217,7 +214,7 @@ struct constrain_t
 class constrains_t: public std::vector<constrain_t>
 {
 	template<class CT, class PT, class ST>
-	friend class GenericEvolution;
+	friend class Evolution;
 
 	bool m_fixed_layout;
 	layout_t layout;

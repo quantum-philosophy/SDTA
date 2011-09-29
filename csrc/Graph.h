@@ -5,10 +5,12 @@
 
 class Graph
 {
+	template<class PT>
 	friend class ListScheduler;
 
 	template<class CT, class PT, class ST>
 	friend class GenericEvolution;
+
 	friend class SOEvolution;
 	friend class MOEvolution;
 

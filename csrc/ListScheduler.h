@@ -4,49 +4,23 @@
 #include "common.h"
 #include "Genetics.h"
 #include "Architecture.h"
+#include "Processor.h"
 #include "Graph.h"
+#include "Task.h"
+#include "Schedule.h"
 #include "Evaluation.h"
+#include "Pool.h"
 
-typedef std::list<tid_t> list_schedule_t;
-
-struct pool_t: public std::vector<list_schedule_t>
+class BasicListScheduler
 {
-	const size_t processor_count;
-	const size_t task_count;
+	public:
 
-	const layout_t &layout;
-	const priority_t &priority;
-
-	void *data;
-
-	const bool without_layout;
-	const bool without_priority;
-
-	vector_t processor_time;
-	vector_t task_time;
-
-	bit_string_t processed;
-	bit_string_t scheduled;
-
-	pool_t(size_t _processor_count, size_t _task_count,
-		const layout_t &_layout, const priority_t &_priority,
-		void *_data) :
-
-		std::vector<list_schedule_t>(_processor_count),
-		processor_count(_processor_count), task_count(_task_count),
-		layout(_layout), priority(_priority),
-		data(_data),
-
-		without_layout(layout.empty()), without_priority(_priority.empty()),
-
-		processor_time(_processor_count, 0),
-		task_time(_task_count, 0),
-
-		processed(_task_count, false),
-		scheduled(_task_count, false) {}
+	virtual Schedule process(const layout_t &layout, const priority_t &priority,
+		void *data = NULL) const = 0;
 };
 
-class ListScheduler
+template<class PT>
+class ListScheduler: public BasicListScheduler
 {
 	protected:
 
@@ -63,205 +37,64 @@ class ListScheduler
 
 	protected:
 
-	virtual void push(pool_t &pool, tid_t id) const = 0;
-	virtual tid_t pull(pool_t &pool, pid_t pid) const = 0;
+	inline bool ready(const Task *task, const bit_string_t &scheduled) const
+	{
+		size_t parent_count = task->parents.size();
 
-	inline bool ready(const Task *task, const bit_string_t &scheduled) const;
+		for (size_t i = 0; i < parent_count; i++)
+			if (!scheduled[task->parents[i]->id]) return false;
+
+		return true;
+	}
 };
 
-class DeterministicListScheduler: public ListScheduler
-{
-	public:
-
-	DeterministicListScheduler(const Architecture &architecture,
-		const Graph &graph) : ListScheduler(architecture, graph) {}
-
-	protected:
-
-	virtual void push(pool_t &pool, tid_t id) const;
-	virtual tid_t pull(pool_t &pool, pid_t pid) const;
-};
-
-class StochasticListScheduler: public ListScheduler
-{
-	public:
-
-	StochasticListScheduler(const Architecture &architecture,
-		const Graph &graph) : ListScheduler(architecture, graph) {}
-
-	void push(pool_t &pool, tid_t id) const;
-	tid_t pull(pool_t &pool, pid_t pid) const;
-};
-
-class RandomGeneratorListScheduler: public ListScheduler
-{
-	public:
-
-	RandomGeneratorListScheduler(const Architecture &architecture,
-		const Graph &graph) : ListScheduler(architecture, graph) {}
-
-	void push(pool_t &pool, tid_t id) const;
-	tid_t pull(pool_t &pool, pid_t pid) const;
-};
+typedef ListScheduler<DeterministicPool> DeterministicListScheduler;
+typedef ListScheduler<RandomPool> RandomGeneratorListScheduler;
 
 template<class CT>
-class ListScheduleMutation: public DeterministicListScheduler, public eoMonOp<CT>
+class ListScheduleMutation:
+	public ListScheduler<MutationPool>,
+	public eoMonOp<CT>
 {
-	const bool fixed_layout;
-	const layout_t &layout;
+	const layout_t *layout;
 	const rate_t &rate;
 
-	double current_rate;
-
 	public:
 
-	ListScheduleMutation(const constrains_t &constrains, const rate_t &_rate,
-		const Architecture &architecture, const Graph &graph) :
+	ListScheduleMutation(const Architecture &architecture, const Graph &graph,
+		const constrains_t &constrains, const rate_t &_rate) :
 
-		DeterministicListScheduler(architecture, graph),
-		fixed_layout(constrains.fixed_layout()),
-		layout(constrains.get_layout()), rate(_rate) {}
+		ListScheduler<MutationPool>(architecture, graph),
+		layout(constrains.fixed_layout() ? &constrains.get_layout() : NULL),
+		rate(_rate) {}
 
-	inline bool operator()(CT &chromosome)
-	{
-		current_rate = rate.get();
-
-		Schedule schedule;
-
-		if (fixed_layout) {
-			schedule = process(layout, chromosome);
-		}
-		else {
-			/* Should be encoded in the chromosome */
-			layout_t layout;
-			priority_t priority;
-
-			GeneEncoder::split(chromosome, layout, priority);
-
-			schedule = process(layout, priority);
-		}
-
-		chromosome.set_schedule(schedule);
-		GeneEncoder::reorder(chromosome);
-
-		/* NOTE: We always say that nothing has changed, since
-		 * the invalidation takes place in set_schedule. The purpose
-		 * is to keep the already computed schedule valid,
-		 * but the price becomes invalid.
-		 */
-		return false;
-	}
-
-	tid_t pull(pool_t &pool, pid_t pid) const;
+	bool operator()(CT &chromosome);
 };
 
 template<class CT>
-class ListScheduleTraining: public DeterministicListScheduler, public eoMonOp<CT>
+class ListScheduleTraining:
+	public ListScheduler<TrainingPool>,
+	public eoMonOp<CT>
 {
 	size_t max_lessons;
 	size_t stall_lessons;
 	Evaluation &evaluation;
-	const bool fixed_layout;
-	const layout_t &layout;
+	const layout_t *layout;
 	const rate_t &rate;
-
-	struct data_t
-	{
-		data_t(size_t _size) : size(_size)
-		{
-			reset();
-		}
-
-		inline void reset()
-		{
-			count = 0;
-			branching = false;
-			branches = std::vector<size_t>(size, 0);
-			point = 0;
-		}
-
-		inline bool choose()
-		{
-			if (count == 0) {
-#ifndef SHALLOW_CHECK
-				throw std::runtime_error("Cannot choose.");
-#endif
-				return false;
-			}
-
-			size_t i, j, pos = Random::number(count);
-
-			for (i = 0, j = 0; i < size; i++)
-				if (branches[i] > 1) {
-					if (j == pos) break;
-					else j++;
-				}
-
-			branching = true;
-			trial = 0;
-			branch_point = i;
-
-			return true;
-		}
-
-		inline bool checkpoint(size_t number)
-		{
-#ifndef SHALLOW_CHECK
-			if (point >= size)
-				throw std::runtime_error("The data is broken.");
-#endif
-
-			if (branching) {
-				return branch_point == point++;
-			}
-			else {
-				if (number > 1) count++;
-				branches[point++] = number;
-				return false;
-			}
-		}
-
-		inline size_t direction() const
-		{
-			return trial;
-		}
-
-		inline bool next()
-		{
-			point = 0;
-			trial++;
-
-			if (trial < branches[branch_point]) return true;
-
-			return false;
-		}
-
-		private:
-
-		const size_t size;
-		size_t count;
-
-		bool branching;
-		std::vector<size_t> branches;
-		int point;
-		size_t branch_point;
-		size_t trial;
-	};
 
 	public:
 
-	ListScheduleTraining(size_t _max_lessons, size_t _stall_lessons,
-		Evaluation &_evaluation, const constrains_t &constrains,
-		const rate_t &_rate, const Architecture &architecture, const Graph &graph) :
+	ListScheduleTraining(const Architecture &architecture, const Graph &graph,
+		size_t _max_lessons, size_t _stall_lessons, Evaluation &_evaluation,
+		const constrains_t &constrains, const rate_t &_rate) :
 
-		DeterministicListScheduler(architecture, graph),
+		ListScheduler<TrainingPool>(architecture, graph),
 		max_lessons(_max_lessons), stall_lessons(_stall_lessons),
-		evaluation(_evaluation), fixed_layout(constrains.fixed_layout()),
-		layout(constrains.get_layout()), rate(_rate) {}
+		evaluation(_evaluation),
+		layout(constrains.fixed_layout() ? &constrains.get_layout() : NULL),
+		rate(_rate) {}
 
 	bool operator()(CT &chromosome);
-
-	tid_t pull(pool_t &pool, pid_t pid) const;
 };
 
 #include "ListScheduler.hpp"

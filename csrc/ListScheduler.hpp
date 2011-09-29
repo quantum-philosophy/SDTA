@@ -1,23 +1,117 @@
 #include "ListScheduler.h"
 
-template<class CT>
-tid_t ListScheduleMutation<CT>::pull(pool_t &pool, pid_t pid) const
+template<class PT>
+Schedule ListScheduler<PT>::process(const layout_t &layout,
+	const priority_t &priority, void *data) const
 {
-	list_schedule_t &local_pool = pool[pid];
+	tid_t id, cid;
+	pid_t pid;
+	const Task *task, *child;
+	const Processor *processor;
+	size_t i, count;
+	double start, duration, finish;
 
-	tid_t id;
+	size_t processor_count = processors.size();
+	size_t task_count = tasks.size();
 
-	list_schedule_t::iterator it = local_pool.begin();
+	PT pool(processor_count, task_count, layout, priority, data);
 
-	if (Random::flip(current_rate)) {
-		size_t choice = Random::number(local_pool.size());
-		for (size_t i = 0; i < choice; i++) it++;
+	bit_string_t &processed = pool.processed;
+	bit_string_t &scheduled = pool.scheduled;
+
+	vector_t &processor_time = pool.processor_time;
+	vector_t &task_time = pool.task_time;
+
+	Schedule schedule(processor_count, task_count);
+
+	for (id = 0; id < task_count; id++) {
+		task = tasks[id];
+		if (task->is_root()) {
+			pool.push(id);
+			processed[id] = true;
+		}
 	}
 
-	id = *it;
-	local_pool.erase(it);
+	while (!pool.empty()) {
+		/* Get the next task */
+		pool.pull(pid, id);
 
-	return id;
+#ifndef SHALLOW_CHECK
+		if (pid >= processor_count || id >= task_count)
+			throw std::runtime_error("We are pulling something strange.");
+#endif
+
+		task = tasks[id];
+		processor = processors[pid];
+
+		/* Calculate its start time and duration */
+		start = std::max(processor_time[pid], task_time[id]);
+		duration = processor->calc_duration(task->get_type());
+		finish = start + duration;
+
+		processor_time[pid] = finish;
+
+		/* Append to the schedule */
+		schedule.append(pid, id, start, duration);
+		scheduled[id] = true;
+
+		/* Append children, but only those which are ready,
+		 * and ensure absence of repetitions.
+		 */
+		count = task->children.size();
+		for (i = 0; i < count; i++) {
+			child = task->children[i];
+			cid = child->id;
+
+			/* Shift the child in time with respect to the parent */
+			task_time[cid] = std::max(task_time[cid], finish);
+
+			/* Prevent from considering the child once again */
+			if (processed[cid]) continue;
+
+			/* All parents should be scheduled */
+			if (!ready(child, scheduled)) continue;
+
+			pool.push(cid);
+			processed[cid] = true;
+		}
+	}
+
+	return schedule;
+}
+
+template<class CT>
+bool ListScheduleMutation<CT>::operator()(CT &chromosome)
+{
+	double current_rate = rate.get();
+	void *data = (void *)&current_rate;
+
+	Schedule schedule;
+
+	if (layout) {
+		schedule = ListScheduler<MutationPool>::process(
+			*layout, chromosome, data);
+	}
+	else {
+		/* Should be encoded in the chromosome */
+		layout_t layout;
+		priority_t priority;
+
+		GeneEncoder::split(chromosome, layout, priority);
+
+		schedule = ListScheduler<MutationPool>::process(
+			layout, priority, data);
+	}
+
+	chromosome.set_schedule(schedule);
+	GeneEncoder::reorder(chromosome);
+
+	/* NOTE: We always say that nothing has changed, since
+	 * the invalidation takes place in set_schedule. The purpose
+	 * is to keep the already computed schedule valid,
+	 * but the price becomes invalid.
+	 */
+	return false;
 }
 
 template<class CT>
@@ -32,8 +126,8 @@ bool ListScheduleTraining<CT>::operator()(CT &chromosome)
 	layout_t layout;
 	priority_t priority;
 
-	if (fixed_layout) {
-		layout = this->layout;
+	if (this->layout) {
+		layout = *(this->layout);
 		priority = chromosome;
 	}
 	else {
@@ -46,7 +140,7 @@ bool ListScheduleTraining<CT>::operator()(CT &chromosome)
 	bool improved = false;
 	size_t lessons = 0, stall = 0;
 
-	data_t data(task_count);
+	TrainingPool::data_t data(task_count);
 
 	/* Collect all possible branches */
 	schedule = process(layout, priority, (void *)&data);
@@ -94,28 +188,4 @@ bool ListScheduleTraining<CT>::operator()(CT &chromosome)
 	GeneEncoder::reorder(chromosome);
 
 	return true;
-}
-
-template<class CT>
-tid_t ListScheduleTraining<CT>::pull(pool_t &pool, pid_t pid) const
-{
-	list_schedule_t &local_pool = pool[pid];
-
-	data_t *data = (data_t *)pool.data;
-
-	tid_t id;
-
-	list_schedule_t::iterator it = local_pool.begin();
-
-	size_t size = local_pool.size();
-
-	if (data->checkpoint(size)) {
-		size_t direction = data->direction();
-		for (size_t i = 0; i < direction; i++) it++;
-	}
-
-	id = *it;
-	local_pool.erase(it);
-
-	return id;
 }

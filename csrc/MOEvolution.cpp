@@ -87,7 +87,7 @@ void MOEvolution::process(population_t &population)
 
 eoMonitor &MOEvolutionStats::operator()()
 {
-	GenericEvolutionStats<chromosome_t, population_t>::operator()();
+	EvolutionStats<chromosome_t, population_t>::operator()();
 
 	best_lifetime = population->best_lifetime();
 	best_energy = population->best_energy();
@@ -110,7 +110,7 @@ eoMonitor &MOEvolutionStats::operator()()
 
 void MOEvolutionStats::display(std::ostream &o) const
 {
-	GenericEvolutionStats<chromosome_t, population_t>::display(o);
+	EvolutionStats<chromosome_t, population_t>::display(o);
 
 	o
 		<< std::setprecision(2)

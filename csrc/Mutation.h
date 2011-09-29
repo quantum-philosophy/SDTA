@@ -36,7 +36,7 @@ template<class CT>
 class Mutation: public eoMonOp<CT>
 {
 	const MutationTuning &tuning;
-	EvolutionStats &stats;
+	BasicEvolutionStats &stats;
 	const rate_t rate;
 
 	method_list_t method_list;
@@ -46,7 +46,7 @@ class Mutation: public eoMonOp<CT>
 
 	Mutation(const Architecture &architecture, const Graph &graph,
 		const constrains_t &constrains, const MutationTuning &_tuning,
-		EvolutionStats &_stats) :
+		BasicEvolutionStats &_stats) :
 
 		tuning(_tuning), stats(_stats),
 		rate(tuning.min_rate, tuning.scale, tuning.exponent, stats.generations)
@@ -67,8 +67,8 @@ class Mutation: public eoMonOp<CT>
 				one = new PeerMutation<CT>(constrains, rate);
 
 			else if (method_list[i].name == "list_schedule")
-				one = new ListScheduleMutation<CT>(constrains, rate,
-					architecture, graph);
+				one = new ListScheduleMutation<CT>(architecture, graph,
+					constrains, rate);
 
 			else throw std::runtime_error("The mutation method is unknown.");
 

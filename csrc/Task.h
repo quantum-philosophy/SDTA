@@ -9,6 +9,8 @@ class Task
 	friend class Architecture;
 	friend class Constrain;
 	friend class Mobility;
+
+	template<class PT>
 	friend class ListScheduler;
 
 	template<class CT, class PT, class ST>

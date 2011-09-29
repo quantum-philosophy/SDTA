@@ -6,10 +6,12 @@
 class Architecture
 {
 	friend class Graph;
+
+	template<class PT>
 	friend class ListScheduler;
 
 	template<class CT, class PT, class ST>
-	friend class GenericEvolution;
+	friend class Evolution;
 
 	friend class DynamicPower;
 	friend class Hotspot;

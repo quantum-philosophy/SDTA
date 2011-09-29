@@ -71,7 +71,7 @@ class eslabMOPop: public eslabPop<eslabMOChromosome>
 	price_t best_energy() const;
 };
 
-class MOEvolutionStats: public GenericEvolutionStats<eslabMOChromosome, eslabMOPop>
+class MOEvolutionStats: public EvolutionStats<eslabMOChromosome, eslabMOPop>
 {
 	public:
 
@@ -83,13 +83,13 @@ class MOEvolutionStats: public GenericEvolutionStats<eslabMOChromosome, eslabMOP
 	void display(std::ostream &o) const;
 
 	MOEvolutionStats(const Evaluation &_evaluation) :
-		GenericEvolutionStats<eslabMOChromosome, eslabMOPop>(_evaluation) {}
+		EvolutionStats<eslabMOChromosome, eslabMOPop>(_evaluation) {}
 
 	virtual eoMonitor& operator()();
 };
 
 class MOEvolution:
-	public GenericEvolution<eslabMOChromosome, eslabMOPop, MOEvolutionStats>
+	public Evolution<eslabMOChromosome, eslabMOPop, MOEvolutionStats>
 {
 	protected:
 
@@ -112,11 +112,11 @@ class MOEvolution:
 	public:
 
 	MOEvolution(const Architecture &_architecture,
-		const Graph &_graph, const ListScheduler &_scheduler,
+		const Graph &_graph, const BasicListScheduler &_scheduler,
 		Evaluation &_evaluation, const EvolutionTuning &_tuning,
 		const constrains_t &_constrains) :
 
-		GenericEvolution<chromosome_t, population_t, stats_t>(
+		Evolution<chromosome_t, population_t, stats_t>(
 			_architecture, _graph, _scheduler, _evaluation, _tuning, _constrains) {}
 
 	protected:

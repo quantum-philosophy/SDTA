@@ -5,7 +5,7 @@
 #include "Genetics.h"
 #include "Evaluation.h"
 
-class EvolutionStats
+class BasicEvolutionStats
 {
 	public:
 
@@ -15,7 +15,7 @@ class EvolutionStats
 	double mutation_rate;
 	double training_rate;
 
-	EvolutionStats()
+	BasicEvolutionStats()
 	{
 		reset();
 	}
@@ -33,15 +33,15 @@ class EvolutionStats
 };
 
 template<class CT, class PT = eslabPop<CT> >
-class GenericEvolutionStats: public EvolutionStats, public eoMonitor
+class EvolutionStats: public BasicEvolutionStats, public eoMonitor
 {
 	public:
 
 	typedef CT chromosome_t;
 	typedef PT population_t;
 
-	GenericEvolutionStats(const Evaluation &_evaluation) :
-		EvolutionStats(), evaluation(_evaluation), population(NULL),
+	EvolutionStats(const Evaluation &_evaluation) :
+		BasicEvolutionStats(), evaluation(_evaluation), population(NULL),
 		last_evaluations(0), last_deadline_misses(0), last_cache_hits(0) {}
 
 	void watch(const population_t &_population, bool _silent = false)
@@ -67,7 +67,7 @@ class GenericEvolutionStats: public EvolutionStats, public eoMonitor
 	size_t last_cache_hits;
 };
 
-std::ostream &operator<< (std::ostream &o, const EvolutionStats &stats);
+std::ostream &operator<< (std::ostream &o, const BasicEvolutionStats &stats);
 
 #include "EvolutionStats.hpp"
 

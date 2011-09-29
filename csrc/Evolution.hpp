@@ -5,7 +5,7 @@
 /******************************************************************************/
 
 template<class CT, class PT, class ST>
-ST &GenericEvolution<CT, PT, ST>::solve(const layout_t &layout,
+ST &Evolution<CT, PT, ST>::solve(const layout_t &layout,
 	const priority_t &priority)
 {
 	population_t population;
@@ -18,7 +18,7 @@ ST &GenericEvolution<CT, PT, ST>::solve(const layout_t &layout,
 }
 
 template<class CT, class PT, class ST>
-void GenericEvolution<CT, PT, ST>::populate(population_t &population,
+void Evolution<CT, PT, ST>::populate(population_t &population,
 	const layout_t &layout, const priority_t &priority)
 {
 	size_t i;

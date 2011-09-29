@@ -27,7 +27,7 @@ class Chromosome
 class GeneEncoder;
 
 template<class CT, class PT, class ST>
-class GenericEvolution;
+class Evolution;
 
 template<class FT>
 class eslabChromosome
@@ -35,7 +35,7 @@ class eslabChromosome
 	friend class GeneEncoder;
 
 	template<class CT, class PT, class ST>
-	friend class GenericEvolution;
+	friend class Evolution;
 
 	protected:
 

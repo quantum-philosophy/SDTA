@@ -69,7 +69,7 @@ void optimize(const string &system_config, const string &genetic_config,
 	Graph *graph = NULL;
 	Architecture *architecture = NULL;
 	Hotspot *hotspot = NULL;
-	Evolution *evolution = NULL;
+	BasicEvolution *evolution = NULL;
 	Evaluation *evaluation = NULL;
 
 	try {
@@ -221,7 +221,7 @@ void optimize(const string &system_config, const string &genetic_config,
 
 			clock_t begin = clock();
 
-			EvolutionStats &stats = evolution->solve(mapping, priority);
+			BasicEvolutionStats &stats = evolution->solve(mapping, priority);
 
 			clock_t end = clock();
 			double elapsed = (double)(end - begin) / CLOCKS_PER_SEC;

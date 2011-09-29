@@ -30,8 +30,6 @@ void Schedule::reorder(const order_t &order)
 
 std::ostream &operator<< (std::ostream &o, const Schedule &schedule)
 {
-	size_t processor_count = schedule.processors();
-
 	o
 		<< "  Duration: " << schedule.get_duration() << std::endl
 		<< "  "
@@ -40,19 +38,23 @@ std::ostream &operator<< (std::ostream &o, const Schedule &schedule)
 			<< std::setw(8) << "start" << " : "
 			<< std::setw(8) << "duration" << " )" << std::endl;
 
-	for (pid_t pid = 0; pid < processor_count; pid++) {
+	size_t i, task_count = schedule.tasks();
+
+	for (tid_t id = 0; id < task_count; id++) {
+		pid_t pid = schedule.map(id);
 		const LocalSchedule &local_schedule = schedule[pid];
-		size_t task_count = local_schedule.size();
+		size_t count = local_schedule.size();
 
-		for (size_t i = 0; i < task_count; i++) {
-			const ScheduleItem &item = local_schedule[i];
+		for (i = 0; i < count; i++)
+			if (id == local_schedule[i].id) break;
 
-			o	<< "  "
-				<< std::setw(4) << item.id << " ( "
-				<< std::setw(4) << pid << " : "
-				<< std::setw(8) << item.start << " : "
-				<< std::setw(8) << item.duration << " )" << std::endl;
-		}
+		const ScheduleItem &item = local_schedule[i];
+
+		o	<< "  "
+			<< std::setw(4) << id << " ( "
+			<< std::setw(4) << pid << " : "
+			<< std::setw(8) << item.start << " : "
+			<< std::setw(8) << item.duration << " )" << std::endl;
 	}
 
 	return o;

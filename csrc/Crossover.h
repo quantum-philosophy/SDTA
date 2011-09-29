@@ -51,7 +51,7 @@ template<class CT>
 class Crossover: public eoQuadOp<CT>
 {
 	const CrossoverTuning &tuning;
-	EvolutionStats &stats;
+	BasicEvolutionStats &stats;
 	const rate_t rate;
 
 	method_list_t method_list;
@@ -60,7 +60,7 @@ class Crossover: public eoQuadOp<CT>
 	public:
 
 	Crossover(const constrains_t &constrains,
-		const CrossoverTuning &_tuning, EvolutionStats &_stats) :
+		const CrossoverTuning &_tuning, BasicEvolutionStats &_stats) :
 
 		tuning(_tuning), stats(_stats),
 		rate(tuning.min_rate, tuning.scale, tuning.exponent, stats.generations)

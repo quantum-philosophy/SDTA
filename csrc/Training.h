@@ -28,7 +28,7 @@ class Training: public eoMonOp<CT>, public eoAlgo<CT>
 	eoMonOp<CT> *train;
 
 	const TrainingTuning &tuning;
-	EvolutionStats &stats;
+	BasicEvolutionStats &stats;
 	const rate_t rate;
 
 	public:
@@ -36,7 +36,7 @@ class Training: public eoMonOp<CT>, public eoAlgo<CT>
 	Training(const Architecture &architecture, const Graph &graph,
 		const constrains_t &constrains, Evaluation &evaluation,
 		eoEvalFunc<CT> &evaluate, const TrainingTuning &_tuning,
-		EvolutionStats &_stats) :
+		BasicEvolutionStats &_stats) :
 
 		train(NULL), tuning(_tuning), stats(_stats),
 		rate(tuning.min_rate, tuning.scale, tuning.exponent, stats.generations)
@@ -46,9 +46,9 @@ class Training: public eoMonOp<CT>, public eoAlgo<CT>
 				tuning.stall_lessons, evaluate, constrains, rate);
 
 		else if (tuning.method == "list_schedule")
-			train = new ListScheduleTraining<CT>(tuning.max_lessons,
-				tuning.stall_lessons, evaluation, constrains, rate,
-				architecture, graph);
+			train = new ListScheduleTraining<CT>(architecture, graph,
+				tuning.max_lessons, tuning.stall_lessons, evaluation,
+				constrains, rate);
 
 		else throw std::runtime_error("The training method is unknown.");
 	}
