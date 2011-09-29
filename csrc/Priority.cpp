@@ -6,13 +6,18 @@
 #include "Task.h"
 #include "Mobility.h"
 
-priority_t Priority::calculate(const Architecture &architecture,
+priority_t Priority::mobile(const Architecture &architecture,
 	const Graph &graph, const mapping_t &mapping)
 {
 	size_t i, task_count = graph.size();
 
 	priority_t priority(task_count);
-	vector_t mobility = Mobility::calculate(architecture, graph, mapping);
+	vector_t mobility;
+
+	if (mapping.empty())
+		mobility = Mobility::uniform(architecture, graph);
+	else
+		mobility = Mobility::precise(architecture, graph, mapping);
 
 #ifndef SHALLOW_CHECK
 	if (mobility.size() != task_count)

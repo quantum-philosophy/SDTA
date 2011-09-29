@@ -103,6 +103,30 @@ class RandomPool: public Pool
 	}
 };
 
+class EarliestProcessorPool: public DeterministicPool
+{
+	public:
+
+	EarliestProcessorPool(size_t _processor_count, size_t _task_count,
+		const layout_t &_layout, const priority_t &_priority, void *_data = NULL) :
+
+		DeterministicPool(_processor_count, _task_count, _layout, _priority, _data) {}
+
+	virtual void pull(pid_t &pid, tid_t &id)
+	{
+		pid_t earliest = 0;
+
+		for (pid_t i = 1; i < processor_count; i++)
+			if (processor_time[earliest] > processor_time[i])
+				earliest = i;
+
+		id = front();
+		pid = earliest;
+
+		pop_front();
+	}
+};
+
 class MutationPool: public DeterministicPool
 {
 	double rate;

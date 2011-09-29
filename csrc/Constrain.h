@@ -7,7 +7,7 @@ class Constrain
 {
 	public:
 
-	static constrains_t calculate(const Architecture &architecture,
+	static constrains_t structural(const Architecture &architecture,
 		const Graph &graph, const layout_t &layout = layout_t());
 
 	private:

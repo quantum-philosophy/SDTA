@@ -4,7 +4,7 @@
 #include "Architecture.h"
 #include "Processor.h"
 
-constrains_t Constrain::calculate(const Architecture &architecture,
+constrains_t Constrain::structural(const Architecture &architecture,
 	const Graph &graph, const layout_t &layout)
 {
 	size_t task_count = graph.size();
@@ -31,7 +31,6 @@ constrains_t Constrain::calculate(const Architecture &architecture,
 		constrains[task_count + id].peers = bit_string_t(2 * task_count, false);
 
 		/* Scheduling constrains */
-#ifndef UNCONSTRAINED
 		bit_string_t dependents(task_count, false);
 		dependent_count = count_dependents(task, dependents);
 
@@ -44,10 +43,6 @@ constrains_t Constrain::calculate(const Architecture &architecture,
 
 		constrains[id].min = dependency_count;
 		constrains[id].max = task_count - dependent_count - 1;
-#else
-		constrains[id].min = 0;
-		constrains[id].max = task_count:
-#endif
 
 		/* Mapping constrains */
 		if (fixed_layout) {

@@ -50,6 +50,7 @@ class ListScheduler: public BasicListScheduler
 
 typedef ListScheduler<DeterministicPool> DeterministicListScheduler;
 typedef ListScheduler<RandomPool> RandomGeneratorListScheduler;
+typedef ListScheduler<EarliestProcessorPool> EarliestProcessorListScheduler;
 
 template<class CT>
 class ListScheduleMutation:

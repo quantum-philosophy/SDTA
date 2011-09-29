@@ -92,7 +92,7 @@ void optimize(const string &system_config, const string &genetic_config,
 		 *
 		 */
 		if (mapping.empty())
-			mapping = Layout::calculate(*architecture, *graph);
+			mapping = Layout::ordinal(*architecture, *graph);
 		else if (tuning.verbose)
 			cout << "Using external mapping." << endl;
 
@@ -100,7 +100,7 @@ void optimize(const string &system_config, const string &genetic_config,
 		 *
 		 */
 		if (priority.empty())
-			priority = Priority::calculate(*architecture, *graph, mapping);
+			priority = Priority::mobile(*architecture, *graph, mapping);
 		else if (tuning.verbose)
 			cout << "Using external priority." << endl;
 
@@ -115,7 +115,7 @@ void optimize(const string &system_config, const string &genetic_config,
 		 */
 		if (deadline == 0) {
 			priority_t deadline_priority =
-				Priority::calculate(*architecture, *graph, mapping);
+				Priority::mobile(*architecture, *graph, mapping);
 			Schedule deadline_schedule = scheduler.process(mapping,
 				deadline_priority);
 			deadline = tuning.deadline_ratio * deadline_schedule.get_duration();
@@ -182,9 +182,9 @@ void optimize(const string &system_config, const string &genetic_config,
 		constrains_t constrains;
 
 		if (tuning.include_mapping)
-			constrains = Constrain::calculate(*architecture, *graph);
+			constrains = Constrain::structural(*architecture, *graph);
 		else
-			constrains = Constrain::calculate(*architecture, *graph, mapping);
+			constrains = Constrain::structural(*architecture, *graph, mapping);
 
 		if (tuning.verbose) {
 			cout << graph << endl << architecture << endl
