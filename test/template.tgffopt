@@ -1,0 +1,33 @@
+# Randomize!
+seed [SEED]
+
+# Task graph label
+tg_label TASK_GRAPH
+# Number of graphs
+tg_cnt 1
+# Number of tasks per graph +/- jitter
+task_cnt [TASK_COUNT] 0.001
+# Number of different tasks
+task_type_cnt [TYPE_COUNT]
+# All tasks are different?
+task_unique false
+# Have exactly the same task count each time
+period_mul 1
+# Write
+tg_write
+
+# Processing element (PE) label
+table_label PE
+# Number of PEs
+table_cnt [PROCESSOR_COUNT]
+# Attributes of PEs
+table_attrib \
+  frequency 3e9 0, \
+  voltage 0.8 0, \
+  ngate 2e6 0
+# Attributes of tasks for particular PE
+type_attrib \
+  effective_switched_capacitance 2e-8 0.5e-8, \
+  number_of_clock_cycles 3e8 1e8
+# Write
+pe_write

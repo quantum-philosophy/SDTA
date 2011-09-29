@@ -1,0 +1,71 @@
+#!/usr/bin/env ruby
+
+if ARGV.length != 5
+  puts 'Need some arguments...'
+  puts '1. a TGFF template'
+  puts '2. the number of processors, e.g. "(1..16)"'
+  puts '3. the number of tasks, e.g. "[ 60, 90, 120 ]"'
+  puts '4. the number of repetitions of each combination'
+  puts '5. the output directory'
+  exit
+end
+
+input = ARGV[0]
+processors = eval ARGV[1]
+tasks = eval ARGV[2]
+repeat = ARGV[3].to_i
+output = ARGV[4]
+
+unless File.exist? input
+  puts 'Need a real template...'
+  exit
+end
+
+unless File.directory? output
+  puts 'Need a real directory...'
+  exit
+end
+
+template = []
+
+File.open(input) do |file|
+  while line = file.gets
+    next if line =~ /\s*#/ or line =~ /^\s*$/
+    template << line
+  end
+end
+
+srand Time.now.to_i
+
+processors.each do |processor_count|
+  tasks.each do |task_count|
+    type_count = task_count / 2
+
+    name = "%03d_%03d" % [ processor_count, task_count ]
+    directory = File.join output, name
+
+    puts "Test case %d x %d: %s" % [ processor_count, task_count, directory ]
+
+    Dir::mkdir directory unless File.directory? directory
+
+    (1..repeat).each do |i|
+      name = "%03d.tgffopt" % i
+      name = File.join directory, name
+
+      puts "  %3d: %s" % [ i, name ]
+
+      File.open(name, 'w') do |file|
+        template.each do |line|
+          seed = rand 1e5
+
+          line = line.gsub '[SEED]', seed.to_s
+          line = line.gsub '[TASK_COUNT]', task_count.to_s
+          line = line.gsub '[TYPE_COUNT]', type_count.to_s
+          line = line.gsub '[PROCESSOR_COUNT]', processor_count.to_s
+
+          file << line
+        end
+      end
+    end
+  end
+end
