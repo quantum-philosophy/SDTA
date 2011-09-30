@@ -37,7 +37,8 @@ function showEvolutionStats(file, full)
         tokens = regexp(value, '([^%]+)%.*', 'tokens');
         improvement(end + 1) = str2num(tokens{1}{1});
       case 'Time elapsed'
-        time(end + 1) = str2num(value) / 60;
+        tokens = regexp(value, '\s*([\d.]+\s*)', 'tokens');
+        time(end + 1) = str2num(tokens{1}{1});
       end
     end
 
