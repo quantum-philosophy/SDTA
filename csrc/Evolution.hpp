@@ -49,7 +49,6 @@ void Evolution<CT, PT, ST>::populate(population_t &population,
 			chromosome.set_schedule(schedule);
 			GeneEncoder::reallocate(chromosome);
 		}
-		GeneEncoder::reorder(chromosome);
 		evaluate(chromosome);
 		population.push_back(chromosome);
 	}
@@ -66,7 +65,6 @@ void Evolution<CT, PT, ST>::populate(population_t &population,
 			chromosome.set_schedule(schedule);
 			GeneEncoder::reallocate(chromosome);
 		}
-		GeneEncoder::reorder(chromosome);
 		evaluate(chromosome);
 		population.push_back(chromosome);
 	}

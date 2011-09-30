@@ -47,10 +47,9 @@ bool NPointCrossover<CT>::operator()(CT &one, CT &another)
 		i = 1 + Random::number(size - 1);
 
 		if (turn[i]) continue;
-		else {
-			turn[i] = true;
-			select_points--;
-		}
+
+		turn[i] = true;
+		select_points--;
 	}
 	while (select_points);
 

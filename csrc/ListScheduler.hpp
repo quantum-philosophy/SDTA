@@ -153,9 +153,6 @@ bool ListScheduleCrossover<CT>::operator()(CT &one, CT &another)
 		another.set_schedule(schedule);
 	}
 
-	GeneEncoder::reorder(one);
-	GeneEncoder::reorder(another);
-
 	/* NOTE: We always say that nothing has changed, since
 	 * the invalidation takes place in set_schedule. The purpose
 	 * is to keep the already computed schedule valid,
@@ -188,7 +185,6 @@ bool ListScheduleMutation<CT>::operator()(CT &chromosome)
 	}
 
 	chromosome.set_schedule(schedule);
-	GeneEncoder::reorder(chromosome);
 
 	/* NOTE: We always say that nothing has changed, since
 	 * the invalidation takes place in set_schedule. The purpose
@@ -269,7 +265,6 @@ bool ListScheduleTraining<CT>::operator()(CT &chromosome)
 
 	chromosome.set_schedule(best_schedule);
 	chromosome.set_price(best_price);
-	GeneEncoder::reorder(chromosome);
 
 	return true;
 }

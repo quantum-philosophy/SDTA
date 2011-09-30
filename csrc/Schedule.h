@@ -25,6 +25,7 @@ typedef std::vector<ScheduleItem> LocalSchedule;
 class Schedule
 {
 	friend class GeneEncoder;
+	friend class eslabSOChromosome;
 #ifndef WITHOUT_MEMCACHED
 	friend class MemcachedEvaluation;
 #endif

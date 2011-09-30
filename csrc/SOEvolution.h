@@ -26,6 +26,17 @@ class eslabSOChromosome: public eslabChromosome<double>,
 		eoInt<double>(_size) {}
 #endif
 
+	virtual inline void set_schedule(const Schedule &schedule)
+	{
+		eslabChromosome<double>::set_schedule(schedule);
+
+		const step_t * const order = schedule.point_order();
+		const size_t task_count = schedule.task_count;
+
+		for (size_t i = 0; i < task_count; i++)
+			(*this)[order[i]] = (rank_t)i;
+	}
+
 	protected:
 
 	inline void set_fitness(const price_t &price)

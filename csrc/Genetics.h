@@ -65,7 +65,7 @@ class eslabChromosome
 		return !invalid_schedule;
 	}
 
-	inline void set_schedule(const Schedule &schedule)
+	virtual inline void set_schedule(const Schedule &schedule)
 	{
 		this->schedule = schedule;
 		invalid_schedule = false;
