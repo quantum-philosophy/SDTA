@@ -81,6 +81,54 @@ Schedule ListScheduler<PT>::process(const layout_t &layout,
 }
 
 template<class CT>
+bool ListScheduleCrossover<CT>::operator()(CT &one, CT &another)
+{
+	double rate = this->rate.get();
+
+	if (!Random::flip(rate)) return false;
+
+	size_t i;
+	size_t size = one.size();
+	size_t select_points = points;
+
+#ifndef SHALLOW_CHECK
+	if (size != another.size())
+		throw std::runtime_error("The chromosomes have different size.");
+#endif
+
+	bit_string_t turn(size, false);
+
+	do {
+		i = 1 + Random::number(size - 1);
+
+		if (turn[i]) continue;
+		else {
+			turn[i] = true;
+			select_points--;
+		}
+	}
+	while (select_points);
+
+	{
+		CrossoverPool::data_t data(one, another, turn);
+		Schedule schedule = ListScheduler<CrossoverPool>::process(
+			*layout, one, &data);
+		one.set_schedule(schedule);
+		GeneEncoder::reorder(one);
+	}
+
+	{
+		CrossoverPool::data_t data(another, one, turn);
+		Schedule schedule = ListScheduler<CrossoverPool>::process(
+			*layout, another, &data);
+		another.set_schedule(schedule);
+		GeneEncoder::reorder(another);
+	}
+
+	return true;
+}
+
+template<class CT>
 bool ListScheduleMutation<CT>::operator()(CT &chromosome)
 {
 	double current_rate = rate.get();

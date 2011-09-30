@@ -26,7 +26,8 @@ void SOEvolution::process(population_t &population)
 	Selection<chromosome_t> select(tuning.selection);
 
 	/* Transform = Crossover + Mutate */
-	Crossover<chromosome_t> crossover(constrains, tuning.crossover, stats);
+	Crossover<chromosome_t> crossover(architecture, graph, constrains,
+		tuning.crossover, stats);
 	Mutation<chromosome_t> mutate(architecture, graph, constrains,
 		tuning.mutation, stats);
 	Transformation<chromosome_t> transform(crossover, mutate);

@@ -62,7 +62,8 @@ void MOEvolution::process(population_t &population)
 	checkpoint.add(evolution_monitor);
 
 	/* Transform = Crossover + Mutate */
-	Crossover<chromosome_t> crossover(constrains, tuning.crossover, stats);
+	Crossover<chromosome_t> crossover(architecture, graph, constrains,
+		tuning.crossover, stats);
 	Mutation<chromosome_t> mutate(architecture, graph, constrains,
 		tuning.mutation, stats);
 	Transformation<chromosome_t> transform(crossover, mutate);

@@ -53,6 +53,31 @@ typedef ListScheduler<RandomPool> RandomGeneratorListScheduler;
 typedef ListScheduler<EarliestProcessorPool> EarliestProcessorListScheduler;
 
 template<class CT>
+class ListScheduleCrossover:
+	public ListScheduler<CrossoverPool>,
+	public eoQuadOp<CT>
+{
+	size_t points;
+	const layout_t *layout;
+	const rate_t &rate;
+
+	public:
+
+	ListScheduleCrossover(const Architecture &architecture, const Graph &graph,
+		size_t _points, const constrains_t &constrains, const rate_t &_rate) :
+
+		ListScheduler<CrossoverPool>(architecture, graph), points(_points),
+		layout(constrains.fixed_layout() ? &constrains.get_layout() : NULL),
+		rate(_rate)
+	{
+		if (points < 1)
+			throw std::runtime_error("The number of crossover points should be at least one.");
+	}
+
+	bool operator()(CT &one, CT &another);
+};
+
+template<class CT>
 class ListScheduleMutation:
 	public ListScheduler<MutationPool>,
 	public eoMonOp<CT>

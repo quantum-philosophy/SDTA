@@ -1,6 +1,7 @@
 #ifndef __CROSSOVER_H__
 #define __CROSSOVER_H__
 
+#include "ListScheduler.h"
 #include "Helper.h"
 
 template<class CT>
@@ -59,8 +60,9 @@ class Crossover: public eoQuadOp<CT>
 
 	public:
 
-	Crossover(const constrains_t &constrains,
-		const CrossoverTuning &_tuning, BasicEvolutionStats &_stats) :
+	Crossover(const Architecture &architecture, const Graph &graph,
+		const constrains_t &constrains, const CrossoverTuning &_tuning,
+		BasicEvolutionStats &_stats) :
 
 		tuning(_tuning), stats(_stats),
 		rate(tuning.min_rate, tuning.scale, tuning.exponent, stats.generations)
@@ -82,6 +84,10 @@ class Crossover: public eoQuadOp<CT>
 
 			else if (method_list[i].name == "peer")
 				one = new PeerCrossover<CT>(constrains, rate);
+
+			else if (method_list[i].name == "list_schedule")
+				one = new ListScheduleCrossover<CT>(architecture, graph,
+					tuning.points, constrains, rate);
 
 			else throw std::runtime_error("The crossover method is unknown.");
 

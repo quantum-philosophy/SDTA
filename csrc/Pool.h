@@ -127,6 +127,87 @@ class EarliestProcessorPool: public DeterministicPool
 	}
 };
 
+class CrossoverPool: public Pool
+{
+	public:
+
+	struct data_t
+	{
+		private:
+
+		const priority_t &initial;
+		const priority_t &alternative;
+		const bit_string_t &turn;
+		bool changed;
+		size_t position;
+
+		public:
+
+		data_t(const priority_t &_initial, const priority_t &_alternative,
+			const bit_string_t &_turn) :
+
+			initial(_initial), alternative(_alternative),
+			turn(_turn), changed(false), position(0) {}
+
+		inline rank_t operator[](size_t i) const
+		{
+			if (changed) return alternative[i];
+			else return initial[i];
+		}
+
+		inline void tick()
+		{
+#ifndef SHALLOW_CHECK
+			if (position > turn.size())
+				throw std::runtime_error("The turn vector is broken.");
+#endif
+			if (turn[position]) changed = !changed;
+			position++;
+		}
+	};
+
+	CrossoverPool(size_t _processor_count, size_t _task_count,
+		const layout_t &_layout, const priority_t &_priority, void *_data) :
+
+		Pool(_processor_count, _task_count, _layout, _priority)
+	{
+#ifndef SHALLOW_CHECK
+		if (!_data)
+			throw std::runtime_error("The data is missing.");
+#endif
+		data = (data_t *)_data;
+	}
+
+	virtual inline void push(tid_t id)
+	{
+		push_back(id);
+	}
+
+	virtual inline void pull(pid_t &pid, tid_t &id)
+	{
+		data_t &data = *(this->data);
+
+		data.tick();
+
+		iterator best, it;
+
+		best = it = begin();
+
+		for (; it != end(); it++)
+			if (data[*it] < data[*best])
+				best = it;
+
+		id = *best;
+		pid = layout[id];
+
+		erase(best);
+	}
+
+	private:
+
+	data_t *data;
+};
+
 class MutationPool: public DeterministicPool
 {
 	double rate;
@@ -147,9 +228,10 @@ class MutationPool: public DeterministicPool
 	virtual void pull(pid_t &pid, tid_t &id)
 	{
 		iterator it = begin();
+		size_t count = size();
 
-		if (Random::flip(rate)) {
-			size_t choice = Random::number(size());
+		if (count > 1 && Random::flip(rate)) {
+			size_t choice = Random::number(count - 1) + 1;
 			for (size_t i = 0; i < choice; i++) it++;
 		}
 
