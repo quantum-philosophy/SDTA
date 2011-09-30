@@ -38,23 +38,33 @@ std::ostream &operator<< (std::ostream &o, const Schedule &schedule)
 			<< std::setw(8) << "start" << " : "
 			<< std::setw(8) << "duration" << " )" << std::endl;
 
-	size_t i, task_count = schedule.tasks();
+	size_t i, count;
+	size_t task_count = schedule.tasks();
+	size_t processor_count = schedule.processors();
 
 	for (tid_t id = 0; id < task_count; id++) {
 		pid_t pid = schedule.map(id);
 		const LocalSchedule &local_schedule = schedule[pid];
-		size_t count = local_schedule.size();
+		count = local_schedule.size();
 
 		for (i = 0; i < count; i++)
 			if (id == local_schedule[i].id) break;
 
 		const ScheduleItem &item = local_schedule[i];
 
-		o	<< "  "
-			<< std::setw(4) << id << " ( "
+		o	<< std::setw(4) << id << " ( "
 			<< std::setw(4) << pid << " : "
 			<< std::setw(8) << item.start << " : "
 			<< std::setw(8) << item.duration << " )" << std::endl;
+	}
+
+	o << std::endl << "Processor load:" << std::endl;
+
+	for (i = 0; i < processor_count; i++) {
+		count = schedule[i].size();
+		o	<< std::setw(4) << i << " -> " << count << " tasks ("
+			<< std::setprecision(2) << double(count) / double(task_count)
+			<< "%)" << std::endl;
 	}
 
 	return o;

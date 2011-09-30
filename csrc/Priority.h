@@ -7,8 +7,8 @@ class Priority
 {
 	public:
 
-	static priority_t calculate(const Architecture &architecture,
-		const Graph &graph, const mapping_t &mapping);
+	static priority_t mobile(const Architecture &architecture,
+		const Graph &graph, const mapping_t &mapping = mapping_t());
 };
 
 #endif
