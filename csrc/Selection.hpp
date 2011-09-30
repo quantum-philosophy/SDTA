@@ -46,16 +46,15 @@ const CT &DominanceRouletteSelection<CT>::operator()(const eoPop<CT> &population
 template<class CT>
 void RankRouletteSelection<CT>::setup(const eoPop<CT> &population)
 {
-	size_t population_size = population.size();
-
-	total = 0;
-	chance.resize(population_size);
-
 	std::vector<const CT *> sorted;
 	population.sort(sorted);
 
 	size_t i, j;
+	double sum = 0;
 
+	size_t population_size = population.size();
+
+	chance.resize(population_size);
 	for (i = 0; i < population_size; i++) {
 		for (j = 0; j < population_size; j++)
 			if (sorted[i] == &population[j]) break;
@@ -65,8 +64,14 @@ void RankRouletteSelection<CT>::setup(const eoPop<CT> &population)
 			throw std::runtime_error("The rank selection is invalid.");
 #endif
 
-		chance[j] = population_size - i;
-		total += chance[j];
+		chance[j] = std::pow(i + 1, factor);
+		sum += chance[j];
+	}
+
+	total = 0;
+	for (i = 0; i < population_size; i++) {
+		chance[i] = double(population_size) * chance[i] / sum;
+		total += chance[i];
 	}
 }
 

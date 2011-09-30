@@ -80,6 +80,8 @@ void EvolutionTuning::update(std::istream &main_stream)
 			stream >> selection.ratio;
 		else if (name == "tournament_size")
 			stream >> selection.tournament_size;
+		else if (name == "ranking_factor")
+			stream >> selection.ranking_factor;
 
 		/* Crossover */
 		else if (name == "crossover") {
@@ -183,6 +185,8 @@ void EvolutionTuning::display(std::ostream &o) const
 		<< "    Ratio:                " << selection.ratio << std::endl
 		<< std::setprecision(0)
 		<< "    Tournament size:      " << selection.tournament_size << std::endl
+		<< std::setprecision(2)
+		<< "    Ranking factor:       " << selection.ranking_factor << std::endl
 		<< std::endl
 
 		/* Crossover */

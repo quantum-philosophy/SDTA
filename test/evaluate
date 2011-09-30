@@ -1,0 +1,51 @@
+#!/usr/bin/env ruby
+
+if ARGV.length != 2
+  puts 'Need some arguments...'
+  puts '1. an input directory'
+  puts '2. an output directory'
+  exit
+end
+
+input = ARGV[0]
+output = ARGV[1]
+
+unless File.exist? input
+  puts 'Need a real input directory...'
+  exit
+end
+
+unless File.exist? output
+  puts 'Need a real output directory...'
+  exit
+end
+
+Dir[File.join(input, '*')].each do |entry|
+  unless File.directory? entry
+    puts "Skipping a regular file '#{ entry }'..."
+    next
+  end
+
+  unless entry.match /\/(\d+)_(\d+)$/
+    puts "Skipping an unknow directory '#{ entry }'..."
+    next
+  end
+
+  processor_count = $1.to_i
+  task_count = $2.to_i
+
+  repetitions = []
+
+  Dir[File.join(entry, '*')].each do |subentry|
+    unless subentry.match /\/(\d+)\.tgffopt$/
+      puts "Skipping an unknow test case '#{ subentry }'..."
+      next
+    end
+    repetitions.push subentry
+  end
+
+  repetition_count = repetitions.length
+
+  puts "Test case %d x %d with %d repetitions" %
+    [ processor_count, task_count, repetition_count ]
+end

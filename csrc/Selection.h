@@ -22,12 +22,15 @@ class RankRouletteSelection: public eoSelectOne<CT>
 {
 	public:
 
+	RankRouletteSelection(double _factor = -0.5) : factor(_factor) {}
+
 	void setup(const eoPop<CT> &population);
 
 	const CT &operator()(const eoPop<CT> &population);
 
 	private:
 
+	double factor;
 	double total;
 	std::vector<double> chance;
 };
@@ -84,7 +87,7 @@ class Selection: public eoSelect<CT>
 			select = new DominanceRouletteSelection<CT>();
 
 		else if (tuning.method == "rank_roulette")
-			select = new RankRouletteSelection<CT>();
+			select = new RankRouletteSelection<CT>(tuning.ranking_factor);
 
 		else if (tuning.method == "tournament")
 			select = new TournamentSelection<CT>(tuning.tournament_size);

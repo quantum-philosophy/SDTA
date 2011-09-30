@@ -18,11 +18,13 @@ struct SelectionTuning
 	std::string method;
 	double ratio;
 	size_t tournament_size;
+	double ranking_factor;
 
 	SelectionTuning() :
 		method("tournament"),
 		ratio(1.0),
-		tournament_size(3) {}
+		tournament_size(3),
+		ranking_factor(-0.5) {}
 };
 
 struct CrossoverTuning
