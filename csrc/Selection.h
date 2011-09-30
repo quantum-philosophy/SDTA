@@ -2,24 +2,34 @@
 #define __SELECTION_H__
 
 template <class CT>
-class RouletteSelection: public eoSelectOne<CT>
+class DominanceRouletteSelection: public eoSelectOne<CT>
 {
 	public:
 
-	typedef CT chromosome_t;
-	typedef eoPop<chromosome_t> population_t;
+	void setup(const eoPop<CT> &population);
 
-	RouletteSelection() : eoSelectOne<chromosome_t>() {}
-
-	void setup(const population_t &population);
-
-	const chromosome_t &operator()(const population_t &population);
+	const CT &operator()(const eoPop<CT> &population);
 
 	private:
 
 	size_t population_size;
 	std::vector<size_t> rank;
 	std::vector<size_t> children;
+};
+
+template <class CT>
+class RankRouletteSelection: public eoSelectOne<CT>
+{
+	public:
+
+	void setup(const eoPop<CT> &population);
+
+	const CT &operator()(const eoPop<CT> &population);
+
+	private:
+
+	double total;
+	std::vector<double> chance;
 };
 
 template <class CT>
@@ -70,8 +80,11 @@ class Selection: public eoSelect<CT>
 		if (tuning.ratio < 0 || tuning.ratio > 1)
 			throw std::runtime_error("The selection ratio is invalid.");
 
-		if (tuning.method == "roulette")
-			select = new RouletteSelection<CT>();
+		if (tuning.method == "dominance_roulette")
+			select = new DominanceRouletteSelection<CT>();
+
+		else if (tuning.method == "rank_roulette")
+			select = new RankRouletteSelection<CT>();
 
 		else if (tuning.method == "tournament")
 			select = new TournamentSelection<CT>(tuning.tournament_size);

@@ -42,7 +42,7 @@ printf "Initial lifetime: %.2f\n", initial_lifetime
 printf "\n"
 
 printf "%5s%15s%15s%15s%15s%15s%15s\n", 'No', 'Generations', 'Evaluations',
-  'Deadline', 'Lifetime', '+, %', 'Time, s'
+  'Deadline', 'Lifetime', '+, %', 'Time, m'
 
 (0...generations.length).each do |i|
   printf "%5d%15d%15d%15d%15.2f%15.2f%15.2f\n", i + 1,

@@ -1,7 +1,7 @@
 #include "Selection.h"
 
 template<class CT>
-void RouletteSelection<CT>::setup(const population_t &population)
+void DominanceRouletteSelection<CT>::setup(const eoPop<CT> &population)
 {
 	population_size = population.size();
 	rank.resize(population_size);
@@ -22,7 +22,7 @@ void RouletteSelection<CT>::setup(const population_t &population)
 }
 
 template<class CT>
-const CT &RouletteSelection<CT>::operator()(const population_t &population)
+const CT &DominanceRouletteSelection<CT>::operator()(const eoPop<CT> &population)
 {
 	size_t i;
 	double total = 0;
@@ -39,6 +39,44 @@ const CT &RouletteSelection<CT>::operator()(const population_t &population)
 	while ((roulette -= chance[i]) > 0) i++;
 
 	children[i]++;
+
+	return population[i];
+}
+
+template<class CT>
+void RankRouletteSelection<CT>::setup(const eoPop<CT> &population)
+{
+	size_t population_size = population.size();
+
+	total = 0;
+	chance.resize(population_size);
+
+	std::vector<const CT *> sorted;
+	population.sort(sorted);
+
+	size_t i, j;
+
+	for (i = 0; i < population_size; i++) {
+		for (j = 0; j < population_size; j++)
+			if (sorted[i] == &population[j]) break;
+
+#ifndef SHALLOW_CHECK
+		if (j >= population_size)
+			throw std::runtime_error("The rank selection is invalid.");
+#endif
+
+		chance[j] = population_size - i;
+		total += chance[j];
+	}
+}
+
+template<class CT>
+const CT &RankRouletteSelection<CT>::operator()(const eoPop<CT> &population)
+{
+	double roulette = Random::uniform(total);
+
+	size_t i = 0;
+	while ((roulette -= chance[i]) > 0) i++;
 
 	return population[i];
 }

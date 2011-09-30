@@ -24,7 +24,8 @@ function showEvolutionStats(file, full)
       case 'Evaluations'
         evaluations(end + 1) = str2num(value);
       case 'Deadline misses'
-        deadline_misses(end + 1) = str2num(value);
+        tokens = regexp(value, '([\d.]+)\s*(\(.*\))?', 'tokens');
+        deadline_misses(end + 1) = str2num(tokens{1}{1});
       case 'Best lifetime'
         tokens = regexp(value, '\(([^,]+), .*', 'tokens');
         if isempty(tokens)
@@ -36,7 +37,8 @@ function showEvolutionStats(file, full)
         tokens = regexp(value, '([^%]+)%.*', 'tokens');
         improvement(end + 1) = str2num(tokens{1}{1});
       case 'Time elapsed'
-        time(end + 1) = str2num(value) / 60;
+        tokens = regexp(value, '\s*([\d.]+\s*)', 'tokens');
+        time(end + 1) = str2num(tokens{1}{1});
       end
     end
 
