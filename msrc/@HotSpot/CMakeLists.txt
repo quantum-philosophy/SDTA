@@ -1,3 +1,5 @@
+set (TINYMT_DIR ${VENDOR_DIR}/tinymt-1.0.1/tinymt)
+
 set (MEX_SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/mex_utils.cpp
 	${PROJECT_SOURCE_DIR}/csrc/common.cpp
@@ -6,6 +8,7 @@ set (MEX_SRCS
 	${PROJECT_SOURCE_DIR}/csrc/Processor.cpp
 	${PROJECT_SOURCE_DIR}/csrc/Task.cpp
 	${PROJECT_SOURCE_DIR}/csrc/Hotspot.cpp
+	${TINYMT_DIR}/tinymt64.c
 )
 
 set (MEX_LIBS
@@ -14,11 +17,13 @@ set (MEX_LIBS
 
 set (MEX_FLAGS
 	-outdir ${CMAKE_CURRENT_SOURCE_DIR}
-	-I${VENDOR_DIR}
 	-I${PROJECT_SOURCE_DIR}/csrc
 	-I${CMAKE_CURRENT_SOURCE_DIR}
 	-I${VENDOR_DIR}/numerical_recipes
+	-I${VENDOR_DIR}
+	-I${TINYMT_DIR}
 	-DHOTSPOT_VERSION="${HOTSPOT_VERSION}"
+	CFLAGS='-std=c99'
 )
 
 add_custom_target (matlab-hotspot
