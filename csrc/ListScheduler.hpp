@@ -109,23 +109,59 @@ bool ListScheduleCrossover<CT>::operator()(CT &one, CT &another)
 	}
 	while (select_points);
 
+	Schedule schedule;
+
 	{
 		CrossoverPool::data_t data(one, another, turn);
-		Schedule schedule = ListScheduler<CrossoverPool>::process(
-			*layout, one, &data);
+
+		if (layout) {
+			schedule = ListScheduler<CrossoverPool>::process(
+				*layout, one, &data);
+		}
+		else {
+			/* Should be encoded in the chromosome */
+			layout_t layout;
+			priority_t priority;
+
+			GeneEncoder::split(one, layout, priority);
+
+			schedule = ListScheduler<CrossoverPool>::process(
+				layout, priority, &data);
+		}
+
 		one.set_schedule(schedule);
-		GeneEncoder::reorder(one);
 	}
 
 	{
 		CrossoverPool::data_t data(another, one, turn);
-		Schedule schedule = ListScheduler<CrossoverPool>::process(
-			*layout, another, &data);
+
+		if (layout) {
+			schedule = ListScheduler<CrossoverPool>::process(
+				*layout, another, &data);
+		}
+		else {
+			/* Should be encoded in the chromosome */
+			layout_t layout;
+			priority_t priority;
+
+			GeneEncoder::split(another, layout, priority);
+
+			schedule = ListScheduler<CrossoverPool>::process(
+				layout, priority, &data);
+		}
+
 		another.set_schedule(schedule);
-		GeneEncoder::reorder(another);
 	}
 
-	return true;
+	GeneEncoder::reorder(one);
+	GeneEncoder::reorder(another);
+
+	/* NOTE: We always say that nothing has changed, since
+	 * the invalidation takes place in set_schedule. The purpose
+	 * is to keep the already computed schedule valid,
+	 * but the price becomes invalid.
+	 */
+	return false;
 }
 
 template<class CT>

@@ -41,14 +41,14 @@ bool NPointCrossover<CT>::operator()(CT &one, CT &another)
 		throw std::runtime_error("The chromosomes have different size.");
 #endif
 
-	std::vector<bool> turn_points(size, false);
+	bit_string_t turn(size, false);
 
 	do {
 		i = 1 + Random::number(size - 1);
 
-		if (turn_points[i]) continue;
+		if (turn[i]) continue;
 		else {
-			turn_points[i] = true;
+			turn[i] = true;
 			select_points--;
 		}
 	}
@@ -57,7 +57,7 @@ bool NPointCrossover<CT>::operator()(CT &one, CT &another)
 	bool change = false;
 
 	for (i = 1; i < size; i++) {
-		if (turn_points[i]) change = !change;
+		if (turn[i]) change = !change;
 		if (change) {
 			rank_t tmp = one[i];
 			one[i] = another[i];
