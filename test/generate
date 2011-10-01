@@ -1,7 +1,6 @@
 #!/usr/bin/env ruby
 
-# Current directory
-CD = '.'
+require File.join File.dirname(__FILE__), 'common'
 
 # The area of the die in square miters
 DIE_AREA = 81e-6
@@ -54,35 +53,6 @@ class Template
 end
 
 class Generate
-  def self.locate *args
-    filename = File.join CD, *args
-
-    unless File.exist? filename
-      puts "Cannot find '#{ filename }'"
-      exit
-    end
-
-    filename
-  end
-
-  def self.run options
-    tool = Array(options[:command])
-    args = Array(options[:arguments])
-
-    command = "#{ locate *tool } #{ args.join ' ' }"
-    output = `#{ command }`
-
-    if $?.exitstatus != 0
-      puts "Filed to execute '#{ command }'"
-      exit
-    end
-
-    return if options[:output].nil?
-
-    File.open(options[:output], 'w') do |file|
-      file.write output
-    end
-  end
 
   def self.tgffopt options
     gaps = {
@@ -102,7 +72,7 @@ class Generate
 
   def self.tgff options
     run \
-      :command => [ 'vendor', 'tgff' ],
+      :tool => [ 'vendor', 'tgff' ],
       :arguments => options[:input].gsub(/\.tgffopt$/, '')
   end
 
@@ -120,7 +90,7 @@ class Generate
 
   def self.system options
     run \
-      :command => [ 'tools', 'system' ],
+      :tool => [ 'tools', 'system' ],
       :arguments => options[:input],
       :output => options[:output]
   end
@@ -145,9 +115,17 @@ class Generate
 
   def self.floorplan options
     run \
-      :command => [ 'tools', 'floorplan' ],
+      :tool => [ 'tools', 'floorplan' ],
       :arguments => [ options[:processor_count], DIE_AREA ],
       :output => options[:output]
+  end
+
+  def self.thermal options
+    File.open(options[:output], 'w') do |file|
+      options[:template].complete({}) do |line|
+        file << line
+      end
+    end
   end
 end
 
@@ -179,6 +157,7 @@ end
 
 tgff_template = File.join input, 'tgff.template'
 genetic_template = File.join input, 'genetic.template'
+thermal_template = File.join input, 'hotspot.template'
 
 unless File.exist? tgff_template
   puts "Cannot find '#{ tgff_template }'"
@@ -190,10 +169,16 @@ unless File.exist? genetic_template
   exit
 end
 
+unless File.exist? thermal_template
+  puts "Cannot find '#{ thermal_template }'"
+  exit
+end
+
 srand Time.now.to_i
 
 tgff_template = Template.new tgff_template
 genetic_template = Template.new genetic_template
+thermal_template = Template.new thermal_template
 
 processors.each do |processor_count|
   tasks.each do |task_count|
@@ -233,6 +218,10 @@ processors.each do |processor_count|
       floorplan = File.join directory, ("%03d_floorplan.config" % i)
       puts "    - floorplan configuration: #{ floorplan }"
       Generate.floorplan :processor_count => processor_count, :output => floorplan
+
+      thermal = File.join directory, ("%03d_thermal.config" % i)
+      puts "    - thermal configuration: #{ thermal }"
+      Generate.thermal :template => thermal_template, :output => thermal
     end
   end
 end

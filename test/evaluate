@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 
+require File.join File.dirname(__FILE__), 'common'
+
 if ARGV.length != 2
   puts 'Need some arguments...'
   puts '1. an input directory'
@@ -34,18 +36,80 @@ Dir[File.join(input, '*')].each do |entry|
   processor_count = $1.to_i
   task_count = $2.to_i
 
-  repetitions = []
+  variants = []
 
-  Dir[File.join(entry, '*')].each do |subentry|
-    unless subentry.match /\/(\d+)\.tgffopt$/
-      puts "Skipping an unknow test case '#{ subentry }'..."
-      next
-    end
-    repetitions.push subentry
+  Dir[File.join(entry, '*_system.config')].each do |subentry|
+    variants.push subentry
   end
 
-  repetition_count = repetitions.length
+  out_entry = File.join output, File.basename(entry)
 
-  puts "Test case %d x %d with %d repetitions" %
-    [ processor_count, task_count, repetition_count ]
+  unless File.directory? out_entry
+    Dir.mkdir out_entry
+  end
+
+  variant_count = variants.length
+
+  puts "Test case: %d cores, %d tasks, and %d variants" %
+    [ processor_count, task_count, variant_count ]
+
+  variants.each do |variant|
+    system_config = variant
+
+    genetic_config = variant.gsub /_system.config$/, '_genetic.config'
+    unless File.exist? genetic_config
+      puts "The genetic configuration is missing '#{ genetic_config }'"
+      next
+    end
+
+    floorplan_config = variant.gsub /_system.config$/, '_floorplan.config'
+    unless File.exist? floorplan_config
+      puts "The floorplan configuration is missing '#{ floorplan_config }'"
+      next
+    end
+
+    thermal_config = variant.gsub /_system.config$/, '_thermal.config'
+    unless File.exist? thermal_config
+      puts "The thermal configuration is missing '#{ thermal_config }'"
+      next
+    end
+
+    variant.match /\/(\d+)_system\.config$/
+    name = $1
+
+    log = File.join out_entry, "#{ name }.log"
+
+    memcache = read_param genetic_config, 'cache'
+
+    start = Time.now
+    puts "  - #{ name }:"
+    puts "    Started #{ start.strftime 'on %Y-%m-%d at %H-%M' }"
+    puts "    Logging to #{ log }"
+
+    if memcache
+      puts "    Flushing cache at #{ memcache }"
+      run \
+        :command => 'memflush',
+        :arguments => [ "--servers=#{ memcache }" ]
+    end
+
+    begin
+      run \
+        :tool => [ 'tools', 'optima' ],
+        :arguments => [ '-s', system_config, '-g', genetic_config,
+          '-f', floorplan_config, '-t', thermal_config ],
+        :output => log
+      success = true
+    rescue
+      success = false
+    end
+
+    finish = Time.now
+
+    puts "    Finished #{ finish.strftime 'on %Y-%m-%d at %H-%M' }"
+    puts "    Elapsed %.2f minutes" % [ (finish - start) / 60.0 ]
+    puts '    [FAILED]' unless success
+
+    $stdout.flush
+  end
 end

@@ -68,4 +68,4 @@ stall_lessons 10
 
 # Output
 verbose 1
-dump_evolution evolution.txt
+# dump_evolution evolution.txt
