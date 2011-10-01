@@ -1,8 +1,159 @@
 #!/usr/bin/env ruby
 
+# Current directory
+CD = '.'
+
+# The area of the die in square miters
+DIE_AREA = 81e-6
+
+# Multiplied by the number of tasks
+POPULATION_FACTOR = 4
+
+# Repetitions of the GA
+GA_REALIZATIONS_PER_GRAPH = 10
+
+STALL_GENERATIONS = 200
+
+class Template
+  def initialize filename
+    @template = []
+
+    File.open(filename) do |file|
+      while line = file.gets
+        next if line =~ /\s*#/ or line =~ /^\s*$/
+        @template << line
+      end
+    end
+  end
+
+  def complete options, &block
+    gaps = {}
+
+    options.each do |param, value|
+      value = value.to_s
+
+      if value.empty?
+        puts "Got a blank value for '#{ param }'"
+        exit
+      end
+
+      gaps["[#{ param.to_s.upcase }]"] = value
+    end
+
+    @template.each do |line|
+      gaps.each do |param, value|
+        line = line.gsub param, value
+      end
+      if line =~ /\[([A-Z_]+)\]/
+        puts "Do not know how to fill in '#{ $1.downcase }'"
+        exit
+      end
+      yield line
+    end
+  end
+end
+
+class Generate
+  def self.locate *args
+    filename = File.join CD, *args
+
+    unless File.exist? filename
+      puts "Cannot find '#{ filename }'"
+      exit
+    end
+
+    filename
+  end
+
+  def self.run options
+    tool = Array(options[:command])
+    args = Array(options[:arguments])
+
+    command = "#{ locate *tool } #{ args.join ' ' }"
+    output = `#{ command }`
+
+    if $?.exitstatus != 0
+      puts "Filed to execute '#{ command }'"
+      exit
+    end
+
+    return if options[:output].nil?
+
+    File.open(options[:output], 'w') do |file|
+      file.write output
+    end
+  end
+
+  def self.tgffopt options
+    gaps = {
+      :task_count => options[:task_count],
+      :type_count => options[:task_count] / 2,
+      :processor_count => options[:processor_count]
+    }
+
+    File.open(options[:output], 'w') do |file|
+      gaps[:seed] = rand 1e5
+
+      options[:template].complete(gaps) do |line|
+        file << line
+      end
+    end
+  end
+
+  def self.tgff options
+    run \
+      :command => [ 'vendor', 'tgff' ],
+      :arguments => options[:input].gsub(/\.tgffopt$/, '')
+  end
+
+  def self.validate_tgff options
+    task_count = 0;
+
+    File.open(options[:input]) do |file|
+      while line = file.gets
+        task_count += 1 if line =~ /\s*TASK\s+/
+      end
+    end
+
+    task_count == options[:task_count]
+  end
+
+  def self.system options
+    run \
+      :command => [ 'tools', 'system' ],
+      :arguments => options[:input],
+      :output => options[:output]
+  end
+
+  def self.genetic options
+    tournament_size = POPULATION_FACTOR * options[:task_count] / 100 + 1
+    population_size = tournament_size * 100
+
+    gaps = {
+      :repeat => GA_REALIZATIONS_PER_GRAPH,
+      :population_size => population_size,
+      :stall_generations => STALL_GENERATIONS,
+      :tournament_size => tournament_size
+    }
+
+    File.open(options[:output], 'w') do |file|
+      options[:template].complete(gaps) do |line|
+        file << line
+      end
+    end
+  end
+
+  def self.floorplan options
+    run \
+      :command => [ 'tools', 'floorplan' ],
+      :arguments => [ options[:processor_count], DIE_AREA ],
+      :output => options[:output]
+  end
+end
+
 if ARGV.length != 5
   puts 'Need some arguments...'
-  puts '1. a TGFF template'
+  puts '1. the template directory'
   puts '2. the number of processors, e.g. "(1..16)"'
   puts '3. the number of tasks, e.g. "[ 60, 90, 120 ]"'
   puts '4. the number of repetitions of each combination'
@@ -16,30 +167,36 @@ tasks = eval ARGV[2]
 repeat = ARGV[3].to_i
 output = ARGV[4]
 
-unless File.exist? input
-  puts 'Need a real template...'
+unless File.directory? input
+  puts 'Need a real template directory...'
   exit
 end
 
 unless File.directory? output
-  puts 'Need a real directory...'
+  puts 'Need a real output directory...'
   exit
 end
 
-template = []
+tgff_template = File.join input, 'tgff.template'
+genetic_template = File.join input, 'genetic.template'
 
-File.open(input) do |file|
-  while line = file.gets
-    next if line =~ /\s*#/ or line =~ /^\s*$/
-    template << line
-  end
+unless File.exist? tgff_template
+  puts "Cannot find '#{ tgff_template }'"
+  exit
+end
+
+unless File.exist? genetic_template
+  puts "Cannot find '#{ genetic_template }'"
+  exit
 end
 
 srand Time.now.to_i
 
+tgff_template = Template.new tgff_template
+genetic_template = Template.new genetic_template
+
 processors.each do |processor_count|
   tasks.each do |task_count|
-    type_count = task_count / 2
 
     name = "%03d_%03d" % [ processor_count, task_count ]
     directory = File.join output, name
@@ -49,23 +206,33 @@ processors.each do |processor_count|
     Dir::mkdir directory unless File.directory? directory
 
     (1..repeat).each do |i|
-      name = "%03d.tgffopt" % i
-      name = File.join directory, name
+      puts "  #{ i }:"
 
-      puts "  %3d: %s" % [ i, name ]
+      begin
+        tgffopt = File.join directory, ("%03d.tgffopt" % i)
+        puts "    - TGFF options: #{ tgffopt }"
+        Generate.tgffopt :template => tgff_template,
+          :processor_count => processor_count, :task_count => task_count,
+          :output => tgffopt
 
-      File.open(name, 'w') do |file|
-        template.each do |line|
-          seed = rand 1e5
+        tgff = File.join directory, ("%03d.tgff" % i)
+        puts "    - TGFF: #{ tgff }"
+        Generate.tgff :input => tgffopt, :output => tgff
+      end until Generate.validate_tgff(:input => tgff, :task_count => task_count)
 
-          line = line.gsub '[SEED]', seed.to_s
-          line = line.gsub '[TASK_COUNT]', task_count.to_s
-          line = line.gsub '[TYPE_COUNT]', type_count.to_s
-          line = line.gsub '[PROCESSOR_COUNT]', processor_count.to_s
+      system = File.join directory, ("%03d_system.config" % i)
+      puts "    - system configuration: #{ system }"
+      Generate.system :input => tgff, :output => system
 
-          file << line
-        end
-      end
+      genetic = File.join directory, ("%03d_genetic.config" % i)
+      puts "    - genetic configuration: #{ genetic }"
+      Generate.genetic :template => genetic_template,
+        :processor_count => processor_count, :task_count => task_count,
+        :output => genetic
+
+      floorplan = File.join directory, ("%03d_floorplan.config" % i)
+      puts "    - floorplan configuration: #{ floorplan }"
+      Generate.floorplan :processor_count => processor_count, :output => floorplan
     end
   end
 end

@@ -1,0 +1,71 @@
+# Prepare
+repeat [REPEAT]
+deadline_ratio 1.1
+reorder_tasks 0
+include_mapping 0
+cache localhost
+
+# Target
+multiobjective 0
+
+# Randomize
+seed -1
+
+# Create
+uniform_ratio 0.1
+population_size [POPULATION_SIZE]
+
+# Continue
+min_generations 0
+max_generations 10000
+stall_generations [STALL_GENERATIONS]
+
+# [SINGLE-OBJECTIVE ONLY] Select
+# * dominance_roulette
+# * rank_roulette
+# * tournament
+# * uniform
+selection tournament
+selection_ratio 1
+tournament_size [TOURNAMENT_SIZE]
+ranking_factor -0.1
+
+# Crossover
+# * npoint
+# * uniform
+# * peer
+# * list_schedule
+crossover uniform
+crossover_min_rate 0.8
+crossover_scale 0
+crossover_exponent 0
+crossover_points 1
+
+# Mutate
+# * uniform
+# * peer
+# * list_schedule
+mutation uniform
+mutation_min_rate 0.05
+mutation_scale 0
+mutation_exponent 0
+
+# [SINGLE-OBJECTIVE ONLY] Evolve
+# * elitism
+# * similarity
+replacement elitism
+elitism_rate 1
+
+# Train
+# * peer
+# * list_schedule
+training list_schedule
+training_min_rate 0
+training_scale 0
+training_exponent 0
+max_lessons 10
+stall_lessons 10
+
+# Output
+verbose 1
+dump_evolution evolution.txt
