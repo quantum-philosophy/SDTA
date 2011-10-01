@@ -79,6 +79,4 @@ eslabEvolutionMonitor<CT>::eslabEvolutionMonitor(population_t &_population,
 	const std::string &filename) : population(_population)
 {
 	stream.open(filename.c_str());
-	if (!stream.is_open())
-		throw std::runtime_error("Cannot open the output file.");
 }

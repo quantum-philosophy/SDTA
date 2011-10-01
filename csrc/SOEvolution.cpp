@@ -94,12 +94,14 @@ void SOEvolutionStats::display(std::ostream &o) const
 
 eoMonitor& eslabSOEvolutionMonitor::operator()()
 {
-	size_t population_size = population.size();
+	if (stream.is_open()) {
+		size_t population_size = population.size();
 
-	for (size_t i = 0; i < population_size; i++)
-		stream << population[i].fitness() << "\t";
+		for (size_t i = 0; i < population_size; i++)
+			stream << population[i].fitness() << "\t";
 
-	stream << std::endl;
+		stream << std::endl;
+	}
 
 	return *this;
 }
