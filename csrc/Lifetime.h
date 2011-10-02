@@ -8,6 +8,16 @@ typedef std::list<peak_t > extrema_t;
 
 class Lifetime
 {
+	public:
+
+	virtual double predict(const matrix_t &temperature,
+		double sampling_interval) = 0;
+};
+
+class ThermalCyclingLifetime: public Lifetime
+{
+	protected:
+
     /* Peak threshold of local minima and maxima (for the cycle counting) */
     static const double delta = 2; /* K */
 
@@ -43,16 +53,21 @@ class Lifetime
 
 	public:
 
-	static double predict(const matrix_t &temperature, double sampling_interval);
-	static double predict_combined(const matrix_t &temperature,
-		double sampling_interval);
+	virtual double predict(const matrix_t &temperature, double sampling_interval);
 
-	private:
+	protected:
 
-	static void detect_peaks(const matrix_t &temperature,
-		std::vector<extrema_t> &peaks);
-	static void rainflow(const extrema_t &extrema, vector_t &amplitudes,
-		vector_t &means);
+	void detect_peaks(const matrix_t &temperature,
+		std::vector<extrema_t> &peaks) const;
+	void rainflow(const extrema_t &extrema, vector_t &amplitudes,
+		vector_t &means) const;
+};
+
+class CombinedThermalCyclingLifetime: public ThermalCyclingLifetime
+{
+	public:
+
+	virtual double predict(const matrix_t &temperature, double sampling_interval);
 };
 
 /* % References:

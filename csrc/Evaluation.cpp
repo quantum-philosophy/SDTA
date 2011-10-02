@@ -5,7 +5,6 @@
 #include "Task.h"
 #include "Hotspot.h"
 #include "DynamicPower.h"
-#include "Lifetime.h"
 #include "Schedule.h"
 
 price_t Evaluation::process(const Schedule &schedule)
@@ -39,8 +38,7 @@ price_t Evaluation::compute(const Schedule &schedule)
 		sampling_interval, temperature);
 #endif
 
-	double lifetime = Lifetime::predict(temperature, sampling_interval);
-
+	double lifetime = this->lifetime.predict(temperature, sampling_interval);
 	double energy = 0;
 
 #ifndef FAKE_EVALUATION

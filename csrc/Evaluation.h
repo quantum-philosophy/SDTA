@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "Genetics.h"
+#include "Lifetime.h"
 
 #ifndef WITHOUT_MEMCACHED
 #include <libmemcached/memcached.h>
@@ -12,6 +13,8 @@
 
 class Evaluation
 {
+	ThermalCyclingLifetime lifetime;
+
 	const Architecture &architecture;
 	const Graph &graph;
 	const Hotspot &hotspot;

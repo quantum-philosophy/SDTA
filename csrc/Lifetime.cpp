@@ -4,7 +4,8 @@
 #include "DynamicPower.h"
 #include "Graph.h"
 
-double Lifetime::predict(const matrix_t &temperature, double sampling_interval)
+double ThermalCyclingLifetime::predict(
+	const matrix_t &temperature, double sampling_interval)
 {
 	const double Q = q; /* Some stupid joke */
 
@@ -49,57 +50,8 @@ double Lifetime::predict(const matrix_t &temperature, double sampling_interval)
 	return (sampling_interval * step_count) / maximal_damage;
 }
 
-double Lifetime::predict_combined(const matrix_t &temperature,
-	double sampling_interval)
-{
-	size_t i, j;
-	std::vector<extrema_t> peaks;
-	vector_t amplitudes, means;
-
-	double damage, factor, tmax, n;
-	const double Q = q; /* Some stupid joke */
-
-	/* Get extrema */
-	detect_peaks(temperature, peaks);
-
-	factor = 0;
-
-	size_t cols = temperature.cols();
-	size_t rows = temperature.rows();
-
-	/* For each temperature curve */
-	for (i = 0; i < cols; i++) {
-		rainflow(peaks[i], amplitudes, means);
-
-		damage = 0;
-
-		size_t cycle_count = amplitudes.size();
-		for (j = 0; j < cycle_count; j++) {
-			/* Skip cycles that do not cause any damage */
-			if (amplitudes[j] <= dT0) continue;
-
-			/* Maximal temperatures during each cycle */
-			tmax = means[j] + amplitudes[j] / 2.0;
-
-			/* Number of cycles to failure for each stress level [3] */
-			n = Atc * pow(amplitudes[j] - dT0, -Q) * exp(Eatc / (k * tmax));
-
-			/* Count all detected cycles (even 0.5) as completed,
-			 * since we have cycling temperature fluctuations
-			 * (1 instead of cycles here).
-			 */
-			damage += 1.0 / n;
-		}
-
-		factor += pow(damage, beta);
-	}
-
-	damage = pow(factor, 1.0 / beta);
-
-	return (sampling_interval * rows) / damage;
-}
-
-void Lifetime::detect_peaks(const matrix_t &data, std::vector<extrema_t> &peaks)
+void ThermalCyclingLifetime::detect_peaks(
+	const matrix_t &data, std::vector<extrema_t> &peaks) const
 {
 	size_t rows = data.rows();
 	size_t cols = data.cols();
@@ -194,8 +146,8 @@ void Lifetime::detect_peaks(const matrix_t &data, std::vector<extrema_t> &peaks)
 	}
 }
 
-void Lifetime::rainflow(const extrema_t &extrema,
-	vector_t &amplitudes, vector_t &means)
+void ThermalCyclingLifetime::rainflow(const extrema_t &extrema,
+	vector_t &amplitudes, vector_t &means) const
 {
 	int i, j;
 	double amplitude, mean;
@@ -253,4 +205,52 @@ void Lifetime::rainflow(const extrema_t &extrema,
 			amplitudes.push_back(amplitude);
 		}
 	}
+}
+
+double CombinedThermalCyclingLifetime::predict(
+	const matrix_t &temperature, double sampling_interval)
+{
+	const double Q = q; /* Some stupid joke */
+
+	size_t processor_count = temperature.cols();
+	size_t step_count = temperature.rows();
+
+	vector_t amplitudes, means;
+
+	/* Get extrema */
+	std::vector<extrema_t> peaks;
+	detect_peaks(temperature, peaks);
+
+	double damage, factor = 0;
+
+	/* For each temperature curve */
+	for (size_t i = 0; i < processor_count; i++) {
+		rainflow(peaks[i], amplitudes, means);
+
+		damage = 0;
+
+		size_t cycle_count = amplitudes.size();
+		for (size_t j = 0; j < cycle_count; j++) {
+			/* Skip cycles that do not cause any damage */
+			if (amplitudes[j] <= dT0) continue;
+
+			/* Maximal temperatures during each cycle */
+			double tmax = means[j] + amplitudes[j] / 2.0;
+
+			/* Number of cycles to failure for each stress level [3] */
+			double n = Atc * pow(amplitudes[j] - dT0, -Q) * exp(Eatc / (k * tmax));
+
+			/* Count all detected cycles (even 0.5) as completed,
+			 * since we have cycling temperature fluctuations
+			 * (1 instead of cycles here).
+			 */
+			damage += 1.0 / n;
+		}
+
+		factor += pow(damage, beta);
+	}
+
+	damage = pow(factor, 1.0 / beta);
+
+	return (sampling_interval * step_count) / damage;
 }
