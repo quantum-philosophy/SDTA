@@ -6,6 +6,52 @@
 
 double Lifetime::predict(const matrix_t &temperature, double sampling_interval)
 {
+	const double Q = q; /* Some stupid joke */
+
+	size_t processor_count = temperature.cols();
+	size_t step_count = temperature.rows();
+
+	vector_t amplitudes, means;
+
+	/* Get extrema */
+	std::vector<extrema_t> peaks;
+	detect_peaks(temperature, peaks);
+
+	double maximal_damage = 0;
+
+	/* For each temperature curve */
+	for (size_t i = 0; i < processor_count; i++) {
+		rainflow(peaks[i], amplitudes, means);
+
+		double damage = 0;
+
+		size_t cycle_count = amplitudes.size();
+		for (size_t j = 0; j < cycle_count; j++) {
+			/* Skip cycles that do not cause any damage */
+			if (amplitudes[j] <= dT0) continue;
+
+			/* Maximal temperatures during each cycle */
+			double tmax = means[j] + amplitudes[j] / 2.0;
+
+			/* Number of cycles to failure for each stress level [3] */
+			double n = Atc * pow(amplitudes[j] - dT0, -Q) * exp(Eatc / (k * tmax));
+
+			/* Count all detected cycles (even 0.5) as completed,
+			 * since we have cycling temperature fluctuations
+			 * (1 instead of cycles here).
+			 */
+			damage += 1.0 / n;
+		}
+
+		if (damage > maximal_damage) maximal_damage = damage;
+	}
+
+	return (sampling_interval * step_count) / maximal_damage;
+}
+
+double Lifetime::predict_combined(const matrix_t &temperature,
+	double sampling_interval)
+{
 	size_t i, j;
 	std::vector<extrema_t> peaks;
 	vector_t amplitudes, means;

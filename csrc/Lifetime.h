@@ -44,6 +44,8 @@ class Lifetime
 	public:
 
 	static double predict(const matrix_t &temperature, double sampling_interval);
+	static double predict_combined(const matrix_t &temperature,
+		double sampling_interval);
 
 	private:
 
