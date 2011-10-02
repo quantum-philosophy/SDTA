@@ -6,14 +6,6 @@
 
 double Lifetime::predict(const matrix_t &temperature, double sampling_interval)
 {
-	double time = sampling_interval * temperature.rows();
-	double damage = calc_damage(temperature);
-
-	return time / damage;
-}
-
-double Lifetime::calc_damage(const matrix_t &temperature)
-{
 	size_t i, j;
 	std::vector<extrema_t> peaks;
 	vector_t amplitudes, means;
@@ -26,8 +18,10 @@ double Lifetime::calc_damage(const matrix_t &temperature)
 
 	factor = 0;
 
-	/* For each temperature curve */
 	size_t cols = temperature.cols();
+	size_t rows = temperature.rows();
+
+	/* For each temperature curve */
 	for (i = 0; i < cols; i++) {
 		rainflow(peaks[i], amplitudes, means);
 
@@ -56,7 +50,7 @@ double Lifetime::calc_damage(const matrix_t &temperature)
 
 	damage = pow(factor, 1.0 / beta);
 
-	return damage;
+	return (sampling_interval * rows) / damage;
 }
 
 void Lifetime::detect_peaks(const matrix_t &data, std::vector<extrema_t> &peaks)

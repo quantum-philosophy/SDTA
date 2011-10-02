@@ -47,7 +47,6 @@ class Lifetime
 
 	private:
 
-	static double calc_damage(const matrix_t &temperature);
 	static void detect_peaks(const matrix_t &temperature,
 		std::vector<extrema_t> &peaks);
 	static void rainflow(const extrema_t &extrema, vector_t &amplitudes,
