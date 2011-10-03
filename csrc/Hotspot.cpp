@@ -7,30 +7,24 @@
 #include "utils.h"
 #include "Hotspot.h"
 
-extern "C" {
-#include <hotspot/flp.h>
-#include <hotspot/temperature.h>
-#include <hotspot/temperature_block.h>
-}
-
 #define __COPY_VECTOR(dest, src, size) \
 	memcpy(&(dest)[0], &(src)[0], sizeof(double) * size)
 
 #define __COPY_SQUARE_MATRIX(dest, src, size) \
 	memcpy((dest)[0], (src)[0], sizeof(double) * size * size)
 
-Hotspot::Hotspot(const std::string &floorplan, const std::string &file,
-	str_pair *extra_table, size_t tsize)
+Hotspot::Hotspot(const std::string &floorplan_filename,
+	const std::string &config_filename, str_pair *extra_table, size_t tsize)
 {
 	size_t i, j;
 
 	/* 1. Configuration file */
-	thermal_config_t config = default_thermal_config();
+	config = default_thermal_config();
 
-	if (!file.empty()) {
+	if (!config_filename.empty()) {
 		str_pair table[MAX_ENTRIES];
 		i = read_str_pairs(&table[0], MAX_ENTRIES,
-			const_cast<char *>(file.c_str()));
+			const_cast<char *>(config_filename.c_str()));
 		thermal_config_add_from_strs(&config, table, i);
 	}
 
@@ -41,16 +35,16 @@ Hotspot::Hotspot(const std::string &floorplan, const std::string &file,
 	ambient_temperature = config.ambient;
 
 	/* 2. Floorplan */
-	flp_t *flp = read_flp(const_cast<char *>(floorplan.c_str()), FALSE);
+	floorplan = read_flp(const_cast<char *>(floorplan_filename.c_str()), FALSE);
 
-	processor_count = flp->n_units;
+	processor_count = floorplan->n_units;
 
 	/* 3. Model itself */
-	RC_model_t *model = alloc_RC_model(&config, flp);
+	model = alloc_RC_model(&config, floorplan);
 	block_model_t *block = model->block;
 
-	populate_R_model(model, flp);
-	populate_C_model(model, flp);
+	populate_R_model(model, floorplan);
+	populate_C_model(model, floorplan);
 
 	node_count = model->block->n_nodes;
 
@@ -62,10 +56,12 @@ Hotspot::Hotspot(const std::string &floorplan, const std::string &file,
 			conductivity[i][j] = -block->b[i][j];
 		root_square_inverse_capacitance[i] = sqrt(block->inva[i]);
 	}
+}
 
+Hotspot::~Hotspot()
+{
 	delete_RC_model(model);
-
-	free_flp(flp, FALSE);
+	free_flp(floorplan, FALSE);
 }
 
 /* Steady-State Dynamic Temperature Analysis without leakage
@@ -386,4 +382,38 @@ void Hotspot::inject_leakage(const Architecture &architecture,
 			total_power[k] = dynamic_power[k] + ngate * Is * favg * voltage;
 		}
 	}
+}
+
+/* Steady-State Temperature Analysis without leakage
+ */
+void Hotspot::solve(const matrix_t &m_power, vector_t &m_temperature) const
+{
+	size_t i, j;
+
+	size_t step_count = m_power.rows();
+
+	m_temperature.resize(processor_count);
+
+	double *temperature = &m_temperature[0];
+	const double *power = m_power.pointer();
+
+	double *overall_power = dvector(node_count);
+	double *steady_temperature = dvector(node_count);
+
+	memset(overall_power, 0, sizeof(double) * node_count);
+
+	for (i = 0; i < step_count; i++)
+		for (j = 0; j < processor_count; j++)
+			overall_power[j] += power[i * processor_count + j];
+
+	for (j = 0; j < processor_count; j++)
+		overall_power[j] /= (double)step_count;
+
+	steady_state_temp(model, overall_power, steady_temperature);
+
+	for (i = 0; i < processor_count; i++)
+		temperature[i] = steady_temperature[i];
+
+	free_dvector(overall_power);
+	free_dvector(steady_temperature);
 }

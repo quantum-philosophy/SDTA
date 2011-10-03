@@ -3,6 +3,9 @@
 
 extern "C" {
 #include <hotspot/util.h>
+#include <hotspot/flp.h>
+#include <hotspot/temperature.h>
+#include <hotspot/temperature_block.h>
 }
 
 class Hotspot
@@ -32,6 +35,10 @@ class Hotspot
 	 */
 	static const double Is = 995.7996;
 
+	thermal_config_t config;
+	flp_t *floorplan;
+	RC_model_t *model;
+
 	double sampling_interval;
 	double ambient_temperature;
 	size_t processor_count;
@@ -42,8 +49,10 @@ class Hotspot
 
 	public:
 
-	Hotspot(const std::string &floorplan, const std::string &config,
+	Hotspot(const std::string &floorplan_filename,
+		const std::string &config_filename,
 		str_pair *extra_table = NULL, size_t tsize = 0);
+	~Hotspot();
 
 	inline double get_sampling_interval() const
 	{
@@ -73,6 +82,8 @@ class Hotspot
 		const matrix_t &m_dynamic_power, matrix_t &m_temperature,
 		matrix_t &m_total_power, double tol = Hotspot::tol,
 		size_t maxit = Hotspot::maxit) const;
+
+	void solve(const matrix_t &m_power, vector_t &m_temperature) const;
 
 	private:
 
