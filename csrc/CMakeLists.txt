@@ -47,7 +47,6 @@ include_directories (
 # * REAL_RANK - ranking in doubles.
 # * SHALLOW_CHECK - eliminate excessive checks.
 # * UNCONSTRAINED - the genes do not have any constrains.
-# * FAKE_EVALUATION - consider power instead of temperature.
 # * WITHOUT_MEMCACHED - do not mention memcached in the source code.
 # * VERIFY_CACHING - check what we are reading from memcached.
 #

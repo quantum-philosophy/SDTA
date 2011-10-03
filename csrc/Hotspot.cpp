@@ -13,7 +13,7 @@
 #define __COPY_SQUARE_MATRIX(dest, src, size) \
 	memcpy((dest)[0], (src)[0], sizeof(double) * size * size)
 
-Hotspot::Hotspot(const std::string &floorplan_filename,
+BasicHotspot::BasicHotspot(const std::string &floorplan_filename,
 	const std::string &config_filename, str_pair *extra_table, size_t tsize)
 {
 	size_t i, j;
@@ -58,15 +58,13 @@ Hotspot::Hotspot(const std::string &floorplan_filename,
 	}
 }
 
-Hotspot::~Hotspot()
+BasicHotspot::~BasicHotspot()
 {
 	delete_RC_model(model);
 	free_flp(floorplan, FALSE);
 }
 
-/* Steady-State Dynamic Temperature Analysis without leakage
- */
-void Hotspot::solve(const matrix_t &m_power, matrix_t &m_temperature) const
+void BasicHotspot::solve(const matrix_t &m_power, matrix_t &m_temperature) const
 {
 	size_t i, j, k;
 	size_t step_count, total;
@@ -179,11 +177,19 @@ void Hotspot::solve(const matrix_t &m_power, matrix_t &m_temperature) const
 			temperature[k] = Y[i][j] * sinvC[j] + ambient_temperature;
 }
 
-/* Steady-State Dynamic Temperature Analysis with leakage
- */
-size_t Hotspot::solve(const Architecture &architecture,
-	const matrix_t &m_dynamic_power, matrix_t &m_temperature,
-	matrix_t &m_total_power, double tol, size_t maxit) const
+Hotspot::Hotspot(const std::string &floorplan_filename,
+	const std::string &config_filename, const Architecture &_architecture,
+	double _tol, size_t _maxit) :
+
+	BasicHotspot(floorplan_filename, config_filename),
+	processors(_architecture.processors),
+	processor_count(_architecture.size()),
+	tol(_tol), maxit(_maxit)
+{
+}
+
+size_t Hotspot::solve(const matrix_t &m_dynamic_power,
+	matrix_t &m_temperature, matrix_t &m_total_power) const
 {
 	size_t i, j, k, it;
 	size_t step_count, total;
@@ -269,8 +275,7 @@ size_t Hotspot::solve(const Architecture &architecture,
 	for (i = 0; i < node_count; i++)
 		v_temp[i] = 1.0 / (1.0 - exp(sampling_interval * step_count * L[i]));
 
-	Hotspot::inject_leakage(architecture, processor_count,
-		step_count, dynamic_power, ambient_temperature, total_power);
+	inject_leakage(step_count, dynamic_power, ambient_temperature, total_power);
 
 	/* We come to the iterative part */
 	for (it = 0;;) {
@@ -316,16 +321,15 @@ size_t Hotspot::solve(const Architecture &architecture,
 
 		if (max_error < tol || it >= maxit) break;
 
-		Hotspot::inject_leakage(architecture, processor_count, step_count,
-			dynamic_power, temperature, total_power);
+		inject_leakage(step_count, dynamic_power, temperature, total_power);
 	}
 
 	return it;
 }
 
-void Hotspot::inject_leakage(const Architecture &architecture,
-	size_t processor_count, size_t step_count, const double *dynamic_power,
-	const double *temperature, double *total_power)
+void Hotspot::inject_leakage(
+	size_t step_count, const double *dynamic_power,
+	const double *temperature, double *total_power) const
 {
 	/* Pleak = Ngate * Iavg * Vdd
 	 * Iavg(T, Vdd) = Is(T0, V0) * favg(T, Vdd)
@@ -343,8 +347,6 @@ void Hotspot::inject_leakage(const Architecture &architecture,
 	double temp, favg, voltage;
 	unsigned long int ngate;
 
-	const processor_vector_t &processors = architecture.processors;
-
 	for (i = 0, k = 0; i < step_count; i++) {
 		for (j = 0; j < processor_count; j++, k++) {
 			temp = temperature[k];
@@ -360,15 +362,13 @@ void Hotspot::inject_leakage(const Architecture &architecture,
 	}
 }
 
-void Hotspot::inject_leakage(const Architecture &architecture,
-	size_t processor_count, size_t step_count, const double *dynamic_power,
-	double temperature, double *total_power)
+void Hotspot::inject_leakage(
+	size_t step_count, const double *dynamic_power,
+	double temperature, double *total_power) const
 {
 	size_t i, j, k;
 	double favg, voltage;
 	unsigned long int ngate;
-
-	const processor_vector_t &processors = architecture.processors;
 
 	for (i = 0, k = 0; i < step_count; i++) {
 		for (j = 0; j < processor_count; j++, k++) {
@@ -384,9 +384,8 @@ void Hotspot::inject_leakage(const Architecture &architecture,
 	}
 }
 
-/* Steady-State Temperature Analysis without leakage
- */
-void Hotspot::solve(const matrix_t &m_power, vector_t &m_temperature) const
+void SteadyStateHotspot::solve(const matrix_t &m_power,
+	vector_t &m_temperature) const
 {
 	size_t i, j;
 

@@ -163,7 +163,7 @@ void optimize(const string &system_config, const string &genetic_config,
 #endif
 		}
 
-		hotspot = new Hotspot(floorplan_config, thermal_config);
+		hotspot = new Hotspot(floorplan_config, thermal_config, *architecture);
 
 		/* 6. Obtain the initial measurements to compare with.
 		 *
