@@ -16,6 +16,8 @@ class Graph
 
 	friend class DynamicPower;
 	friend class Lifetime;
+	friend class SteadyStateHotspot;
+
 	friend std::ostream &operator<< (std::ostream &, const Graph *);
 
 	public:

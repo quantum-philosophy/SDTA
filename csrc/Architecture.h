@@ -15,6 +15,8 @@ class Architecture
 
 	friend class DynamicPower;
 	friend class Hotspot;
+	friend class SteadyStateHotspot;
+
 	friend std::ostream &operator<< (std::ostream &, const Architecture *);
 
 	public:

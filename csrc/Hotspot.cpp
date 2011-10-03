@@ -6,6 +6,11 @@
 
 #include "utils.h"
 #include "Hotspot.h"
+#include "Schedule.h"
+#include "Architecture.h"
+#include "Processor.h"
+#include "Graph.h"
+#include "Task.h"
 
 #define __COPY_VECTOR(dest, src, size) \
 	memcpy(&(dest)[0], &(src)[0], sizeof(double) * size)
@@ -384,35 +389,136 @@ void Hotspot::inject_leakage(
 	}
 }
 
-void SteadyStateHotspot::solve(const matrix_t &m_power,
-	vector_t &m_temperature) const
+EventQueue::EventQueue(const Schedule &schedule, double _deadline) :
+	deadline(_deadline), position(0), length(0)
 {
-	size_t i, j;
+	size_t processor_count = schedule.processors();
 
-	size_t step_count = m_power.rows();
+	for (pid_t pid = 0; pid < processor_count; pid++) {
+		const LocalSchedule &local_schedule = schedule[pid];
+		size_t count = local_schedule.size();
+		for (size_t i = 0; i < count; i++) {
+			const ScheduleItem &item = local_schedule[i];
+			events.push_back(Event(pid, item.id, item.start));
+			events.push_back(Event(pid, item.id, item.start + item.duration));
+			length += 2;
+		}
+	}
 
-	m_temperature.resize(processor_count);
+	std::sort(events.begin(), events.end(), EventQueue::compare_events);
 
-	double *temperature = &m_temperature[0];
-	const double *power = m_power.pointer();
+	events.push_back(Event(-1, -1, deadline));
+	length++;
+}
 
-	double *overall_power = dvector(node_count);
-	double *steady_temperature = dvector(node_count);
+SteadyStateHotspot::SteadyStateHotspot(const std::string &floorplan_filename,
+	const std::string &config_filename, const Architecture &_architecture,
+	const Graph &_graph) :
 
-	memset(overall_power, 0, sizeof(double) * node_count);
+	BasicHotspot(floorplan_filename, config_filename),
+	processors(_architecture.processors), processor_count(_architecture.size()),
+	tasks(_graph.tasks), task_count(_graph.size()),
+	deadline(_graph.get_deadline()), storage(NULL)
+{
+#ifndef SHALLOW_CHECK
+	if (!processor_count)
+		throw std::runtime_error("There are no processors.");
 
-	for (i = 0; i < step_count; i++)
-		for (j = 0; j < processor_count; j++)
-			overall_power[j] += power[i * processor_count + j];
+	if (!task_count)
+		throw std::runtime_error("There are no tasks.");
+#endif
 
-	for (j = 0; j < processor_count; j++)
-		overall_power[j] /= (double)step_count;
+	step_count = ceil(_graph.get_deadline() / sampling_interval);
 
-	steady_state_temp(model, overall_power, steady_temperature);
+	type_count = processors[0]->size();
 
-	for (i = 0; i < processor_count; i++)
-		temperature[i] = steady_temperature[i];
+#ifndef SHALLOW_CHECK
+	if (step_count == 0)
+		throw std::runtime_error("The number of steps is zero.");
 
-	free_dvector(overall_power);
-	free_dvector(steady_temperature);
+	for (size_t i = 1; i < processor_count; i++)
+		if (type_count != processors[i]->size())
+			throw std::runtime_error("The number of types differs between processors.");
+#endif
+
+	storage = new Slot(type_count);
+}
+
+SteadyStateHotspot::~SteadyStateHotspot()
+{
+	__DELETE(storage);
+}
+
+void SteadyStateHotspot::solve(const Schedule &schedule,
+	matrix_t &temperature)
+{
+	temperature.resize(step_count, processor_count);
+
+	Event event;
+	EventQueue queue(schedule, deadline);
+
+	size_t i, start = 0, end;
+
+	SlotTrace trace(processor_count, -1);
+
+	while (queue.next(event)) {
+		end = ceil(event.time / sampling_interval);
+
+#ifndef SHALLOW_CHECK
+		if (end > step_count)
+			throw std::runtime_error("The event time is out of range.");
+#endif
+
+		if (end != start) {
+			const double *slot_temperature = get(trace);
+
+			for (i = start; i < end && i < step_count; i++)
+				memcpy(temperature[i], slot_temperature,
+					sizeof(double) * processor_count);
+
+			start = end;
+		}
+
+		if (event.id < 0 || event.pid < 0) continue;
+
+		const Task *task = tasks[event.id];
+
+		if (trace[event.pid] < 0)
+			trace[event.pid] = task->get_type();
+		else
+			trace[event.pid] = -1;
+	}
+}
+
+double *SteadyStateHotspot::compute(const SlotTrace &trace) const
+{
+	double *power = __ALLOC(node_count);
+	double *temperature = __ALLOC(node_count);
+
+	memset(power, 0, sizeof(double) * node_count);
+
+	for (size_t i = 0; i < processor_count; i++) {
+		if (trace[i] < 0) continue;
+		power[i] = processors[i]->calc_power((unsigned int)trace[i]);
+	}
+
+	steady_state_temp(model, power, temperature);
+
+	__FREE(power);
+
+	return temperature;
+}
+
+const double *SteadyStateHotspot::get(const SlotTrace &trace)
+{
+	Slot *slot = storage->find(trace);
+
+	double *power = slot->get_data();
+
+	if (!power) {
+		power = compute(trace);
+		slot->store(power);
+	}
+
+	return power;
 }

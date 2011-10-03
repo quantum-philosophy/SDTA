@@ -9,6 +9,8 @@ class Processor
 	friend class Task;
 	friend class DynamicPower;
 	friend class Hotspot;
+	friend class SteadyStateHotspot;
+
 	friend std::ostream &operator<< (std::ostream &, const Processor *);
 	friend std::ostream &operator<< (std::ostream &, const Task *);
 
