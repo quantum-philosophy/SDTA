@@ -18,12 +18,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	mxFree(floorplan);
 	mxFree(config);
 
-	matrix_t neg_a;
-	vector_t inv_c;
-
-	hotspot.calc_coefficients(neg_a, inv_c);
+	matrix_t neg_a = hotspot.get_conductivity();
+	vector_t inv_c = hotspot.get_capacitance();
 
 	int node_count = inv_c.size();
+
+	/* Just for fun =) */
+	for (size_t i = 0; i < node_count; i++) {
+		for (size_t j = 0; j < node_count; j++)
+			neg_a[i][j] = -neg_a[i][j];
+		inv_c[i] = 1.0 / inv_c[i];
+	}
 
     plhs[0] = mxCreateDoubleMatrix(node_count, node_count, mxREAL);
 	c_matrix_to_mex(mxGetPr(plhs[0]), neg_a.pointer(), node_count, node_count);

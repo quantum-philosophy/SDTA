@@ -7,91 +7,83 @@
 #include "utils.h"
 #include "Hotspot.h"
 
-Hotspot::Hotspot(const std::string &floorplan, const std::string &config,
+extern "C" {
+#include <hotspot/flp.h>
+#include <hotspot/temperature.h>
+#include <hotspot/temperature_block.h>
+}
+
+#define __COPY_VECTOR(dest, src, size) \
+	memcpy(&(dest)[0], &(src)[0], sizeof(double) * size)
+
+#define __COPY_SQUARE_MATRIX(dest, src, size) \
+	memcpy((dest)[0], (src)[0], sizeof(double) * size * size)
+
+Hotspot::Hotspot(const std::string &floorplan, const std::string &file,
 	str_pair *extra_table, size_t tsize)
 {
-	cfg = default_thermal_config();
+	size_t i, j;
 
-	if (!config.empty()) {
+	/* 1. Configuration file */
+	thermal_config_t config = default_thermal_config();
+
+	if (!file.empty()) {
 		str_pair table[MAX_ENTRIES];
-		int i = read_str_pairs(&table[0], MAX_ENTRIES,
-			const_cast<char *>(config.c_str()));
-		thermal_config_add_from_strs(&cfg, table, i);
+		i = read_str_pairs(&table[0], MAX_ENTRIES,
+			const_cast<char *>(file.c_str()));
+		thermal_config_add_from_strs(&config, table, i);
 	}
 
 	if (extra_table && tsize)
-		thermal_config_add_from_strs(&cfg, extra_table, tsize);
+		thermal_config_add_from_strs(&config, extra_table, tsize);
 
-	flp = read_flp(const_cast<char *>(floorplan.c_str()), FALSE);
-}
+	sampling_interval = config.sampling_intvl;
+	ambient_temperature = config.ambient;
 
-Hotspot::~Hotspot()
-{
-	free_flp(flp, FALSE);
-}
+	/* 2. Floorplan */
+	flp_t *flp = read_flp(const_cast<char *>(floorplan.c_str()), FALSE);
 
-void Hotspot::calc_coefficients(matrix_t &neg_a, vector_t &inv_c) const
-{
-	size_t i, j;
-	size_t node_count;
+	processor_count = flp->n_units;
 
-	RC_model_t *model;
-	block_model_t *block;
-
-	model = alloc_RC_model(
-		const_cast<thermal_config_t *>(&cfg),
-		const_cast<flp_t *>(flp));
-	block = model->block;
+	/* 3. Model itself */
+	RC_model_t *model = alloc_RC_model(&config, flp);
+	block_model_t *block = model->block;
 
 	populate_R_model(model, flp);
 	populate_C_model(model, flp);
 
 	node_count = model->block->n_nodes;
 
-	neg_a.resize(node_count, node_count);
-	inv_c.resize(node_count);
+	conductivity.resize(node_count, node_count);
+	root_square_inverse_capacitance.resize(node_count);
 
 	for (i = 0; i < node_count; i++) {
 		for (j = 0; j < node_count; j++)
-			neg_a[i][j] = block->b[i][j];
-		inv_c[i] = block->inva[i];
+			conductivity[i][j] = -block->b[i][j];
+		root_square_inverse_capacitance[i] = sqrt(block->inva[i]);
 	}
 
 	delete_RC_model(model);
+
+	free_flp(flp, FALSE);
 }
 
+/* Steady-State Dynamic Temperature Analysis without leakage
+ */
 void Hotspot::solve(const matrix_t &m_power, matrix_t &m_temperature) const
 {
 	size_t i, j, k;
-	size_t processor_count, node_count, step_count, total;
-	double ts, am;
+	size_t step_count, total;
 
-	RC_model_t *model;
-	block_model_t *block;
-
-	processor_count = flp->n_units;
 	step_count = m_power.rows();
 	total = processor_count * step_count;
 
 	if (processor_count != m_power.cols())
 		throw std::runtime_error("The floorplan does not match the given power.");
 
-	model = alloc_RC_model(
-		const_cast<thermal_config_t *>(&cfg),
-		const_cast<flp_t *>(flp));
-	block = model->block;
-
-	populate_R_model(model, flp);
-	populate_C_model(model, flp);
-
-	node_count = model->block->n_nodes;
-
 	m_temperature.resize(m_power);
 
 	double *temperature = m_temperature.pointer();
-
-	ts = model->config->sampling_intvl;
-	am = model->config->ambient;
 
 	/* We have:
 	 * C * dT/dt = A * T + B
@@ -99,13 +91,8 @@ void Hotspot::solve(const matrix_t &m_power, matrix_t &m_temperature) const
 	MatDoub A(node_count, node_count);
 	VecDoub sinvC(node_count);
 
-	for (i = 0; i < node_count; i++) {
-		for (j = 0; j < node_count; j++)
-			A[i][j] = -block->b[i][j];
-		sinvC[i] = sqrt(block->inva[i]);
-	}
-
-	delete_RC_model(model);
+	__COPY_SQUARE_MATRIX(A, conductivity, node_count);
+	__COPY_VECTOR(sinvC, root_square_inverse_capacitance, node_count);
 
 	MatDoub &D = A;
 	MatDoub m_temp(node_count, node_count);
@@ -143,7 +130,7 @@ void Hotspot::solve(const matrix_t &m_power, matrix_t &m_temperature) const
 	MatDoub &K = A;
 	VecDoub v_temp(node_count);
 
-	for (i = 0; i < node_count; i++) v_temp[i] = exp(ts * L[i]);
+	for (i = 0; i < node_count; i++) v_temp[i] = exp(sampling_interval * L[i]);
 	multiply_matrix_diagonal_matrix(U, v_temp, m_temp);
 	multiply_matrix_matrix(m_temp, UT, K);
 
@@ -163,7 +150,7 @@ void Hotspot::solve(const matrix_t &m_power, matrix_t &m_temperature) const
 
 	/* M = diag(1/(1 - exp(m * l0)), ....) */
 	for (i = 0; i < node_count; i++)
-		v_temp[i] = 1.0 / (1.0 - exp(ts * step_count * L[i]));
+		v_temp[i] = 1.0 / (1.0 - exp(sampling_interval * step_count * L[i]));
 
 	/* Q(0) = G * B(0) */
 	multiply_matrix_incomplete_vector(G, m_power[0], processor_count, Q[0]);
@@ -193,36 +180,24 @@ void Hotspot::solve(const matrix_t &m_power, matrix_t &m_temperature) const
 	 */
 	for (i = 0, k = 0; i < step_count; i++)
 		for (j = 0; j < processor_count; j++, k++)
-			temperature[k] = Y[i][j] * sinvC[j] + am;
+			temperature[k] = Y[i][j] * sinvC[j] + ambient_temperature;
 }
 
+/* Steady-State Dynamic Temperature Analysis with leakage
+ */
 size_t Hotspot::solve(const Architecture &architecture,
 	const matrix_t &m_dynamic_power, matrix_t &m_temperature,
 	matrix_t &m_total_power, double tol, size_t maxit) const
 {
 	size_t i, j, k, it;
-	size_t processor_count, node_count, step_count, total;
-	double ts, am, tmp, error, max_error;
+	size_t step_count, total;
+	double tmp, error, max_error;
 
-	RC_model_t *model;
-	block_model_t *block;
-
-	processor_count = flp->n_units;
 	step_count = m_dynamic_power.rows();
 	total = processor_count * step_count;
 
 	if (processor_count != m_dynamic_power.cols())
 		throw std::runtime_error("The floorplan does not match the given power.");
-
-	model = alloc_RC_model(
-		const_cast<thermal_config_t *>(&cfg),
-		const_cast<flp_t *>(flp));
-	block = model->block;
-
-	populate_R_model(model, flp);
-	populate_C_model(model, flp);
-
-	node_count = model->block->n_nodes;
 
 	m_temperature.resize(m_dynamic_power);
 	m_total_power.resize(m_dynamic_power);
@@ -231,22 +206,14 @@ size_t Hotspot::solve(const Architecture &architecture,
 	double *temperature = m_temperature.pointer();
 	double *total_power = m_total_power.pointer();
 
-	ts = model->config->sampling_intvl;
-	am = model->config->ambient;
-
 	/* We have:
 	 * C * dT/dt = A * T + B
 	 */
 	MatDoub A(node_count, node_count);
 	VecDoub sinvC(node_count);
 
-	for (i = 0; i < node_count; i++) {
-		for (j = 0; j < node_count; j++)
-			A[i][j] = -block->b[i][j];
-		sinvC[i] = sqrt(block->inva[i]);
-	}
-
-	delete_RC_model(model);
+	__COPY_SQUARE_MATRIX(A, conductivity, node_count);
+	__COPY_VECTOR(sinvC, root_square_inverse_capacitance, node_count);
 
 	MatDoub &D = A;
 	MatDoub m_temp(node_count, node_count);
@@ -284,7 +251,7 @@ size_t Hotspot::solve(const Architecture &architecture,
 	MatDoub &K = A;
 	VecDoub v_temp(node_count);
 
-	for (i = 0; i < node_count; i++) v_temp[i] = exp(ts * L[i]);
+	for (i = 0; i < node_count; i++) v_temp[i] = exp(sampling_interval * L[i]);
 	multiply_matrix_diagonal_matrix(U, v_temp, m_temp);
 	multiply_matrix_matrix(m_temp, UT, K);
 
@@ -304,10 +271,10 @@ size_t Hotspot::solve(const Architecture &architecture,
 
 	/* M = diag(1/(1 - exp(m * l0)), ....) */
 	for (i = 0; i < node_count; i++)
-		v_temp[i] = 1.0 / (1.0 - exp(ts * step_count * L[i]));
+		v_temp[i] = 1.0 / (1.0 - exp(sampling_interval * step_count * L[i]));
 
 	Hotspot::inject_leakage(architecture, processor_count,
-		step_count, dynamic_power, am, total_power);
+		step_count, dynamic_power, ambient_temperature, total_power);
 
 	/* We come to the iterative part */
 	for (it = 0;;) {
@@ -341,7 +308,7 @@ size_t Hotspot::solve(const Architecture &architecture,
 		max_error = 0;
 		for (i = 0, k = 0; i < step_count; i++)
 			for (j = 0; j < processor_count; j++, k++) {
-				tmp = Y[i][j] * sinvC[j] + am;
+				tmp = Y[i][j] * sinvC[j] + ambient_temperature;
 
 				error = abs(temperature[k] - tmp);
 				if (max_error < error) max_error = error;

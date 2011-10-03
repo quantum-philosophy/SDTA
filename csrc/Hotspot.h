@@ -3,16 +3,10 @@
 
 extern "C" {
 #include <hotspot/util.h>
-#include <hotspot/flp.h>
-#include <hotspot/temperature.h>
-#include <hotspot/temperature_block.h>
 }
 
 class Hotspot
 {
-	thermal_config_t cfg;
-	flp_t *flp;
-
 	static const double tol = 0.01;
 	static const size_t maxit = 10;
 
@@ -38,13 +32,40 @@ class Hotspot
 	 */
 	static const double Is = 995.7996;
 
+	double sampling_interval;
+	double ambient_temperature;
+	size_t processor_count;
+	size_t node_count;
+
+	matrix_t conductivity;
+	vector_t root_square_inverse_capacitance;
+
 	public:
 
 	Hotspot(const std::string &floorplan, const std::string &config,
 		str_pair *extra_table = NULL, size_t tsize = 0);
-	~Hotspot();
 
-	void calc_coefficients(matrix_t &neg_a, vector_t &inv_c) const;
+	inline double get_sampling_interval() const
+	{
+		return sampling_interval;
+	}
+
+	inline const matrix_t &get_conductivity() const
+	{
+		return conductivity;
+	}
+
+	inline vector_t get_capacitance() const
+	{
+		size_t i;
+
+		vector_t capacitance(root_square_inverse_capacitance);
+
+		for (i = 0; i < node_count; i++)
+			capacitance[i] = 1.0 / (capacitance[i] * capacitance[i]);
+
+		return capacitance;
+	}
 
 	void solve(const matrix_t &m_power, matrix_t &m_temperature) const;
 
@@ -52,11 +73,6 @@ class Hotspot
 		const matrix_t &m_dynamic_power, matrix_t &m_temperature,
 		matrix_t &m_total_power, double tol = Hotspot::tol,
 		size_t maxit = Hotspot::maxit) const;
-
-	inline double sampling_interval() const
-	{
-		return cfg.sampling_intvl;
-	}
 
 	private:
 

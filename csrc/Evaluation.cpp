@@ -23,7 +23,7 @@ price_t Evaluation::process(const Schedule &schedule)
 
 price_t Evaluation::compute(const Schedule &schedule)
 {
-	double sampling_interval = hotspot.sampling_interval();
+	double sampling_interval = hotspot.get_sampling_interval();
 
 	matrix_t dynamic_power, temperature, total_power;
 
