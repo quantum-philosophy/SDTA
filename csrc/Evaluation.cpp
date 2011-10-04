@@ -4,7 +4,6 @@
 #include "Graph.h"
 #include "Task.h"
 #include "Hotspot.h"
-#include "DynamicPower.h"
 #include "Schedule.h"
 
 price_t Evaluation::process(const Schedule &schedule)
@@ -25,19 +24,15 @@ price_t Evaluation::compute(const Schedule &schedule)
 {
 	double sampling_interval = hotspot.get_sampling_interval();
 
-	matrix_t dynamic_power, temperature, total_power;
-
-	DynamicPower::compute(architecture, graph, schedule,
-		sampling_interval, dynamic_power);
-
-	(void)hotspot.solve(dynamic_power, temperature, total_power);
+	matrix_t temperature, power;
+	hotspot.solve(schedule, temperature, power);
 
 	double lifetime = this->lifetime.predict(temperature, sampling_interval);
 	double energy = 0;
 
 	if (!shallow) {
-		size_t total_count = total_power.cols() * total_power.rows();
-		const double *ptr = total_power.pointer();
+		size_t total_count = power.cols() * power.rows();
+		const double *ptr = power.pointer();
 		for (int i = 0; i < total_count; i++, ptr++) energy += *ptr;
 		energy *= sampling_interval;
 	}

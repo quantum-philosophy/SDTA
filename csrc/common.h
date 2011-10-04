@@ -40,7 +40,6 @@ class Architecture;
 class Schedule;
 class BasicListScheduler;
 
-class DynamicPower;
 class Hotspot;
 class Lifetime;
 
@@ -310,8 +309,20 @@ class matrix_t: public vector_t
 		resize(another.m_rows, another.m_cols);
 	}
 
-	inline size_t rows() const { return m_rows; }
-	inline size_t cols() const { return m_cols; }
+	inline size_t rows() const
+	{
+		return m_rows;
+	}
+
+	inline size_t cols() const
+	{
+		return m_cols;
+	}
+
+	inline void nullify()
+	{
+		memset(pointer(), 0, sizeof(double) * m_rows * m_cols);
+	}
 };
 
 /******************************************************************************/

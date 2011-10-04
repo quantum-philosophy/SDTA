@@ -1,7 +1,6 @@
 #include "MOEvolution.h"
 #include "Graph.h"
 #include "Lifetime.h"
-#include "DynamicPower.h"
 #include "Schedule.h"
 
 /******************************************************************************/

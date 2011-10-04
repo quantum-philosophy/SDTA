@@ -1,7 +1,6 @@
 #include "SOEvolution.h"
 #include "Graph.h"
 #include "Lifetime.h"
-#include "DynamicPower.h"
 #include "ListScheduler.h"
 #include "Schedule.h"
 #include "Selection.h"

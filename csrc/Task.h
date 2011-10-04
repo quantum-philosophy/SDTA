@@ -13,10 +13,6 @@ class Task
 	template<class PT>
 	friend class ListScheduler;
 
-	template<class CT, class PT, class ST>
-	friend class GenericEvolution;
-
-	friend class DynamicPower;
 	friend std::ostream &operator<< (std::ostream &, const Task *);
 
 	tid_t id;

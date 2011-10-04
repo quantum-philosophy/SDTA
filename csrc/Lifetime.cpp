@@ -1,7 +1,5 @@
 #include "Lifetime.h"
 #include "Architecture.h"
-#include "Hotspot.h"
-#include "DynamicPower.h"
 #include "Graph.h"
 
 double ThermalCyclingLifetime::predict(

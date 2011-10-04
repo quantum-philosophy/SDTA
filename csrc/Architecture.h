@@ -13,8 +13,6 @@ class Architecture
 	template<class CT, class PT, class ST>
 	friend class Evolution;
 
-	friend class DynamicPower;
-
 	friend std::ostream &operator<< (std::ostream &, const Architecture *);
 
 	public:

@@ -16,9 +16,22 @@ extern "C" {
 		some = NULL; \
 	} while(0)
 
-class BasicHotspot
+class Hotspot
 {
 	protected:
+
+	const processor_vector_t &processors;
+	const size_t processor_count;
+
+	const task_vector_t &tasks;
+	const size_t task_count;
+
+	const double deadline;
+
+	size_t node_count;
+
+	double sampling_interval;
+	double ambient_temperature;
 
 	thermal_config_t config;
 	flp_t *floorplan;
@@ -26,44 +39,59 @@ class BasicHotspot
 
 	public:
 
-	BasicHotspot(const std::string &floorplan_filename,
-		const std::string &config_filename, str_pair *extra_table = NULL,
-		size_t tsize = 0);
+	Hotspot(const Architecture &architecture, const Graph &graph,
+		const std::string &floorplan_filename, const std::string &config_filename);
+	virtual ~Hotspot();
 
-	~BasicHotspot();
+	virtual void solve(const Schedule &schedule, matrix_t &temperature,
+		matrix_t &power) const = 0;
 
 	inline double get_sampling_interval() const
 	{
-		return config.sampling_intvl;
+		return sampling_interval;
 	}
 };
 
-class HotspotWithoutLeakage: public BasicHotspot
+class HotspotWithDynamicPower: public Hotspot
 {
-	void *condensed_equation;
+	std::vector<unsigned int> types;
 
 	public:
 
-	HotspotWithoutLeakage(const std::string &floorplan_filename,
-		const std::string &config_filename);
-	~HotspotWithoutLeakage();
+	HotspotWithDynamicPower(const Architecture &architecture, const Graph &graph,
+		const std::string &floorplan, const std::string &config);
 
-	void solve(const matrix_t &power, matrix_t &temperature) const;
+	protected:
+
+	void compute_power(const Schedule &schedule, matrix_t &power) const;
 };
 
-/* Meaning "with leakage" */
-class Hotspot: public BasicHotspot
+class HotspotWithoutLeakage: public HotspotWithDynamicPower
 {
 	void *condensed_equation;
 
 	public:
 
-	Hotspot(const std::string &floorplan_filename,
-		const std::string &config_filename, const Architecture &_architecture);
-	~Hotspot();
+	HotspotWithoutLeakage(const Architecture &architecture, const Graph &graph,
+		const std::string &floorplan, const std::string &config);
+	~HotspotWithoutLeakage();
 
-	size_t solve(const matrix_t &dynamic_power,
-		matrix_t &temperature, matrix_t &total_power) const;
+	void solve(const Schedule &schedule, matrix_t &temperature,
+		matrix_t &power) const;
+};
+
+class HotspotWithLeakage: public HotspotWithDynamicPower
+{
+	void *condensed_equation;
+
+	public:
+
+	HotspotWithLeakage(const Architecture &architecture, const Graph &graph,
+		const std::string &floorplan, const std::string &config);
+	~HotspotWithLeakage();
+
+	void solve(const Schedule &schedule, matrix_t &temperature,
+		matrix_t &total_power) const;
 };
 
 typedef std::vector<int> SlotTrace;
@@ -173,33 +201,22 @@ class EventQueue
 	}
 };
 
-class SteadyStateHotspot: public BasicHotspot
+class SteadyStateHotspot: public Hotspot
 {
-	const processor_vector_t &processors;
-	const size_t processor_count;
-
-	const task_vector_t &tasks;
-	const size_t task_count;
-
-	const double deadline;
-
-	double sampling_interval;
-	size_t node_count;
-
 	size_t step_count;
 	size_t type_count;
+
+	std::vector<unsigned int> types;
 
 	Slot *storage;
 
 	public:
 
-	SteadyStateHotspot(const std::string &floorplan_filename,
-		const std::string &config_filename,
-		const Architecture &_architecture,
-		const Graph &_graph);
+	SteadyStateHotspot(const Architecture &architecture, const Graph &graph,
+		const std::string &floorplan, const std::string &config);
 	~SteadyStateHotspot();
 
-	void solve(const Schedule &schedule, matrix_t &temperature);
+	void solve(const Schedule &schedule, matrix_t &temperature, matrix_t &power);
 
 	protected:
 

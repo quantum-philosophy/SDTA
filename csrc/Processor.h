@@ -7,7 +7,6 @@ class Processor
 {
 	friend class Architecture;
 	friend class Task;
-	friend class DynamicPower;
 
 	friend std::ostream &operator<< (std::ostream &, const Processor *);
 	friend std::ostream &operator<< (std::ostream &, const Task *);
