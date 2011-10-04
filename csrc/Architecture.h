@@ -14,8 +14,6 @@ class Architecture
 	friend class Evolution;
 
 	friend class DynamicPower;
-	friend class Hotspot;
-	friend class SteadyStateHotspot;
 
 	friend std::ostream &operator<< (std::ostream &, const Architecture *);
 
@@ -33,6 +31,11 @@ class Architecture
 	inline const Processor *operator[] (pid_t id) const
 	{
 		return processors[id];
+	}
+
+	inline const processor_vector_t &get_processors() const
+	{
+		return processors;
 	}
 
 	protected:

@@ -7,94 +7,137 @@
 #include "utils.h"
 #include "Hotspot.h"
 #include "Schedule.h"
-#include "Architecture.h"
-#include "Processor.h"
 #include "Graph.h"
 #include "Task.h"
 
-#define __COPY_VECTOR(dest, src, size) \
-	memcpy(&(dest)[0], &(src)[0], sizeof(double) * size)
+#include "Helper.h"
 
-#define __COPY_SQUARE_MATRIX(dest, src, size) \
-	memcpy((dest)[0], (src)[0], sizeof(double) * size * size)
+class CondensedEquationWithoutLeakage
+{
+	protected:
 
-BasicHotspot::BasicHotspot(const std::string &floorplan_filename,
-	const std::string &config_filename, str_pair *extra_table, size_t tsize)
+	const size_t processor_count;
+	const size_t node_count;
+
+	const double sampling_interval;
+	const double ambient_temperature;
+
+	/* Matrix exponent */
+	MatDoub K;
+
+	VecDoub sinvC;
+	MatDoub G;
+
+	/* Eigenvector decomposition
+	 *
+	 * K = U * L * UT
+	 */
+	VecDoub L;
+	MatDoub U;
+	MatDoub UT;
+
+	MatDoub P;
+	MatDoub Q;
+	MatDoub Y;
+
+	MatDoub m_temp;
+	VecDoub v_temp;
+
+	public:
+
+	CondensedEquationWithoutLeakage(size_t _processor_count, size_t _node_count,
+		double _sampling_interval, double _ambient_temperature,
+		const double **neg_conductivity, const double *inv_capacitance);
+
+	/* NOTE: power should be of size (step_count x processor_count) */
+	void solve(const double *power, double *temperature, size_t step_count);
+};
+
+class CondensedEquation: public CondensedEquationWithoutLeakage
+{
+	static const double A = 1.1432e-12;
+	static const double B = 1.0126e-14;
+	static const double alpha = 466.4029;
+	static const double beta = -1224.74083;
+	static const double gamma = 6.28153;
+	static const double delta = 6.9094;
+
+	/* How to calculate Is?
+	 *
+	 * Take a look at (all coefficients above are from this paper):
+	 * "Temperature and Supply Voltage Aware Performance and Power
+	 * Modeling at Microarchitecture Level" (July 2005)
+	 *
+	 * T = [ 100, 100, 80, 80, 60, 60 ] + 273.15
+	 * V = [ 0.95, 1.05, 0.95, 1.05, 0.95, 1.05 ]
+	 * Iavg = [ 23.44, 29.56, 19.44, 25.14, 16.00, 21.33 ] * 1e-6
+	 * Is = mean(Iavg(i) / favg(T(i), V(i)))
+	 *
+	 * Where favg is the scaling factor (see calc_scaling).
+	 */
+	static const double Is = 995.7996;
+
+	static const double tol = 0.01;
+	static const size_t maxit = 10;
+
+	std::vector<double> voltage;
+	std::vector<unsigned long int> ngate;
+
+	public:
+
+	CondensedEquation(const processor_vector_t &processors,
+		size_t _node_count, double _sampling_interval, double _ambient_temperature,
+		const double **neg_conductivity, const double *inv_capacitance);
+
+	/* NOTE: dynamic_power should be of size (step_count x processor_count) */
+	size_t solve(const double *dynamic_power,
+		double *temperature, double *total_power, size_t step_count);
+
+	private:
+
+	void inject_leakage(size_t step_count, const double *dynamic_power,
+		const double *temperature, double *total_power) const;
+
+	void inject_leakage(size_t step_count, const double *dynamic_power,
+		double temperature, double *total_power) const;
+};
+
+CondensedEquationWithoutLeakage::CondensedEquationWithoutLeakage(
+	size_t _processor_count, size_t _node_count,
+	double _sampling_interval, double _ambient_temperature,
+	const double **neg_conductivity, const double *inv_capacitance) :
+
+	processor_count(_processor_count),
+	node_count(_node_count),
+	sampling_interval(_sampling_interval),
+	ambient_temperature(_ambient_temperature)
 {
 	size_t i, j;
 
-	/* 1. Configuration file */
-	config = default_thermal_config();
+	K.resize(node_count, node_count);
+	sinvC.resize(node_count);
 
-	if (!config_filename.empty()) {
-		str_pair table[MAX_ENTRIES];
-		i = read_str_pairs(&table[0], MAX_ENTRIES,
-			const_cast<char *>(config_filename.c_str()));
-		thermal_config_add_from_strs(&config, table, i);
-	}
+	L.resize(node_count);
+	U.resize(node_count, node_count);
+	UT.resize(node_count, node_count);
 
-	if (extra_table && tsize)
-		thermal_config_add_from_strs(&config, extra_table, tsize);
+	G.resize(node_count, node_count);
 
-	sampling_interval = config.sampling_intvl;
-	ambient_temperature = config.ambient;
-
-	/* 2. Floorplan */
-	floorplan = read_flp(const_cast<char *>(floorplan_filename.c_str()), FALSE);
-
-	processor_count = floorplan->n_units;
-
-	/* 3. Model itself */
-	model = alloc_RC_model(&config, floorplan);
-	block_model_t *block = model->block;
-
-	populate_R_model(model, floorplan);
-	populate_C_model(model, floorplan);
-
-	node_count = model->block->n_nodes;
-
-	conductivity.resize(node_count, node_count);
-	root_square_inverse_capacitance.resize(node_count);
-
-	for (i = 0; i < node_count; i++) {
-		for (j = 0; j < node_count; j++)
-			conductivity[i][j] = -block->b[i][j];
-		root_square_inverse_capacitance[i] = sqrt(block->inva[i]);
-	}
-}
-
-BasicHotspot::~BasicHotspot()
-{
-	delete_RC_model(model);
-	free_flp(floorplan, FALSE);
-}
-
-void BasicHotspot::solve(const matrix_t &m_power, matrix_t &m_temperature) const
-{
-	size_t i, j, k;
-	size_t step_count, total;
-
-	step_count = m_power.rows();
-	total = processor_count * step_count;
-
-	if (processor_count != m_power.cols())
-		throw std::runtime_error("The floorplan does not match the given power.");
-
-	m_temperature.resize(m_power);
-
-	double *temperature = m_temperature.pointer();
+	m_temp.resize(node_count, node_count);
+	v_temp.resize(node_count);
 
 	/* We have:
 	 * C * dT/dt = A * T + B
 	 */
-	MatDoub A(node_count, node_count);
-	VecDoub sinvC(node_count);
+	MatDoub &A = K;
 
-	__COPY_SQUARE_MATRIX(A, conductivity, node_count);
-	__COPY_VECTOR(sinvC, root_square_inverse_capacitance, node_count);
+	for (i = 0; i < node_count; i++) {
+		for (j = 0; j < node_count; j++)
+			A[i][j] = -neg_conductivity[i][j];
+		sinvC[i] = sqrt(inv_capacitance[i]);
+	}
 
 	MatDoub &D = A;
-	MatDoub m_temp(node_count, node_count);
 
 	/* We want to get rid of everything in front of dX/dt,
 	 * but at the same time we want to keep the matrix in front of X
@@ -117,18 +160,14 @@ void BasicHotspot::solve(const matrix_t &m_power, matrix_t &m_temperature) const
 	 */
 	Symmeig S(D);
 
-	VecDoub &L = S.d;
-	MatDoub &U = S.z;
-	MatDoub UT(node_count, node_count);
+	copy_vector(&L[0], &S.d[0], node_count);
+	copy_vector(U[0], S.z[0], node_count * node_count); /* matrix */
 
 	transpose_matrix(U, UT);
 
 	/* Matrix exponential:
 	 * K = exp(D * t) = U * exp(L * t) UT
 	 */
-	MatDoub &K = A;
-	VecDoub v_temp(node_count);
-
 	for (i = 0; i < node_count; i++) v_temp[i] = exp(sampling_interval * L[i]);
 	multiply_matrix_diagonal_matrix(U, v_temp, m_temp);
 	multiply_matrix_matrix(m_temp, UT, K);
@@ -137,28 +176,32 @@ void BasicHotspot::solve(const matrix_t &m_power, matrix_t &m_temperature) const
 	 * G = D^(-1) * (exp(D * t) - I) * C^(-1/2) =
 	 * = U * diag((exp(t * l0) - 1) / l0, ...) * UT * C^(-1/2)
 	 */
-	MatDoub G(node_count, node_count);
-
 	for (i = 0; i < node_count; i++) v_temp[i] = (v_temp[i] - 1) / L[i];
 	multiply_matrix_diagonal_matrix(U, v_temp, m_temp);
 	multiply_matrix_matrix_diagonal_matrix(m_temp, UT, sinvC, G);
+}
 
-	MatDoub P(step_count, node_count);
-	MatDoub Q(step_count, node_count);
-	MatDoub Y(step_count, node_count);
+void CondensedEquationWithoutLeakage::solve(const double *power, double *temperature,
+	size_t step_count)
+{
+	size_t i, j, k;
+
+	P.resize(step_count, node_count);
+	Q.resize(step_count, node_count);
+	Y.resize(step_count, node_count);
 
 	/* M = diag(1/(1 - exp(m * l0)), ....) */
 	for (i = 0; i < node_count; i++)
 		v_temp[i] = 1.0 / (1.0 - exp(sampling_interval * step_count * L[i]));
 
 	/* Q(0) = G * B(0) */
-	multiply_matrix_incomplete_vector(G, m_power[0], processor_count, Q[0]);
+	multiply_matrix_incomplete_vector(G, power, processor_count, Q[0]);
 	/* P(0) = Q(0) */
 	copy_vector(P[0], Q[0], node_count);
 
 	for (i = 1; i < step_count; i++) {
 		/* Q(i) = G * B(i) */
-		multiply_matrix_incomplete_vector(G, m_power[i],
+		multiply_matrix_incomplete_vector(G, power + i * processor_count,
 			processor_count, Q[i]);
 		/* P(i) = K * P(i-1) + Q(i) */
 		multiply_matrix_vector_plus_vector(K, P[i - 1], Q[i], P[i]);
@@ -182,99 +225,35 @@ void BasicHotspot::solve(const matrix_t &m_power, matrix_t &m_temperature) const
 			temperature[k] = Y[i][j] * sinvC[j] + ambient_temperature;
 }
 
-Hotspot::Hotspot(const std::string &floorplan_filename,
-	const std::string &config_filename, const Architecture &_architecture,
-	double _tol, size_t _maxit) :
+CondensedEquation::CondensedEquation(
+	const processor_vector_t &processors, size_t _node_count,
+	double _sampling_interval, double _ambient_temperature,
+	const double **neg_conductivity, const double *inv_capacitance) :
 
-	BasicHotspot(floorplan_filename, config_filename),
-	processors(_architecture.processors),
-	processor_count(_architecture.size()),
-	tol(_tol), maxit(_maxit)
+	CondensedEquationWithoutLeakage(processors.size(), _node_count,
+		_sampling_interval, _ambient_temperature,
+		neg_conductivity, inv_capacitance)
 {
+	size_t count = processors.size();
+
+	voltage.resize(count);
+	ngate.resize(count);
+
+	for (size_t i = 0; i < count; i++) {
+		voltage[i] = processors[i]->get_voltage();
+		ngate[i] = processors[i]->get_ngate();
+	}
 }
 
-size_t Hotspot::solve(const matrix_t &m_dynamic_power,
-	matrix_t &m_temperature, matrix_t &m_total_power) const
+size_t CondensedEquation::solve(const double *dynamic_power,
+	double *temperature, double *total_power, size_t step_count)
 {
 	size_t i, j, k, it;
-	size_t step_count, total;
 	double tmp, error, max_error;
 
-	step_count = m_dynamic_power.rows();
-	total = processor_count * step_count;
-
-	if (processor_count != m_dynamic_power.cols())
-		throw std::runtime_error("The floorplan does not match the given power.");
-
-	m_temperature.resize(m_dynamic_power);
-	m_total_power.resize(m_dynamic_power);
-
-	const double *dynamic_power = m_dynamic_power.pointer();
-	double *temperature = m_temperature.pointer();
-	double *total_power = m_total_power.pointer();
-
-	/* We have:
-	 * C * dT/dt = A * T + B
-	 */
-	MatDoub A(node_count, node_count);
-	VecDoub sinvC(node_count);
-
-	__COPY_SQUARE_MATRIX(A, conductivity, node_count);
-	__COPY_VECTOR(sinvC, root_square_inverse_capacitance, node_count);
-
-	MatDoub &D = A;
-	MatDoub m_temp(node_count, node_count);
-
-	/* We want to get rid of everything in front of dX/dt,
-	 * but at the same time we want to keep the matrix in front of X
-	 * symmetric, so we do the following substitution:
-	 * Y = C^(1/2) * T
-	 * D = C^(-1/2) * A * C^(-1/2)
-	 * E = C^(-1/2) * B
-	 *
-	 * Eventually, we have:
-	 * dY/dt = DY + E
-	 */
-	multiply_diagonal_matrix_matrix(sinvC, A, m_temp);
-	multiply_matrix_diagonal_matrix(m_temp, sinvC, D);
-
-	/* Eigenvalue decomposition:
-	 * D = U * L * UT
-	 *
-	 * Where:
-	 * L = diag(l0, ..., l(n-1))
-	 */
-	Symmeig S(D);
-
-	VecDoub &L = S.d;
-	MatDoub &U = S.z;
-	MatDoub UT(node_count, node_count);
-
-	transpose_matrix(U, UT);
-
-	/* Matrix exponential:
-	 * K = exp(D * t) = U * exp(L * t) UT
-	 */
-	MatDoub &K = A;
-	VecDoub v_temp(node_count);
-
-	for (i = 0; i < node_count; i++) v_temp[i] = exp(sampling_interval * L[i]);
-	multiply_matrix_diagonal_matrix(U, v_temp, m_temp);
-	multiply_matrix_matrix(m_temp, UT, K);
-
-	/* Coefficient matrix G:
-	 * G = D^(-1) * (exp(D * t) - I) * C^(-1/2) =
-	 * = U * diag((exp(t * l0) - 1) / l0, ...) * UT * C^(-1/2)
-	 */
-	MatDoub G(node_count, node_count);
-
-	for (i = 0; i < node_count; i++) v_temp[i] = (v_temp[i] - 1) / L[i];
-	multiply_matrix_diagonal_matrix(U, v_temp, m_temp);
-	multiply_matrix_matrix_diagonal_matrix(m_temp, UT, sinvC, G);
-
-	MatDoub P(step_count, node_count);
-	MatDoub Q(step_count, node_count);
-	MatDoub Y(step_count, node_count);
+	P.resize(step_count, node_count);
+	Q.resize(step_count, node_count);
+	Y.resize(step_count, node_count);
 
 	/* M = diag(1/(1 - exp(m * l0)), ....) */
 	for (i = 0; i < node_count; i++)
@@ -285,13 +264,13 @@ size_t Hotspot::solve(const matrix_t &m_dynamic_power,
 	/* We come to the iterative part */
 	for (it = 0;;) {
 		/* Q(0) = G * B(0) */
-		multiply_matrix_incomplete_vector(G, m_total_power[0], processor_count, Q[0]);
+		multiply_matrix_incomplete_vector(G, total_power, processor_count, Q[0]);
 		/* P(0) = Q(0) */
 		copy_vector(P[0], Q[0], node_count);
 
 		for (i = 1; i < step_count; i++) {
 			/* Q(i) = G * B(i) */
-			multiply_matrix_incomplete_vector(G, m_total_power[i],
+			multiply_matrix_incomplete_vector(G, total_power + i * processor_count,
 				processor_count, Q[i]);
 			/* P(i) = K * P(i-1) + Q(i) */
 			multiply_matrix_vector_plus_vector(K, P[i - 1], Q[i], P[i]);
@@ -332,7 +311,7 @@ size_t Hotspot::solve(const matrix_t &m_dynamic_power,
 	return it;
 }
 
-void Hotspot::inject_leakage(
+void CondensedEquation::inject_leakage(
 	size_t step_count, const double *dynamic_power,
 	const double *temperature, double *total_power) const
 {
@@ -355,8 +334,8 @@ void Hotspot::inject_leakage(
 	for (i = 0, k = 0; i < step_count; i++) {
 		for (j = 0; j < processor_count; j++, k++) {
 			temp = temperature[k];
-			voltage = processors[j]->voltage;
-			ngate = processors[j]->ngate;
+			voltage = this->voltage[j];
+			ngate = this->ngate[j];
 
 			favg = A * temp * temp *
 				exp((alpha * voltage + beta) / temp) +
@@ -367,7 +346,7 @@ void Hotspot::inject_leakage(
 	}
 }
 
-void Hotspot::inject_leakage(
+void CondensedEquation::inject_leakage(
 	size_t step_count, const double *dynamic_power,
 	double temperature, double *total_power) const
 {
@@ -377,8 +356,8 @@ void Hotspot::inject_leakage(
 
 	for (i = 0, k = 0; i < step_count; i++) {
 		for (j = 0; j < processor_count; j++, k++) {
-			voltage = processors[j]->voltage;
-			ngate = processors[j]->ngate;
+			voltage = this->voltage[j];
+			ngate = this->ngate[j];
 
 			favg = A * temperature * temperature *
 				exp((alpha * voltage + beta) / temperature) +
@@ -387,6 +366,101 @@ void Hotspot::inject_leakage(
 			total_power[k] = dynamic_power[k] + ngate * Is * favg * voltage;
 		}
 	}
+}
+
+BasicHotspot::BasicHotspot(const std::string &floorplan_filename,
+	const std::string &config_filename, str_pair *extra_table, size_t tsize)
+{
+	config = default_thermal_config();
+
+	if (!config_filename.empty()) {
+		str_pair table[MAX_ENTRIES];
+		size_t i = read_str_pairs(&table[0], MAX_ENTRIES,
+			const_cast<char *>(config_filename.c_str()));
+		thermal_config_add_from_strs(&config, table, i);
+	}
+
+	if (extra_table && tsize)
+		thermal_config_add_from_strs(&config, extra_table, tsize);
+
+	floorplan = read_flp(const_cast<char *>(floorplan_filename.c_str()), FALSE);
+
+	model = alloc_RC_model(&config, floorplan);
+
+	populate_R_model(model, floorplan);
+	populate_C_model(model, floorplan);
+}
+
+BasicHotspot::~BasicHotspot()
+{
+	delete_RC_model(model);
+	free_flp(floorplan, FALSE);
+}
+
+HotspotWithoutLeakage::HotspotWithoutLeakage(const std::string &floorplan_filename,
+	const std::string &config_filename) :
+
+	BasicHotspot(floorplan_filename, config_filename)
+{
+	CondensedEquationWithoutLeakage *equation = new CondensedEquationWithoutLeakage(
+		floorplan->n_units, model->block->n_nodes, config.sampling_intvl,
+		config.ambient, (const double **)model->block->b, model->block->inva);
+
+	condensed_equation = (void *)equation;
+}
+
+HotspotWithoutLeakage::~HotspotWithoutLeakage()
+{
+	CondensedEquationWithoutLeakage *equation =
+		(CondensedEquationWithoutLeakage *)condensed_equation;
+	__DELETE(equation);
+}
+
+void HotspotWithoutLeakage::solve(const matrix_t &power, matrix_t &temperature) const
+{
+	if (floorplan->n_units != power.cols())
+		throw std::runtime_error("The floorplan does not match the given power.");
+
+	temperature.resize(power);
+
+	CondensedEquationWithoutLeakage *equation =
+		(CondensedEquationWithoutLeakage *)condensed_equation;
+	equation->solve(power.pointer(), temperature.pointer(), power.rows());
+}
+
+Hotspot::Hotspot(const std::string &floorplan_filename,
+	const std::string &config_filename, const Architecture &_architecture) :
+
+	BasicHotspot(floorplan_filename, config_filename)
+{
+	CondensedEquation *equation = new CondensedEquation(
+		_architecture.get_processors(), model->block->n_nodes, config.sampling_intvl,
+		config.ambient, (const double **)model->block->b, model->block->inva);
+
+	condensed_equation = (void *)equation;
+}
+
+Hotspot::~Hotspot()
+{
+	CondensedEquation *equation =
+		(CondensedEquation *)condensed_equation;
+	__DELETE(equation);
+}
+
+size_t Hotspot::solve(const matrix_t &dynamic_power,
+	matrix_t &temperature, matrix_t &total_power) const
+{
+	if (floorplan->n_units != dynamic_power.cols())
+		throw std::runtime_error("The floorplan does not match the given power.");
+
+	temperature.resize(dynamic_power);
+	total_power.resize(dynamic_power);
+
+	CondensedEquation *equation =
+		(CondensedEquation *)condensed_equation;
+
+	return equation->solve(dynamic_power.pointer(), temperature.pointer(),
+		total_power.pointer(), dynamic_power.rows());
 }
 
 EventQueue::EventQueue(const Schedule &schedule, double _deadline) :
@@ -416,10 +490,14 @@ SteadyStateHotspot::SteadyStateHotspot(const std::string &floorplan_filename,
 	const Graph &_graph) :
 
 	BasicHotspot(floorplan_filename, config_filename),
-	processors(_architecture.processors), processor_count(_architecture.size()),
+	processors(_architecture.get_processors()), processor_count(processors.size()),
 	tasks(_graph.tasks), task_count(_graph.size()),
 	deadline(_graph.get_deadline()), storage(NULL)
 {
+	sampling_interval = config.sampling_intvl;
+
+	node_count = model->block->n_nodes;
+
 #ifndef SHALLOW_CHECK
 	if (!processor_count)
 		throw std::runtime_error("There are no processors.");

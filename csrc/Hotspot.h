@@ -24,91 +24,46 @@ class BasicHotspot
 	flp_t *floorplan;
 	RC_model_t *model;
 
-	double sampling_interval;
-	double ambient_temperature;
-	size_t processor_count;
-	size_t node_count;
-
-	matrix_t conductivity;
-	vector_t root_square_inverse_capacitance;
-
 	public:
 
 	BasicHotspot(const std::string &floorplan_filename,
-		const std::string &config_filename,
-		str_pair *extra_table = NULL, size_t tsize = 0);
+		const std::string &config_filename, str_pair *extra_table = NULL,
+		size_t tsize = 0);
+
 	~BasicHotspot();
 
 	inline double get_sampling_interval() const
 	{
-		return sampling_interval;
+		return config.sampling_intvl;
 	}
-
-	inline const matrix_t &get_conductivity() const
-	{
-		return conductivity;
-	}
-
-	inline vector_t get_capacitance() const
-	{
-		size_t i;
-
-		vector_t capacitance(root_square_inverse_capacitance);
-
-		for (i = 0; i < node_count; i++)
-			capacitance[i] = 1.0 / (capacitance[i] * capacitance[i]);
-
-		return capacitance;
-	}
-
-	void solve(const matrix_t &m_power, matrix_t &m_temperature) const;
 };
 
+class HotspotWithoutLeakage: public BasicHotspot
+{
+	void *condensed_equation;
+
+	public:
+
+	HotspotWithoutLeakage(const std::string &floorplan_filename,
+		const std::string &config_filename);
+	~HotspotWithoutLeakage();
+
+	void solve(const matrix_t &power, matrix_t &temperature) const;
+};
+
+/* Meaning "with leakage" */
 class Hotspot: public BasicHotspot
 {
-	static const double A = 1.1432e-12;
-	static const double B = 1.0126e-14;
-	static const double alpha = 466.4029;
-	static const double beta = -1224.74083;
-	static const double gamma = 6.28153;
-	static const double delta = 6.9094;
-
-	/* How to calculate Is?
-	 *
-	 * Take a look at (all coefficients above are from this paper):
-	 * "Temperature and Supply Voltage Aware Performance and Power
-	 * Modeling at Microarchitecture Level" (July 2005)
-	 *
-	 * T = [ 100, 100, 80, 80, 60, 60 ] + 273.15
-	 * V = [ 0.95, 1.05, 0.95, 1.05, 0.95, 1.05 ]
-	 * Iavg = [ 23.44, 29.56, 19.44, 25.14, 16.00, 21.33 ] * 1e-6
-	 * Is = mean(Iavg(i) / favg(T(i), V(i)))
-	 *
-	 * Where favg is the scaling factor (see calc_scaling).
-	 */
-	static const double Is = 995.7996;
-
-	const processor_vector_t &processors;
-	const size_t processor_count;
-	const double tol;
-	const size_t maxit;
+	void *condensed_equation;
 
 	public:
 
 	Hotspot(const std::string &floorplan_filename,
-		const std::string &config_filename, const Architecture &_architecture,
-		double _tol = 0.01, size_t _maxit = 10);
+		const std::string &config_filename, const Architecture &_architecture);
+	~Hotspot();
 
-	size_t solve(const matrix_t &m_dynamic_power,
-		matrix_t &m_temperature, matrix_t &m_total_power) const;
-
-	protected:
-
-	void inject_leakage(size_t step_count, const double *dynamic_power,
-		const double *temperature, double *total_power) const;
-
-	void inject_leakage(size_t step_count, const double *dynamic_power,
-		double temperature, double *total_power) const;
+	size_t solve(const matrix_t &dynamic_power,
+		matrix_t &temperature, matrix_t &total_power) const;
 };
 
 typedef std::vector<int> SlotTrace;
@@ -220,7 +175,6 @@ class EventQueue
 
 class SteadyStateHotspot: public BasicHotspot
 {
-
 	const processor_vector_t &processors;
 	const size_t processor_count;
 
@@ -228,6 +182,9 @@ class SteadyStateHotspot: public BasicHotspot
 	const size_t task_count;
 
 	const double deadline;
+
+	double sampling_interval;
+	size_t node_count;
 
 	size_t step_count;
 	size_t type_count;
@@ -238,7 +195,8 @@ class SteadyStateHotspot: public BasicHotspot
 
 	SteadyStateHotspot(const std::string &floorplan_filename,
 		const std::string &config_filename,
-		const Architecture &_architecture, const Graph &_graph);
+		const Architecture &_architecture,
+		const Graph &_graph);
 	~SteadyStateHotspot();
 
 	void solve(const Schedule &schedule, matrix_t &temperature);
