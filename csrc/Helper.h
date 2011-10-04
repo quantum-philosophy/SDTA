@@ -11,14 +11,17 @@ class Helper
 
 	static void dump(const matrix_t &matrix, const char *filename)
 	{
-		std::ofstream stream(filename);
+		dump(matrix.pointer(), matrix.rows(), matrix.cols(), filename);
+	}
 
-		size_t rows = matrix.rows();
-		size_t cols = matrix.cols();
+	static void dump(const double *matrix, size_t rows, size_t cols,
+		const char *filename)
+	{
+		std::ofstream stream(filename);
 
 		for (size_t i = 0; i < rows; i++) {
 			for (size_t j = 0; j < cols; j++) {
-				stream << matrix[i][j];
+				stream << matrix[i * cols + j];
 				if (j + 1 < cols) stream << '\t';
 			}
 			stream << std::endl;
