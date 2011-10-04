@@ -94,6 +94,7 @@ class EvolutionTuning
 	double deadline_ratio;
 	bool reorder_tasks;
 	bool include_mapping;
+	bool steady_state;
 	std::string cache;
 
 	/* Target */
@@ -122,6 +123,7 @@ class EvolutionTuning
 		deadline_ratio(1.1),
 		reorder_tasks(false),
 		include_mapping(false),
+		steady_state(false),
 		multiobjective(false),
 		seed(-1),
 		uniform_ratio(0.5),

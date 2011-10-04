@@ -48,6 +48,8 @@ void EvolutionTuning::update(std::istream &main_stream)
 			stream >> reorder_tasks;
 		else if (name == "include_mapping")
 			stream >> include_mapping;
+		else if (name == "steady_state")
+			stream >> steady_state;
 		else if (name == "cache")
 			stream >> cache;
 
@@ -153,6 +155,7 @@ void EvolutionTuning::display(std::ostream &o) const
 		<< "  Deadline ratio:         " << deadline_ratio << std::endl
 		<< "  Reorder tasks:          " << reorder_tasks << std::endl
 		<< "  Consider mapping:       " << include_mapping << std::endl
+		<< "  Steady-State:           " << steady_state << std::endl
 		<< "  Cache server:           " << cache << std::endl
 		<< std::endl
 

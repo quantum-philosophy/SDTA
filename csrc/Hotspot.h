@@ -44,7 +44,7 @@ class Hotspot
 	virtual ~Hotspot();
 
 	virtual void solve(const Schedule &schedule, matrix_t &temperature,
-		matrix_t &power) const = 0;
+		matrix_t &power) = 0;
 
 	inline double get_sampling_interval() const
 	{
@@ -77,7 +77,7 @@ class HotspotWithoutLeakage: public HotspotWithDynamicPower
 	~HotspotWithoutLeakage();
 
 	void solve(const Schedule &schedule, matrix_t &temperature,
-		matrix_t &power) const;
+		matrix_t &power);
 };
 
 class HotspotWithLeakage: public HotspotWithDynamicPower
@@ -91,7 +91,7 @@ class HotspotWithLeakage: public HotspotWithDynamicPower
 	~HotspotWithLeakage();
 
 	void solve(const Schedule &schedule, matrix_t &temperature,
-		matrix_t &total_power) const;
+		matrix_t &total_power);
 };
 
 typedef std::vector<int> SlotTrace;
@@ -216,7 +216,8 @@ class SteadyStateHotspot: public Hotspot
 		const std::string &floorplan, const std::string &config);
 	~SteadyStateHotspot();
 
-	void solve(const Schedule &schedule, matrix_t &temperature, matrix_t &power);
+	void solve(const Schedule &schedule, matrix_t &temperature,
+		matrix_t &power);
 
 	protected:
 

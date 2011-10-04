@@ -63,7 +63,7 @@ std::ostream &operator<< (std::ostream &o, const Schedule &schedule)
 	for (i = 0; i < processor_count; i++) {
 		count = schedule[i].size();
 		o	<< std::setw(4) << i << " -> " << count << " tasks ("
-			<< std::setprecision(2) << double(count) / double(task_count)
+			<< std::setprecision(0) << (double(count) / double(task_count) * 100)
 			<< "%)" << std::endl;
 	}
 

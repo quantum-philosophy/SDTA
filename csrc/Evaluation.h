@@ -17,7 +17,7 @@ class Evaluation
 
 	const Architecture &architecture;
 	const Graph &graph;
-	const Hotspot &hotspot;
+	Hotspot &hotspot;
 
 	const bool shallow;
 
@@ -28,7 +28,7 @@ class Evaluation
 	size_t cache_hits;
 
 	Evaluation(const Architecture &_architecture, const Graph &_graph,
-		const Hotspot &_hotspot, bool _shallow) :
+		Hotspot &_hotspot, bool _shallow) :
 
 		architecture(_architecture), graph(_graph), hotspot(_hotspot),
 		shallow(_shallow), evaluations(0), deadline_misses(0), cache_hits(0) {}
@@ -60,7 +60,7 @@ class MemcachedEvaluation: public Evaluation
 
 	MemcachedEvaluation(const std::string &config, bool _extended,
 		const Architecture &_architecture, const Graph &_graph,
-		const Hotspot &_hotspot, bool _shallow) :
+		Hotspot &_hotspot, bool _shallow) :
 
 		Evaluation(_architecture, _graph, _hotspot, _shallow), extended(_extended)
 	{

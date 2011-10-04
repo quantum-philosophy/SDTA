@@ -10,8 +10,6 @@
 #include "Graph.h"
 #include "Task.h"
 
-#include "Helper.h"
-
 class CondensedEquationWithoutLeakage
 {
 	protected:
@@ -499,11 +497,8 @@ HotspotWithoutLeakage::~HotspotWithoutLeakage()
 }
 
 void HotspotWithoutLeakage::solve(const Schedule &schedule, matrix_t &temperature,
-	matrix_t &power) const
+	matrix_t &power)
 {
-	if (processor_count != power.cols())
-		throw std::runtime_error("The floorplan does not match the given power.");
-
 	compute_power(schedule, power);
 
 	temperature.resize(power);
@@ -536,7 +531,7 @@ HotspotWithLeakage::~HotspotWithLeakage()
 }
 
 void HotspotWithLeakage::solve(const Schedule &schedule, matrix_t &temperature,
-	matrix_t &total_power) const
+	matrix_t &total_power)
 {
 	matrix_t dynamic_power;
 	compute_power(schedule, dynamic_power);

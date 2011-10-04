@@ -163,8 +163,12 @@ void optimize(const string &system_config, const string &genetic_config,
 #endif
 		}
 
-		hotspot = new HotspotWithLeakage(*architecture, *graph,
-			floorplan_config, thermal_config);
+		if (tuning.steady_state)
+			hotspot = new SteadyStateHotspot(*architecture, *graph,
+				floorplan_config, thermal_config);
+		else
+			hotspot = new HotspotWithLeakage(*architecture, *graph,
+				floorplan_config, thermal_config);
 
 		/* 6. Obtain the initial measurements to compare with.
 		 *
