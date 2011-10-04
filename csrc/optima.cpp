@@ -163,7 +163,8 @@ void optimize(const string &system_config, const string &genetic_config,
 #endif
 		}
 
-		hotspot = new Hotspot(floorplan_config, thermal_config, *architecture);
+		hotspot = new HotspotWithLeakage(*architecture, *graph,
+			floorplan_config, thermal_config);
 
 		/* 6. Obtain the initial measurements to compare with.
 		 *
