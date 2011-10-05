@@ -4,7 +4,7 @@ clear all;
 clc;
 rng(0);
 
-name = '004_060';
+name = '002_030';
 floorplan = Utils.path([ name, '.flp' ]);
 testCase = Utils.path([ name, '.tgff' ]);
 config = Utils.path('hotspot.config');
@@ -15,13 +15,7 @@ pes = tgff.pes;
 
 hotspot = HotSpot(floorplan, config);
 
-% Mapping
-mapping = Utils.generateEvenMapping(length(pes), length(graph.tasks));
-graph.assignMapping(pes, mapping);
-
-% Scheduling
-schedule = LS.process(pes, graph, mapping);
-graph.assignDistributedSchedule(schedule);
+LS.mapEarliestAndSchedule(graph, pes);
 
 graph.assignDeadline(Constants.deadlineFactor * graph.duration);
 
