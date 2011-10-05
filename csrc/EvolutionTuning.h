@@ -95,6 +95,7 @@ class EvolutionTuning
 	bool reorder_tasks;
 	bool include_mapping;
 	bool steady_state;
+	bool leakage;
 	std::string cache;
 
 	/* Target */
@@ -124,6 +125,7 @@ class EvolutionTuning
 		reorder_tasks(false),
 		include_mapping(false),
 		steady_state(false),
+		leakage(true),
 		multiobjective(false),
 		seed(-1),
 		uniform_ratio(0.5),

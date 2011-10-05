@@ -16,6 +16,8 @@ extern "C" {
 		some = NULL; \
 	} while(0)
 
+#include "Leakage.h"
+
 class Hotspot
 {
 	protected:
@@ -163,6 +165,68 @@ class Slot
 	}
 };
 
+class Slot;
+
+class SteadyStateHotspot: public Hotspot
+{
+	size_t step_count;
+	size_t type_count;
+
+	std::vector<unsigned int> types;
+
+	Slot *storage;
+
+	public:
+
+	SteadyStateHotspot(const Architecture &architecture, const Graph &graph,
+		const std::string &floorplan, const std::string &config);
+	~SteadyStateHotspot();
+
+	void solve(const Schedule &schedule, matrix_t &temperature,
+		matrix_t &power);
+
+	protected:
+
+	virtual double *compute(const SlotTrace &trace) const = 0;
+	const double *get(const SlotTrace &trace);
+};
+
+class SteadyStateHotspotWithoutLeakage: public SteadyStateHotspot
+{
+	public:
+
+	SteadyStateHotspotWithoutLeakage(const Architecture &architecture,
+		const Graph &graph, const std::string &floorplan,
+		const std::string &config) :
+
+		SteadyStateHotspot(architecture, graph, floorplan, config) {}
+
+	protected:
+
+	double *compute(const SlotTrace &trace) const;
+};
+
+class SteadyStateHotspotWithLeakage: public SteadyStateHotspot
+{
+	static const double tol = 0.01;
+	static const size_t maxit = 10;
+
+	Leakage leakage;
+
+	public:
+
+	SteadyStateHotspotWithLeakage(const Architecture &architecture,
+		const Graph &graph, const std::string &floorplan,
+		const std::string &config) :
+
+		SteadyStateHotspot(architecture, graph, floorplan, config),
+		leakage(architecture.get_processors()) {}
+
+	protected:
+
+	double *compute(const SlotTrace &trace) const;
+};
+
 struct Event
 {
 	int pid;
@@ -199,30 +263,6 @@ class EventQueue
 	{
 		return one.time < another.time;
 	}
-};
-
-class SteadyStateHotspot: public Hotspot
-{
-	size_t step_count;
-	size_t type_count;
-
-	std::vector<unsigned int> types;
-
-	Slot *storage;
-
-	public:
-
-	SteadyStateHotspot(const Architecture &architecture, const Graph &graph,
-		const std::string &floorplan, const std::string &config);
-	~SteadyStateHotspot();
-
-	void solve(const Schedule &schedule, matrix_t &temperature,
-		matrix_t &power);
-
-	protected:
-
-	double *compute(const SlotTrace &trace) const;
-	const double *get(const SlotTrace &trace);
 };
 
 #endif

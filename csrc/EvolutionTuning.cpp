@@ -50,6 +50,8 @@ void EvolutionTuning::update(std::istream &main_stream)
 			stream >> include_mapping;
 		else if (name == "steady_state")
 			stream >> steady_state;
+		else if (name == "leakage")
+			stream >> leakage;
 		else if (name == "cache")
 			stream >> cache;
 
@@ -156,6 +158,7 @@ void EvolutionTuning::display(std::ostream &o) const
 		<< "  Reorder tasks:          " << reorder_tasks << std::endl
 		<< "  Consider mapping:       " << include_mapping << std::endl
 		<< "  Steady-State:           " << steady_state << std::endl
+		<< "  Consider leakage:       " << leakage << std::endl
 		<< "  Cache server:           " << cache << std::endl
 		<< std::endl
 

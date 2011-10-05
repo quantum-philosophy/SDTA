@@ -21,6 +21,7 @@ set (COMMON_SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/MOEvolution.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Hotspot.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Lifetime.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Leakage.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Random.cpp
 	${TINYMT_DIR}/tinymt64.c
 )

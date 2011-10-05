@@ -117,13 +117,8 @@ void optimize(const string &system_config, const string &genetic_config,
 		/* 4. Assign a deadline.
 		 *
 		 */
-		if (deadline == 0) {
-			priority_t deadline_priority =
-				Priority::mobile(*architecture, *graph, mapping);
-			Schedule deadline_schedule = scheduler.process(mapping,
-				deadline_priority);
-			deadline = tuning.deadline_ratio * deadline_schedule.get_duration();
-		}
+		if (deadline == 0)
+			deadline = tuning.deadline_ratio * schedule.get_duration();
 		else if (tuning.verbose)
 			cout << "Using external deadline." << endl;
 
@@ -163,12 +158,23 @@ void optimize(const string &system_config, const string &genetic_config,
 #endif
 		}
 
-		if (tuning.steady_state)
-			hotspot = new SteadyStateHotspot(*architecture, *graph,
-				floorplan_config, thermal_config);
-		else
-			hotspot = new HotspotWithLeakage(*architecture, *graph,
-				floorplan_config, thermal_config);
+		if (tuning.steady_state) {
+			if (tuning.leakage)
+				hotspot = new SteadyStateHotspotWithLeakage(*architecture,
+					*graph, floorplan_config, thermal_config);
+			else
+				hotspot = new SteadyStateHotspotWithoutLeakage(*architecture,
+					*graph, floorplan_config, thermal_config);
+		}
+		else {
+			/* People want leakage! */
+			if (tuning.leakage)
+				hotspot = new HotspotWithLeakage(*architecture,
+					*graph, floorplan_config, thermal_config);
+			else
+				hotspot = new HotspotWithoutLeakage(*architecture,
+					*graph, floorplan_config, thermal_config);
+		}
 
 		/* 6. Obtain the initial measurements to compare with.
 		 *
@@ -209,13 +215,16 @@ void optimize(const string &system_config, const string &genetic_config,
 
 			if (out > 0)
 				cout << "Out of range priorities: " << out << endl;
-
-			cout << "Initial lifetime: "
-				<< setiosflags(ios::fixed) << setprecision(2)
-				<< price.lifetime << endl
-				<< "Initial energy: "
-				<< price.energy << endl << endl;
 		}
+
+		cout << "Initial lifetime: "
+			<< setiosflags(ios::fixed) << setprecision(2)
+			<< price.lifetime << endl;
+
+		if (tuning.multiobjective)
+			cout
+				<< "Initial energy: "
+				<< price.energy << endl;
 
 		for (size_t i = 0; i < repeat; i++) {
 			Random::reseed();

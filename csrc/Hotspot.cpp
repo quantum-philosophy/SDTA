@@ -53,33 +53,10 @@ class CondensedEquationWithoutLeakage
 
 class CondensedEquation: public CondensedEquationWithoutLeakage
 {
-	static const double A = 1.1432e-12;
-	static const double B = 1.0126e-14;
-	static const double alpha = 466.4029;
-	static const double beta = -1224.74083;
-	static const double gamma = 6.28153;
-	static const double delta = 6.9094;
-
-	/* How to calculate Is?
-	 *
-	 * Take a look at (all coefficients above are from this paper):
-	 * "Temperature and Supply Voltage Aware Performance and Power
-	 * Modeling at Microarchitecture Level" (July 2005)
-	 *
-	 * T = [ 100, 100, 80, 80, 60, 60 ] + 273.15
-	 * V = [ 0.95, 1.05, 0.95, 1.05, 0.95, 1.05 ]
-	 * Iavg = [ 23.44, 29.56, 19.44, 25.14, 16.00, 21.33 ] * 1e-6
-	 * Is = mean(Iavg(i) / favg(T(i), V(i)))
-	 *
-	 * Where favg is the scaling factor (see calc_scaling).
-	 */
-	static const double Is = 995.7996;
-
 	static const double tol = 0.01;
 	static const size_t maxit = 10;
 
-	std::vector<double> voltages;
-	std::vector<unsigned long int> ngates;
+	Leakage leakage;
 
 	public:
 
@@ -90,14 +67,6 @@ class CondensedEquation: public CondensedEquationWithoutLeakage
 	/* NOTE: dynamic_power should be of size (step_count x processor_count) */
 	size_t solve(const double *dynamic_power,
 		double *temperature, double *total_power, size_t step_count);
-
-	private:
-
-	void inject_leakage(size_t step_count, const double *dynamic_power,
-		const double *temperature, double *total_power) const;
-
-	void inject_leakage(size_t step_count, const double *dynamic_power,
-		double temperature, double *total_power) const;
 };
 
 CondensedEquationWithoutLeakage::CondensedEquationWithoutLeakage(
@@ -230,17 +199,9 @@ CondensedEquation::CondensedEquation(
 
 	CondensedEquationWithoutLeakage(processors.size(), _node_count,
 		_sampling_interval, _ambient_temperature,
-		neg_conductivity, inv_capacitance)
+		neg_conductivity, inv_capacitance),
+	leakage(processors)
 {
-	size_t count = processors.size();
-
-	voltages.resize(count);
-	ngates.resize(count);
-
-	for (size_t i = 0; i < count; i++) {
-		voltages[i] = processors[i]->get_voltage();
-		ngates[i] = processors[i]->get_ngate();
-	}
 }
 
 size_t CondensedEquation::solve(const double *dynamic_power,
@@ -257,7 +218,7 @@ size_t CondensedEquation::solve(const double *dynamic_power,
 	for (i = 0; i < node_count; i++)
 		v_temp[i] = 1.0 / (1.0 - exp(sampling_interval * step_count * L[i]));
 
-	inject_leakage(step_count, dynamic_power, ambient_temperature, total_power);
+	leakage.inject(step_count, dynamic_power, ambient_temperature, total_power);
 
 	/* We come to the iterative part */
 	for (it = 0;;) {
@@ -303,67 +264,10 @@ size_t CondensedEquation::solve(const double *dynamic_power,
 
 		if (max_error < tol || it >= maxit) break;
 
-		inject_leakage(step_count, dynamic_power, temperature, total_power);
+		leakage.inject(step_count, dynamic_power, temperature, total_power);
 	}
 
 	return it;
-}
-
-void CondensedEquation::inject_leakage(
-	size_t step_count, const double *dynamic_power,
-	const double *temperature, double *total_power) const
-{
-	/* Pleak = Ngate * Iavg * Vdd
-	 * Iavg(T, Vdd) = Is(T0, V0) * favg(T, Vdd)
-	 *
-	 * Where the scaling factor:
-	 * f(T, Vdd) = A * T^2 * e^((alpha * Vdd + beta)/T) +
-	 *   B * e^(gamma * Vdd + delta)
-	 *
-	 * From:
-	 * "Temperature and Supply Voltage Aware Performance and
-	 * Power Modeling at Microarchitecture Level"
-	 */
-
-	size_t i, j, k;
-	double temp, favg, voltage;
-	unsigned long int ngate;
-
-	for (i = 0, k = 0; i < step_count; i++) {
-		for (j = 0; j < processor_count; j++, k++) {
-			temp = temperature[k];
-			voltage = voltages[j];
-			ngate = ngates[j];
-
-			favg = A * temp * temp *
-				exp((alpha * voltage + beta) / temp) +
-				B * exp(gamma * voltage + delta);
-
-			total_power[k] = dynamic_power[k] + ngate * Is * favg * voltage;
-		}
-	}
-}
-
-void CondensedEquation::inject_leakage(
-	size_t step_count, const double *dynamic_power,
-	double temperature, double *total_power) const
-{
-	size_t i, j, k;
-	double favg, voltage;
-	unsigned long int ngate;
-
-	for (i = 0, k = 0; i < step_count; i++) {
-		for (j = 0; j < processor_count; j++, k++) {
-			voltage = voltages[j];
-			ngate = ngates[j];
-
-			favg = A * temperature * temperature *
-				exp((alpha * voltage + beta) / temperature) +
-				B * exp(gamma * voltage + delta);
-
-			total_power[k] = dynamic_power[k] + ngate * Is * favg * voltage;
-		}
-	}
 }
 
 /******************************************************************************/
@@ -644,7 +548,21 @@ void SteadyStateHotspot::solve(const Schedule &schedule,
 	}
 }
 
-double *SteadyStateHotspot::compute(const SlotTrace &trace) const
+const double *SteadyStateHotspot::get(const SlotTrace &trace)
+{
+	Slot *slot = storage->find(trace);
+
+	double *power = slot->get_data();
+
+	if (!power) {
+		power = compute(trace);
+		slot->store(power);
+	}
+
+	return power;
+}
+
+double *SteadyStateHotspotWithoutLeakage::compute(const SlotTrace &trace) const
 {
 	double *power = __ALLOC(node_count);
 	double *temperature = __ALLOC(node_count);
@@ -663,16 +581,49 @@ double *SteadyStateHotspot::compute(const SlotTrace &trace) const
 	return temperature;
 }
 
-const double *SteadyStateHotspot::get(const SlotTrace &trace)
+double *SteadyStateHotspotWithLeakage::compute(const SlotTrace &trace) const
 {
-	Slot *slot = storage->find(trace);
+	size_t i, it;
 
-	double *power = slot->get_data();
+	double error, max_error;
 
-	if (!power) {
-		power = compute(trace);
-		slot->store(power);
+	double *dynamic_power = __ALLOC(node_count);
+	double *total_power = __ALLOC(node_count);
+
+	double *last_temperature = __ALLOC(node_count);
+	double *temperature = __ALLOC(node_count);
+
+	memset(dynamic_power, 0, sizeof(double) * node_count);
+	memset(last_temperature, 0, sizeof(double) * node_count);
+
+	for (size_t i = 0; i < processor_count; i++) {
+		if (trace[i] < 0) continue;
+		dynamic_power[i] = processors[i]->calc_power((unsigned int)trace[i]);
 	}
 
-	return power;
+	leakage.inject(1, dynamic_power, ambient_temperature, total_power);
+
+	for (it = 0;;) {
+		steady_state_temp(model, total_power, temperature);
+
+		max_error = 0;
+
+		for (i = 0; i < processor_count; i++) {
+			error = abs(temperature[i] - last_temperature[i]);
+			if (max_error < error) max_error = error;
+			last_temperature[i] = temperature[i];
+		}
+
+		it++;
+
+		if (max_error < tol || it >= maxit) break;
+
+		leakage.inject(1, dynamic_power, temperature, total_power);
+	}
+
+	__FREE(dynamic_power);
+	__FREE(total_power);
+	__FREE(last_temperature);
+
+	return temperature;
 }
