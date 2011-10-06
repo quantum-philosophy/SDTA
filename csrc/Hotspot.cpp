@@ -45,7 +45,7 @@ class CondensedEquationWithoutLeakage
 
 	CondensedEquationWithoutLeakage(size_t _processor_count, size_t _node_count,
 		double _sampling_interval, double _ambient_temperature,
-		const double **neg_conductivity, const double *inv_capacitance);
+		const double **conductivity, const double *inv_capacitance);
 
 	/* NOTE: power should be of size (step_count x processor_count) */
 	void solve(const double *power, double *temperature, size_t step_count);
@@ -62,7 +62,7 @@ class CondensedEquation: public CondensedEquationWithoutLeakage
 
 	CondensedEquation(const processor_vector_t &processors,
 		size_t _node_count, double _sampling_interval, double _ambient_temperature,
-		const double **neg_conductivity, const double *inv_capacitance);
+		const double **conductivity, const double *inv_capacitance);
 
 	/* NOTE: dynamic_power should be of size (step_count x processor_count) */
 	size_t solve(const double *dynamic_power,
@@ -72,7 +72,7 @@ class CondensedEquation: public CondensedEquationWithoutLeakage
 CondensedEquationWithoutLeakage::CondensedEquationWithoutLeakage(
 	size_t _processor_count, size_t _node_count,
 	double _sampling_interval, double _ambient_temperature,
-	const double **neg_conductivity, const double *inv_capacitance) :
+	const double **conductivity, const double *inv_capacitance) :
 
 	processor_count(_processor_count),
 	node_count(_node_count),
@@ -100,7 +100,7 @@ CondensedEquationWithoutLeakage::CondensedEquationWithoutLeakage(
 
 	for (i = 0; i < node_count; i++) {
 		for (j = 0; j < node_count; j++)
-			A[i][j] = -neg_conductivity[i][j];
+			A[i][j] = -conductivity[i][j];
 		sinvC[i] = sqrt(inv_capacitance[i]);
 	}
 
@@ -195,11 +195,11 @@ void CondensedEquationWithoutLeakage::solve(const double *power, double *tempera
 CondensedEquation::CondensedEquation(
 	const processor_vector_t &processors, size_t _node_count,
 	double _sampling_interval, double _ambient_temperature,
-	const double **neg_conductivity, const double *inv_capacitance) :
+	const double **conductivity, const double *inv_capacitance) :
 
 	CondensedEquationWithoutLeakage(processors.size(), _node_count,
 		_sampling_interval, _ambient_temperature,
-		neg_conductivity, inv_capacitance),
+		conductivity, inv_capacitance),
 	leakage(processors)
 {
 }
