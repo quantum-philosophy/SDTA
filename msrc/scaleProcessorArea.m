@@ -28,12 +28,12 @@ for i = 1:processorCount
 end
 
 for i = 1:processorCount
-  fprintf('%15s', 'Variance');
+  fprintf('%15s', 'RMSE');
 end
 
 fprintf('\n');
 
-Variance = zeros(0, processorCount);
+Error = zeros(0, processorCount);
 Scale = zeros(0, 0);
 
 scale = 1;
@@ -45,12 +45,12 @@ for i = 1:length(processorArea)
 
   if i == 1
     temperature1 = Optima.solve(system, floorplan, hotspot, params, ...
-      sprintf('leakage 0 \n steady_state 0 \n power_scale %f', scale));
+      sprintf('deadline_ratio 1 \n leakage 0 \n steady_state 0 \n power_scale %f', scale));
     standard = mean(mean(temperature1));
   else
     while true
       temperature1 = Optima.solve(system, floorplan, hotspot, params, ...
-        sprintf('leakage 0 \n steady_state 0 \n power_scale %f', scale));
+        sprintf('deadline_ratio 1 \n leakage 0 \n steady_state 0 \n power_scale %f', scale));
 
       average = mean(mean(temperature1));
       if average >= standard, break; end;
@@ -60,29 +60,36 @@ for i = 1:length(processorArea)
   end
 
   temperature2 = Optima.solve(system, floorplan, hotspot, params, ...
-    sprintf('leakage 0 \n steady_state 1 \n power_scale %f', scale));
+    sprintf('deadline_ratio 1 \n leakage 0 \n steady_state 1 \n power_scale %f', scale));
 
   stepCount = size(temperature1, 1);
-  difference = temperature2 - temperature1;
-  variance = sum(difference .^ 2) / (stepCount - 1);
+  error = sqrt(sum((temperature2 - temperature1).^ 2) / stepCount);
 
   fprintf('%15d%15.2f', area * 1e6, scale);
   fprintf('%15.2f', min(temperature1));
   fprintf('%15.2f', max(temperature1));
   fprintf('%15.2f', mean(temperature1));
-  fprintf('%15.2f', variance);
+  fprintf('%15.2f', error);
   fprintf('\n');
 
-  Variance(end + 1, :) = variance;
+  Error(end + 1, :) = error;
   Scale(end + 1) = scale;
 end
 
-figure;
-
-Utils.drawLines('Variance', 'Processor area, mm^2', 'Variance', ...
-  processorArea * 1e6, Variance, [], 'Marker', 'o');
+processorArea = processorArea * 1e6;
 
 figure;
 
-Utils.drawLines('Power scale', 'Processor area, mm^2', 'Scale', ...
-  processorArea * 1e6, transpose(Scale), [], 'Marker', 'o');
+Utils.drawLines('Temperature RMSE', ...
+  'Area of one core, mm^2', 'RMSE', ...
+  processorArea, Error, [], 'Line', '--', 'Color', 'k');
+
+x = processorArea(1):1:processorArea(end);
+y = interp1(processorArea, mean(Error, 2), x, 'cubic');
+line(x, y, 'Color', 'r', 'LineWidth', 2);
+
+figure;
+
+Utils.drawLines('Power Scale', ...
+  'Area of one core, mm^2', 'Scale', ...
+  processorArea, transpose(Scale), [], 'Marker', 'o');

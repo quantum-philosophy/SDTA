@@ -1,7 +1,16 @@
 function drawLines(labelTitle, labelX, labelY, x, y, index, varargin)
-  if ~isempty(labelTitle), title(labelTitle); end
-  if ~isempty(labelX), xlabel(labelX); end
-  if ~isempty(labelY), ylabel(labelY); end
+  if ~isempty(labelTitle)
+    title(labelTitle, 'FontSize', 16);
+  end
+
+  if ~isempty(labelX)
+    xlabel(labelX, 'FontSize', 14);
+  end
+
+  if ~isempty(labelY)
+    ylabel(labelY, 'FontSize', 14);
+  end
+
   if nargin < 6, index = []; end
 
   colors = Constants.roundRobinColors;

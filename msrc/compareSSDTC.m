@@ -2,8 +2,8 @@ clear all;
 clc;
 
 name = '001_030';
-processorArea = 4e-6;
-powerScale = 1;
+processorArea = 128e-6;
+powerScale = 29.70;
 
 tgff = Utils.path([ name, '.tgffopt' ]);
 system = Utils.path([ name, '.sys' ]);
@@ -15,10 +15,10 @@ processorCount = Utils.readParameter(tgff, 'table_cnt');
 Utils.generateFloorplan(floorplan, processorCount, processorArea);
 
 temperature1 = Optima.solve(system, floorplan, hotspot, params, ...
-  sprintf('leakage 0 \n steady_state 0 \n power_scale %f', powerScale));
+  sprintf('deadline_ratio 1 \n leakage 0 \n steady_state 0 \n power_scale %f', powerScale));
 
 temperature2 = Optima.solve(system, floorplan, hotspot, params, ...
-  sprintf('leakage 0 \n steady_state 1 \n power_scale %f', powerScale));
+  sprintf('deadline_ratio 1 \n leakage 0 \n steady_state 1 \n power_scale %f', powerScale));
 
 samplingInterval = Utils.readParameter(hotspot, '-sampling_intvl');
 
