@@ -4,7 +4,7 @@ rng(0);
 
 name = '004_060';
 
-system = Utils.path([ name, '.config' ]);
+system = Utils.path([ name, '.sys' ]);
 floorplan = Utils.path([ name, '.flp' ]);
 hotspot = Utils.path('hotspot.config');
 params = Utils.path('parameters.config');
