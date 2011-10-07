@@ -1,36 +1,26 @@
-#include <stdexcept>
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
-#include <vector>
 #include <time.h>
 
 #include "CommandLine.h"
-#include "Architecture.h"
-#include "Graph.h"
-#include "Hotspot.h"
-#include "Schedule.h"
-#include "Layout.h"
-#include "Priority.h"
+#include "TestCase.h"
 #include "SOEvolution.h"
 #include "MOEvolution.h"
-#include "ListScheduler.h"
 #include "Evaluation.h"
 
 using namespace std;
 
-void optimize(const string &system_config, const string &genetic_config,
-	const string &floorplan_config, const string &thermal_config,
-	stringstream &tuning_stream);
+void optimize(const string &system, const string &floorplan,
+	const string &hotspot, const string &params, stringstream &param_stream);
 
 int main(int argc, char **argv)
 {
 	try {
 		CommandLine arguments(argc, (const char **)argv);
-		optimize(arguments.system_config, arguments.genetic_config,
-			arguments.floorplan_config, arguments.thermal_config,
-			arguments.tuning_stream);
+		optimize(arguments.system, arguments.floorplan, arguments.hotspot,
+			arguments.params, arguments.param_stream);
 	}
 	catch (exception &e) {
 		cerr << e.what() << endl;
@@ -50,178 +40,85 @@ void backup(const string &iname, int index)
 	os << is.rdbuf();
 }
 
-void optimize(const string &system_config, const string &genetic_config,
-	const string &floorplan_config, const string &thermal_config,
-	stringstream &tuning_stream)
+void optimize(const string &system, const string &floorplan,
+	const string &hotspot, const string &_params,
+	stringstream &param_stream)
 {
-	system_t system(system_config);
+	parameters_t params(_params);
+	params.update(param_stream);
 
-	EvolutionTuning tuning(genetic_config);
-	tuning.update(tuning_stream);
+	EvolutionTuning evolution_tuning;
+	evolution_tuning.setup(params);
 
-	if (tuning.verbose)
-		cout << tuning << endl;
+	SystemTuning &system_tuning = evolution_tuning.system;
+	OptimizationTuning &optimization_tuning = evolution_tuning.optimization;
 
-	Random::set_seed(tuning.seed, tuning.verbose);
+	if (system_tuning.verbose)
+		cout << evolution_tuning << endl;
 
-	size_t repeat = tuning.repeat < 0 ? 1 : tuning.repeat;
+	Random::set_seed(optimization_tuning.seed, system_tuning.verbose);
 
-	Graph *graph = NULL;
-	Architecture *architecture = NULL;
-	Hotspot *hotspot = NULL;
+	size_t repeat = optimization_tuning.repeat < 0 ? 1 : optimization_tuning.repeat;
+
 	BasicEvolution *evolution = NULL;
 	Evaluation *evaluation = NULL;
 
 	try {
-		graph = new GraphBuilder(system.type, system.link);
-		architecture = new ArchitectureBuilder(system.frequency,
-			system.voltage, system.ngate, system.nc, system.ceff);
+		TestCase test(system, floorplan, hotspot, system_tuning);
 
-		/* In order to assign a reasonable deadline and perform
-		 * initial measurements to compare with, we:
-		 * - assign a dummy mapping,
-		 * - compute a mobility-based priority,
-		 * - and obtain a schedule with help of List Scheduler.
-		 */
-
-		mapping_t mapping = system.mapping;
-		priority_t priority = system.priority;
-		double deadline = system.deadline;
-
-		/* 1. Calculate a priority vector based on the task mobility.
-		 *
-		 * NOTE: If the mapping is given, we are fine, the task mobility
-		 * will be calculated properly, but if we do not have mapping,
-		 * we do not know the execution time of the tasks, so, to deal
-		 * with the problem, we assume them to be equal.
-		 */
-		if (priority.empty())
-			priority = Priority::mobile(*architecture, *graph, mapping);
-		else if (tuning.verbose)
-			cout << "Using external priority." << endl;
-
-		/* 2. Create and assign an even mapping.
+		/* Obtain the initial measurements to compare with.
 		 *
 		 */
-		if (mapping.empty())
-			mapping = Layout::earliest(*architecture, *graph, priority);
-		else if (tuning.verbose)
-			cout << "Using external mapping." << endl;
-
-		/* 3. Compute a schedule.
-		 *
-		 */
-		DeterministicListScheduler scheduler(*architecture, *graph);
-		Schedule schedule = scheduler.process(mapping, priority);
-
-		/* 4. Assign a deadline.
-		 *
-		 */
-		if (deadline == 0)
-			deadline = tuning.deadline_ratio * schedule.get_duration();
-		else if (tuning.verbose)
-			cout << "Using external deadline." << endl;
-
-		graph->set_deadline(deadline);
-
-		/* 5. Reorder the tasks if requested.
-		 *
-		 */
-		size_t task_count = graph->size();
-
-		if (tuning.reorder_tasks) {
-			if (tuning.verbose)
-				cout << "Reordering the tasks." << endl;
-
-			/* Reordering according to the priority vector.
-			 * First, get a vector with increasing components by 1.
-			 */
-			order_t order(task_count);
-			for (size_t i = 0; i < task_count; i++) order[i] = i;
-
-			/* Reorder the vector according to the given priority */
-			Helper::prioritize(order, priority);
-
-			/* Now, we can reorder everything */
-			graph->reorder(order);
-			Helper::permute<pid_t>(mapping, order);
-			Helper::permute<rank_t>(priority, order);
-			schedule.reorder(order);
-
-			/* Since we are reordering according to the priority,
-			 * the priority vector should become 0, 1, ..., (N - 1).
-			 */
-#ifndef SHALLOW_CHECK
-			for (size_t i = 0; i < task_count; i++)
-				if (priority[i] != i)
-					throw runtime_error("The reordering does not work properly.");
-#endif
-		}
-
-		if (tuning.steady_state) {
-			if (tuning.leakage)
-				hotspot = new SteadyStateHotspotWithLeakage(*architecture,
-					*graph, floorplan_config, thermal_config);
-			else
-				hotspot = new SteadyStateHotspotWithoutLeakage(*architecture,
-					*graph, floorplan_config, thermal_config);
-		}
-		else {
-			/* People want leakage! */
-			if (tuning.leakage)
-				hotspot = new HotspotWithLeakage(*architecture,
-					*graph, floorplan_config, thermal_config);
-			else
-				hotspot = new HotspotWithoutLeakage(*architecture,
-					*graph, floorplan_config, thermal_config);
-		}
-
-		/* 6. Obtain the initial measurements to compare with.
-		 *
-		 */
-		if (tuning.cache.empty()) {
-			evaluation = new Evaluation(*architecture, *graph,
-				*hotspot, !tuning.include_mapping);
+		if (optimization_tuning.cache.empty()) {
+			evaluation = new Evaluation(*test.architecture, *test.graph,
+				*test.hotspot, !optimization_tuning.mapping);
 		}
 		else {
 #ifndef WITHOUT_MEMCACHED
-			evaluation = new MemcachedEvaluation(tuning.cache, tuning.multiobjective,
-				*architecture, *graph, *hotspot, !tuning.include_mapping);
+			evaluation = new MemcachedEvaluation(optimization_tuning.cache,
+				optimization_tuning.multiobjective, *test.architecture,
+				*test.graph, *test.hotspot, !optimization_tuning.mapping);
 #else
 			throw runtime_error("The code is compiled without caching support.");
 #endif
 		}
 
-		price_t price = evaluation->process(schedule);
+		price_t price = evaluation->process(test.schedule);
 
 		constrains_t constrains;
 
-		if (tuning.include_mapping)
-			constrains = Constrain::structural(*architecture, *graph);
+		if (optimization_tuning.mapping)
+			constrains = Constrain::structural(
+				*test.architecture, *test.graph);
 		else
-			constrains = Constrain::structural(*architecture, *graph, mapping);
+			constrains = Constrain::structural(
+				*test.architecture, *test.graph, test.mapping);
 
-		if (tuning.verbose) {
-			cout << graph << endl << architecture << endl
-				<< "Start mapping: " << print_t<pid_t>(mapping) << endl
-				<< "Start priority: " << print_t<rank_t>(priority) << endl
-				<< "Start schedule:" << endl << schedule << endl
+		if (system_tuning.verbose) {
+			cout
+				<< test.graph << endl
+				<< test.architecture << endl
+				<< "Start mapping: " << print_t<pid_t>(test.mapping) << endl
+				<< "Start priority: " << print_t<rank_t>(test.priority) << endl
+				<< "Start schedule:" << endl << test.schedule << endl
 				<< "Constrains: " << print_t<constrain_t>(constrains) << endl;
 
 			size_t out = 0;
+			size_t task_count = test.graph->size();
 			for (size_t i = 0; i < task_count; i++)
-				if (priority[i] < constrains[i].min ||
-					priority[i] > constrains[i].max) out++;
+				if (test.priority[i] < constrains[i].min ||
+					test.priority[i] > constrains[i].max) out++;
 
 			if (out > 0)
 				cout << "Out of range priorities: " << out << endl;
 		}
 
-		cout << "Initial lifetime: "
+		cout
+			<< "Initial lifetime: "
 			<< setiosflags(ios::fixed) << setprecision(2)
 			<< price.lifetime << endl;
 
-		if (tuning.multiobjective)
+		if (optimization_tuning.multiobjective)
 			cout
 				<< "Initial energy: "
 				<< price.energy << endl;
@@ -230,16 +127,19 @@ void optimize(const string &system_config, const string &genetic_config,
 			Random::reseed();
 			evaluation->reset();
 
-			if (tuning.multiobjective)
-				evolution = new MOEvolution(*architecture, *graph,
-					scheduler, *evaluation, tuning, constrains);
+			if (optimization_tuning.multiobjective)
+				evolution = new MOEvolution(*test.architecture,
+					*test.graph, *test.scheduler, *evaluation,
+					evolution_tuning, constrains);
 			else
-				evolution = new SOEvolution(*architecture, *graph,
-					scheduler, *evaluation, tuning, constrains);
+				evolution = new SOEvolution(*test.architecture,
+					*test.graph, *test.scheduler, *evaluation,
+					evolution_tuning, constrains);
 
 			clock_t begin = clock();
 
-			BasicEvolutionStats &stats = evolution->solve(mapping, priority);
+			BasicEvolutionStats &stats = evolution->solve(
+				test.mapping, test.priority);
 
 			clock_t end = clock();
 			double elapsed = (double)(end - begin) / CLOCKS_PER_SEC;
@@ -248,7 +148,7 @@ void optimize(const string &system_config, const string &genetic_config,
 
 			cout << "Improvement: " << setiosflags(ios::fixed) << setprecision(2);
 
-			if (!tuning.multiobjective) {
+			if (!optimization_tuning.multiobjective) {
 				SOEvolutionStats *sstats = (SOEvolutionStats *)&stats;
 
 				cout
@@ -266,29 +166,23 @@ void optimize(const string &system_config, const string &genetic_config,
 					<< endl;
 			}
 
-			if (tuning.verbose)
+			if (system_tuning.verbose)
 				cout << "Time elapsed: " << setprecision(2)
 					<< (elapsed / 60.0) << " minutes" << endl << endl;
 
 			/* Make a back copy of the dump file */
-			if (!tuning.dump_evolution.empty() && repeat > 1)
-				backup(tuning.dump_evolution, i);
+			if (!optimization_tuning.dump.empty() && repeat > 1)
+				backup(optimization_tuning.dump, i);
 
 			__DELETE(evolution);
 		}
 	}
 	catch (exception &e) {
-		__DELETE(graph);
-		__DELETE(architecture);
-		__DELETE(hotspot);
 		__DELETE(evaluation);
 		__DELETE(evolution);
 		throw;
 	}
 
-	__DELETE(graph);
-	__DELETE(architecture);
-	__DELETE(hotspot);
 	__DELETE(evaluation);
 	__DELETE(evolution);
 }

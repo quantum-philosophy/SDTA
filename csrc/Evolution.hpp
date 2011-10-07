@@ -37,8 +37,10 @@ void Evolution<CT, PT, ST>::populate(population_t &population,
 	Schedule schedule;
 	RandomGeneratorListScheduler scheduler(architecture, graph);
 
+	const CreationTuning &creation_tuning = tuning.creation;
+
 	/* Fill the first part with uniform chromosomes */
-	create_count = tuning.uniform_ratio * tuning.population_size;
+	create_count = creation_tuning.uniform_ratio * creation_tuning.population_size;
 	for (i = 0; i < create_count; i++) {
 		if (fixed_layout) {
 			schedule = scheduler.process(layout, priority);
@@ -54,7 +56,7 @@ void Evolution<CT, PT, ST>::populate(population_t &population,
 	}
 
 	/* Fill the second part with randomly generated chromosomes */
-	create_count = tuning.population_size - create_count;
+	create_count = creation_tuning.population_size - create_count;
 	for (i = 0; i < create_count; i++) {
 		if (fixed_layout) {
 			schedule = scheduler.process(layout, priority_t());

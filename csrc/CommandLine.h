@@ -12,11 +12,11 @@ class CommandLine
 {
 	public:
 
-	std::string system_config;
-	std::string genetic_config;
-	std::string floorplan_config;
-	std::string thermal_config;
-	std::stringstream tuning_stream;
+	std::string system;
+	std::string floorplan;
+	std::string hotspot;
+	std::string params;
+	std::stringstream param_stream;
 
 	CommandLine() {}
 	CommandLine(int argc, const char **argv) { parse(argc, argv); }
@@ -39,19 +39,19 @@ class CommandLine
 			name = std::string(pname + 1);
 
 			if (name == "s" || name == "system")
-				system_config = std::string(pvalue);
-
-			else if (name == "g" || name == "genetic")
-				genetic_config = std::string(pvalue);
+				system = std::string(pvalue);
 
 			else if (name == "f" || name == "floorplan")
-				floorplan_config = std::string(pvalue);
+				floorplan = std::string(pvalue);
 
-			else if (name == "t" || name == "thermal")
-				thermal_config = std::string(pvalue);
+			else if (name == "h" || name == "hotspot")
+				hotspot = std::string(pvalue);
+
+			else if (name == "p" || name == "parameters")
+				params = std::string(pvalue);
 
 			else
-				tuning_stream << name << " " << pvalue << std::endl;
+				param_stream << name << " " << pvalue << std::endl;
 		}
 
 		verify();
@@ -63,11 +63,11 @@ class CommandLine
 			<< "Usage: optima [-<param name> <param value>]" << std::endl
 			<< std::endl
 			<< "  Available parameters:" << std::endl
-			<< "  * s, system      - a task graph with a set of PEs (architecture)" << std::endl
-			<< "    g, genetic     - the configuration of the GA" << std::endl
-			<< "  * f, floorplan   - the floorplan of the architecture" << std::endl
-			<< "    t, thermal     - the configuration of Hotspot" << std::endl
-			<< "    other          - overwrite the genetic configuration" << std::endl
+			<< "  * s, system      - a task graph with a number of PEs" << std::endl
+			<< "  * f, floorplan   - a floorplan for the PEs" << std::endl
+			<< "    h, hotspot     - the Hotspot configuration" << std::endl
+			<< "    p, parameters  - the tuning parameters" << std::endl
+			<< "    other          - overwrite the tuning parameters" << std::endl
 			<< std::endl
 			<< "  (* required parameters)" << std::endl;
 	}
@@ -76,26 +76,26 @@ class CommandLine
 
 	void reset()
 	{
-		system_config    = std::string();
-		genetic_config   = std::string();
-		floorplan_config = std::string();
-		system_config    = std::string();
-		tuning_stream.clear();
+		system = std::string();
+		floorplan = std::string();
+		hotspot = std::string();
+		params = std::string();
+		param_stream.clear();
 	}
 
 	void verify() const
 	{
-		if (system_config.empty() || !file_exist(system_config))
+		if (system.empty() || !file_exist(system))
 			throw std::runtime_error("The system configuration file does not exist.");
 
-		if (floorplan_config.empty() || !file_exist(floorplan_config))
+		if (floorplan.empty() || !file_exist(floorplan))
 			throw std::runtime_error("The floorplan configuration file does not exist.");
 
-		if (!genetic_config.empty() && !file_exist(genetic_config))
-			throw std::runtime_error("The genetic configuration file does not exist.");
+		if (!hotspot.empty() && !file_exist(hotspot))
+			throw std::runtime_error("The Hotspot configuration file does not exist.");
 
-		if (!thermal_config.empty() && !file_exist(thermal_config))
-			throw std::runtime_error("The thermal configuration file does not exist.");
+		if (!params.empty() && !file_exist(params))
+			throw std::runtime_error("The tuning configuration file does not exist.");
 	}
 
 	inline bool file_exist(const std::string &filename) const

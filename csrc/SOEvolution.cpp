@@ -11,12 +11,15 @@
 
 void SOEvolution::process(population_t &population)
 {
+	const SystemTuning &system_tuning = tuning.system;
+	const OptimizationTuning &optimization_tuning = tuning.optimization;
+
 	/* Continue */
 	SOContinuation continuation(tuning.continuation);
 
 	/* Monitor */
 	eslabCheckPoint<chromosome_t> checkpoint(continuation);
-	stats.watch(population, !tuning.verbose);
+	stats.watch(population, !system_tuning.verbose);
 	checkpoint.add(stats);
 
 	evaluate_t evaluator(*this);
@@ -38,7 +41,7 @@ void SOEvolution::process(population_t &population)
 	Training<chromosome_t> train(architecture, graph, constrains,
 		evaluation, evaluator, tuning.training, stats);
 
-	eslabSOEvolutionMonitor evolution_monitor(population, tuning.dump_evolution);
+	eslabSOEvolutionMonitor evolution_monitor(population, optimization_tuning.dump);
 	checkpoint.add(evolution_monitor);
 
 	eslabSOGeneticAlgorithm<chromosome_t> ga(checkpoint, evaluator, select,
