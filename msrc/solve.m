@@ -2,7 +2,7 @@ clear all;
 clc;
 rng(0);
 
-name = '004_060';
+name = '001_030';
 
 system = Utils.path([ name, '.sys' ]);
 floorplan = Utils.path([ name, '.flp' ]);
