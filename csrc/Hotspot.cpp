@@ -468,7 +468,7 @@ EventQueue::EventQueue(const Schedule &schedule, double _deadline) :
 		}
 	}
 
-	std::sort(events.begin(), events.end(), EventQueue::compare_events);
+	std::stable_sort(events.begin(), events.end(), EventQueue::compare_events);
 
 	events.push_back(Event(-1, -1, deadline));
 	length++;
@@ -541,10 +541,12 @@ void SteadyStateHotspot::solve(const Schedule &schedule,
 
 		if (event.id < 0 || event.pid < 0) continue;
 
-		if (trace[event.pid] < 0)
-			trace[event.pid] = types[event.id];
-		else
-			trace[event.pid] = -1;
+		int last_type = trace[event.pid];
+		int new_type = types[event.id];
+
+		if (last_type < 0) trace[event.pid] = new_type;
+		else if (last_type == new_type) trace[event.pid] = -1;
+		else throw std::runtime_error("The order of events is incorrect.");
 	}
 }
 
