@@ -34,6 +34,18 @@ class TestCase
 	{
 		system_t system(_system);
 
+		if (tuning.power_scale != 1) {
+			if (tuning.verbose)
+				std::cout << "Scaling the power consumption." << std::endl;
+
+			size_t processor_count = system.ceff.size();
+			for (size_t i = 0; i < processor_count; i++) {
+				size_t type_count = system.ceff[i].size();
+				for (size_t j = 0; j < type_count; j++)
+					system.ceff[i][j] = tuning.power_scale * system.ceff[i][j];
+			}
+		}
+
 		graph = new GraphBuilder(system.type, system.link);
 		architecture = new ArchitectureBuilder(system.frequency,
 			system.voltage, system.ngate, system.nc, system.ceff);

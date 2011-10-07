@@ -60,6 +60,7 @@ struct Tuning
 struct SystemTuning: public Tuning
 {
 	double deadline_ratio;
+	double power_scale;
 	bool reorder_tasks;
 	bool steady_state;
 	bool leakage;
@@ -67,6 +68,7 @@ struct SystemTuning: public Tuning
 
 	SystemTuning() :
 		deadline_ratio(1.1),
+		power_scale(1.0),
 		reorder_tasks(false),
 		steady_state(false),
 		leakage(true),

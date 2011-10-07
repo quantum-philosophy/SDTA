@@ -59,6 +59,8 @@ void SystemTuning::setup(const parameters_t &params)
 
 		if (it->name == "deadline_ratio")
 			deadline_ratio = it->to_double();
+		else if (it->name == "power_scale")
+			power_scale = it->to_double();
 		else if (it->name == "reorder_tasks")
 			reorder_tasks = it->to_bool();
 		else if (it->name == "steady_state")
@@ -75,6 +77,7 @@ void SystemTuning::display(std::ostream &o) const
 	o
 		<< "System:" << std::endl
 		<< "  Deadline ratio:       " << deadline_ratio << std::endl
+		<< "  Task power scale:     " << power_scale << std::endl
 		<< "  Reorder tasks:        " << reorder_tasks << std::endl
 		<< "  Steady-State:         " << steady_state << std::endl
 		<< "  Consider leakage:     " << leakage << std::endl
