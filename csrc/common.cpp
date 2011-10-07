@@ -4,7 +4,6 @@
 #include <fstream>
 #include <string>
 #include <iomanip>
-#include <string.h>
 
 #include "common.h"
 

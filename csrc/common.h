@@ -13,6 +13,7 @@
 #include <cmath>
 #include <algorithm>
 #include <stdlib.h>
+#include <string.h>
 
 #include "Random.h"
 
