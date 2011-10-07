@@ -7,44 +7,22 @@ rng(0);
 tol = 0.01; % K
 maxit = 10;
 
-if true
-  [ graph, hotspot, dynamicPowerProfile ] = setup('test_cases/004_060');
-  [ steps, cores ] = size(dynamicPowerProfile);
+[ graph, hotspot, dynamicPowerProfile ] = setup('004_060');
+[ steps, cores ] = size(dynamicPowerProfile);
 
-  maxPower = max(sum(dynamicPowerProfile, 2));
-  totalTime = steps * Constants.samplingInterval;
+maxPower = max(dynamicPowerProfile);
+totalTime = steps * Constants.samplingInterval;
 
-  [ vdd, ngate ] = Utils.collectLeakageParams(graph);
-  pes = graph.pes;
-else
-  name = 'simple';
+[ vdd, ngate ] = Utils.collectLeakageParams(graph);
+pes = graph.pes;
 
-  cores = 4;
-  dieSize = 81e-6; % m^2
-  maxPower = 100; % W
-  totalTime = 1; % s
-
-  floorplan = Utils.path([ name, '.flp' ]);
-  config = Utils.path('hotspot.config');
-
-  steps = floor(totalTime / Constants.samplingInterval);
-
-  Utils.generateFloorplan(floorplan, cores, dieSize);
-
-  vdd = 0.8 + 0.2 * (rand(1, cores) - 0.5);
-  ngate = 2e6 + 0.1e6 * (rand(1, cores) - 0.5);
-
-  pes = {};
-  for i = 1:cores
-    pes{end + 1} = TestCase.Processor(i, '', i, 2e6, vdd(i), ngate(i));
-    pes{end}.inspect();
-  end
-
-  hotspot = HotSpot(floorplan, config);
-  dynamicPowerProfile = Power.generateRandomProfile(cores, steps, maxPower);
+fprintf('%10s%15s\n', 'Core', 'Max power, W');
+for i = 1:cores
+  fprintf('%10d%15.2f\n', i, maxPower(i));
 end
+fprintf('%10s%15.2f\n', 'total', max(sum(dynamicPowerProfile, 2)));
+fprintf('\n');
 
-fprintf('Maximal power:   %.2f W\n', maxPower);
 fprintf('Simulation time: %.2f s\n', totalTime);
 fprintf('Number of steps: %d\n', steps);
 fprintf('Number of cores: %d\n', cores);
@@ -130,9 +108,11 @@ T = hotspot.solveCondensedEquation(dynamicPowerProfile) - Constants.degreeKelvin
 
 % Temperature profile without leakage
 subplot(2, 3, 4);
-Utils.drawLines(...
-  sprintf('Temperature without leakage', t, i), ...
-  'Time, s', 'Temperature, C', x, T);
+Utils.drawLines('Temperature without leakage', 'Time, s', 'Temperature, C', x, T);
+
+% Temperature difference
+subplot(2, 3, 5);
+Utils.drawLines('Leakage temperature', 'Time, s', 'Temperature, C', x, Tcpp - T);
 
 % Temperature profile
 subplot(2, 3, 6);
@@ -151,6 +131,7 @@ line(x, [ am, am ],  'Color', 'k', 'Line', '--');
 % Balance axes
 subplot(2, 3, 3);
 YLim = get(gca, 'YLim');
+YLim(1) = 0;
 subplot(2, 3, 1);
 set(gca, 'YLim', YLim);
 subplot(2, 3, 2);
@@ -168,6 +149,8 @@ set(gca, 'XLim', [ 0 totalTime ]);
 subplot(2, 3, 3);
 set(gca, 'XLim', [ 0 totalTime ]);
 subplot(2, 3, 4);
+set(gca, 'XLim', [ 0 totalTime ]);
+subplot(2, 3, 5);
 set(gca, 'XLim', [ 0 totalTime ]);
 subplot(2, 3, 6);
 set(gca, 'XLim', [ 0 totalTime ]);

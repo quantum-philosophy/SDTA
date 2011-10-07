@@ -2,32 +2,35 @@ set (PARADISEO_DIR ${VENDOR_DIR}/paradiseo)
 set (TINYMT_DIR ${VENDOR_DIR}/tinymt-1.0.1/tinymt)
 
 set (COMMON_SRCS
-	${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/common.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/Task.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/Graph.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/Processor.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Architecture.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/Pool.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/Schedule.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/Layout.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/Priority.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/Mobility.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Constrain.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/EvolutionTuning.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/EvolutionStats.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Evaluation.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/SOEvolution.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/MOEvolution.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/EvolutionStats.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Graph.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Hotspot.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/DynamicPower.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Layout.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Leakage.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Lifetime.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/MOEvolution.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Mobility.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Pool.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Priority.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Processor.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Random.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/SOEvolution.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Schedule.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Task.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Tuning.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/common.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
 	${TINYMT_DIR}/tinymt64.c
 )
 
 set_property(SOURCE ${TINYMT_DIR}/tinymt64.c
 	APPEND PROPERTY COMPILE_FLAGS "-std=c99")
+
+set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/Hotspot.cpp
+	APPEND PROPERTY COMPILE_FLAGS "-Wno-reorder")
 
 add_executable (optima optima.cpp ${COMMON_SRCS})
 
@@ -47,7 +50,6 @@ include_directories (
 # * REAL_RANK - ranking in doubles.
 # * SHALLOW_CHECK - eliminate excessive checks.
 # * UNCONSTRAINED - the genes do not have any constrains.
-# * FAKE_EVALUATION - consider power instead of temperature.
 # * WITHOUT_MEMCACHED - do not mention memcached in the source code.
 # * VERIFY_CACHING - check what we are reading from memcached.
 #

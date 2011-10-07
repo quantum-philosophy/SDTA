@@ -8,14 +8,12 @@ class Graph
 	template<class PT>
 	friend class ListScheduler;
 
-	template<class CT, class PT, class ST>
-	friend class GenericEvolution;
-
 	friend class SOEvolution;
 	friend class MOEvolution;
 
-	friend class DynamicPower;
 	friend class Lifetime;
+	friend class SteadyStateHotspot;
+
 	friend std::ostream &operator<< (std::ostream &, const Graph *);
 
 	public:
@@ -43,6 +41,11 @@ class Graph
 	inline const Task *operator[] (tid_t id) const
 	{
 		return tasks[id];
+	}
+
+	inline const task_vector_t &get_tasks() const
+	{
+		return tasks;
 	}
 
 	void reorder(const order_t &order);

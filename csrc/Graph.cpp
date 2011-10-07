@@ -2,9 +2,6 @@
 #include "Graph.h"
 #include "Processor.h"
 #include "Architecture.h"
-#include "Hotspot.h"
-#include "Lifetime.h"
-#include "DynamicPower.h"
 
 void Graph::add_task(Task *task)
 {

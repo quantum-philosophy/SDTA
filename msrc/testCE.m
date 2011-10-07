@@ -1,29 +1,27 @@
-% Test: Just one execution of the Condensed Equation method
-
 clear all;
 clc;
 rng(0);
 
-[ graph, hotspot, powerProfile ] = setup('004_060');
+name = '004_060';
 
-graph.inspect();
+system = Utils.path([ name, '.sys' ]);
+floorplan = Utils.path([ name, '.flp' ]);
+hotspot = Utils.path('hotspot.config');
+params = Utils.path('parameters.config');
 
-Utils.startTimer('Solve with the CE');
-T1 = hotspot.solveCondensedEquation(powerProfile) ;
-Utils.stopTimer();
+[ temperature, power ] = Optima.solve(system, floorplan, hotspot, params);
+[ stepCount, processorCount ] = size(temperature);
 
-Utils.drawSimulation(graph, powerProfile, T1);
+time = ((1:stepCount) - 1) * Constants.samplingInterval;
 
-dummy = zeros(1, length(graph.pes));
+figure;
 
-Utils.startTimer('Solve with the CE (leakage)');
-T2 = hotspot.solveCondensedEquationWithLeakage(...
-  powerProfile, dummy, dummy, 0.01, 1);
-Utils.stopTimer();
+subplot(2, 1, 1);
+Utils.drawLines('Power Profile', 'Time, s', 'Power, W', ...
+  time, power);
+set(gca, 'XLim', [ 0 time(end) ]);
 
-Utils.startTimer('Solve with in Matlab');
-T3 = hotspot.solveNativeCondensedEquation(powerProfile);
-Utils.stopTimer();
-
-fprintf('Error T1 and T2: %f\n', abs(max(max(T2 - T1))));
-fprintf('Error T1 and T3: %f\n', abs(max(max(T3 - T1))));
+subplot(2, 1, 2);
+Utils.drawLines('Temperature Profile', 'Time, s', 'Temperature, C', ...
+  time, temperature - Constants.degreeKelvin);
+set(gca, 'XLim', [ 0 time(end) ]);

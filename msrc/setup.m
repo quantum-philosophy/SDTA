@@ -17,12 +17,7 @@ function [ graph, hotspot, powerProfile ] = setup(name)
   % Thermal model
   hotspot = HotSpot(floorplan, config);
 
-  % Dummy mapping
-  mapping = Utils.generateEvenMapping(cores, length(graph.tasks));
-  graph.assignMapping(pes, mapping);
-
-  % LS scheduling
-  LS.schedule(graph);
+  LS.mapEarliestAndSchedule(graph, pes);
 
   graph.assignDeadline(Constants.deadlineFactor * graph.duration);
 

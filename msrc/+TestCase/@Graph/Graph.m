@@ -180,9 +180,60 @@ classdef Graph < handle
       graph.duration = graph.duration * factor;
       graph.deadline = graph.deadline * factor;
     end
+
+    function assign(graph, priority, mapping, schedule, start, duration)
+      graph.priority = priority;
+
+      graph.mapping = mapping;
+      graph.isMapped = true;
+
+      graph.schedule = schedule;
+      graph.isScheduled = true;
+
+      taskCount = length(graph.tasks);
+      graph.ordinalSchedule = zeros(1, taskCount);
+
+      for i = 1:taskCount
+        graph.ordinalSchedule(schedule(i)) = i;
+      end
+
+      graph.duration = max(start + duration);
+
+      for i = 1:taskCount
+        graph.tasks{i}.assign(start(i), duration(i));
+      end
+    end
+
+    function priority = averageMobility(graph, pes)
+      graph.pes = pes;
+      graph.calculateAverageTime();
+
+      taskCount = length(graph.tasks);
+      priority = zeros(1, taskCount);
+      for i = 1:taskCount, priority(i) = graph.tasks{i}.mobility; end
+    end
   end
 
   methods (Access = private)
+    function calculateAverageTime(graph)
+      processorCount = length(graph.pes);
+      taskCount = length(graph.tasks);
+
+      % Calculate execution times of the tasks
+      for i = 1:taskCount
+        total = 0;
+        for j = 1:processorCount
+          total = total + graph.pes{j}.calculateDuration(graph.tasks{i}.type);
+        end
+        graph.tasks{i}.assignDuration(total / processorCount);
+      end
+
+      % So, we know the average duration of the tasks,
+      % we can compute their average ASAP and ALAP.
+      graph.calculateASAP();
+      graph.calculateALAP(); % and mobility
+    end
+
     function calculateTime(graph)
       % Calculate execution times of the tasks
       for pe = graph.pes

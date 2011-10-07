@@ -23,6 +23,32 @@ class PeerTraining: public eoMonOp<CT>
 };
 
 template<class CT>
+class ListScheduleTraining:
+	public ListScheduler<TrainingPool>,
+	public eoMonOp<CT>
+{
+	size_t max_lessons;
+	size_t stall_lessons;
+	Evaluation &evaluation;
+	const layout_t *layout;
+	const rate_t &rate;
+
+	public:
+
+	ListScheduleTraining(const Architecture &architecture, const Graph &graph,
+		size_t _max_lessons, size_t _stall_lessons, Evaluation &_evaluation,
+		const constrains_t &constrains, const rate_t &_rate) :
+
+		ListScheduler<TrainingPool>(architecture, graph),
+		max_lessons(_max_lessons), stall_lessons(_stall_lessons),
+		evaluation(_evaluation),
+		layout(constrains.fixed_layout() ? &constrains.get_layout() : NULL),
+		rate(_rate) {}
+
+	bool operator()(CT &chromosome);
+};
+
+template<class CT>
 class Training: public eoMonOp<CT>, public eoAlgo<CT>
 {
 	eoMonOp<CT> *train;

@@ -137,5 +137,10 @@ classdef Task < handle
         parent{1}.propagateALAP(alap);
       end
     end
+
+    function assign(task, start, duration)
+      task.start = start;
+      task.duration = duration;
+    end
   end
 end

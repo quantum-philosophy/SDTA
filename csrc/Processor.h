@@ -7,8 +7,7 @@ class Processor
 {
 	friend class Architecture;
 	friend class Task;
-	friend class DynamicPower;
-	friend class Hotspot;
+
 	friend std::ostream &operator<< (std::ostream &, const Processor *);
 	friend std::ostream &operator<< (std::ostream &, const Task *);
 
@@ -32,6 +31,16 @@ class Processor
 	inline size_t size() const
 	{
 		return type_count;
+	}
+
+	inline double get_voltage() const
+	{
+		return voltage;
+	}
+
+	inline unsigned long int get_ngate() const
+	{
+		return ngate;
 	}
 
 	inline double calc_duration(unsigned int type) const

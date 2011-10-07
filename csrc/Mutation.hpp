@@ -60,3 +60,36 @@ bool PeerMutation<CT>::operator()(CT &chromosome)
 
 	return changed;
 }
+
+template<class CT>
+bool ListScheduleMutation<CT>::operator()(CT &chromosome)
+{
+	double current_rate = rate.get();
+	void *data = (void *)&current_rate;
+
+	Schedule schedule;
+
+	if (layout) {
+		schedule = ListScheduler<MutationPool>::process(
+			*layout, chromosome, data);
+	}
+	else {
+		/* Should be encoded in the chromosome */
+		layout_t layout;
+		priority_t priority;
+
+		GeneEncoder::split(chromosome, layout, priority);
+
+		schedule = ListScheduler<MutationPool>::process(
+			layout, priority, data);
+	}
+
+	chromosome.set_schedule(schedule);
+
+	/* NOTE: We always say that nothing has changed, since
+	 * the invalidation takes place in set_schedule. The purpose
+	 * is to keep the already computed schedule valid,
+	 * but the price becomes invalid.
+	 */
+	return false;
+}

@@ -14,7 +14,7 @@ void usage();
 int main(int argc, char *argv[])
 {
 	size_t i, cols, processor_count;
-	double die_area, processor_width, x, y;
+	double processor_area, processor_width, x, y;
 
 	try {
 		if (argc < 2)
@@ -26,26 +26,17 @@ int main(int argc, char *argv[])
 			throw runtime_error("The number of processors should be positive.");
 
 		if (argc < 3) {
-			/* Intel i7 620M processing die size 81mm^2 */
-			die_area = 81e-6;
+			processor_area = 4e-6; /* m^2 */
 		}
 		else {
-			die_area = atof(argv[2]);
+			processor_area = atof(argv[2]);
 
-			if (die_area <= 0)
-				throw runtime_error("The die area should be positive.");
+			if (processor_area <= 0)
+				throw runtime_error("The core area should be positive.");
 		}
 
+		processor_width = sqrt(processor_area);
 		cols = sqrt(processor_count);
-		processor_width = sqrt(die_area) / cols;
-
-#ifdef DEBUG
-		cout
-			<< "Processor count:      " << processor_count << endl
-			<< "Processors in row:    " << cols << endl
-			<< "Total die area:       " << die_area << " m^2" << endl
-			<< "Width of a processor: " << processor_width << " m^2" << endl;
-#endif
 
 		for (i = 0; i < processor_count; i++) {
 			x = (i % cols) * processor_width;
@@ -71,10 +62,10 @@ int main(int argc, char *argv[])
 void usage()
 {
 	cout
-		<< "Usage: floorplan <processor count> [<die area>]" << endl
+		<< "Usage: floorplan <processor count> [<processor area>]" << endl
 		<< endl
-		<< "  * processor count - the number of processing elements on the die" << endl
-		<< "    die area        - the die area in square miters" << endl
+		<< "  * processor count - the number of cores on the die" << endl
+		<< "    processor area  - the area of a single core in square miters (4 mm^2 by default)" << endl
 		<< endl
 		<< "  (* required parameters)" << endl;
 }

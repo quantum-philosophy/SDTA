@@ -8,66 +8,261 @@ extern "C" {
 #include <hotspot/temperature_block.h>
 }
 
+#define __ALLOC(size) (double *)malloc(sizeof(double) * size)
+
+#define __FREE(some) \
+	do { \
+		if (some) free(some); \
+		some = NULL; \
+	} while(0)
+
+#include "Leakage.h"
+
 class Hotspot
 {
-	thermal_config_t cfg;
-	flp_t *flp;
+	protected:
 
-	static const double tol = 0.01;
-	static const size_t maxit = 10;
+	const processor_vector_t &processors;
+	const size_t processor_count;
 
-	static const double A = 1.1432e-12;
-	static const double B = 1.0126e-14;
-	static const double alpha = 466.4029;
-	static const double beta = -1224.74083;
-	static const double gamma = 6.28153;
-	static const double delta = 6.9094;
+	const task_vector_t &tasks;
+	const size_t task_count;
 
-	/* How to calculate Is?
-	 *
-	 * Take a look at (all coefficients above are from this paper):
-	 * "Temperature and Supply Voltage Aware Performance and Power
-	 * Modeling at Microarchitecture Level" (July 2005)
-	 *
-	 * T = [ 100, 100, 80, 80, 60, 60 ] + 273.15
-	 * V = [ 0.95, 1.05, 0.95, 1.05, 0.95, 1.05 ]
-	 * Iavg = [ 23.44, 29.56, 19.44, 25.14, 16.00, 21.33 ] * 1e-6
-	 * Is = mean(Iavg(i) / favg(T(i), V(i)))
-	 *
-	 * Where favg is the scaling factor (see calc_scaling).
-	 */
-	static const double Is = 995.7996;
+	const double deadline;
+
+	size_t node_count;
+
+	double sampling_interval;
+	double ambient_temperature;
+
+	thermal_config_t config;
+	flp_t *floorplan;
+	RC_model_t *model;
 
 	public:
 
-	Hotspot(const std::string &floorplan, const std::string &config,
-		str_pair *extra_table = NULL, size_t tsize = 0);
-	~Hotspot();
+	Hotspot(const Architecture &architecture, const Graph &graph,
+		const std::string &floorplan_filename, const std::string &config_filename);
+	virtual ~Hotspot();
 
-	void calc_coefficients(matrix_t &neg_a, vector_t &inv_c) const;
+	virtual void solve(const Schedule &schedule, matrix_t &temperature,
+		matrix_t &power) = 0;
 
-	void solve(const matrix_t &m_power, matrix_t &m_temperature) const;
-
-	size_t solve(const Architecture &architecture,
-		const matrix_t &m_dynamic_power, matrix_t &m_temperature,
-		matrix_t &m_total_power, double tol = Hotspot::tol,
-		size_t maxit = Hotspot::maxit) const;
-
-	inline double sampling_interval() const
+	inline double get_sampling_interval() const
 	{
-		return cfg.sampling_intvl;
+		return sampling_interval;
+	}
+};
+
+class HotspotWithDynamicPower: public Hotspot
+{
+	std::vector<unsigned int> types;
+
+	public:
+
+	HotspotWithDynamicPower(const Architecture &architecture, const Graph &graph,
+		const std::string &floorplan, const std::string &config);
+
+	protected:
+
+	void compute_power(const Schedule &schedule, matrix_t &power) const;
+};
+
+class HotspotWithoutLeakage: public HotspotWithDynamicPower
+{
+	void *condensed_equation;
+
+	public:
+
+	HotspotWithoutLeakage(const Architecture &architecture, const Graph &graph,
+		const std::string &floorplan, const std::string &config);
+	~HotspotWithoutLeakage();
+
+	void solve(const Schedule &schedule, matrix_t &temperature,
+		matrix_t &power);
+};
+
+class HotspotWithLeakage: public HotspotWithDynamicPower
+{
+	void *condensed_equation;
+
+	public:
+
+	HotspotWithLeakage(const Architecture &architecture, const Graph &graph,
+		const std::string &floorplan, const std::string &config);
+	~HotspotWithLeakage();
+
+	void solve(const Schedule &schedule, matrix_t &temperature,
+		matrix_t &total_power);
+};
+
+typedef std::vector<int> SlotTrace;
+
+class Slot
+{
+	const size_t width;
+
+	Slot *blank;
+	std::vector<Slot *> children;
+
+	double *data;
+
+	public:
+
+	Slot(size_t _width) :
+		width(_width), blank(NULL), children(_width, NULL), data(NULL) {}
+
+	~Slot()
+	{
+		__DELETE(blank);
+
+		size_t width = children.size();
+
+		for (size_t i = 0; i < width; i++)
+			__DELETE(children[i]);
+
+		__FREE(data);
 	}
 
-	private:
+	inline Slot *find(const SlotTrace &trace)
+	{
+		Slot *current = this;
+		size_t i, size = trace.size();
+		int id;
 
-	static void inject_leakage(const Architecture &architecture,
-		size_t processor_count, size_t step_count, const double *dynamic_power,
-		const double *temperature, double *total_power);
+		for (i = 0; i < size; i++) {
+			id = trace[i];
 
-	/* Initial leakage with the ambient temperature */
-	static void inject_leakage(const Architecture &architecture,
-		size_t processor_count, size_t step_count, const double *dynamic_power,
-		double temperature, double *total_power);
+			if (id < 0) {
+				if (!current->blank)
+					current->blank = new Slot(width);
+
+				current = current->blank;
+			}
+			else {
+				if (!current->children[id])
+					current->children[id] = new Slot(width);
+
+				current = current->children[id];
+			}
+		}
+
+		return current;
+	}
+
+	inline void store(double *data)
+	{
+#ifndef SHALLOW_CHECK
+		if (this->data)
+			throw std::runtime_error("The slot already has some data.");
+#endif
+		this->data = data;
+	}
+
+	inline double *get_data()
+	{
+		return data;
+	}
+};
+
+class Slot;
+
+class SteadyStateHotspot: public Hotspot
+{
+	size_t step_count;
+	size_t type_count;
+
+	std::vector<unsigned int> types;
+
+	Slot *storage;
+
+	public:
+
+	SteadyStateHotspot(const Architecture &architecture, const Graph &graph,
+		const std::string &floorplan, const std::string &config);
+	~SteadyStateHotspot();
+
+	void solve(const Schedule &schedule, matrix_t &temperature,
+		matrix_t &power);
+
+	protected:
+
+	virtual double *compute(const SlotTrace &trace) const = 0;
+	const double *get(const SlotTrace &trace);
+};
+
+class SteadyStateHotspotWithoutLeakage: public SteadyStateHotspot
+{
+	public:
+
+	SteadyStateHotspotWithoutLeakage(const Architecture &architecture,
+		const Graph &graph, const std::string &floorplan,
+		const std::string &config) :
+
+		SteadyStateHotspot(architecture, graph, floorplan, config) {}
+
+	protected:
+
+	double *compute(const SlotTrace &trace) const;
+};
+
+class SteadyStateHotspotWithLeakage: public SteadyStateHotspot
+{
+	static const double tol = 0.01;
+	static const size_t maxit = 10;
+
+	Leakage leakage;
+
+	public:
+
+	SteadyStateHotspotWithLeakage(const Architecture &architecture,
+		const Graph &graph, const std::string &floorplan,
+		const std::string &config) :
+
+		SteadyStateHotspot(architecture, graph, floorplan, config),
+		leakage(architecture.get_processors()) {}
+
+	protected:
+
+	double *compute(const SlotTrace &trace) const;
+};
+
+struct Event
+{
+	int pid;
+	int id;
+	double time;
+
+	Event(int _pid = -1, int _id = -1, double _time = 0) :
+		pid(_pid), id(_id), time(_time) {}
+};
+
+class EventQueue
+{
+	const double deadline;
+
+	size_t position;
+	size_t length;
+
+	std::vector<Event> events;
+
+	public:
+
+	EventQueue(const Schedule &schedule, double _deadline);
+
+	inline bool next(Event &event)
+	{
+		if (position < length) {
+			event = events[position++];
+			return true;
+		}
+		return false;
+	}
+
+	inline static bool compare_events(const Event &one, const Event &another)
+	{
+		return one.time < another.time;
+	}
 };
 
 #endif

@@ -40,7 +40,6 @@ class Architecture;
 class Schedule;
 class BasicListScheduler;
 
-class DynamicPower;
 class Hotspot;
 class Lifetime;
 
@@ -269,7 +268,7 @@ struct system_t
 
 typedef std::vector<double> vector_t;
 
-class matrix_t: public std::vector<double>
+class matrix_t: public vector_t
 {
 	size_t m_rows;
 	size_t m_cols;
@@ -277,32 +276,32 @@ class matrix_t: public std::vector<double>
 	public:
 
 	matrix_t(size_t _rows = 0, size_t _cols = 0) :
-		std::vector<double>(_rows * _cols, 0), m_rows(_rows), m_cols(_cols) {}
+		vector_t(_rows * _cols, 0), m_rows(_rows), m_cols(_cols) {}
 
 	inline double *operator[] (unsigned int row)
 	{
-		return &std::vector<double>::operator[](m_cols * row);
+		return &vector_t::operator[](m_cols * row);
 	}
 
 	inline const double *operator[] (unsigned int row) const
 	{
-		return &std::vector<double>::operator[](m_cols * row);
+		return &vector_t::operator[](m_cols * row);
 	}
 
 	inline double *pointer()
 	{
-		return &std::vector<double>::operator[](0);
+		return &vector_t::operator[](0);
 	}
 
 	inline const double *pointer() const
 	{
-		return &std::vector<double>::operator[](0);
+		return &vector_t::operator[](0);
 	}
 
 	inline void resize(size_t _rows, size_t _cols)
 	{
 		m_rows = _rows; m_cols = _cols;
-		std::vector<double>::resize(_rows * _cols);
+		vector_t::resize(_rows * _cols);
 	}
 
 	inline void resize(const matrix_t &another)
@@ -310,8 +309,20 @@ class matrix_t: public std::vector<double>
 		resize(another.m_rows, another.m_cols);
 	}
 
-	inline size_t rows() const { return m_rows; }
-	inline size_t cols() const { return m_cols; }
+	inline size_t rows() const
+	{
+		return m_rows;
+	}
+
+	inline size_t cols() const
+	{
+		return m_cols;
+	}
+
+	inline void nullify()
+	{
+		memset(pointer(), 0, sizeof(double) * m_rows * m_cols);
+	}
 };
 
 /******************************************************************************/

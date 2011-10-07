@@ -5,7 +5,7 @@
 
 #include "Genetics.h"
 
-#include "EvolutionTuning.h"
+#include "Tuning.h"
 #include "EvolutionStats.h"
 
 #include "Continuation.h"

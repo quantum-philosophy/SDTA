@@ -1,13 +1,21 @@
 set (TINYMT_DIR ${VENDOR_DIR}/tinymt-1.0.1/tinymt)
 
 set (MEX_SRCS
-	${CMAKE_CURRENT_SOURCE_DIR}/mex_utils.cpp
+	${PROJECT_SOURCE_DIR}/csrc/Architecture.cpp
+	${PROJECT_SOURCE_DIR}/csrc/Constrain.cpp
+	${PROJECT_SOURCE_DIR}/csrc/Graph.cpp
+	${PROJECT_SOURCE_DIR}/csrc/Hotspot.cpp
+	${PROJECT_SOURCE_DIR}/csrc/Layout.cpp
+	${PROJECT_SOURCE_DIR}/csrc/Leakage.cpp
+	${PROJECT_SOURCE_DIR}/csrc/Mobility.cpp
+	${PROJECT_SOURCE_DIR}/csrc/Pool.cpp
+	${PROJECT_SOURCE_DIR}/csrc/Priority.cpp
+	${PROJECT_SOURCE_DIR}/csrc/Processor.cpp
+	${PROJECT_SOURCE_DIR}/csrc/Schedule.cpp
+	${PROJECT_SOURCE_DIR}/csrc/Task.cpp
+	${PROJECT_SOURCE_DIR}/csrc/Tuning.cpp
 	${PROJECT_SOURCE_DIR}/csrc/common.cpp
 	${PROJECT_SOURCE_DIR}/csrc/utils.cpp
-	${PROJECT_SOURCE_DIR}/csrc/Architecture.cpp
-	${PROJECT_SOURCE_DIR}/csrc/Processor.cpp
-	${PROJECT_SOURCE_DIR}/csrc/Task.cpp
-	${PROJECT_SOURCE_DIR}/csrc/Hotspot.cpp
 	${TINYMT_DIR}/tinymt64.c
 )
 
@@ -26,13 +34,7 @@ set (MEX_FLAGS
 	CFLAGS='-std=c99'
 )
 
-add_custom_target (matlab-hotspot
-	COMMAND mex ${CMAKE_CURRENT_SOURCE_DIR}/obtain_coefficients.cpp
-		${MEX_SRCS} ${MEX_LIBS} ${MEX_FLAGS}
-	COMMAND mex ${CMAKE_CURRENT_SOURCE_DIR}/solve_condensed_equation.cpp
-		${MEX_SRCS} ${MEX_LIBS} ${MEX_FLAGS}
-	COMMAND mex ${CMAKE_CURRENT_SOURCE_DIR}/solve_condensed_equation_with_leakage.cpp
+add_custom_target (matlab-optima
+	COMMAND mex ${CMAKE_CURRENT_SOURCE_DIR}/solve.cpp
 		${MEX_SRCS} ${MEX_LIBS} ${MEX_FLAGS}
 )
-
-add_dependencies (matlab-hotspot hotspot)

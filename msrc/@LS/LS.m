@@ -78,6 +78,110 @@ classdef LS < handle
       graph.assignSchedule(schedule, priority);
     end
 
+    function schedule = mapEarliestAndSchedule(graph, pes)
+      tasks = graph.tasks;
+
+      processorCount = length(pes);
+      taskCount = length(tasks);
+
+      priority = graph.averageMobility(pes);
+
+      % Obtain roots and sort them according to their priority
+      ids = graph.getRootIds();
+      [ dummy, I ] = sort(priority(ids));
+      ids = ids(I);
+
+      pool = tasks(ids);
+
+      processed = zeros(1, taskCount);
+      scheduled = zeros(1, taskCount);
+
+      processed(ids) = 1;
+
+      schedule = zeros(0, 0);
+      mapping = zeros(1, taskCount);
+      start = zeros(1, taskCount);
+      duration = zeros(1, taskCount);
+
+      processorTime = zeros(1, processorCount);
+      taskTime = zeros(1, taskCount);
+
+      while ~isempty(pool)
+        % The pool is always sorted according to the priority
+        task = pool{1};
+
+        % Exclude the task
+        pool(1) = [];
+
+        % Append to the schedule
+        schedule(end + 1) = task.id;
+        scheduled(task.id) = 1;
+
+        % Find earliest processor
+        pid = 1;
+        earliestTime = processorTime(1);
+        for i = 2:processorCount
+          if processorTime(i) < earliestTime
+            earliestTime = processorTime(i);
+            pid = i;
+          end
+        end
+
+        % Append to the mapping
+        mapping(task.id) = pid;
+
+        start(task.id) = max(taskTime(task.id), processorTime(pid));
+        duration(task.id) = pes{pid}.calculateDuration(task.type);
+        finish = start(task.id) + duration(task.id);
+
+        processorTime(pid) = finish;
+
+        % Append new tasks, but only ready ones, and ensure absence
+        % of repetitions
+        for child = task.children
+          child = child{1};
+          taskTime(child.id) = max(taskTime(child.id), finish);
+
+          % Do not do again
+          if processed(child.id), continue; end
+
+          % All parents should be scheduled
+          ready = true;
+          for parent = child.parents
+            parent = parent{1};
+            if ~scheduled(parent.id)
+              ready = false;
+              break;
+            end
+          end
+
+          % Is it ready or should we wait for another parent?
+          if ~ready, continue; end
+
+          % We need to insert it in the right place in order to keep
+          % the pool sorted by priority
+          index = 1;
+          childPriority = priority(child.id);
+          for competitor = pool
+            competitor = competitor{1};
+            if priority(competitor.id) > childPriority
+              break;
+            end
+            index = index + 1;
+          end
+          if index > length(pool), pool{end + 1} = child;
+          elseif index == 1, pool = { child pool{:} };
+          else pool = { pool{1:index - 1} child pool{index:end} };
+          end
+
+          % We are done with it
+          processed(child.id) = 1;
+        end
+      end
+
+      graph.assign(priority, mapping, schedule, start, duration);
+    end
+
     function schedule = process(processors, graph, layout, priority)
       tasks = graph.tasks;
 
