@@ -1,34 +1,25 @@
-% Test: Find local minima and maxima on the temperature curves
-
 clear all;
 clc;
 rng(0);
 
-[ graph, hotspot, dynamicPowerProfile ] = setup('004_010');
-[ steps, cores ] = size(dynamicPowerProfile);
+name = '004_060';
 
-x = ((1:steps) - 1) * Constants.samplingInterval;
+system = Utils.path([ name, '.sys' ]);
+floorplan = Utils.path([ name, '.flp' ]);
+hotspot = Utils.path('hotspot.config');
+params = Utils.path('parameters.config');
 
-if true
-  tol = 0.01; % K
-  maxit = 10;
+[ temperature, power ] = Optima.solve(system, floorplan, hotspot, params);
+[ stepCount, processorCount ] = size(temperature);
 
-  [ vdd, ngate ] = Utils.collectLeakageParams(graph);
-
-  [ T, i, totalPowerProfile ] = hotspot.solveCondensedEquationWithLeakage(...
-    dynamicPowerProfile, vdd, ngate, tol, maxit);
-else
-  T = hotspot.solveCondensedEquation(dynamicPowerProfile);
-end
-
-Lifetime.drawCycles(T);
+Lifetime.drawCycles(temperature);
 
 tic
-mttf = Lifetime.predictMultiple(T);
+mttf = Lifetime.predictMultiple(temperature);
 toc
 
 tic
-mttf0 = Lifetime.predictCombined(T);
+mttf0 = Lifetime.predictCombined(temperature);
 toc
 
 fprintf('%5s%15s\n', 'Core', 'MTTF, TU');

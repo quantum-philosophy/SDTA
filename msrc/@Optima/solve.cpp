@@ -46,7 +46,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	SystemTuning tuning;
 
 	if (nrhs > 3) {
-		parameters_t params(array_to_string(prhs[3]));
+		parameters_t params;
+
+		string file = array_to_string(prhs[3]);
+
+		if (!file.empty())
+			params.update(file);
+
+		if (nrhs > 4) {
+			stringstream stream(array_to_string(prhs[4]));
+			params.update(stream);
+		}
+
 		tuning.setup(params);
 	}
 
