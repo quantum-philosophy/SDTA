@@ -8,16 +8,16 @@ set (system ${CMAKE_BINARY_DIR}/tools/system)
 set (floorplan ${CMAKE_BINARY_DIR}/tools/floorplan)
 set (optima ${CMAKE_BINARY_DIR}/tools/optima)
 
-# Genetic configuration (shared)
-set (genetic_config ${test_path}/genetic.config)
-add_custom_command (OUTPUT ${genetic_config}
-	COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/genetic.config ${genetic_config}
+# Parameters (shared)
+set (params_config ${test_path}/parameters.config)
+add_custom_command (OUTPUT ${params_config}
+	COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/parameters.config ${params_config}
 )
 
-# Thermal configuration (shared)
-set (thermal_config ${test_path}/hotspot.config)
-add_custom_command (OUTPUT ${thermal_config}
-	COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/hotspot.config ${thermal_config}
+# Hotspot configuration (shared)
+set (hotspot_config ${test_path}/hotspot.config)
+add_custom_command (OUTPUT ${hotspot_config}
+	COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/hotspot.config ${hotspot_config}
 )
 
 file (GLOB files "${CMAKE_CURRENT_SOURCE_DIR}/*.tgffopt")
@@ -51,16 +51,16 @@ foreach (file ${files})
 	)
 
 	add_custom_target (test_${test_name}
-		DEPENDS ${tgff_config} ${system_config} ${genetic_config} ${floorplan_config} ${thermal_config})
+		DEPENDS ${tgff_config} ${system_config} ${floorplan_config} ${hotspot_config} ${params_config})
 
 	add_dependencies (test_${test_name} tgff)
 	add_dependencies (test test_${test_name})
 
 	set (run_command ${optima}
 		-s ${system_config}
-		-g ${genetic_config}
 		-f ${floorplan_config}
-		-t ${thermal_config}
+		-h ${hotspot_config}
+		-p ${params_config}
 	)
 
 	add_custom_target ("hint_${test_name}"

@@ -29,6 +29,9 @@ set (COMMON_SRCS
 set_property(SOURCE ${TINYMT_DIR}/tinymt64.c
 	APPEND PROPERTY COMPILE_FLAGS "-std=c99")
 
+set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/Hotspot.cpp
+	APPEND PROPERTY COMPILE_FLAGS "-Wno-reorder")
+
 add_executable (optima optima.cpp ${COMMON_SRCS})
 
 target_link_libraries (optima crypto memcached libeo libmoeo libeoutils libhotspot)
