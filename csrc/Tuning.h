@@ -61,6 +61,7 @@ struct SystemTuning: public Tuning
 {
 	double deadline_ratio;
 	double power_scale;
+	std::string hotspot;
 	bool reorder_tasks;
 	bool steady_state;
 	bool leakage;

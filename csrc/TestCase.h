@@ -134,19 +134,19 @@ class TestCase
 		if (tuning.steady_state) {
 			if (tuning.leakage)
 				hotspot = new SteadyStateHotspotWithLeakage(*architecture,
-					*graph, _floorplan, _hotspot);
+					*graph, _floorplan, _hotspot, tuning.hotspot);
 			else
 				hotspot = new SteadyStateHotspotWithoutLeakage(*architecture,
-					*graph, _floorplan, _hotspot);
+					*graph, _floorplan, _hotspot, tuning.hotspot);
 		}
 		else {
 			/* People want leakage! */
 			if (tuning.leakage)
 				hotspot = new HotspotWithLeakage(*architecture,
-					*graph, _floorplan, _hotspot);
+					*graph, _floorplan, _hotspot, tuning.hotspot);
 			else
 				hotspot = new HotspotWithoutLeakage(*architecture,
-					*graph, _floorplan, _hotspot);
+					*graph, _floorplan, _hotspot, tuning.hotspot);
 		}
 	}
 

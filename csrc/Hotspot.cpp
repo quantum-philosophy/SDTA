@@ -272,8 +272,38 @@ size_t CondensedEquation::solve(const double *dynamic_power,
 
 /******************************************************************************/
 
+size_t read_config_line(str_pair *table, size_t max, const std::string &line)
+{
+	size_t count = 0;
+
+	std::string name, value;
+	std::stringstream stream(line);
+
+	while (true) {
+		stream >> name;
+
+		if (name.empty() || stream.eof() || stream.bad())
+			throw std::runtime_error("The configuration stream is bad.");
+
+		stream >> value;
+
+		if (stream.bad())
+			throw std::runtime_error("The configuration stream is bad.");
+
+		strcpy(table[count].name, name.c_str());
+		strcpy(table[count].value, value.c_str());
+
+		count++;
+
+		if (stream.eof()) break;
+	}
+
+	return count;
+}
+
 Hotspot::Hotspot(const Architecture &architecture, const Graph &graph,
-	const std::string &floorplan_filename, const std::string &config_filename) :
+	const std::string &floorplan_filename, const std::string &config_filename,
+	const std::string &config_line) :
 
 	processors(architecture.get_processors()), processor_count(processors.size()),
 	tasks(graph.get_tasks()), task_count(tasks.size()),
@@ -291,8 +321,14 @@ Hotspot::Hotspot(const Architecture &architecture, const Graph &graph,
 
 	if (!config_filename.empty()) {
 		str_pair table[MAX_ENTRIES];
-		size_t i = read_str_pairs(&table[0], MAX_ENTRIES,
+		size_t i = read_str_pairs(table, MAX_ENTRIES,
 			const_cast<char *>(config_filename.c_str()));
+		thermal_config_add_from_strs(&config, table, i);
+	}
+
+	if (!config_line.empty()) {
+		str_pair table[MAX_ENTRIES];
+		size_t i = read_config_line(table, MAX_ENTRIES, config_line);
 		thermal_config_add_from_strs(&config, table, i);
 	}
 
@@ -318,13 +354,35 @@ Hotspot::~Hotspot()
 	free_flp(floorplan, FALSE);
 }
 
+void Hotspot::get_capacitance(vector_t &capacitance) const
+{
+	capacitance.resize(node_count);
+
+	double *a = model->block->a;
+
+	for (size_t i = 0; i < node_count; i++)
+		capacitance[i] = a[i];
+}
+
+void Hotspot::get_conductance(matrix_t &conductance) const
+{
+	conductance.resize(node_count, node_count);
+
+	double **b = model->block->b;
+
+	for (size_t i = 0; i < node_count; i++)
+		for (size_t j = 0; j < node_count; j++)
+			conductance[i][j] = b[i][j];
+}
+
 /******************************************************************************/
 
 HotspotWithDynamicPower::HotspotWithDynamicPower(
 	const Architecture &architecture, const Graph &graph,
-	const std::string &floorplan, const std::string &config) :
+	const std::string &floorplan, const std::string &config,
+	const std::string &config_line) :
 
-	Hotspot(architecture, graph, floorplan, config)
+	Hotspot(architecture, graph, floorplan, config, config_line)
 {
 	types.resize(task_count);
 
@@ -382,9 +440,10 @@ void HotspotWithDynamicPower::compute_power(const Schedule &schedule,
 
 HotspotWithoutLeakage::HotspotWithoutLeakage(
 	const Architecture &architecture, const Graph &graph,
-	const std::string &floorplan, const std::string &config) :
+	const std::string &floorplan, const std::string &config,
+	const std::string &config_line) :
 
-	HotspotWithDynamicPower(architecture, graph, floorplan, config)
+	HotspotWithDynamicPower(architecture, graph, floorplan, config, config_line)
 {
 	CondensedEquationWithoutLeakage *equation = new CondensedEquationWithoutLeakage(
 		processor_count, node_count, sampling_interval, ambient_temperature,
@@ -416,9 +475,10 @@ void HotspotWithoutLeakage::solve(const Schedule &schedule, matrix_t &temperatur
 
 HotspotWithLeakage::HotspotWithLeakage(
 	const Architecture &architecture, const Graph &graph,
-	const std::string &floorplan, const std::string &config) :
+	const std::string &floorplan, const std::string &config,
+	const std::string &config_line) :
 
-	HotspotWithDynamicPower(architecture, graph, floorplan, config)
+	HotspotWithDynamicPower(architecture, graph, floorplan, config, config_line)
 {
 	CondensedEquation *equation = new CondensedEquation(
 		processors, node_count, sampling_interval, ambient_temperature,
@@ -477,9 +537,10 @@ EventQueue::EventQueue(const Schedule &schedule, double _deadline) :
 /******************************************************************************/
 
 SteadyStateHotspot::SteadyStateHotspot(const Architecture &architecture,
-	const Graph &graph, const std::string &floorplan, const std::string &config) :
+	const Graph &graph, const std::string &floorplan, const std::string &config,
+	const std::string &config_line) :
 
-	Hotspot(architecture, graph, floorplan, config), storage(NULL)
+	Hotspot(architecture, graph, floorplan, config, config_line), storage(NULL)
 {
 	step_count = ceil(deadline / sampling_interval);
 

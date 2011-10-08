@@ -42,7 +42,8 @@ class Hotspot
 	public:
 
 	Hotspot(const Architecture &architecture, const Graph &graph,
-		const std::string &floorplan_filename, const std::string &config_filename);
+		const std::string &floorplan_filename, const std::string &config_filename,
+		const std::string &config_line = std::string());
 	virtual ~Hotspot();
 
 	virtual void solve(const Schedule &schedule, matrix_t &temperature,
@@ -52,6 +53,9 @@ class Hotspot
 	{
 		return sampling_interval;
 	}
+
+	void get_capacitance(vector_t &capacitance) const;
+	void get_conductance(matrix_t &conductance) const;
 };
 
 class HotspotWithDynamicPower: public Hotspot
@@ -61,7 +65,8 @@ class HotspotWithDynamicPower: public Hotspot
 	public:
 
 	HotspotWithDynamicPower(const Architecture &architecture, const Graph &graph,
-		const std::string &floorplan, const std::string &config);
+		const std::string &floorplan, const std::string &config,
+		const std::string &config_line = std::string());
 
 	protected:
 
@@ -75,7 +80,8 @@ class HotspotWithoutLeakage: public HotspotWithDynamicPower
 	public:
 
 	HotspotWithoutLeakage(const Architecture &architecture, const Graph &graph,
-		const std::string &floorplan, const std::string &config);
+		const std::string &floorplan, const std::string &config,
+		const std::string &config_line = std::string());
 	~HotspotWithoutLeakage();
 
 	void solve(const Schedule &schedule, matrix_t &temperature,
@@ -89,7 +95,8 @@ class HotspotWithLeakage: public HotspotWithDynamicPower
 	public:
 
 	HotspotWithLeakage(const Architecture &architecture, const Graph &graph,
-		const std::string &floorplan, const std::string &config);
+		const std::string &floorplan, const std::string &config,
+		const std::string &config_line = std::string());
 	~HotspotWithLeakage();
 
 	void solve(const Schedule &schedule, matrix_t &temperature,
@@ -179,7 +186,8 @@ class SteadyStateHotspot: public Hotspot
 	public:
 
 	SteadyStateHotspot(const Architecture &architecture, const Graph &graph,
-		const std::string &floorplan, const std::string &config);
+		const std::string &floorplan, const std::string &config,
+		const std::string &config_line = std::string());
 	~SteadyStateHotspot();
 
 	void solve(const Schedule &schedule, matrix_t &temperature,
@@ -196,10 +204,10 @@ class SteadyStateHotspotWithoutLeakage: public SteadyStateHotspot
 	public:
 
 	SteadyStateHotspotWithoutLeakage(const Architecture &architecture,
-		const Graph &graph, const std::string &floorplan,
-		const std::string &config) :
+		const Graph &graph, const std::string &floorplan, const std::string &config,
+		const std::string &config_line = std::string()) :
 
-		SteadyStateHotspot(architecture, graph, floorplan, config) {}
+		SteadyStateHotspot(architecture, graph, floorplan, config, config_line) {}
 
 	protected:
 
@@ -216,10 +224,10 @@ class SteadyStateHotspotWithLeakage: public SteadyStateHotspot
 	public:
 
 	SteadyStateHotspotWithLeakage(const Architecture &architecture,
-		const Graph &graph, const std::string &floorplan,
-		const std::string &config) :
+		const Graph &graph, const std::string &floorplan, const std::string &config,
+		const std::string &config_line = std::string()) :
 
-		SteadyStateHotspot(architecture, graph, floorplan, config),
+		SteadyStateHotspot(architecture, graph, floorplan, config, config_line),
 		leakage(architecture.get_processors()) {}
 
 	protected:

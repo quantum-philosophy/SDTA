@@ -36,30 +36,28 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	TestCase test(system, floorplan, hotspot, tuning);
 
-	matrix_t temperature;
-	matrix_t power;
+	matrix_t conductance;
+	vector_t capacitance;
 
-	test.hotspot->solve(test.schedule, temperature, power);
+	test.hotspot->get_conductance(conductance);
+	test.hotspot->get_capacitance(capacitance);
 
-	size_t step_count = temperature.rows();
-	size_t processor_count = temperature.cols();
+	size_t node_count = conductance.rows();
 
-	/* Temperature */
-    mxArray *out_temperature = mxCreateDoubleMatrix(
-		step_count, processor_count, mxREAL);
-	double *_temperature = mxGetPr(out_temperature);
+	/* Conductance */
+    mxArray *out_conductance = mxCreateDoubleMatrix(node_count, node_count, mxREAL);
+	double *_conductance = mxGetPr(out_conductance);
 
-	c_matrix_to_mex(_temperature, temperature.pointer(),
-		step_count, processor_count);
+	c_matrix_to_mex(_conductance, conductance.pointer(),
+		node_count, node_count);
 
-	/* Power */
-    mxArray *out_power = mxCreateDoubleMatrix(
-		step_count, processor_count, mxREAL);
-	double *_power = mxGetPr(out_power);
+	/* Capacitance */
+    mxArray *out_capacitance = mxCreateDoubleMatrix(1, node_count, mxREAL);
+	double *_capacitance = mxGetPr(out_capacitance);
 
-	c_matrix_to_mex(_power, power.pointer(),
-		step_count, processor_count);
+	for (size_t i = 0; i < node_count; i++)
+		_capacitance[i] = capacitance[i];
 
-    plhs[0] = out_temperature;
-    plhs[1] = out_power;
+    plhs[0] = out_conductance;
+    plhs[1] = out_capacitance;
 }
