@@ -15,7 +15,7 @@ classdef Constants < handle
     deadlineFactor = 1.1;
 
     % Visualization
-    roundRobinColors = { 'r', 'g', 'b', 'm', 'y', 'c' };
+    roundRobinColors = { [ 87/255, 181/255, 232/255 ], [ 230/255, 158/255, 0 ], 'r', 'g', 'm', 'y', 'c' };
 
     % Kelvin to Celsius
     degreeKelvin = 273.15; % K
