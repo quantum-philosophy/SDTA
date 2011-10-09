@@ -16,6 +16,8 @@ extern "C" {
 		some = NULL; \
 	} while(0)
 
+#define __COPY(dest, src, size) memcpy(dest, src, sizeof(double) * size)
+
 #include "Leakage.h"
 
 class Hotspot
@@ -271,6 +273,33 @@ class EventQueue
 	{
 		return one.time < another.time;
 	}
+};
+
+class IterativeHotspot: public HotspotWithDynamicPower
+{
+	const size_t max_iterations;
+	const size_t min_mismatches;
+	const double tolerance;
+
+	public:
+
+	IterativeHotspot(const Architecture &architecture, const Graph &graph,
+		const std::string &floorplan, const std::string &config,
+		const std::string &config_line, size_t _max_iterations,
+		size_t _min_mismatches, double _tolerance) :
+
+		HotspotWithDynamicPower(architecture, graph, floorplan, config, config_line),
+		max_iterations(_max_iterations), min_mismatches(_min_mismatches),
+		tolerance(_tolerance) {}
+
+	void solve(const Schedule &schedule, matrix_t &temperature, matrix_t &power);
+	size_t solve(const matrix_t &power, matrix_t &temperature,
+		const matrix_t &reference_temperature = matrix_t());
+
+	private:
+
+	size_t solve(double *extended_power, const double *reference_temperature,
+		double *temperature, size_t step_count);
 };
 
 #endif

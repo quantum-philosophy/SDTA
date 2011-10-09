@@ -430,7 +430,7 @@ void HotspotWithDynamicPower::compute_power(const Schedule &schedule,
 			if (end >= step_count)
 				throw std::runtime_error("The duration of the task is too long.");
 #endif
-			for (j = start; j < end && j < step_count; j++)
+			for (j = start; j <= end && j < step_count; j++)
 				ptr[j * processor_count + pid] = power;
 		}
 	}
@@ -594,8 +594,7 @@ void SteadyStateHotspot::solve(const Schedule &schedule,
 			const double *slot_temperature = get(trace);
 
 			for (i = start; i < end && i < step_count; i++)
-				memcpy(temperature[i], slot_temperature,
-					sizeof(double) * processor_count);
+				__COPY(temperature[i], slot_temperature, processor_count);
 
 			start = end;
 		}
@@ -689,4 +688,88 @@ double *SteadyStateHotspotWithLeakage::compute(const SlotTrace &trace) const
 	__FREE(last_temperature);
 
 	return temperature;
+}
+
+/******************************************************************************/
+
+void IterativeHotspot::solve(const Schedule &schedule,
+	matrix_t &temperature, matrix_t &power)
+{
+	compute_power(schedule, power);
+	(void)solve(power, temperature);
+}
+
+size_t IterativeHotspot::solve(const matrix_t &power, matrix_t &temperature,
+	const matrix_t &reference_temperature)
+{
+	size_t step_count = power.rows();
+
+	bool use_reference = !reference_temperature.empty();
+
+	if (use_reference)
+		if (power.cols() != reference_temperature.cols() ||
+			step_count != reference_temperature.rows())
+			throw std::runtime_error("The reference temperature is wrong.");
+
+	temperature.resize(power);
+
+	const double *_power = power.pointer();
+	double *_temperature = temperature.pointer();
+
+	/* Since Hotspot works with power for all thermal nodes,
+	 * and our power is only for the processors, we need to extend it
+	 * with zeros for the rest of the thermal nodes.
+	 */
+	matrix_t extended_power(step_count, node_count);
+	double *_extended_power = extended_power.pointer();
+
+	extended_power.nullify();
+	for (size_t i = 0; i < step_count; i++)
+		__COPY(_extended_power + i * node_count,
+			_power + i * processor_count, processor_count);
+
+	if (use_reference) {
+		const double *_reference_temperature = reference_temperature.pointer();
+		return solve(_extended_power, _reference_temperature,
+			_temperature, step_count);
+	}
+	else {
+		temperature.nullify();
+		return solve(_extended_power, _temperature,
+			_temperature, step_count);
+	}
+}
+
+size_t IterativeHotspot::solve(double *extended_power,
+	const double *reference_temperature, double *temperature, size_t step_count)
+{
+	double *extended_temperature = __ALLOC(node_count);
+
+	set_temp(model, extended_temperature, config.init_temp);
+
+	size_t it;
+
+	for (it = 0; it < max_iterations; it++) {
+		size_t bad = 0;
+
+		for (size_t i = 0; i < step_count; i++) {
+			compute_temp(model, extended_power + node_count * i,
+				extended_temperature, sampling_interval);
+
+			/* Compare with the reference */
+			const double *tmp = reference_temperature + i * processor_count;
+			for (size_t j = 0; j < processor_count; j++)
+				if (abs(tmp[j] - extended_temperature[j]) >= tolerance) bad++;
+
+			/* Copy the new values */
+			__COPY(temperature + i * processor_count,
+				extended_temperature, processor_count);
+		}
+
+		if (bad <= min_mismatches) break;
+	}
+
+	__FREE(extended_temperature);
+
+	return it;
 }
