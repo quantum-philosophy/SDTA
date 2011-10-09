@@ -32,4 +32,14 @@ std::string array_to_string(const mxArray *array)
 	return line;
 }
 
+template<class T>
+mxArray *output(const T scalar)
+{
+    mxArray *out = mxCreateDoubleMatrix(1, 1, mxREAL);
+	double *_out = mxGetPr(out);
+	*_out = (double)scalar;
+
+	return out;
+}
+
 #endif

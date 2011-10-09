@@ -1,6 +1,13 @@
 classdef Optima < handle
   methods (Static)
-    [ temperature, power ] = solve(system, floorplan, hotspot, params, extra);
-    [ conductance, capacitance ] = get_coefficients(system, floorplan, hotspot, params, extra);
+    [ temperature, power ] = ...
+      solve(system, floorplan, hotspot, params, extra);
+
+    [ conductance, capacitance ] = ...
+      get_coefficients(system, floorplan, hotspot, params, extra);
+
+    [ temperature, power, reference_temperature, iterations ] = ...
+      verify(system, floorplan, hotspot, params, extra, ...
+      max_iterations, min_mismatches, tolerance);
   end
 end
