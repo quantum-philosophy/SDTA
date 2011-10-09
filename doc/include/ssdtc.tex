@@ -1,10 +1,23 @@
 \subsection{Problem Formulation}
-We consider a multiprocessor embedded system that runs a number of periodic tasks. We assume that the power profile of the system is given, and it has periodic nature. Therefore, the overall profile is described with one repeating chunk.
+We consider a multiprocessor system with a set of processing elements $\Pi = \{ \pi_i: i = 1 \dots N_p \}$. The system executes a periodic application with the overall period $\tau$ which is discretized into $N_s$ intervals $\triangle \tau = \{ \triangle \tau_j: j = 1 \dots N_s \}$. The time intervals $\triangle \tau_{ij}$ are small enough to assume that the power consumption and the temperature of each processing element $\pi_i$ are constant within these intervals. We assume that the power profile $P = \{ p_{ij}: i = 1 \dots N_p, j = 1 \dots N_s \}$, where $p_{ij}$ is the power consumption of the $i$th core during the $j$th time interval, is also periodic. After the stabilization process, the temperature profile of the system becomes periodic as well and defined as $T = \{ T_{ij}: i = 1 \dots N_p, j = 1 \dots N_s \}$, ${T_{ij}}$ corresponds to the temperature of the ${i}$th core on the $j$th time interval. Such periodic temperature profile is called the steady-state dynamic temperature curve (SSDTC).
 
-In this case, after the stabilization process, the temperature profile also becomes periodic. This temperature curve is called \ssdtc\ (SSDTC), and our goal is to find it. Furthermore, we want to calculate it quick and accurate enough to be able to use it inside other optimization problems. An example of such problem is given in \secref{sec:results}.
+Given:
+\begin{itemize}
+  \item A multiprocessor system running a periodic application.
+  \item The periodic power profile $P$ of the system.
+  \item The floorplan of the die, i.e., the location and size of each processing element.
+  \item The configuration of the package including the thermal interface material, the heat spreader, and the heat sink.
+  \item The thermal parameters of the die and the package, i.e., thermal conductivity, thermal capacitance, etc.
+\end{itemize}
+Find:
+\begin{itemize}
+  \item The corresponding periodic temperature profile $T$.
+\end{itemize}
+
+Furthermore, we want to be able to perform this procedure as quick as possible with a desired accuracy in order to use it for solving different optimization problems where such temperature curves have to be calculated a very large number of times. An example of such problem is the reliability-aware task allocation and scheduling given in \secref{sec:results}.
 
 \subsection{Iterative Solution with HotSpot}
-One approach to find SSDTC would be to call HotSpot (the tool) with a very long power profile composed of some repeating chunk, but it would take much time to compute (see the comparison in \secref{sec:results}).
+One approach to find the SSDTC is to call the HotSpot simulator with a very long power profile composed of one repeating chunk. In this case, we get a huge temperature profile, and we can take only its tail, that corresponds to the last chunk in the power profile. Another way to obtain the SSDTC is to call the simulator a number of times each time starting from the temperature that we got during the call before. The number of iterations required to get the steady-state temperature profile depends on the accuracy that we are trying to achieve. It also depends a lot on the application itself and, consequently, on the power profile. For example, if we have a short application with a low power consumption, then it will take a lot of iterations and, therefore, a lot of simulation time for the temperature to stabilize.
 
 \subsection{Direct Analytical Solution}
 In order to deal with the problem, we use the analytical approach. First of all, we need to be able to solve \equref{eq:initial} efficiently. The direct solution is:

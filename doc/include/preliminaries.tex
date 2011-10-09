@@ -1,33 +1,13 @@
-\subsection{RC Thermal Model}
-We consider a well-known thermal model called HotSpot. HotSpot is a modeling methodology for developing compact thermal models based on the popular stacked-layer packaging scheme in modern very large-scale integration systems \cite{huang2006}. It describes thermal systems with the following widespread differential equation \cite{rao2008}:
+\subsection{The RC Thermal Model}
+In our analysis we use the well-known thermal model called HotSpot. HotSpot is a modeling methodology for developing compact thermal models based on the popular stacked-layer packaging scheme in modern very large-scale integration systems \cite{huang2006}. The model is based on the following differential equation \cite{rao2008}:
 \[
-  C \cdot \frac{dT}{dt} + G \cdot T = P
+  C \frac{dT}{dt} + G T = P
 \]
-where $C$ is a diagonal matrix $n \times n$ of the thermal capacitance, $G$ is a symmetric matrix $n \times n$ of the thermal conductivity ($\frac{1}{R}$), $P$ is a $n \times 1$ vector of the power consumption, and $n$ is the number of thermal nodes.
+where $C$ is the thermal capacitance matrix, $G$ is the thermal conductance matrix (equal to $\frac{1}{R}$, where $R$ is the resistance matrix), $P$ is the power dissipation, and $T$ is the temperature vector. The matrices are of the dimensions $n \times n$, the vector is of the length $n$, where $n$ is the number of thermal nodes.
 
-For convenience, we move $GT$ to the right part of the equation and change the denotation:
+For convenience, in the rest of the paper we use the following denotation:
 \begin{equation} \label{eq:initial}
-  C \cdot \frac{dT}{dt} = A \cdot T + B
+  C \frac{dT}{dt} = A T + B
 \end{equation}
 
-HotSpot comes with a tool of the same name to calculate this model. It uses the Runge-Kutta numerical method to solve \equref{eq:initial}.
-
-If we are talking about a power profile, then we have a number of vectors $B$ for each time step. The profile can be represented with a matrix which rows are transposed vectors $B$, and the number of rows is the number of time steps:
-\[
-  BB =
-    \left[
-      \begin{array}{c}
-        B_0^T \\
-        \vdots \\
-        B_{m-1}^T
-      \end{array}
-    \right] =
-    \left[
-      \begin{array}{ccc}
-        \dindex{b}{0}{0} & \cdots & \dindex{b}{0}{cores-1} \\
-        \vdots & \ddots & \vdots \\
-        \dindex{b}{m-1}{0} & \cdots & \dindex{b}{m-1}{cores-1}
-      \end{array}
-    \right]
-\]
-where $m$ is the number of time steps, $b_{ij}$ id the power supplied to the $i$-th core on the $j$-th step.
+HotSpot comes with a tool of the same name to perform all the calculations. If we are interested in the transient temperature, it solves \equref{eq:initial} using the Runge-Kutta numerical method. When we need to get only the steady-state temperature, $\frac{dT}{dt}$ becomes zero leaving a linear system, which is HotSpot solves the linear system with help of the regular LU decomposition.
