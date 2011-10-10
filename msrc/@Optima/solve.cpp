@@ -26,13 +26,23 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	TestCase test(system, floorplan, hotspot, tuning);
 
-	matrix_t temperature;
 	matrix_t power;
 
-	clock_t begin = clock();
-	test.hotspot->solve(test.schedule, temperature, power);
-	clock_t end = clock();
-	double elapsed = (double)(end - begin) / CLOCKS_PER_SEC;
+	DynamicPower dynamic_power(test.architecture->get_processors(),
+		test.graph->get_tasks(), test.graph->get_deadline(),
+		test.hotspot->get_sampling_interval());
+
+	dynamic_power.compute(test.schedule, power);
+
+	matrix_t temperature;
+
+	clock_t begin, end;
+	double elapsed;
+
+	begin = clock();
+	test.hotspot->solve(power, temperature);
+	end = clock();
+	elapsed = (double)(end - begin) / CLOCKS_PER_SEC;
 
 	plhs[0] = to_matlab(temperature);
 	plhs[1] = to_matlab(power);

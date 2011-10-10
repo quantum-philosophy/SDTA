@@ -26,9 +26,9 @@ classdef Hotspot < handle
     end
 
     function [ T, time ] = solve(hs, power)
-      [ A, B ] = hs.constructBand(power, hs.samplingInterval);
+      start = tic;
 
-      tic;
+      [ A, B ] = hs.constructBand(power, hs.samplingInterval);
 
       Y = A \ B;
 
@@ -37,7 +37,7 @@ classdef Hotspot < handle
       T = Utils.compact(Y, steps, cores);
 
       d = diag(hs.sinvC);
-      d = d(1:cores);
+      d = transpose(d(1:cores));
 
       a = hs.ambientTemperature;
 
@@ -45,7 +45,7 @@ classdef Hotspot < handle
         T(i, :) = T(i, :) .* d + a;
       end
 
-      time = toc;
+      time = toc(start);
     end
   end
 
