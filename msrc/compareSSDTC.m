@@ -22,11 +22,9 @@ config = @(leakage, steady_state, power_scale) ...
     'steady_state', steady_state, ...
     'power_scale', power_scale);
 
-Tce = Optima.solve(system, floorplan, hotspot, params, ...
-  config(0, 0, powerScale));
+Tce = Optima.solve(system, floorplan, hotspot, params, config(0, 0, powerScale));
 
-Tss = Optima.solve(system, floorplan, hotspot, params, ...
-  config(0, 1, powerScale));
+Tss = Optima.solve(system, floorplan, hotspot, params, config(0, 1, powerScale));
 
 samplingInterval = Utils.readParameter(hotspot, '-sampling_intvl');
 

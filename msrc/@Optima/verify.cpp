@@ -4,88 +4,56 @@
 
 using namespace std;
 
-mxArray *output(const matrix_t &matrix)
-{
-	size_t rows = matrix.rows();
-	size_t cols = matrix.cols();
-
-    mxArray *out = mxCreateDoubleMatrix(rows, cols, mxREAL);
-	double *_out = mxGetPr(out);
-
-	c_matrix_to_mex(_out, matrix.pointer(), rows, cols);
-
-	return out;
-}
-
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-	if (nrhs < 3)
-		mexErrMsgTxt("The number of arguments should be at least three.");
+	string system = from_matlab<string>(prhs[0]);
+	string floorplan = from_matlab<string>(prhs[1]);
+	string _hotspot = from_matlab<string>(prhs[2]);
 
-	if (!mxIsChar(prhs[0]) || !mxIsChar(prhs[1]) || !mxIsChar(prhs[2]))
-		mexErrMsgTxt("The first three arguments should be strings.");
+	parameters_t params;
 
-	string system = array_to_string(prhs[0]);
-	string floorplan = array_to_string(prhs[1]);
-	string hotspot = array_to_string(prhs[2]);
+	string param_filename = from_matlab<string>(prhs[3], string());
+	if (!param_filename.empty()) params.update(param_filename);
+
+	string param_line = from_matlab<string>(prhs[4], string());
+	if (!param_line.empty()) {
+		stringstream param_stream(param_line);
+		params.update(param_stream);
+	}
 
 	SystemTuning tuning;
+	tuning.setup(params);
 
-	if (nrhs > 3) {
-		parameters_t params;
+	TestCase test(system, floorplan, _hotspot, tuning);
 
-		string file = array_to_string(prhs[3]);
-
-		if (!file.empty())
-			params.update(file);
-
-		if (nrhs > 4) {
-			stringstream stream(array_to_string(prhs[4]));
-			params.update(stream);
-		}
-
-		tuning.setup(params);
-	}
-
-	size_t max_iterations = 1000;
-	if (nrhs > 5) {
-		if (!mxIsNumeric(prhs[5])) mexErrMsgTxt(
-			"'max_iterations' should be numeric.");
-		max_iterations = mxGetScalar(prhs[5]);
-	}
-
-	int min_mismatches = 0;
-	if (nrhs > 6) {
-		if (!mxIsNumeric(prhs[6])) mexErrMsgTxt(
-			"'min_mismatches' should be numeric.");
-		min_mismatches = mxGetScalar(prhs[6]);
-	}
-
-	double tolerance = 1;
-	if (nrhs > 7) {
-		if (!mxIsNumeric(prhs[7])) mexErrMsgTxt(
-			"'tolerance' should be numeric.");
-		tolerance = mxGetScalar(prhs[7]);
-	}
-
-	TestCase test(system, floorplan, hotspot, tuning);
-
-	matrix_t reference_temperature;
 	matrix_t power;
+	matrix_t reference_temperature;
 
+	clock_t begin, end;
+	double reference_elapsed, elapsed;
+
+	begin = clock();
 	test.hotspot->solve(test.schedule, reference_temperature, power);
+	end = clock();
+	reference_elapsed = (double)(end - begin) / CLOCKS_PER_SEC;
 
 	matrix_t temperature;
 
-	IterativeHotspot iterative_hotspot(*test.architecture,
-		*test.graph, floorplan, hotspot, tuning.hotspot,
-		max_iterations, min_mismatches, tolerance);
+	size_t max_iterations = from_matlab<size_t>(prhs[5], 1000);
+	double tolerance = from_matlab<double>(prhs[6], 1);
 
-	size_t iterations = iterative_hotspot.solve(power, temperature,
-		reference_temperature);
+	IterativeHotspot hotspot(floorplan, _hotspot, tuning.hotspot,
+		max_iterations, tolerance);
 
-    plhs[0] = output(temperature);
-    plhs[1] = output(power);
-    plhs[2] = output(reference_temperature);
-	plhs[3] = output(iterations);
+	begin = clock();
+	size_t iterations = hotspot.verify(power, reference_temperature, temperature);
+	end = clock();
+	elapsed = (double)(end - begin) / CLOCKS_PER_SEC;
+
+	plhs[0] = to_matlab(reference_temperature);
+	plhs[1] = to_matlab(reference_elapsed);
+	plhs[2] = to_matlab(power);
+	plhs[3] = to_matlab(iterations);
+	plhs[4] = to_matlab(temperature);
+	plhs[5] = to_matlab(elapsed);
 }

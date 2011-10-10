@@ -3,6 +3,7 @@ set (TINYMT_DIR ${VENDOR_DIR}/tinymt-1.0.1/tinymt)
 set (MEX_SRCS
 	${PROJECT_SOURCE_DIR}/csrc/Architecture.cpp
 	${PROJECT_SOURCE_DIR}/csrc/Constrain.cpp
+	${PROJECT_SOURCE_DIR}/csrc/DynamicPower.cpp
 	${PROJECT_SOURCE_DIR}/csrc/Graph.cpp
 	${PROJECT_SOURCE_DIR}/csrc/Hotspot.cpp
 	${PROJECT_SOURCE_DIR}/csrc/Layout.cpp
@@ -35,9 +36,9 @@ set (MEX_FLAGS
 )
 
 add_custom_target (matlab-optima
-	COMMAND mex ${CMAKE_CURRENT_SOURCE_DIR}/verify.cpp
-		${MEX_SRCS} ${MEX_LIBS} ${MEX_FLAGS}
 	COMMAND mex ${CMAKE_CURRENT_SOURCE_DIR}/solve.cpp
+		${MEX_SRCS} ${MEX_LIBS} ${MEX_FLAGS}
+	COMMAND mex ${CMAKE_CURRENT_SOURCE_DIR}/verify.cpp
 		${MEX_SRCS} ${MEX_LIBS} ${MEX_FLAGS}
 	COMMAND mex ${CMAKE_CURRENT_SOURCE_DIR}/get_coefficients.cpp
 		${MEX_SRCS} ${MEX_LIBS} ${MEX_FLAGS}

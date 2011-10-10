@@ -6,60 +6,35 @@ using namespace std;
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-	if (nrhs < 3)
-		mexErrMsgTxt("The number of arguments should be at least three.");
+	string system = from_matlab<string>(prhs[0]);
+	string floorplan = from_matlab<string>(prhs[1]);
+	string hotspot = from_matlab<string>(prhs[2]);
 
-	if (!mxIsChar(prhs[0]) || !mxIsChar(prhs[1]) || !mxIsChar(prhs[2]))
-		mexErrMsgTxt("The first three arguments should be strings.");
+	parameters_t params;
 
-	string system = array_to_string(prhs[0]);
-	string floorplan = array_to_string(prhs[1]);
-	string hotspot = array_to_string(prhs[2]);
+	string param_filename = from_matlab<string>(prhs[3], string());
+	if (!param_filename.empty()) params.update(param_filename);
+
+	string param_line = from_matlab<string>(prhs[4], string());
+	if (!param_line.empty()) {
+		stringstream param_stream(param_line);
+		params.update(param_stream);
+	}
 
 	SystemTuning tuning;
-
-	if (nrhs > 3) {
-		parameters_t params;
-
-		string file = array_to_string(prhs[3]);
-
-		if (!file.empty())
-			params.update(file);
-
-		if (nrhs > 4) {
-			stringstream stream(array_to_string(prhs[4]));
-			params.update(stream);
-		}
-
-		tuning.setup(params);
-	}
+	tuning.setup(params);
 
 	TestCase test(system, floorplan, hotspot, tuning);
 
 	matrix_t temperature;
 	matrix_t power;
 
+	clock_t begin = clock();
 	test.hotspot->solve(test.schedule, temperature, power);
+	clock_t end = clock();
+	double elapsed = (double)(end - begin) / CLOCKS_PER_SEC;
 
-	size_t step_count = temperature.rows();
-	size_t processor_count = temperature.cols();
-
-	/* Temperature */
-    mxArray *out_temperature = mxCreateDoubleMatrix(
-		step_count, processor_count, mxREAL);
-	double *_temperature = mxGetPr(out_temperature);
-
-	c_matrix_to_mex(_temperature, temperature.pointer(),
-		step_count, processor_count);
-
-	/* Power */
-    mxArray *out_power = mxCreateDoubleMatrix(
-		step_count, processor_count, mxREAL);
-	double *_power = mxGetPr(out_power);
-
-	c_matrix_to_mex(_power, power.pointer(),
-		step_count, processor_count);
-
-    plhs[0] = out_temperature;
-    plhs[1] = out_power;
+	plhs[0] = to_matlab(temperature);
+	plhs[1] = to_matlab(power);
+	plhs[2] = to_matlab(elapsed);
 }
