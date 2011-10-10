@@ -32,7 +32,7 @@ fprintf('Matrix size: %d\n', stepCount * (4 * processorCount + 12));
 [ Tce, power, tce ] = Optima.solve(system, floorplan, hotspot_config, params, param_line);
 fprintf('Condensed Equation: %.3f s\n', tce);
 
-[ Ths, ths ] = hotspot.solve(power);
+[ Ths, ths ] = hotspot.solve(power, 'band');
 fprintf('Hotspot: %.3f s\n', ths);
 
 Utils.compareTemperature(...
