@@ -1,7 +1,7 @@
 clear all;
 clc;
 
-name = '004_060';
+name = '001_030';
 
 tgffopt = Utils.path([ name, '.tgffopt' ]);
 system = Utils.path([ name, '.sys' ]);
@@ -12,7 +12,7 @@ hotspot_config = Utils.path('hotspot.config');
 hotspot_line = '';
 
 param_line = Utils.configStream(...
-  'time_scale', 1, ...
+  'time_scale', 0.1, ...
   'verbose', 0, ...
   'leakage', 0, ...
   'steady_state', 0);

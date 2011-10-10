@@ -130,12 +130,12 @@ classdef Hotspot < handle
       Y = A \ B;
     end
 
-    function Y = ce(hs, P)
-      [ m, cores ] = size(P);
+    function Y = ce(hs, B)
+      [ m, cores ] = size(B);
       n = hs.nodes;
       nm = n * m;
 
-      P = [ P, zeros(m, n - cores) ];
+      B = [ B, zeros(m, n - cores) ];
 
       t = hs.samplingInterval;
 
@@ -151,7 +151,7 @@ classdef Hotspot < handle
       end
 
       Y = zeros(nm, 1);
-      Y(1:n) = model.DV * diag(1 ./ (1 - exp(t * m * model.DL))) * model.DVT * P(:, m);
+      Y(1:n) = hs.DV * diag(1 ./ (1 - exp(t * m * hs.DL))) * hs.DVT * P(:, m);
 
       for i = 2:m
         op = (i - 2) * n + 1;
