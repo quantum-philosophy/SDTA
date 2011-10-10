@@ -61,6 +61,8 @@ void SystemTuning::setup(const parameters_t &params)
 			deadline_ratio = it->to_double();
 		else if (it->name == "power_scale")
 			power_scale = it->to_double();
+		else if (it->name == "time_scale")
+			time_scale = it->to_double();
 		else if (it->name == "hotspot")
 			hotspot = it->value;
 		else if (it->name == "reorder_tasks")
@@ -80,6 +82,7 @@ void SystemTuning::display(std::ostream &o) const
 		<< "System:" << std::endl
 		<< "  Deadline ratio:       " << deadline_ratio << std::endl
 		<< "  Task power scale:     " << power_scale << std::endl
+		<< "  Task time scale:      " << time_scale << std::endl
 		<< "  Hotspot tuning:       " << hotspot << std::endl
 		<< "  Reorder tasks:        " << reorder_tasks << std::endl
 		<< "  Steady-State:         " << steady_state << std::endl
