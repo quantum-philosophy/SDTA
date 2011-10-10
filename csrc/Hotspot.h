@@ -67,8 +67,9 @@ class Hotspot
 		return sampling_interval;
 	}
 
-	void get_capacitance(vector_t &capacitance) const;
 	void get_conductance(matrix_t &conductance) const;
+	void get_capacitance(vector_t &capacitance) const;
+	void get_inversed_capacitance(vector_t &inversed_capacitance) const;
 };
 
 class BasicCondensedEquationHotspot: public Hotspot

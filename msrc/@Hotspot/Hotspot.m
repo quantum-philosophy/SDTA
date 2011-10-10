@@ -12,8 +12,11 @@ classdef Hotspot < handle
   end
 
   methods
-    function hs = Hotspot(conductance, capacitance, samplingInterval, ambientTemperature)
-      hs.sinvC = diag(sqrt(1 ./ capacitance));
+    function hs = Hotspot(floorplan, config, config_line)
+      [ conductance, capacitance, inversed_capacitance ] = Optima.get_coefficients( ...
+        floorplan, config, config_line);
+
+      hs.sinvC = diag(sqrt(inversed_capacitance));
       hs.D = hs.sinvC * (-conductance) * hs.sinvC;
       [ V, L ] = eig(hs.D);
       hs.DL = diag(L);
@@ -21,8 +24,8 @@ classdef Hotspot < handle
       hs.DVT = V';
       hs.nodes = size(hs.D, 1);
 
-      hs.samplingInterval = samplingInterval;
-      hs.ambientTemperature = ambientTemperature;
+      hs.samplingInterval = Utils.readParameter(config, '-sampling_intvl');
+      hs.ambientTemperature = Utils.readParameter(config, '-ambient');
     end
 
     function [ T, time ] = solve(hs, power)

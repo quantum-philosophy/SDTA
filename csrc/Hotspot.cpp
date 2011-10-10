@@ -339,6 +339,17 @@ Hotspot::~Hotspot()
 	free_flp(floorplan, FALSE);
 }
 
+void Hotspot::get_conductance(matrix_t &conductance) const
+{
+	conductance.resize(node_count, node_count);
+
+	double **b = model->block->b;
+
+	for (size_t i = 0; i < node_count; i++)
+		for (size_t j = 0; j < node_count; j++)
+			conductance[i][j] = b[i][j];
+}
+
 void Hotspot::get_capacitance(vector_t &capacitance) const
 {
 	capacitance.resize(node_count);
@@ -349,15 +360,14 @@ void Hotspot::get_capacitance(vector_t &capacitance) const
 		capacitance[i] = a[i];
 }
 
-void Hotspot::get_conductance(matrix_t &conductance) const
+void Hotspot::get_inversed_capacitance(vector_t &inversed_capacitance) const
 {
-	conductance.resize(node_count, node_count);
+	inversed_capacitance.resize(node_count);
 
-	double **b = model->block->b;
+	double *inva = model->block->inva;
 
 	for (size_t i = 0; i < node_count; i++)
-		for (size_t j = 0; j < node_count; j++)
-			conductance[i][j] = b[i][j];
+		inversed_capacitance[i] = inva[i];
 }
 
 /******************************************************************************/
