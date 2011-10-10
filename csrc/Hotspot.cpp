@@ -10,7 +10,7 @@
 #include "Graph.h"
 #include "Task.h"
 
-class CondensedEquationWithoutLeakage
+class CondensedEquation
 {
 	protected:
 
@@ -43,7 +43,7 @@ class CondensedEquationWithoutLeakage
 
 	public:
 
-	CondensedEquationWithoutLeakage(size_t _processor_count, size_t _node_count,
+	CondensedEquation(size_t _processor_count, size_t _node_count,
 		double _sampling_interval, double _ambient_temperature,
 		const double **conductivity, const double *inv_capacitance);
 
@@ -51,7 +51,7 @@ class CondensedEquationWithoutLeakage
 	void solve(const double *power, double *temperature, size_t step_count);
 };
 
-class CondensedEquation: public CondensedEquationWithoutLeakage
+class LeakageCondensedEquation: public CondensedEquation
 {
 	static const double tol = 0.01;
 	static const size_t maxit = 10;
@@ -60,7 +60,7 @@ class CondensedEquation: public CondensedEquationWithoutLeakage
 
 	public:
 
-	CondensedEquation(const processor_vector_t &processors,
+	LeakageCondensedEquation(const processor_vector_t &processors,
 		size_t _node_count, double _sampling_interval, double _ambient_temperature,
 		const double **conductivity, const double *inv_capacitance);
 
@@ -69,7 +69,7 @@ class CondensedEquation: public CondensedEquationWithoutLeakage
 		double *temperature, double *total_power, size_t step_count);
 };
 
-CondensedEquationWithoutLeakage::CondensedEquationWithoutLeakage(
+CondensedEquation::CondensedEquation(
 	size_t _processor_count, size_t _node_count,
 	double _sampling_interval, double _ambient_temperature,
 	const double **conductivity, const double *inv_capacitance) :
@@ -148,7 +148,7 @@ CondensedEquationWithoutLeakage::CondensedEquationWithoutLeakage(
 	multiply_matrix_matrix_diagonal_matrix(m_temp, UT, sinvC, G);
 }
 
-void CondensedEquationWithoutLeakage::solve(const double *power, double *temperature,
+void CondensedEquation::solve(const double *power, double *temperature,
 	size_t step_count)
 {
 	size_t i, j, k;
@@ -192,19 +192,19 @@ void CondensedEquationWithoutLeakage::solve(const double *power, double *tempera
 			temperature[k] = Y[i][j] * sinvC[j] + ambient_temperature;
 }
 
-CondensedEquation::CondensedEquation(
+LeakageCondensedEquation::LeakageCondensedEquation(
 	const processor_vector_t &processors, size_t _node_count,
 	double _sampling_interval, double _ambient_temperature,
 	const double **conductivity, const double *inv_capacitance) :
 
-	CondensedEquationWithoutLeakage(processors.size(), _node_count,
+	CondensedEquation(processors.size(), _node_count,
 		_sampling_interval, _ambient_temperature,
 		conductivity, inv_capacitance),
 	leakage(processors)
 {
 }
 
-size_t CondensedEquation::solve(const double *dynamic_power,
+size_t LeakageCondensedEquation::solve(const double *dynamic_power,
 	double *temperature, double *total_power, size_t step_count)
 {
 	size_t i, j, k, it;
@@ -301,22 +301,9 @@ size_t read_config_line(str_pair *table, size_t max, const std::string &line)
 	return count;
 }
 
-Hotspot::Hotspot(const Architecture &architecture, const Graph &graph,
-	const std::string &floorplan_filename, const std::string &config_filename,
-	const std::string &config_line) :
-
-	processors(architecture.get_processors()), processor_count(processors.size()),
-	tasks(graph.get_tasks()), task_count(tasks.size()),
-	deadline(graph.get_deadline())
+Hotspot::Hotspot(const std::string &floorplan_filename,
+	const std::string &config_filename, const std::string &config_line)
 {
-#ifndef SHALLOW_CHECK
-	if (!processor_count)
-		throw std::runtime_error("There are no processors.");
-
-	if (!task_count)
-		throw std::runtime_error("There are no tasks.");
-#endif
-
 	config = default_thermal_config();
 
 	if (!config_filename.empty()) {
@@ -339,10 +326,8 @@ Hotspot::Hotspot(const Architecture &architecture, const Graph &graph,
 	populate_R_model(model, floorplan);
 	populate_C_model(model, floorplan);
 
-	if (processor_count != floorplan->n_units)
-		throw std::runtime_error("The architecture does not match the floorplan.");
-
 	node_count = model->block->n_nodes;
+	processor_count = floorplan->n_units;
 
 	sampling_interval = config.sampling_intvl;
 	ambient_temperature = config.ambient;
@@ -377,139 +362,152 @@ void Hotspot::get_conductance(matrix_t &conductance) const
 
 /******************************************************************************/
 
-HotspotWithoutLeakage::HotspotWithoutLeakage(
-	const Architecture &architecture, const Graph &graph,
-	const std::string &floorplan, const std::string &config,
+BasicCondensedEquationHotspot::BasicCondensedEquationHotspot(
+	const std::string &_floorplan, const std::string &config,
 	const std::string &config_line) :
 
-	Hotspot(architecture, graph, floorplan, config, config_line),
-	dynamic_power(processors, tasks, deadline, sampling_interval)
+	Hotspot(_floorplan, config, config_line)
 {
-	CondensedEquationWithoutLeakage *equation = new CondensedEquationWithoutLeakage(
+	CondensedEquation *equation = new CondensedEquation(
 		processor_count, node_count, sampling_interval, ambient_temperature,
 		(const double **)model->block->b, model->block->inva);
 
 	condensed_equation = (void *)equation;
 }
 
-HotspotWithoutLeakage::~HotspotWithoutLeakage()
+BasicCondensedEquationHotspot::~BasicCondensedEquationHotspot()
 {
-	CondensedEquationWithoutLeakage *equation =
-		(CondensedEquationWithoutLeakage *)condensed_equation;
+	CondensedEquation *equation =
+		(CondensedEquation *)condensed_equation;
 	__DELETE(equation);
 }
 
-void HotspotWithoutLeakage::solve(const Schedule &schedule, matrix_t &temperature,
-	matrix_t &power)
+void BasicCondensedEquationHotspot::solve(const matrix_t &power, matrix_t &temperature)
 {
-	dynamic_power.compute(schedule, power);
-
 	temperature.resize(power);
 
-	CondensedEquationWithoutLeakage *equation =
-		(CondensedEquationWithoutLeakage *)condensed_equation;
+	CondensedEquation *equation = (CondensedEquation *)condensed_equation;
 	equation->solve(power.pointer(), temperature.pointer(), power.rows());
 }
 
 /******************************************************************************/
 
-HotspotWithLeakage::HotspotWithLeakage(
+CondensedEquationHotspot::CondensedEquationHotspot(
 	const Architecture &architecture, const Graph &graph,
 	const std::string &floorplan, const std::string &config,
 	const std::string &config_line) :
 
-	Hotspot(architecture, graph, floorplan, config, config_line),
-	dynamic_power(processors, tasks, deadline, sampling_interval)
+	BasicCondensedEquationHotspot(floorplan, config, config_line),
+	dynamic_power(architecture.get_processors(), graph.get_tasks(),
+		graph.get_deadline(), sampling_interval)
 {
-	CondensedEquation *equation = new CondensedEquation(
-		processors, node_count, sampling_interval, ambient_temperature,
-		(const double **)model->block->b, model->block->inva);
+}
+
+void CondensedEquationHotspot::solve(const Schedule &schedule,
+	matrix_t &temperature, matrix_t &power)
+{
+	dynamic_power.compute(schedule, power);
+	BasicCondensedEquationHotspot::solve(power, temperature);
+}
+
+/******************************************************************************/
+
+BasicCondensedEquationLeakageHotspot::BasicCondensedEquationLeakageHotspot(
+	const Architecture &architecture, const std::string &floorplan,
+	const std::string &config, const std::string &config_line) :
+
+	Hotspot(floorplan, config, config_line)
+{
+	LeakageCondensedEquation *equation = new LeakageCondensedEquation(
+		architecture.get_processors(), node_count, sampling_interval,
+		ambient_temperature, (const double **)model->block->b,
+		model->block->inva);
 
 	condensed_equation = (void *)equation;
 }
 
-HotspotWithLeakage::~HotspotWithLeakage()
+BasicCondensedEquationLeakageHotspot::~BasicCondensedEquationLeakageHotspot()
 {
-	CondensedEquation *equation =
-		(CondensedEquation *)condensed_equation;
+	LeakageCondensedEquation *equation =
+		(LeakageCondensedEquation *)condensed_equation;
 	__DELETE(equation);
 }
 
-void HotspotWithLeakage::solve(const Schedule &schedule, matrix_t &temperature,
-	matrix_t &total_power)
+void BasicCondensedEquationLeakageHotspot::solve(const matrix_t &dynamic_power,
+	matrix_t &temperature, matrix_t &total_power)
+{
+	temperature.resize(dynamic_power);
+	total_power.resize(dynamic_power);
+
+	LeakageCondensedEquation *equation =
+		(LeakageCondensedEquation *)condensed_equation;
+
+	equation->solve(dynamic_power.pointer(), temperature.pointer(),
+		total_power.pointer(), dynamic_power.rows());
+}
+
+/******************************************************************************/
+
+CondensedEquationLeakageHotspot::CondensedEquationLeakageHotspot(
+	const Architecture &architecture, const Graph &graph,
+	const std::string &floorplan, const std::string &config,
+	const std::string &config_line) :
+
+	BasicCondensedEquationLeakageHotspot(architecture, floorplan, config, config_line),
+	dynamic_power(architecture.get_processors(), graph.get_tasks(),
+		graph.get_deadline(), sampling_interval)
+{
+}
+
+void CondensedEquationLeakageHotspot::solve(const Schedule &schedule,
+	matrix_t &temperature, matrix_t &total_power)
 {
 	matrix_t power;
 	dynamic_power.compute(schedule, power);
-
-	temperature.resize(power);
-	total_power.resize(power);
-
-	CondensedEquation *equation =
-		(CondensedEquation *)condensed_equation;
-
-	equation->solve(power.pointer(), temperature.pointer(),
-		total_power.pointer(), power.rows());
+	BasicCondensedEquationLeakageHotspot::solve(power, temperature, total_power);
 }
 
 /******************************************************************************/
 
-EventQueue::EventQueue(const Schedule &schedule, double _deadline) :
-	deadline(_deadline), position(0), length(0)
-{
-	size_t processor_count = schedule.processors();
-
-	for (pid_t pid = 0; pid < processor_count; pid++) {
-		const LocalSchedule &local_schedule = schedule[pid];
-		size_t count = local_schedule.size();
-		for (size_t i = 0; i < count; i++) {
-			const ScheduleItem &item = local_schedule[i];
-			events.push_back(Event(pid, item.id, item.start));
-			events.push_back(Event(pid, item.id, item.start + item.duration));
-			length += 2;
-		}
-	}
-
-	std::stable_sort(events.begin(), events.end(), EventQueue::compare_events);
-
-	events.push_back(Event(-1, -1, deadline));
-	length++;
-}
-
-/******************************************************************************/
-
-SteadyStateHotspot::SteadyStateHotspot(const Architecture &architecture,
-	const Graph &graph, const std::string &floorplan, const std::string &config,
+BasicSteadyStateHotspot::BasicSteadyStateHotspot(
+	const Architecture &architecture, const Graph &graph,
+	const std::string &floorplan, const std::string &config,
 	const std::string &config_line) :
 
-	Hotspot(architecture, graph, floorplan, config, config_line), storage(NULL)
+	Hotspot(floorplan, config, config_line),
+	processors(architecture.get_processors()),
+	deadline(graph.get_deadline()),
+	step_count(ceil(deadline / sampling_interval)), storage(NULL)
 {
-	step_count = ceil(deadline / sampling_interval);
+#ifndef SHALLOW_CHECK
+	if (step_count == 0)
+		throw std::runtime_error("The number of steps is zero.");
+#endif
 
 	type_count = processors[0]->size();
 
 #ifndef SHALLOW_CHECK
-	if (step_count == 0)
-		throw std::runtime_error("The number of steps is zero.");
-
 	for (size_t i = 1; i < processor_count; i++)
 		if (type_count != processors[i]->size())
 			throw std::runtime_error("The number of types differs between processors.");
 #endif
 
-	types.resize(task_count);
+	const task_vector_t &tasks = graph.get_tasks();
+	size_t task_count = tasks.size();
 
+	types.resize(task_count);
 	for (size_t i = 0; i < task_count; i++)
 		types[i] = tasks[i]->get_type();
 
 	storage = new Slot(type_count);
 }
 
-SteadyStateHotspot::~SteadyStateHotspot()
+BasicSteadyStateHotspot::~BasicSteadyStateHotspot()
 {
 	__DELETE(storage);
 }
 
-void SteadyStateHotspot::solve(const Schedule &schedule,
+void BasicSteadyStateHotspot::solve(const Schedule &schedule,
 	matrix_t &temperature, matrix_t &power)
 {
 	temperature.resize(step_count, processor_count);
@@ -551,7 +549,7 @@ void SteadyStateHotspot::solve(const Schedule &schedule,
 	}
 }
 
-const double *SteadyStateHotspot::get(const SlotTrace &trace)
+const double *BasicSteadyStateHotspot::get(const SlotTrace &trace)
 {
 	Slot *slot = storage->find(trace);
 
@@ -565,7 +563,7 @@ const double *SteadyStateHotspot::get(const SlotTrace &trace)
 	return power;
 }
 
-double *SteadyStateHotspotWithoutLeakage::compute(const SlotTrace &trace) const
+double *SteadyStateHotspot::compute(const SlotTrace &trace) const
 {
 	double *power = __ALLOC(node_count);
 	double *temperature = __ALLOC(node_count);
@@ -584,7 +582,18 @@ double *SteadyStateHotspotWithoutLeakage::compute(const SlotTrace &trace) const
 	return temperature;
 }
 
-double *SteadyStateHotspotWithLeakage::compute(const SlotTrace &trace) const
+SteadyStateLeakageHotspot::SteadyStateLeakageHotspot(
+	const Architecture &architecture, const Graph &graph,
+	const std::string &floorplan, const std::string &config,
+	const std::string &config_line) :
+
+	BasicSteadyStateHotspot(architecture, graph, floorplan,
+		config, config_line),
+	leakage(architecture.get_processors())
+{
+}
+
+double *SteadyStateLeakageHotspot::compute(const SlotTrace &trace) const
 {
 	size_t i, it;
 
@@ -633,26 +642,17 @@ double *SteadyStateHotspotWithLeakage::compute(const SlotTrace &trace) const
 
 /******************************************************************************/
 
-IterativeHotspot::IterativeHotspot(const Architecture &architecture,
-	const Graph &graph, const std::string &floorplan, const std::string &config,
-	const std::string &config_line, size_t _max_iterations,
-	double _tolerance) :
+IterativeHotspot::IterativeHotspot(const std::string &floorplan,
+	const std::string &config, const std::string &config_line,
+	size_t _max_iterations, double _tolerance) :
 
-	Hotspot(architecture, graph, floorplan, config, config_line),
-	dynamic_power(processors, tasks, deadline, sampling_interval),
+	Hotspot(floorplan, config, config_line),
 	max_iterations(_max_iterations), tolerance(_tolerance)
 {
 }
 
-void IterativeHotspot::solve(const Schedule &schedule,
-	matrix_t &temperature, matrix_t &power)
-{
-	dynamic_power.compute(schedule, power);
-	(void)solve(power, temperature);
-}
-
-size_t IterativeHotspot::solve(const matrix_t &power, matrix_t &temperature,
-	const matrix_t &reference_temperature)
+size_t IterativeHotspot::verify(const matrix_t &power,
+	const matrix_t &reference_temperature, matrix_t &temperature)
 {
 	size_t step_count = power.rows();
 
@@ -722,4 +722,28 @@ size_t IterativeHotspot::solve(double *extended_power,
 	__FREE(extended_temperature);
 
 	return iterations;
+}
+
+/******************************************************************************/
+
+EventQueue::EventQueue(const Schedule &schedule, double _deadline) :
+	deadline(_deadline), position(0), length(0)
+{
+	size_t processor_count = schedule.processors();
+
+	for (pid_t pid = 0; pid < processor_count; pid++) {
+		const LocalSchedule &local_schedule = schedule[pid];
+		size_t count = local_schedule.size();
+		for (size_t i = 0; i < count; i++) {
+			const ScheduleItem &item = local_schedule[i];
+			events.push_back(Event(pid, item.id, item.start));
+			events.push_back(Event(pid, item.id, item.start + item.duration));
+			length += 2;
+		}
+	}
+
+	std::stable_sort(events.begin(), events.end(), EventQueue::compare_events);
+
+	events.push_back(Event(-1, -1, deadline));
+	length++;
 }
