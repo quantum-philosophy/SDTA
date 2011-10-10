@@ -377,73 +377,13 @@ void Hotspot::get_conductance(matrix_t &conductance) const
 
 /******************************************************************************/
 
-HotspotWithDynamicPower::HotspotWithDynamicPower(
-	const Architecture &architecture, const Graph &graph,
-	const std::string &floorplan, const std::string &config,
-	const std::string &config_line) :
-
-	Hotspot(architecture, graph, floorplan, config, config_line)
-{
-	types.resize(task_count);
-
-	for (size_t i = 0; i < task_count; i++)
-		types[i] = tasks[i]->get_type();
-}
-
-void HotspotWithDynamicPower::compute_power(const Schedule &schedule,
-	matrix_t &dynamic_power) const
-{
-	pid_t pid;
-
-	size_t step_count = ceil(deadline / sampling_interval);
-
-#ifndef SHALLOW_CHECK
-	if (step_count == 0)
-		throw std::runtime_error("The number of steps is zero.");
-#endif
-
-	dynamic_power.resize(step_count, processor_count);
-	double *ptr = dynamic_power.pointer();
-
-	size_t i, j, task_count, start, end;
-	const Processor *processor;
-	double power;
-
-	/* Here we build a profile for the whole time period of the graph
-	 * including its actual duration (only tasks) plus the gap to
-	 * the deadline.
-	 */
-
-	for (pid = 0; pid < processor_count; pid++) {
-		const LocalSchedule &local_schedule = schedule[pid];
-		task_count = local_schedule.size();
-		processor = processors[pid];
-
-		for (i = 0; i < task_count; i++) {
-			const ScheduleItem &item = local_schedule[i];
-
-			start = floor(item.start / sampling_interval);
-			end = floor((item.start + item.duration) / sampling_interval);
-			power = processor->calc_power(types[item.id]);
-
-#ifndef SHALLOW_CHECK
-			if (end >= step_count)
-				throw std::runtime_error("The duration of the task is too long.");
-#endif
-			for (j = start; j <= end && j < step_count; j++)
-				ptr[j * processor_count + pid] = power;
-		}
-	}
-}
-
-/******************************************************************************/
-
 HotspotWithoutLeakage::HotspotWithoutLeakage(
 	const Architecture &architecture, const Graph &graph,
 	const std::string &floorplan, const std::string &config,
 	const std::string &config_line) :
 
-	HotspotWithDynamicPower(architecture, graph, floorplan, config, config_line)
+	Hotspot(architecture, graph, floorplan, config, config_line),
+	dynamic_power(processors, tasks, deadline, sampling_interval)
 {
 	CondensedEquationWithoutLeakage *equation = new CondensedEquationWithoutLeakage(
 		processor_count, node_count, sampling_interval, ambient_temperature,
@@ -462,7 +402,7 @@ HotspotWithoutLeakage::~HotspotWithoutLeakage()
 void HotspotWithoutLeakage::solve(const Schedule &schedule, matrix_t &temperature,
 	matrix_t &power)
 {
-	compute_power(schedule, power);
+	dynamic_power.compute(schedule, power);
 
 	temperature.resize(power);
 
@@ -478,7 +418,8 @@ HotspotWithLeakage::HotspotWithLeakage(
 	const std::string &floorplan, const std::string &config,
 	const std::string &config_line) :
 
-	HotspotWithDynamicPower(architecture, graph, floorplan, config, config_line)
+	Hotspot(architecture, graph, floorplan, config, config_line),
+	dynamic_power(processors, tasks, deadline, sampling_interval)
 {
 	CondensedEquation *equation = new CondensedEquation(
 		processors, node_count, sampling_interval, ambient_temperature,
@@ -497,17 +438,17 @@ HotspotWithLeakage::~HotspotWithLeakage()
 void HotspotWithLeakage::solve(const Schedule &schedule, matrix_t &temperature,
 	matrix_t &total_power)
 {
-	matrix_t dynamic_power;
-	compute_power(schedule, dynamic_power);
+	matrix_t power;
+	dynamic_power.compute(schedule, power);
 
-	temperature.resize(dynamic_power);
-	total_power.resize(dynamic_power);
+	temperature.resize(power);
+	total_power.resize(power);
 
 	CondensedEquation *equation =
 		(CondensedEquation *)condensed_equation;
 
-	equation->solve(dynamic_power.pointer(), temperature.pointer(),
-		total_power.pointer(), dynamic_power.rows());
+	equation->solve(power.pointer(), temperature.pointer(),
+		total_power.pointer(), power.rows());
 }
 
 /******************************************************************************/
@@ -692,10 +633,21 @@ double *SteadyStateHotspotWithLeakage::compute(const SlotTrace &trace) const
 
 /******************************************************************************/
 
+IterativeHotspot::IterativeHotspot(const Architecture &architecture,
+	const Graph &graph, const std::string &floorplan, const std::string &config,
+	const std::string &config_line, size_t _max_iterations,
+	double _tolerance) :
+
+	Hotspot(architecture, graph, floorplan, config, config_line),
+	dynamic_power(processors, tasks, deadline, sampling_interval),
+	max_iterations(_max_iterations), tolerance(_tolerance)
+{
+}
+
 void IterativeHotspot::solve(const Schedule &schedule,
 	matrix_t &temperature, matrix_t &power)
 {
-	compute_power(schedule, power);
+	dynamic_power.compute(schedule, power);
 	(void)solve(power, temperature);
 }
 
@@ -704,17 +656,15 @@ size_t IterativeHotspot::solve(const matrix_t &power, matrix_t &temperature,
 {
 	size_t step_count = power.rows();
 
-	bool use_reference = !reference_temperature.empty();
-
-	if (use_reference)
-		if (power.cols() != reference_temperature.cols() ||
-			step_count != reference_temperature.rows())
-			throw std::runtime_error("The reference temperature is wrong.");
+	if (power.cols() != reference_temperature.cols() ||
+		step_count != reference_temperature.rows())
+		throw std::runtime_error("The reference temperature is wrong.");
 
 	temperature.resize(power);
 
 	const double *_power = power.pointer();
 	double *_temperature = temperature.pointer();
+	const double *_reference_temperature = reference_temperature.pointer();
 
 	/* Since Hotspot works with power for all thermal nodes,
 	 * and our power is only for the processors, we need to extend it
@@ -728,16 +678,7 @@ size_t IterativeHotspot::solve(const matrix_t &power, matrix_t &temperature,
 		__COPY(_extended_power + i * node_count,
 			_power + i * processor_count, processor_count);
 
-	if (use_reference) {
-		const double *_reference_temperature = reference_temperature.pointer();
-		return solve(_extended_power, _reference_temperature,
-			_temperature, step_count);
-	}
-	else {
-		temperature.nullify();
-		return solve(_extended_power, _temperature,
-			_temperature, step_count);
-	}
+	return solve(_extended_power, _reference_temperature, _temperature, step_count);
 }
 
 size_t IterativeHotspot::solve(double *extended_power,
@@ -747,29 +688,38 @@ size_t IterativeHotspot::solve(double *extended_power,
 
 	set_temp(model, extended_temperature, config.init_temp);
 
-	size_t it;
+	size_t iterations, total;
+	double delta, square_sum;
+	const double *reference;
 
-	for (it = 0; it < max_iterations; it++) {
-		size_t bad = 0;
+	total = processor_count * step_count;
+
+	for (iterations = 0; iterations < max_iterations; iterations++) {
+		square_sum = 0;
 
 		for (size_t i = 0; i < step_count; i++) {
 			compute_temp(model, extended_power + node_count * i,
 				extended_temperature, sampling_interval);
 
 			/* Compare with the reference */
-			const double *tmp = reference_temperature + i * processor_count;
-			for (size_t j = 0; j < processor_count; j++)
-				if (abs(tmp[j] - extended_temperature[j]) >= tolerance) bad++;
+			reference = reference_temperature + i * processor_count;
+			for (size_t j = 0; j < processor_count; j++) {
+				delta = extended_temperature[j] - reference[j];
+				square_sum += delta * delta;
+			}
 
 			/* Copy the new values */
 			__COPY(temperature + i * processor_count,
 				extended_temperature, processor_count);
 		}
 
-		if (bad <= min_mismatches) break;
+		if (std::sqrt(square_sum / double(total)) < tolerance) {
+			iterations++;
+			break;
+		}
 	}
 
 	__FREE(extended_temperature);
 
-	return it;
+	return iterations;
 }

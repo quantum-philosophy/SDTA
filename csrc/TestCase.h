@@ -46,6 +46,18 @@ class TestCase
 			}
 		}
 
+		if (tuning.time_scale != 1) {
+			if (tuning.verbose)
+				std::cout << "Scaling the execution time." << std::endl;
+
+			size_t processor_count = system.nc.size();
+			for (size_t i = 0; i < processor_count; i++) {
+				size_t type_count = system.nc[i].size();
+				for (size_t j = 0; j < type_count; j++)
+					system.nc[i][j] = tuning.time_scale * system.nc[i][j];
+			}
+		}
+
 		graph = new GraphBuilder(system.type, system.link);
 		architecture = new ArchitectureBuilder(system.frequency,
 			system.voltage, system.ngate, system.nc, system.ceff);

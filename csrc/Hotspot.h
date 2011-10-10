@@ -19,6 +19,7 @@ extern "C" {
 #define __COPY(dest, src, size) memcpy(dest, src, sizeof(double) * size)
 
 #include "Leakage.h"
+#include "DynamicPower.h"
 
 class Hotspot
 {
@@ -60,23 +61,9 @@ class Hotspot
 	void get_conductance(matrix_t &conductance) const;
 };
 
-class HotspotWithDynamicPower: public Hotspot
+class HotspotWithoutLeakage: public Hotspot
 {
-	std::vector<unsigned int> types;
-
-	public:
-
-	HotspotWithDynamicPower(const Architecture &architecture, const Graph &graph,
-		const std::string &floorplan, const std::string &config,
-		const std::string &config_line = std::string());
-
-	protected:
-
-	void compute_power(const Schedule &schedule, matrix_t &power) const;
-};
-
-class HotspotWithoutLeakage: public HotspotWithDynamicPower
-{
+	const DynamicPower dynamic_power;
 	void *condensed_equation;
 
 	public:
@@ -90,8 +77,9 @@ class HotspotWithoutLeakage: public HotspotWithDynamicPower
 		matrix_t &power);
 };
 
-class HotspotWithLeakage: public HotspotWithDynamicPower
+class HotspotWithLeakage: public Hotspot
 {
+	const DynamicPower dynamic_power;
 	void *condensed_equation;
 
 	public:
@@ -275,10 +263,10 @@ class EventQueue
 	}
 };
 
-class IterativeHotspot: public HotspotWithDynamicPower
+class IterativeHotspot: public Hotspot
 {
+	const DynamicPower dynamic_power;
 	const size_t max_iterations;
-	const size_t min_mismatches;
 	const double tolerance;
 
 	public:
@@ -286,11 +274,7 @@ class IterativeHotspot: public HotspotWithDynamicPower
 	IterativeHotspot(const Architecture &architecture, const Graph &graph,
 		const std::string &floorplan, const std::string &config,
 		const std::string &config_line, size_t _max_iterations,
-		size_t _min_mismatches, double _tolerance) :
-
-		HotspotWithDynamicPower(architecture, graph, floorplan, config, config_line),
-		max_iterations(_max_iterations), min_mismatches(_min_mismatches),
-		tolerance(_tolerance) {}
+		double _tolerance);
 
 	void solve(const Schedule &schedule, matrix_t &temperature, matrix_t &power);
 	size_t solve(const matrix_t &power, matrix_t &temperature,
