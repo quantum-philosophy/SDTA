@@ -31,9 +31,7 @@ classdef Hotspot < handle
     function [ T, time ] = solve(hs, power)
       start = tic;
 
-      [ A, B ] = hs.constructBand(power, hs.samplingInterval);
-
-      Y = A \ B;
+      Y = hs.ce(power);
 
       [ steps, cores ] = size(power);
 
@@ -125,6 +123,41 @@ classdef Hotspot < handle
       A(:, p) = -ones(nm, 1);
 
       A = spdiags(A, d, nm, nm);
+    end
+
+    function Y = band(hs, P)
+      [ A, B ] = hs.constructBand(P, hs.samplingInterval);
+      Y = A \ B;
+    end
+
+    function Y = ce(hs, P)
+      [ m, cores ] = size(P);
+      n = hs.nodes;
+      nm = n * m;
+
+      P = [ P, zeros(m, n - cores) ];
+
+      t = hs.samplingInterval;
+
+      [ K, G ] = hs.calculateCoefficients(t);
+
+      P = zeros(n, m);
+      Q = zeros(n, m);
+      Q(:, 1) = G * transpose(B(1, :));
+      P(:, 1) = Q(:, 1);
+      for i = 2:m
+        Q(:, i) = G * transpose(B(i, :));
+        P(:, i) = K * P(:, i - 1) + Q(:, i);
+      end
+
+      Y = zeros(nm, 1);
+      Y(1:n) = model.DV * diag(1 ./ (1 - exp(t * m * model.DL))) * model.DVT * P(:, m);
+
+      for i = 2:m
+        op = (i - 2) * n + 1;
+        on = op + n;
+        Y(on:(on + n - 1)) = K * Y(op:(op + n - 1)) + Q(:, i - 1);
+      end
     end
   end
 end
