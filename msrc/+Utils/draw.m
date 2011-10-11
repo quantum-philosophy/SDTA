@@ -32,4 +32,8 @@ function draw(x, y, o, varargin)
   end
 
   xlim([ x(1), x(end) ]);
+
+  if isfield(o, 'legend')
+    legend(o.legend{:});
+  end
 end
