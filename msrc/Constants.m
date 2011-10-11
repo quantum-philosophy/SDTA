@@ -1,7 +1,7 @@
 classdef Constants < handle
   properties (Constant)
     % Working directory, everything goes here
-    workingDirectory = '../build/test';
+    workingDirectory = [ Constants.thisDirectory, '/../build/test' ];
 
     % HotSpot version
     hotspotVersion = '5.0';
@@ -28,5 +28,13 @@ classdef Constants < handle
 
     % Temperature runaway
     temperatureRunaway = 120 + Constants.degreeKelvin; % K
+  end
+
+  methods (Static)
+    function result = thisDirectory
+      filename = mfilename('fullpath');
+      attrs = regexp(filename, '^(.*)/[^/]+$', 'tokens');
+      result = attrs{1}{1};
+    end
   end
 end

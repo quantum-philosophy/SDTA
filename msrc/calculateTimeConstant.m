@@ -4,10 +4,9 @@ clc;
 name = '001_030';
 
 tgff = Utils.path([ name, '.tgffopt' ]);
-system = Utils.path([ name, '.sys' ]);
-hotspot = Utils.path('hotspot.config');
 floorplan = Utils.path([ name, '_temp.flp' ]);
-params = Utils.path('parameters.config');
+config = Utils.path('hotspot.config');
+config_line = '';
 
 processorCount = Utils.readParameter(tgff, 'table_cnt');
 nodeCount = 4 * processorCount + 12;
@@ -26,7 +25,7 @@ for i = 1:length(processorArea)
   area = processorArea(i);
 
   Utils.generateFloorplan(floorplan, processorCount, area);
-  [ G, C ] = Optima.get_coefficients(system, floorplan, hotspot, params);
+  [ G, C ] = Optima.get_coefficients(floorplan, config, config_line);
 
   G = G(1:processorCount, 1:processorCount);
   C = C(1:processorCount);
