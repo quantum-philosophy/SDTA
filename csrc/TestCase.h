@@ -160,6 +160,12 @@ class TestCase
 				hotspot = new SteadyStateHotspot(
 					*architecture, *graph, _floorplan, _hotspot, tuning.hotspot);
 		}
+		else if (tuning.solution == "precise_steady_state") {
+			if (tuning.leakage)
+				throw std::runtime_error("Not implemented yet.");
+			hotspot = new PreciseSteadyStateHotspot(
+				*architecture, *graph, _floorplan, _hotspot, tuning.hotspot);
+		}
 		else throw std::runtime_error("The solution method is unknown.");
 	}
 

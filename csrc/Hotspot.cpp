@@ -652,6 +652,49 @@ double *SteadyStateLeakageHotspot::compute(const SlotTrace &trace) const
 
 /******************************************************************************/
 
+PreciseSteadyStateHotspot::PreciseSteadyStateHotspot(
+	const Architecture &architecture, const Graph &graph,
+	const std::string &floorplan, const std::string &config,
+	const std::string &config_line) :
+
+	Hotspot(floorplan, config, config_line),
+	dynamic_power(architecture.get_processors(), graph.get_tasks(),
+		graph.get_deadline(), sampling_interval)
+{
+}
+
+void PreciseSteadyStateHotspot::solve(const Schedule &schedule,
+	matrix_t &temperature, matrix_t &power)
+{
+	dynamic_power.compute(schedule, power);
+	solve(power, temperature);
+}
+
+void PreciseSteadyStateHotspot::solve(const matrix_t &_power, matrix_t &_temperature)
+{
+	size_t step_count = _power.rows();
+	_temperature.resize(_power);
+
+	double *extended_power = __ALLOC(node_count);
+	double *extended_temperature = __ALLOC(node_count);
+
+	const double *power = _power.pointer();
+	double *temperature = _temperature.pointer();
+
+	memset(extended_power, 0, sizeof(double) * node_count);
+
+	for (size_t i = 0; i < step_count; i++) {
+		__COPY(extended_power, power + i * processor_count, processor_count);
+		steady_state_temp(model, extended_power, extended_temperature);
+		__COPY(temperature + i * processor_count, extended_temperature, processor_count);
+	}
+
+	__FREE(extended_power);
+	__FREE(extended_temperature);
+}
+
+/******************************************************************************/
+
 IterativeHotspot::IterativeHotspot(const std::string &floorplan,
 	const std::string &config, const std::string &config_line,
 	size_t _max_iterations, double _tolerance) :

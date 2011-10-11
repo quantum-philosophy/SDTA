@@ -266,6 +266,21 @@ class SteadyStateLeakageHotspot: public BasicSteadyStateHotspot
 	double *compute(const SlotTrace &trace) const;
 };
 
+class PreciseSteadyStateHotspot: public Hotspot
+{
+	const DynamicPower dynamic_power;
+
+	public:
+
+	PreciseSteadyStateHotspot(
+		const Architecture &architecture, const Graph &graph,
+		const std::string &floorplan, const std::string &config,
+		const std::string &config_line);
+
+	void solve(const Schedule &schedule, matrix_t &temperature, matrix_t &power);
+	void solve(const matrix_t &power, matrix_t &temperature);
+};
+
 class IterativeHotspot: public Hotspot
 {
 	const size_t max_iterations;
