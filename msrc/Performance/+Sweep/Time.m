@@ -6,7 +6,7 @@ classdef Time < Sweep.Basic
   methods
     function sweep = Time(test, timeScale)
       sweep = sweep@Sweep.Basic(test);
-      sweep.variable = 'Time, s';
+      sweep.variable = 'Application Time, s';
       sweep.timeScale = timeScale;
     end
   end

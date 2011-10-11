@@ -33,7 +33,7 @@ classdef Basic < handle
       sweep.floorplan = Utils.path([ test, '.flp' ]);
       sweep.params = Utils.path('parameters.config');
 
-      sweep.title = 'Computational time';
+      sweep.title = 'Performance';
       sweep.variable = 'Variable';
 
       sweep.hotspot = Hotspot(sweep.floorplan, ...
@@ -43,9 +43,9 @@ classdef Basic < handle
     function perform(sweep)
       fprintf('%15s%15s%15s%15s%15s%15s%15s\n', ...
         'CE, s', ...
-        'UMF, s', 'UMF RMSE', ...
-        'HotSpot, s', 'HotSpot RMSE', ...
-        'SS, s', 'SS RMSE');
+        'UMF, s', 'Error(UMF)', ...
+        'HS, s', 'Error(HS)', ...
+        'SS, s', 'Error(SS)');
 
       sweep.values = zeros(0, 0);
       sweep.times = zeros(0, 4);
@@ -63,9 +63,9 @@ classdef Basic < handle
 
         sweep.times(end + 1, 1:4) = [ tce, tml, ths, tss ];
 
-        Eml = Utils.RMSE(Tce, Tml);
-        Ehs = Utils.RMSE(Tce, Ths);
-        Ess = Utils.RMSE(Tce, Tss);
+        Eml = sweep.error(Tce, Tml);
+        Ehs = sweep.error(Tce, Ths);
+        Ess = sweep.error(Tce, Tss);
 
         fprintf('%15.4f%15.4f%15.2e%15.4f%15.2e%15.4f%15.2e\n', ...
           tce, tml, mean(Eml), ths, mean(Ehs), tss, mean(Ess));
@@ -80,9 +80,10 @@ classdef Basic < handle
       options = struct(...
         'title', sweep.title, ...
         'xlabel', sweep.variable, ...
-        'ylabel', 'log(Time, s)');
+        'ylabel', 'log(Computational Time, s)', ...
+        'marker', true);
 
-      Utils.draw(sweep.values, sweep.times, options, 'Marker', 'o');
+      Utils.draw(sweep.values, sweep.times, options);
       set(gca, 'YScale', 'log');
 
       legend('CE', 'UMF', 'HS', 'SS');
@@ -142,6 +143,26 @@ classdef Basic < handle
       end
 
       t = t / sweep.tryCount;
+    end
+
+    function e = error(sweep, T1, T2)
+      e = sweep.rmse(T1, T2);
+    end
+
+    function e = rmse(sweep, T1, T2)
+      e = Utils.RMSE(T1, T2);
+    end
+
+    function e = max(sweep, T1, T2)
+      e = max(T2);
+    end
+
+    function e = corridor(sweep, T1, T2)
+      mn1 = min(T1);
+      mx1 = max(T1);
+      mn2 = min(T2);
+      mx2 = max(T2);
+      e = (mx1 - mn1) - (mx2 - mn2);
     end
   end
 end

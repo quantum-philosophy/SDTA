@@ -16,6 +16,7 @@ classdef Constants < handle
 
     % Visualization
     roundRobinColors = { [ 87/255, 181/255, 232/255 ], [ 230/255, 158/255, 0 ], 'r', 'g', 'm', 'y', 'c' };
+    roundRobinMarkers = { 'o', 'x', 'v', 's', '^', '+' };
 
     % Kelvin to Celsius
     degreeKelvin = 273.15; % K

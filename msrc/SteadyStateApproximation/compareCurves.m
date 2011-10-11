@@ -26,7 +26,7 @@ Tce = Optima.solve(system, floorplan, hotspot, params, ...
   config(0, 'condensed_equation', powerScale));
 
 Tss = Optima.solve(system, floorplan, hotspot, params, ...
-  config(0, 'precise_steady_state', powerScale));
+  config(0, 'steady_state', powerScale));
 
 samplingInterval = Utils.readParameter(hotspot, '-sampling_intvl');
 
