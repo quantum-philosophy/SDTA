@@ -62,9 +62,9 @@ struct SystemTuning: public Tuning
 	double deadline_ratio;
 	double power_scale;
 	double time_scale;
-	std::string hotspot;
 	bool reorder_tasks;
-	bool steady_state;
+	std::string solution;
+	std::string hotspot;
 	bool leakage;
 	bool verbose;
 
@@ -73,7 +73,7 @@ struct SystemTuning: public Tuning
 		power_scale(1.0),
 		time_scale(1.0),
 		reorder_tasks(false),
-		steady_state(false),
+		solution("condensed_equation"),
 		leakage(true),
 		verbose(false) {}
 

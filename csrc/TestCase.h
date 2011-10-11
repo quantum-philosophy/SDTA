@@ -143,15 +143,7 @@ class TestCase
 #endif
 		}
 
-		if (tuning.steady_state) {
-			if (tuning.leakage)
-				hotspot = new SteadyStateLeakageHotspot(
-					*architecture, *graph, _floorplan, _hotspot, tuning.hotspot);
-			else
-				hotspot = new SteadyStateHotspot(
-					*architecture, *graph, _floorplan, _hotspot, tuning.hotspot);
-		}
-		else {
+		if (tuning.solution == "condensed_equation") {
 			/* People want leakage! */
 			if (tuning.leakage)
 				hotspot = new CondensedEquationLeakageHotspot(
@@ -160,6 +152,15 @@ class TestCase
 				hotspot = new CondensedEquationHotspot(
 					*architecture, *graph, _floorplan, _hotspot, tuning.hotspot);
 		}
+		else if (tuning.solution == "steady_state") {
+			if (tuning.leakage)
+				hotspot = new SteadyStateLeakageHotspot(
+					*architecture, *graph, _floorplan, _hotspot, tuning.hotspot);
+			else
+				hotspot = new SteadyStateHotspot(
+					*architecture, *graph, _floorplan, _hotspot, tuning.hotspot);
+		}
+		else throw std::runtime_error("The solution method is unknown.");
 	}
 
 	~TestCase()

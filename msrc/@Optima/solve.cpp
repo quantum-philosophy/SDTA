@@ -32,7 +32,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	clock_t begin, end;
 	double elapsed;
 
-	if (!tuning.steady_state) {
+	if (tuning.solution == "condensed_equation") {
 		DynamicPower dynamic_power(test.architecture->get_processors(),
 			test.graph->get_tasks(), test.graph->get_deadline(),
 			test.hotspot->get_sampling_interval());
