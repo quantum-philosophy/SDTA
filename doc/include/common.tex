@@ -11,3 +11,16 @@
 \newcommand{\dindex}[3]{#1_{#2,\;#3}}
 
 \newcommand{\url}[1]{Web address goes here}
+
+\newcommand{\innerimage}[3]{
+  \includegraphics[clip=true, trim=#2, width=\linewidth]{assets/#1}
+  \caption{#3}
+  \label{fig:#1}
+}
+
+\newcommand{\image}[3]{
+  \begin{figure}
+    \centering
+    \innerimage{#1}{#2}{#3}
+  \end{figure}
+}

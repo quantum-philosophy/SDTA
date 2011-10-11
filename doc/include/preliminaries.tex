@@ -10,4 +10,4 @@ For convenience, in the rest of the paper we use the following denotation:
   C \frac{dT}{dt} = A T + B
 \end{equation}
 
-HotSpot comes with a tool of the same name to perform all the calculations. If we are interested in the transient temperature, it solves \equref{eq:initial} using the Runge-Kutta numerical method. When we need to get only the steady-state temperature, $\frac{dT}{dt}$ becomes zero leaving a linear system, which is HotSpot solves the linear system with help of the regular LU decomposition.
+HotSpot comes with a tool of the same name to perform all the calculations. If we are interested in the transient temperature, it solves \equref{eq:initial} using the Runge-Kutta numerical method. When we need to get only the steady-state temperature, $\frac{dT}{dt}$ becomes zero, and \equref{eq:initial} turned into a linear system, which HotSpot solves using the LU decomposition.

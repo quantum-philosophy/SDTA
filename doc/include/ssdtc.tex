@@ -1,7 +1,7 @@
 \subsection{Problem Formulation}
 We consider a multiprocessor system with a set of processing elements $\Pi = \{ \pi_i: i = 1 \dots N_p \}$. The system executes a periodic application with the overall period $\tau$ which is discretized into $N_s$ intervals $\triangle \tau = \{ \triangle \tau_j: j = 1 \dots N_s \}$. The time intervals $\triangle \tau_{ij}$ are small enough to assume that the power consumption and the temperature of each processing element $\pi_i$ are constant within these intervals. We assume that the power profile $P = \{ p_{ij}: i = 1 \dots N_p, j = 1 \dots N_s \}$, where $p_{ij}$ is the power consumption of the $i$th core during the $j$th time interval, is also periodic. After the stabilization process, the temperature profile of the system becomes periodic as well and defined as $T = \{ T_{ij}: i = 1 \dots N_p, j = 1 \dots N_s \}$, ${T_{ij}}$ corresponds to the temperature of the ${i}$th core on the $j$th time interval. Such periodic temperature profile is called the steady-state dynamic temperature curve (SSDTC).
 
-Given:
+Now we can formulate the problem. Given:
 \begin{itemize}
   \item A multiprocessor system running a periodic application.
   \item The periodic power profile $P$ of the system.
@@ -17,15 +17,19 @@ Find:
 Furthermore, we want to be able to perform this procedure as quick as possible with a desired accuracy in order to use it for solving different optimization problems where such temperature curves have to be calculated a very large number of times. An example of such problem is the reliability-aware task allocation and scheduling given in \secref{sec:results}.
 
 \subsection{Iterative Solution with HotSpot}
-One approach to find the SSDTC is to call the HotSpot simulator with a very long power profile composed of one repeating chunk. In this case, we get a huge temperature profile, and we can take only its tail, that corresponds to the last chunk in the power profile. Another way to obtain the SSDTC is to call the simulator a number of times each time starting from the temperature that we got during the call before. The number of iterations required to get the steady-state temperature profile depends on the accuracy that we are trying to achieve. It also depends a lot on the application itself and, consequently, on the power profile. For example, if we have a short application with a low power consumption, then it will take a lot of iterations and, therefore, a lot of simulation time for the temperature to stabilize.
+One approach to find the SSDTC is to call the HotSpot simulator with a very long power profile composed of one repeating chunk. In this case, we get a huge temperature profile, and we can take only its tail that corresponds to the last chunk in the power profile. Another way to obtain the SSDTC is to call the simulator a number of times each time starting from the temperature that we got during the previous call.
+
+\image{hotspot-one-realization}{50 200 50 200}{The comparison of two temperature profiles for one processing unit running an application of $30 \; ms$. The blue one is the steady-state dynamic temperature curve (the ground truth), the second one is obtain with one HotSpot simulation.}
+
+The number of iterations required to get the steady-state temperature profile depends on the accuracy that we are trying to achieve. It also depends a lot on the application itself and, consequently, on its power profile. This is an especially urgent issue for tasks that have a short execution time relative to the thermal time constant of the die. In this case temperature does not have time to reach its steady-state value during executing of one task, but it is still gradually increasing in average. This leads to a large number iterations that the simulator is required to perform. An example is given on \figref{fig:hotspot-one-realization}, where the blue curve represents the ground truth, and the orange one shows one first simulation of HotSpot.
 
 \subsection{Direct Analytical Solution}
-In order to deal with the problem, we use the analytical approach. First of all, we need to be able to solve \equref{eq:initial} efficiently. The direct solution is:
+In order to deal with the problem, we use an analytical approach. The direct solution of \equref{eq:initial} is given as the following:
 \begin{equation} \label{eq:solution}
-  T(t) = e^{C^{-1}A \cdot t} \cdot T_0 + (C^{-1} \cdot A)^{-1}(e^{C^{-1}A \cdot t} - I)C^{-1} \cdot B
+  T(t) = e^{C^{-1}A t} \; T_0 + (C^{-1} A)^{-1}(e^{C^{-1}A t} - I)C^{-1} B
 \end{equation}
 
-Here we need to find the matrix exponential of $C^{-1} \cdot A \cdot t$, but it would be easier to do if the matrix were symmetric, because a real symmetric matrix is diagonalizable and has independent (orthogonal) real eigenvectors:
+Since we want to be efficient, we shall go into details of the solution. Here we need to find the matrix exponential of the matrix $C^{-1} A \; t$, but it would be much easier to accomplish this if the matrix were symmetric, because a real symmetric matrix is diagonalizable and has independent (orthogonal) real eigenvectors:
 \begin{align}
   & A = U \cdot \Lambda \cdot U^T \label{eq:eigenvalue-decomposition} \\
   & e^A = e^{U \cdot \Lambda \cdot U^T} = U \cdot e^{\Lambda} \cdot U^T \nonumber \\
