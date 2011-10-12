@@ -147,9 +147,14 @@ To get the whole picture, the system can be written as:
   \right] \nonumber
 \end{align}
 
-$\mathbb{A}$ is a square matrix of the dimensions $N_n N_s \times N_n N_s$. $\mathbb{Y}$ and $\mathbb{B}$ are vectors of the length $N_n N_s$. This is the system that can give us the desired SSDTC.
+$\mathbb{A}$ is a square matrix of the dimensions $N_n N_s \times N_n N_s$. $\mathbb{Y}$ and $\mathbb{B}$ are vectors of the length $N_n N_s$. This is the system that can give us the desired SSDTP.
 
-Such systems could be extremely big, especially when we want to achieve a high level of accuracy and, therefore, the power profile contains a lot of steps $N_s$. Each new step is $N_n$ new equations in the system given by \equref{eq:system}. Also the complexity grows very rapidly with the number of processing elements $N_p$, since in the HotSpot thermal model $N_n$, the number of thermal nodes, is equal to $4 N_p + 12$ \cite{rao2008}. All in all, we need to find a fast and accurate way to solve \equref{eq:system}.
+Such systems could be extremely big, especially when we want to achieve a high level of accuracy and, therefore, the power profile contains a lot of steps $N_s$. Each new step is $N_n$ new equations in the system given by \equref{eq:system}. Also the complexity grows very rapidly with the number of processing elements $N_p$, since in the HotSpot thermal model the number of thermal nodes $N_n$ is dependent on it according to the equation \cite{rao2008}:
+\[
+  N_n = 4 N_p + 12
+\]
+
+Therefore, \emph{each} new processing element increases \emph{each} matrix $K_i$ by 4 rows and 4 columns, and \emph{each} vector $Y_i$ and $Q_i$ by 4 elements. All in all, a fast and accurate approach to solve \equref{eq:system} is required.
 
 \subsection{Condensed Equation}
 The system that we have is described with the following recurrent equation:

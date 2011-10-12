@@ -3,14 +3,15 @@
 
 \newcommand{\ssdtc}{Steady-State Dynamic Temperature Curve}
 
-\title{Fast and Accurate Steady-State\\Dynamic Temperature Analysis}
+\title{Accurate and Fast Steady-State\\Dynamic Temperature Analysis}
 \author{Min Bao, Petru Eles, Zebo Peng, and Ivan Ukhov}
 
 \begin{document}
   \maketitle
 
   \begin{abstract}
-    In this paper we propose a fast and accurate approach for the steady-state dynamic temperature curve (SSDTC) calculation.
+    The temperature analysis is one of the most important components of a well-established design of an embedded system. Whenever it is possible, system architects are trying to take it into account in order to produce results of a higher quality in sense of, for example, reliability and energy consumption. An accurate and fast temperature estimation is not an easy goal to achieve, since the temperature variation is a considerably complicated process that depends on a lot of different parameters, such as the dynamic power consumption and power leakage of the die. The problem becomes much more severe when we make a little step further and put it inside an optimization loop where this type of estimation needs to be performed thousands of times. In this case, the solution should be not only accurate, but also computationally cheap to find. In this paper we propose such a technique that satisfies both criteria, accuracy and speed. Our particular focus of interest is \emph{multiprocessor} system-on-chips that have \emph{periodic} power and, consequently, temperature profiles (for example, the system may execute a periodic application). The proposed solution is analytical, therefore, it is exact from the perspective of the underlying model, also it is fast enough to be used in such search heuristics as the genetic algorithms, that we have chosen to demonstrate our approach.
+
   \end{abstract}
 
   \section{Introduction}
@@ -18,6 +19,9 @@
 
   \section{Preliminaries}
   \input{include/preliminaries.tex}
+
+  \section{Prior Work and Motivation}
+  \input{include/motivation.tex}
 
   \section{\ssdtc}
   \input{include/ssdtc.tex}
