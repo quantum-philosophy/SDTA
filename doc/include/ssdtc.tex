@@ -1,17 +1,16 @@
 \subsection{Problem Formulation}
-We consider a multiprocessor system with a set of processing elements $\Pi = \{ \pi_i: i = 1 \dots N_p \}$. The system executes a periodic application with the overall period $\tau$ which is discretized into $N_s$ intervals $\triangle \tau = \{ \triangle \tau_j: j = 1 \dots N_s \}$. The time intervals $\triangle \tau_{ij}$ are small enough to assume that the power consumption and the temperature of each processing element $\pi_i$ are constant within these intervals. We assume that the power profile $P = \{ p_{ij}: i = 1 \dots N_p, j = 1 \dots N_s \}$, where $p_{ij}$ is the power consumption of the $i$th core during the $j$th time interval, is also periodic. After the stabilization process, the temperature profile of the system becomes periodic as well and defined as $T = \{ T_{ij}: i = 1 \dots N_p, j = 1 \dots N_s \}$, ${T_{ij}}$ corresponds to the temperature of the ${i}$th core on the $j$th time interval. Such periodic temperature profile is called the steady-state dynamic temperature curve (SSDTC).
+We consider a multiprocessor system-on-chip with a set of processing elements $\Pi = \{ \pi_i: i = 1 \dots N_p \}$. The system executes a periodic application with the overall period $\mathcal{T}$ which is discretized into $N_s$ intervals $\triangle t_j$ for $j = 1 \dots N_s$. The time intervals $\triangle t_j$ are small enough to assume that the power consumption and the temperature of each processing element $\Pi_i$ are constant within these intervals. We assume that the power profile $P = \{ P_{ij}: i = 1 \dots N_p, \; j = 1 \dots N_s \}$, where $P_{ij}$ is the power consumption of the $i$th core during the $j$th time interval, is also periodic. After the stabilization process, the temperature profile of the system becomes periodic as well and defined as $T = \{ T_{ij}: i = 1 \dots N_p, \; j = 1 \dots N_s \}$, ${T_{ij}}$ corresponds to the temperature of the ${i}$th core on the $j$th time interval. Such periodic temperature profile is called the steady-state dynamic temperature curve (SSDTC).
 
 Now we can formulate the problem. Given:
 \begin{itemize}
-  \item A multiprocessor system running a periodic application.
-  \item The periodic power profile $P$ of the system.
-  \item The floorplan of the die, i.e., the location and size of each processing element.
-  \item The configuration of the package including the thermal interface material, the heat spreader, and the heat sink.
-  \item The thermal parameters of the die and the package, i.e., thermal conductivity, thermal capacitance, etc.
+  \item A \emph{periodic} power profile $P$ of a multiprocessor system-on-chip with a set of processing elements $\Pi$.
+  \item The floorplan of the chip, i.e., the location and size of each processing element $\pi_i \in \Pi$.
+  \item The configuration of the package including the thermal interface material, heat spreader, and heat sink.
+  \item The thermal parameters of the die and package (the thermal conductivity, thermal capacitance, etc.).
 \end{itemize}
 Find:
 \begin{itemize}
-  \item The corresponding periodic temperature profile $T$.
+  \item The corresponding \emph{periodic} temperature profile $T$ of the system in its steady state (when the temperature stabilization process is finished).
 \end{itemize}
 
 Furthermore, we want to be able to perform this procedure as quick as possible with a desired accuracy in order to use it for solving different optimization problems where such temperature curves have to be calculated a very large number of times. An example of such problem is the reliability-aware task allocation and scheduling given in \secref{sec:results}.
@@ -31,7 +30,7 @@ In order to deal with the problem, we use an analytical approach. The direct sol
 
 Since we want to be as efficient as possible, we shall go into details of the solution. First, we notice that here we need to calculate the matrix exponential of the matrix $C^{-1} A t$, which would be much easier to accomplish if the matrix were symmetric, because a real symmetric matrix is \emph{diagonalizable} and has \emph{independent} (orthogonal) real eigenvectors:
 \begin{equation} \label{eq:eigenvalue-decomposition}
-  M = U \: \Lambda \: U^T
+  M = U \Lambda U^T
 \end{equation}
 where $M$ is a real symmetric matrix, $U$ is the eigenvectors of $M$, $\Lambda$ is a diagonal matrix of the eigenvalues of $M$ ($\lambda_i$). Therefore, the matrix exponential can be computed using the obtained eigenvalue decomposition:
 \begin{align}
@@ -71,7 +70,7 @@ In this case, $D$ is a symmetric matrix, therefore, it will be easier to find th
 
 Now we are going further and look at the power profile $B$. Each row of $B$ corresponds to a particular time interval $\triangle t_i$ and represents the power consumption $B_i$ during this interval of all processing elements. Each step $i = 1 \dots N_s$ of the iterative process we have a pair $(\triangle t_i, B_i)$ which gives us a temperature vector $T_i$ according to \equref{eq:modified-solution} where $t = \triangle t_i$. The iterative process can be described as the following:
 \begin{align}
-  & Y_{i+1} = K_i \: Y_i + G_i \: B_i \label{eq:ce-recurrent} \\
+  & Y_{i+1} = K_i \: Y_i + G_i \: B_i \label{eq:recurrent-equation} \\
   & K_i = e^{D \: \triangle t_i} \nonumber \\
   & G_i = D^{-1} \left( e^{D \triangle t_i} - I \right) C^{-\frac{1}{2}} \nonumber
 \end{align}
@@ -152,8 +151,42 @@ $\mathbb{A}$ is a square matrix of the dimensions $N_n N_s \times N_n N_s$. $\ma
 
 Such systems could be extremely big, especially when we want to achieve a high level of accuracy and, therefore, the power profile contains a lot of steps $N_s$. Each new step is $N_n$ new equations in the system given by \equref{eq:system}. Also the complexity grows very rapidly with the number of processing elements $N_p$, since in the HotSpot thermal model $N_n$, the number of thermal nodes, is equal to $4 N_p + 12$ \cite{rao2008}. All in all, we need to find a fast and accurate way to solve \equref{eq:system}.
 
+\subsection{Condensed Equation}
+The system that we have is described with the following recurrent equation:
+\begin{equation} \label{eq:ce-recurrent}
+  Y_{i + 1} = K_i \: Y_i + Q_i, \; i = 1 \dots N_s
+\end{equation}
+
+The iterative repetition of this equation leads us to:
+\begin{align}
+  Y_i & = \prod_{j = 1}^{i} K_j \: Y_1 + P_{i - 1}, \; i = 2 \dots N_s + 1 \label{eq:y-recurrent} \\
+  P_1 & = Q_1 \nonumber \\
+  P_i & = \sum_{l = 2}^i \prod_{j = l}^i K_j \: Q_{l - 1} + Q_i, \: i = 2 \dots N_s \nonumber
+\end{align}
+
+The recurrent version of the last equation:
+\begin{equation} \label{eq:p-recurrent}
+  P_i = K_i \: P_{i - 1} + Q_i, \; i = 2 \dots N_s
+\end{equation}
+
+Therefore, we can calculate the final value $Y_{N_s + 1}$ from \equref{eq:y-recurrent}:
+\[
+  Y_{N_s + 1} = \prod_{j = 1}^{N_s} K_j \: Y_1 + P_{N_s}
+\]
+
+Taking into account the boundary condition given by \equref{eq:boundary-condition}, we obtain the following system of linear equations:
+\[
+  (I - \prod_{j = 1}^{N_s} K_j) \: Y_1 = P_{N_s}
+\]
+
+Solving this system, we obtain the first component of the vector $\mathbb{Y}$, that is $Y_1$. ($P_{N_s}$ can be calculated using \equref{eq:p-recurrent}.) All other vectors $Y_i$ for $i = 2 \dots N_s$ are successively found with help of \equref{eq:ce-recurrent}. We also recall that $K_i$ is the matrix exponential, therefore, we use the following simplification:
+\[
+  \prod_{j = i}^l K_j = \prod_{j = i}^l e^{D t_j} = e^{D \sum_{j = i}^l t_j}
+\]
+since the product of each pair $D \: t_j$ and $D \: t_k$ is commutative.
+
 \subsection{Sampling Interval}
-We make an important assumption about the time intervals $\triangle t_i$ in order to perform all the calculations in an efficient manner. We assume that \emph{the time intervals are equal}, $\triangle t_i = \triangle t$ for $i = 1 \dots N_s$, i.e., the distance in time between two successive power measurements stays constant. We refer to this distance as \emph{sampling interval}. The preferable size of this sampling interval depends on a particular application and the level of accuracy that we want to achieve. Having this assumption, the iterative process (\equref{eq:ce-recurrent}) turns into:
+Now, we make an important assumption about the time intervals $\triangle t_i$ in order to perform all the calculations in a much more efficient manner. We assume that \emph{the time intervals are equal}, $\triangle t_i = \triangle t$ for $i = 1 \dots N_s$, i.e., the distance in time between two successive power measurements stays constant. We refer to this distance as \emph{sampling interval}. The preferable size of this sampling interval depends on a particular application and the level of accuracy that we want to achieve. Having this assumption, the iterative process (\equref{eq:recurrent-equation}) turns into:
 \[
   Y_{i+1} = K \: Y_i + G \: B_i
 \]
@@ -163,77 +196,48 @@ where:
   & G = D^{-1} \left( e^{D \: \triangle t} - I \right) C^{-\frac{1}{2}}
 \end{align*}
 
-It should be noted that $K$ and $G$ are constants, since they depend only on the matrices $D$, $C$, and the sampling interval $\triangle t$. Both $Y_i$ and $B_i$ are vectors of the length $N_n$. In this case, the block diagonal of the matrix $\mathbb{A}$ in \equref{eq:system} is composed of the same block: $K_i = K$ for $i = 1 \dots N_s$.
+It should be noted that $K$ and $G$ are constants, since they depend only on the matrices $D$, $C$, and the sampling interval $\triangle t$. Both $Y_i$ and $B_i$ are vectors of the length $N_n$. In this case, the block diagonal of the matrix $\mathbb{A}$ in \equref{eq:system} is composed of the same block, since $K_i = K$ for $i = 1 \dots N_s$.
 
-\subsection{Condensed Equation Method}
-The system that we have is described with the following recurrent equation:
-\begin{equation} \label{eq:recurrent}
-  Y_{i + 1} = K_i \cdot Y_i + Q_i, \; i = 0 \dots (m - 1)
-\end{equation}
-
-The iterative repetition of this equation leads us to:
+Let us come back to the condensed equation presented in the previous section. The recurrent expressions in case of equal time intervals are the following:
 \begin{align}
-  Y_i & = \prod_{j = 0}^{i - 1} K_j \cdot Y_0 + P_{i - 1}, \; i = 1 \dots m \label{eq:y-recurrent} \\
-  P_0 & = Q_0 \nonumber \\
-  P_i & = \sum_{l = 1}^i \prod_{j = l}^i K_j \cdot Q_{l - 1} + Q_i, \: i = 1 \dots (m - 1) \nonumber
-\end{align}
-The last one can be rewritten as:
-\begin{equation} \label{eq:p-recurrent}
-  P_i = K_i \cdot P_{i - 1} + Q_i, \; i = 1 \dots (m - 1)
-\end{equation}
-
-Therefore, we can calculate the final value $Y_m$ from \equref{eq:y-recurrent}:
-\[
-  Y_m = \prod_{j = 0}^{m - 1} K_j \cdot Y_0 + P_{m - 1}
-\]
-
-Taking into account the boundary condition \equref{eq:boundary-condition} and substituting $Y_m$ with $Y_0$, we get the following system of linear equations:
-\[
-  (I - \prod_{j = 0}^{m - 1} K_j) Y_0 = P_{m - 1}
-\]
-
-To solve it, we need to obtain $P_{m - 1}$ from \eqref{eq:p-recurrent}. Once we get $Y_0$, we can use \eqref{eq:recurrent} to get all other vectors $Y_i$.
-
-Now, we know that in case of the fixed sampling interval $K_i = K$. Therefore, the equations become much simpler:
-\begin{align}
-  & Y_{i + 1} = K \cdot Y_i + Q_i, \; i = 0 \dots (m - 1) \nonumber \\
-  & P_i = K \cdot P_{i - 1} + Q_i, \; i = 1 \dots (m - 1) \nonumber \\
-  & (I - K^m) Y_0 = P_{m - 1} \label{eq:linear-system}
+  & Y_{i + 1} = K \: Y_i + Q_i, \; i = 1 \dots N_s \nonumber \\
+  & P_i = K \: P_{i - 1} + Q_i, \; i = 2 \dots N_s \nonumber \\
+  & (I - K^{N_s}) Y_1 = P_{N_s} \label{eq:linear-system}
 \end{align}
 
-In this case, $K^m$ can be found very efficiently, since it is a power of the matrix exponential of $D t_s$ (see \equref{eq:ce-recurrent}):
+Again thank to the matrix exponential $K$ and eigenvalue decomposition, $K^{N_s}$ can be found very efficiently:
 \begin{align*}
-  & K = U \cdot e^{\Lambda} \cdot U^T = U \cdot diag(\lambda_0, \dots, \lambda_{n - 1}) \cdot U^T \\
-  & K^m = U \cdot e^{\Lambda} \cdot U^T \cdot U e^{\Lambda} \cdot U^T \dots U \cdot e^{\Lambda} \cdot U^T = U \cdot e^{m \Lambda} \cdot U^T
+  K^{N_s} & = U \: e^{N_s \triangle t \: \Lambda} \: U^T = U \: e^{\mathcal{T} \Lambda} \: U^T \\
+    & = U \left[
+      \begin{array}{ccc}
+        e^{\mathcal{T} \lambda_1} & \cdots & 0 \\
+        \vdots & \ddots & \vdots \\
+        0 & \cdots & e^{\mathcal{T} \lambda_{N_n}}
+      \end{array}
+    \right] U^T
 \end{align*}
-where $U$ is a matrix of the eigenvectors of $D t_s$ (orthogonal), $\Lambda$ is a diagonal matrix of the eigenvalues of $D t_s$.
+where $U$ is a square matrix of the eigenvectors (orthogonal) of $D \triangle t$, $\Lambda$ is a diagonal matrix of the eigenvalues, and $\mathcal{T}$ is the period of the application.
 
-Substituting $K^m$ from the last equation into \equref{eq:linear-system}, we get:
+Substituting $K^{N_s}$ from the last equation into \equref{eq:linear-system}, we get:
 \[
-  (I - U \cdot e^{m \cdot \Lambda} \cdot U^T) Y_0 = P_{m - 1}
+  (I - U \: e^{\mathcal{T} \Lambda} \: U^T) Y_1 = P_{N_s}
 \]
 
-The identity matrix $I$ can be split into $U U^T$, therefore:
+The identity matrix $I$ can be thought as $U U^T$, therefore:
 \begin{align*}
-  & U (I - e^{m \cdot \Lambda}) U^T \cdot Y_0 = P_{m - 1} \\
-  & Y_0 = U (I - e^{m \cdot \Lambda})^{-1} U^T \cdot P_{m - 1} \\
-  & Y_0 = U \cdot M \cdot U^T \cdot P_{m - 1}
+  & U (I - e^{\mathcal{T} \Lambda}) U^T \: Y_1 = P_{N_s} \\
+  & Y_1 = U (I - e^{\mathcal{T} \Lambda})^{-1} U^T P_{N_s} \\
+  & Y_1 = U M U^T P_{N_s}
 \end{align*}
 where $M$ is a diagonal matrix with the following structure:
 \[
   M = \left[
     \begin{array}{ccc}
-      \frac{1}{1 - e^{m \cdot \lambda_0}} & \cdots & 0 \\
+      \frac{1}{1 - e^{\mathcal{T} \lambda_1}} & \cdots & 0 \\
       \vdots & \ddots & \vdots \\
-      0 & \cdots & \frac{1}{1 - e^{m \cdot \lambda_{n - 1}}}
+      0 & \cdots & \frac{1}{1 - e^{\mathcal{T} \lambda_{N_n}}}
     \end{array}
   \right]
 \]
 
 As we see, in this approach there is no need to inverse any matrix, the solution of the system is obtained by scalar divisions and a similarity transformation with $U$.
-
-We also can benefit from the matrix exponential in the general case where the time intervals could be different:
-\[
-  \prod_{j = i}^l K_j = \prod_{j = i}^l e^{D \cdot t_j} = e^{D \sum_{j = i}^l t_j}
-\]
-since the product of each pair $D \cdot t_j$ and $D \cdot t_k$ is commutative.
