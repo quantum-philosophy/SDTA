@@ -1,13 +1,13 @@
-\subsection{The RC Thermal Model}
-In our analysis we use the well-known thermal model called HotSpot. HotSpot is a modeling methodology for developing compact thermal models based on the popular stacked-layer packaging scheme in modern very large-scale integration systems \cite{huang2006}. The model is based on the following differential equation \cite{rao2008}:
+\subsection{RC Thermal Model}
+In our analysis we use the well-known thermal model called HotSpot \cite{huang2006}. The model is based on the analogy between electrical and thermal circuits and can be described with the following differential equation \cite{rao2008}:
 \[
   C \frac{dT}{dt} + G T = P
 \]
-where $C$ is the thermal capacitance matrix, $G$ is the thermal conductance matrix (equal to $\frac{1}{R}$, where $R$ is the resistance matrix), $P$ is the power dissipation, and $T$ is the temperature vector. The matrices are of the dimensions $n \times n$, the vector is of the length $n$, where $n$ is the number of thermal nodes.
+where $C$ is the thermal capacitance matrix, $G$ is the thermal conductance matrix (equal to $\frac{1}{R}$, where $R$ is the resistance matrix), $P$ is the power dissipation, and $T$ is the temperature vector. The matrices are of the dimensions $N_n \times N_n$, the vector is of the length $N_n$, where $N_n$ is the number of thermal nodes.
 
 For convenience, in the rest of the paper we use the following denotation:
 \begin{equation} \label{eq:initial}
   C \frac{dT}{dt} = A T + B
 \end{equation}
 
-HotSpot comes with a tool of the same name to perform all the calculations. If we are interested in the transient temperature, it solves \equref{eq:initial} using the Runge-Kutta numerical method. When we need to get only the steady-state temperature, $\frac{dT}{dt}$ becomes zero, and \equref{eq:initial} turned into a linear system, which HotSpot solves using the LU decomposition.
+HotSpot comes with a tool of the same name to perform all the calculations. If we are interested in the transient temperature, it solves \equref{eq:initial} using the Runge-Kutta numerical method. When we need to get only the steady-state temperature, $\frac{dT}{dt}$ becomes zero, and \equref{eq:initial} turns into a linear system, which HotSpot solves using the LU decomposition.

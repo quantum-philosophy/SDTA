@@ -19,9 +19,9 @@ Furthermore, we want to be able to perform this procedure as quick as possible w
 \subsection{Iterative Solution with HotSpot}
 One approach to find the SSDTC is to call the HotSpot simulator with a very long power profile composed of one repeating chunk. In this case, we get a huge temperature profile, and we can take only its tail that corresponds to the last chunk in the power profile. Another way to obtain the SSDTC is to call the simulator a number of times each time starting from the temperature that we got during the previous call.
 
-\image{hotspot-one-realization}{50 200 50 200}{The comparison of two temperature profiles for one processing unit running an application of $30 \; ms$. The blue one is the steady-state dynamic temperature curve (the ground truth), the second one is obtain with one HotSpot simulation.}
+\image{hotspot-one-realization}{50 200 50 200}{An example of one HotSpot simulation for one processing element running an application of $1 s$. The ground truth is the real steady-state dynamic temperatures curve that HotSpot is supposed to reach after a number of iterations. The power profile contains $10^4$ steps that corresponds to $10^{-4} s$ sampling interval.}
 
-The number of iterations required to get the steady-state temperature profile depends on the accuracy that we are trying to achieve. It also depends a lot on the application itself and, consequently, on its power profile. This is an especially urgent issue for tasks that have a short execution time relative to the thermal time constant of the die. In this case temperature does not have time to reach its steady-state value during executing of one task, but it is still gradually increasing in average. This leads to a large number iterations that the simulator is required to perform. An example is given on \figref{fig:hotspot-one-realization}, where the blue curve represents the ground truth, and the orange one shows one first simulation of HotSpot.
+The number of iterations required to get the steady-state temperature profile depends on the accuracy that we are trying to achieve. It also depends a lot on the application itself and, consequently, on its power profile. This is an especially urgent issue for tasks that have a short execution time relative to the thermal time constant of the die. In this case temperature does not have time to reach its steady-state value during executing of a task, but it is still gradually increasing on average. This leads to a large number iterations that the simulator is required to perform. An example is given on \figref{fig:hotspot-one-realization}, where the blue curve represents the ground truth (SSDTC), and the orange one shows one first simulation of HotSpot. The sampling interval was chosen to be $10^{-4} \; s$ to capture all power fluctuations due to the task switching activity, resulting in a power profile with $10^4$ steps. The situation is getting \emph{much worse} if we want to take into consideration the leakage power, since in this case we have a loop between temperature and power, and we need to perform extra iterations (indifferent of the chosen solution approach) for temperature and power to converge \cite{liu2007}.
 
 \subsection{Direct Analytical Solution}
 In order to deal with the problem, we use an analytical approach. The direct solution of \equref{eq:initial} is given as the following:
@@ -29,145 +29,141 @@ In order to deal with the problem, we use an analytical approach. The direct sol
   T(t) = e^{C^{-1}A t} \; T_0 + (C^{-1} A)^{-1}(e^{C^{-1}A t} - I)C^{-1} B
 \end{equation}
 
-Since we want to be efficient, we shall go into details of the solution. Here we need to find the matrix exponential of the matrix $C^{-1} A \; t$, but it would be much easier to accomplish this if the matrix were symmetric, because a real symmetric matrix is diagonalizable and has independent (orthogonal) real eigenvectors:
+Since we want to be as efficient as possible, we shall go into details of the solution. First, we notice that here we need to calculate the matrix exponential of the matrix $C^{-1} A t$, which would be much easier to accomplish if the matrix were symmetric, because a real symmetric matrix is \emph{diagonalizable} and has \emph{independent} (orthogonal) real eigenvectors:
+\begin{equation} \label{eq:eigenvalue-decomposition}
+  M = U \: \Lambda \: U^T
+\end{equation}
+where $M$ is a real symmetric matrix, $U$ is the eigenvectors of $M$, $\Lambda$ is a diagonal matrix of the eigenvalues of $M$ ($\lambda_i$). Therefore, the matrix exponential can be computed using the obtained eigenvalue decomposition:
 \begin{align}
-  & A = U \cdot \Lambda \cdot U^T \label{eq:eigenvalue-decomposition} \\
-  & e^A = e^{U \cdot \Lambda \cdot U^T} = U \cdot e^{\Lambda} \cdot U^T \nonumber \\
+  & e^M = e^{U \Lambda U^T} = U \: e^{\Lambda} \: U^T \nonumber \\
   & e^{\Lambda} = \left[
       \begin{array}{ccc}
-        e^{\lambda_0} & \cdots & 0 \\
+        e^{\lambda_1} & \cdots & 0 \\
         \vdots & \ddots & \vdots \\
-        0 & \cdots & e^{\lambda_{n - 1}}
+        0 & \cdots & e^{\lambda_{n}}
       \end{array}
     \right] \nonumber
 \end{align}
-where: $A$ is a real symmetric matrix, $U$ is the eigenvectors of $A$, $\Lambda$ is a diagonal matrix of the eigenvalues of $A$ ($\lambda_i$).
 
-Therefore, we want to keep symmetry of the matrix which matrix exponential we are going to compute. In order to achieve this, we do the following substitution:
+Hence, instead of $C^{-1} A t$ in front of the temperature vector we want to have a symmetry matrix. In order to achieve this, we perform the following substitution:
 \begin{align*}
-  Y & = C^{\frac{1}{2}} \cdot T \\
-  D & = C^{-\frac{1}{2}} \cdot A \cdot C^{-\frac{1}{2}} \\
-  E & = C^{-\frac{1}{2}} \cdot B
+  Y & = C^{\frac{1}{2}} T \\
+  D & = C^{-\frac{1}{2}} A \: C^{-\frac{1}{2}} \\
+  E & = C^{-\frac{1}{2}} B
 \end{align*}
 with the result:
 \begin{align}
-  \frac{dY}{dt} & = D \cdot Y + E \nonumber \\
-  Y(t) & = e^{D \cdot t} \cdot Y_{0} + D^{-1}(e^{D \cdot t} - I)E \label{eq:modified-solution} \\
-  T(t) & = C^{-\frac{1}{2}} \cdot Y(t) \nonumber
+  \frac{dY}{dt} & = D \: Y + E \nonumber \\
+  Y(t) & = e^{D t} Y_0 + D^{-1} (e^{D t} - I) E \label{eq:modified-solution} \\
+  T(t) & = C^{-\frac{1}{2}} Y(t) \nonumber
 \end{align}
 
-Now $D$ is a symmetric matrix, hence, it will be easy to find the matrix exponential of $D \cdot t$ using the eigenvalue decomposition (\equref{eq:eigenvalue-decomposition}):
+In this case, $D$ is a symmetric matrix, therefore, it will be easier to find the matrix exponential of $D \: t$ using the above-mentioned eigenvalue decomposition (\equref{eq:eigenvalue-decomposition}):
 \[
-  e^{D \cdot t} = U \cdot e^{t \cdot \Lambda} \cdot U^T = \left[
+  e^{D t} = U \: e^{\Lambda t} \: U^T = U \left[
       \begin{array}{ccc}
-        e^{t \cdot \lambda_0} & \cdots & 0 \\
+        e^{t \lambda_1} & \cdots & 0 \\
         \vdots & \ddots & \vdots \\
-        0 & \cdots & e^{t \cdot \lambda_{n - 1}}
+        0 & \cdots & e^{t \lambda_{N_n}}
       \end{array}
-    \right]
+    \right] U^T
 \]
 
-Each line of the power profile $B$ contains power values for all cores, denoted as $B_i$, at the same period of time $t_i$. Each step of the iterative process we get a vector of temperature values for all cores according to \equref{eq:modified-solution}:
+Now we are going further and look at the power profile $B$. Each row of $B$ corresponds to a particular time interval $\triangle t_i$ and represents the power consumption $B_i$ during this interval of all processing elements. Each step $i = 1 \dots N_s$ of the iterative process we have a pair $(\triangle t_i, B_i)$ which gives us a temperature vector $T_i$ according to \equref{eq:modified-solution} where $t = \triangle t_i$. The iterative process can be described as the following:
 \begin{align}
-  & Y_{i+1} = K_i \cdot Y_i + G_i \cdot B_i \label{eq:ce-recurrent} \\
-  & K_i = e^{D \cdot t_i} \nonumber \\
-  & G_i = D^{-1}(e^{D \cdot t_i} - I) C^{-\frac{1}{2}} \nonumber
+  & Y_{i+1} = K_i \: Y_i + G_i \: B_i \label{eq:ce-recurrent} \\
+  & K_i = e^{D \: \triangle t_i} \nonumber \\
+  & G_i = D^{-1} \left( e^{D \triangle t_i} - I \right) C^{-\frac{1}{2}} \nonumber
 \end{align}
 
 Since we perform the eigenvalue decomposition of D (\equref{eq:eigenvalue-decomposition}), $D^{-1}$ can be efficiently computed in the following way:
 \[
-  D^{-1} = U \cdot \Lambda^{-1} \cdot U^T = U \left[
+  D^{-1} = U \: \Lambda^{-1} \: U^T = U \left[
       \begin{array}{ccc}
-        \frac{1}{\lambda_0} & \cdots & 0 \\
+        \frac{1}{\lambda_1} & \cdots & 0 \\
         \vdots & \ddots & \vdots \\
-        0 & \cdots & \frac{1}{\lambda_{n - 1}}
+        0 & \cdots & \frac{1}{\lambda_{N_n}}
       \end{array}
     \right] U^T \\
 \]
 therefore:
 \begin{align*}
-  G_i & = U \cdot \Lambda^{-1} \cdot U^T (U \cdot e^{t_i \cdot \Lambda} \cdot U^T - U \cdot U^T) C^{-\frac{1}{2}} = \\
+  G_i & = U \: \Lambda^{-1} \: U^T \left(U \: e^{\Lambda \triangle t_i} \: U^T - U \: U^T \right) C^{-\frac{1}{2}} = \\
       & = U \left[
         \begin{array}{ccc}
-          \frac{e^{t_i \cdot \lambda_0} - 1}{\lambda_0} & \cdots & 0 \\
+          \frac{e^{\triangle t_i \: \lambda_1} - 1}{\lambda_1} & \cdots & 0 \\
           \vdots & \ddots & \vdots \\
-          0 & \cdots & \frac{e^{t_i \cdot \lambda_{n - 1}} - 1}{\lambda_{n - 1}}
+          0 & \cdots & \frac{e^{\triangle t_i \: \lambda_{N_n}} - 1}{\lambda_{N_n}}
         \end{array}
-      \right] U^T \cdot C^{-\frac{1}{2}}
+      \right] U^T \: C^{-\frac{1}{2}}
 \end{align*}
-
-If the time intervals are equal, i.e. the distance in time between two vectors of power values stays the same, the iterative process can be described as the following:
-\[
-  Y_{i+1} = K \cdot Y_i + G \cdot B_i
-\]
-where:
-\begin{align*}
-  & t_i = t_s, \forall i \\
-  & K = e^{D \cdot t_s} \\
-  & G = D^{-1}(e^{D \cdot t_s}-I) C^{-\frac{1}{2}}
-\end{align*}
-
-It should be noted that $K$ and $G$ are constants, since they depend only on the matrices $A$, $C$, and the sampling interval $t_s$.  Both $Y_i$ and $B_i$ are vectors $n \times 1$.
 
 Therefore, in order to find SSDTC, we need to solve the following system of linear equations:
 \[
   \begin{cases}
-    K_0 \cdot Y_0 - Y_1 & = -Q_0 \\
+    K_1 \: Y_1 - Y_2 & = -Q_1 \\
     ... \\
-    K_{m-1} \cdot Y_{m-1} - Y_{m} & = -Q_{m-1}
+    K_{N_s} \: Y_{N_s} - Y_{N_s + 1} & = -Q_{N_s}
   \end{cases}
 \]
-where $Q_i = G_i \cdot B_i$.
-
-Also we have one boundary condition that ensures the temperature to be the same on both sides of the curve:
+where $Q_i = G_i \: B_i$. Also we should take into account the boundary condition which ensures that the temperature has the same values on both sides of the curve:
 \begin{equation} \label{eq:boundary-condition}
-  Y_0 = Y_m
+  Y_1 = Y_{N_s + 1}
 \end{equation}
 
-Taking it into account, we get:
+Hence, the system of linear equations takes the following form:
 \[
   \begin{cases}
-    K_0 \cdot Y_0 - Y_1 & =-Q_0 \\
+    K_1 \: Y_1 - Y_2 & = -Q_1 \\
     ... \\
-    -Y_0 + K_{m-1} \cdot Y_{m-1} & = -Q_{m-1}
+    -Y_1 + K_{N_s} \: Y_{N_s} & = -Q_{N_s}
   \end{cases}
 \]
 
-In this notation, the system can be written as:
+To get the whole picture, the system can be written as:
 \begin{align}
-  & AA \cdot YY = BB \label{eq:system} \\
-  & AA = \left[
+  & \mathbb{A} \: \mathbb{Y} = \mathbb{B} \label{eq:system} \\
+  & \mathbb{A} = \left[
     \begin{array}{ccccc}
-      K_0 & -I & 0 & \cdots & 0 \\
-      0 & K_1 & -I &  & \vdots \\
+      K_1 & -I & 0 & \cdots & 0 \\
+      0 & K_2 & -I &  & \vdots \\
       \vdots &  & \ddots & -I & 0 \\
-      0 &  &  & K_{m-2} & -I \\
-      -I & 0 & \cdots & 0 & K_{m-1}
+      0 &  &  & K_{N_s - 1} & -I \\
+      -I & 0 & \cdots & 0 & K_{N_s}
     \end{array}
   \right] \nonumber \\
-  & YY = \left[
+  & \mathbb{Y} = \left[
     \begin{array}{c}
-      Y_0 \\
       Y_1 \\
       \vdots \\
-      Y_{m-2} \\
-      Y_{m-1}
+      Y_{N_s}
     \end{array}
   \right] \nonumber \\
-  & BB = \left[
+  & \mathbb{B} = \left[
     \begin{array}{c}
-      -Q_0 \\
       -Q_1 \\
       \vdots \\
-      -Q_{m-2} \\
-      -Q_{m-1}
+      -Q_{N_s}
     \end{array}
   \right] \nonumber
 \end{align}
 
-$AA$ is a square matrix $nm \times nm$. $YY$ and $BB$ are vectors $nm \times 1$. This is the system that can give us desired SSDTC. It should be observed that if the sampling interval is constant, the block diagonal of the matrix $AA$ is composed of the same blocks $K$.
+$\mathbb{A}$ is a square matrix of the dimensions $N_n N_s \times N_n N_s$. $\mathbb{Y}$ and $\mathbb{B}$ are vectors of the length $N_n N_s$. This is the system that can give us the desired SSDTC.
 
-Such systems could be extremely big, therefore, we need to find a fast and accurate way to solve them.
+Such systems could be extremely big, especially when we want to achieve a high level of accuracy and, therefore, the power profile contains a lot of steps $N_s$. Each new step is $N_n$ new equations in the system given by \equref{eq:system}. Also the complexity grows very rapidly with the number of processing elements $N_p$, since in the HotSpot thermal model $N_n$, the number of thermal nodes, is equal to $4 N_p + 12$ \cite{rao2008}. All in all, we need to find a fast and accurate way to solve \equref{eq:system}.
+
+\subsection{Sampling Interval}
+We make an important assumption about the time intervals $\triangle t_i$ in order to perform all the calculations in an efficient manner. We assume that \emph{the time intervals are equal}, $\triangle t_i = \triangle t$ for $i = 1 \dots N_s$, i.e., the distance in time between two successive power measurements stays constant. We refer to this distance as \emph{sampling interval}. The preferable size of this sampling interval depends on a particular application and the level of accuracy that we want to achieve. Having this assumption, the iterative process (\equref{eq:ce-recurrent}) turns into:
+\[
+  Y_{i+1} = K \: Y_i + G \: B_i
+\]
+where:
+\begin{align*}
+  & K = e^{D \: \triangle t} \\
+  & G = D^{-1} \left( e^{D \: \triangle t} - I \right) C^{-\frac{1}{2}}
+\end{align*}
+
+It should be noted that $K$ and $G$ are constants, since they depend only on the matrices $D$, $C$, and the sampling interval $\triangle t$. Both $Y_i$ and $B_i$ are vectors of the length $N_n$. In this case, the block diagonal of the matrix $\mathbb{A}$ in \equref{eq:system} is composed of the same block: $K_i = K$ for $i = 1 \dots N_s$.
 
 \subsection{Condensed Equation Method}
 The system that we have is described with the following recurrent equation:
