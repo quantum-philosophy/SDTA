@@ -1,5 +1,5 @@
 \subsection{Problem Formulation}
-We consider a multiprocessor system-on-chip with a set of processing elements $\Pi = \{ \pi_i: i = 1 \dots N_p \}$. The system executes a periodic application with the overall period $\mathcal{T}$ which is discretized into $N_s$ intervals $\triangle t_j$ for $j = 1 \dots N_s$. The time intervals $\triangle t_j$ are small enough to assume that the power consumption and the temperature of each processing element $\Pi_i$ are constant within these intervals. We assume that the power profile $P = \{ P_{ij}: i = 1 \dots N_p, \; j = 1 \dots N_s \}$, where $P_{ij}$ is the power consumption of the $i$th core during the $j$th time interval, is also periodic. After the stabilization process, the temperature profile of the system becomes periodic as well and defined as $T = \{ T_{ij}: i = 1 \dots N_p, \; j = 1 \dots N_s \}$, ${T_{ij}}$ corresponds to the temperature of the ${i}$th core on the $j$th time interval. Such periodic temperature profile is called the steady-state dynamic temperature curve (SSDTC).
+We consider a multiprocessor system-on-chip with a set of processing elements $\Pi = \{ \pi_i: i = 1 \dots N_p \}$. The system executes a periodic application with the overall period $\mathcal{T}$ which is discretized into $N_s$ intervals $\triangle t_j$ for $j = 1 \dots N_s$. The time intervals $\triangle t_j$ are small enough to assume that the power consumption and the temperature of each processing element $\Pi_i$ are constant within these intervals. We assume that the power profile $P = \{ P_{ij}: i = 1 \dots N_p, \; j = 1 \dots N_s \}$, where $P_{ij}$ is the power consumption of the $i$th core during the $j$th time interval, is also periodic. After the stabilization process, the temperature profile of the system becomes periodic as well and defined as $T = \{ T_{ij}: i = 1 \dots N_p, \; j = 1 \dots N_s \}$, ${T_{ij}}$ corresponds to the temperature of the ${i}$th core on the $j$th time interval. Such periodic temperature profile is called the steady-state dynamic temperature profile (SSDTP).
 
 Now we can formulate the problem. Given:
 \begin{itemize}
@@ -22,7 +22,7 @@ One approach to find the SSDTC is to call the HotSpot simulator with a very long
 
 The number of iterations required to get the steady-state temperature profile depends on the accuracy that we are trying to achieve. It also depends a lot on the application itself and, consequently, on its power profile. This is an especially urgent issue for tasks that have a short execution time relative to the thermal time constant of the die. In this case temperature does not have time to reach its steady-state value during executing of a task, but it is still gradually increasing on average. This leads to a large number iterations that the simulator is required to perform. An example is given on \figref{fig:hotspot-one-realization}, where the blue curve represents the ground truth (SSDTC), and the orange one shows one first simulation of HotSpot. The sampling interval was chosen to be $10^{-4} \; s$ to capture all power fluctuations due to the task switching activity, resulting in a power profile with $10^4$ steps. The situation is getting \emph{much worse} if we want to take into consideration the leakage power, since in this case we have a loop between temperature and power, and we need to perform extra iterations (indifferent of the chosen solution approach) for temperature and power to converge \cite{liu2007}.
 
-\subsection{Direct Analytical Solution}
+\subsection{Analytical Solution}
 In order to deal with the problem, we use an analytical approach. The direct solution of \equref{eq:initial} is given as the following:
 \begin{equation} \label{eq:solution}
   T(t) = e^{C^{-1}A t} \; T_0 + (C^{-1} A)^{-1}(e^{C^{-1}A t} - I)C^{-1} B
@@ -157,10 +157,12 @@ Such systems could be extremely big, especially when we want to achieve a high l
 Therefore, \emph{each} new processing element increases \emph{each} matrix $K_i$ by 4 rows and 4 columns, and \emph{each} vector $Y_i$ and $Q_i$ by 4 elements. All in all, a fast and accurate approach to solve \equref{eq:system} is required.
 
 \subsection{Condensed Equation}
-The system that we have is described with the following recurrent equation:
+In this section we shall describe the proposed solution. The system of linear equations, that we want to solve, has the following recurrent structure:
 \begin{equation} \label{eq:ce-recurrent}
   Y_{i + 1} = K_i \: Y_i + Q_i, \; i = 1 \dots N_s
 \end{equation}
+
+The same configuration arises in multiple shooting methods for boundary value problems of ordinary differential equations \cite{stoer2002}.
 
 The iterative repetition of this equation leads us to:
 \begin{align}
@@ -191,7 +193,7 @@ Solving this system, we obtain the first component of the vector $\mathbb{Y}$, t
 since the product of each pair $D \: t_j$ and $D \: t_k$ is commutative.
 
 \subsection{Sampling Interval}
-Now, we make an important assumption about the time intervals $\triangle t_i$ in order to perform all the calculations in a much more efficient manner. We assume that \emph{the time intervals are equal}, $\triangle t_i = \triangle t$ for $i = 1 \dots N_s$, i.e., the distance in time between two successive power measurements stays constant. We refer to this distance as \emph{sampling interval}. The preferable size of this sampling interval depends on a particular application and the level of accuracy that we want to achieve. Having this assumption, the iterative process (\equref{eq:recurrent-equation}) turns into:
+Now, we make an important assumption about the time intervals $\triangle t_i$ in order to perform all the calculations in a much more efficient manner. We assume that \emph{the time intervals are equal}, $\triangle t_i = \triangle t$ for $i = 1 \dots N_s$, i.e., the distance in time between two successive power measurements stays constant. We refer to this distance as the \emph{sampling interval}. The preferable size of this sampling interval depends on a particular application and the level of accuracy that we want to achieve. Having this assumption, the iterative process (\equref{eq:recurrent-equation}) turns into:
 \[
   Y_{i+1} = K \: Y_i + G \: B_i
 \]
@@ -246,3 +248,10 @@ where $M$ is a diagonal matrix with the following structure:
 \]
 
 As we see, in this approach there is no need to inverse any matrix, the solution of the system is obtained by scalar divisions and a similarity transformation with $U$.
+
+\subsection{Performance Comparison}
+We have discussed three different approaches to calculate the steady-state dynamic temperature profile:
+\begin{itemize}
+  \item The iterative solution with the HotSpot simulator.
+  \item The direct analytical solution
+\end{itemize}
