@@ -19,20 +19,19 @@ Furthermore, we want to be able to perform this procedure as quick as possible w
 One approach to find the SSDTC is to call the HotSpot simulator with a very long power profile composed of one repeating chunk. In this case, we get a huge temperature profile, and we can take only its tail that corresponds to the last chunk in the power profile. Another way to obtain the SSDTC is to call the simulator a number of times each time starting from the temperature that we got during the previous call.
 
 \image{hotspot-one-realization}{50 200 50 200}{An example of one HotSpot simulation for one processing element running an application of $1 s$. The ground truth is the real steady-state dynamic temperatures curve that HotSpot is supposed to reach after a number of iterations. The power profile contains $10^4$ steps that corresponds to $10^{-4} s$ sampling interval.}
-
 The number of iterations required to get the steady-state temperature profile depends on the accuracy that we are trying to achieve. It also depends a lot on the application itself and, consequently, on its power profile. This is an especially urgent issue for tasks that have a short execution time relative to the thermal time constant of the die. In this case temperature does not have time to reach its steady-state value during executing of a task, but it is still gradually increasing on average. This leads to a large number iterations that the simulator is required to perform. An example is given on \figref{fig:hotspot-one-realization}, where the blue curve represents the ground truth (SSDTC), and the orange one shows one first simulation of HotSpot. The sampling interval was chosen to be $10^{-4} \; s$ to capture all power fluctuations due to the task switching activity, resulting in a power profile with $10^4$ steps. The situation is getting \emph{much worse} if we want to take into consideration the leakage power, since in this case we have a loop between temperature and power, and we need to perform extra iterations (indifferent of the chosen solution approach) for temperature and power to converge \cite{liu2007}.
 
 \subsection{Analytical Solution}
-In order to deal with the problem, we use an analytical approach. The direct solution of \equref{eq:initial} is given as the following:
+In order to resolve the problem, we use an analytical approach. The direct solution of \equref{eq:initial} is given by the following equation:
 \begin{equation} \label{eq:solution}
   T(t) = e^{C^{-1}A t} \; T_0 + (C^{-1} A)^{-1}(e^{C^{-1}A t} - I)C^{-1} B
 \end{equation}
 
-Since we want to be as efficient as possible, we shall go into details of the solution. First, we notice that here we need to calculate the matrix exponential of the matrix $C^{-1} A t$, which would be much easier to accomplish if the matrix were symmetric, because a real symmetric matrix is \emph{diagonalizable} and has \emph{independent} (orthogonal) real eigenvectors:
+The solution provides us with the transient temperature and holds only when the power vector $B$ is constant. If it is not the case, we need to simulate shorter time intervals where this assumption can take place. Before going to the steady-state case, we perform one important adjustment to the system in order to be more efficient in our future calculations. According to \equref{eq:solution}, we need to compute the matrix exponential of the matrix $C^{-1} A t$. It would be much easier to accomplish if the matrix were symmetric, because a real symmetric matrix is \emph{diagonalizable} and has \emph{independent} (orthogonal) real eigenvectors:
 \begin{equation} \label{eq:eigenvalue-decomposition}
   M = U \Lambda U^T
 \end{equation}
-where $M$ is a real symmetric matrix, $U$ is the eigenvectors of $M$, $\Lambda$ is a diagonal matrix of the eigenvalues of $M$ ($\lambda_i$). Therefore, the matrix exponential can be computed using the obtained eigenvalue decomposition:
+where $M$ is a real symmetric matrix, $U$ is a square matrix of the eigenvectors of $M$, $\Lambda$ is a diagonal matrix composed of the eigenvalues of $M$ ($\lambda_i$), the equation itself is called the eigenvalue decomposition. Once we have such decomposition, the matrix exponential becomes a trivial task:
 \begin{align}
   & e^M = e^{U \Lambda U^T} = U \: e^{\Lambda} \: U^T \nonumber \\
   & e^{\Lambda} = \left[
@@ -44,7 +43,7 @@ where $M$ is a real symmetric matrix, $U$ is the eigenvectors of $M$, $\Lambda$ 
     \right] \nonumber
 \end{align}
 
-Hence, instead of $C^{-1} A t$ in front of the temperature vector we want to have a symmetry matrix. In order to achieve this, we perform the following substitution:
+Hence, instead of $C^{-1} A t$ in front of the variable vector we want to have a symmetry matrix. In order to achieve this, we perform the following substitution:
 \begin{align*}
   Y & = C^{\frac{1}{2}} T \\
   D & = C^{-\frac{1}{2}} A \: C^{-\frac{1}{2}} \\
@@ -54,7 +53,7 @@ with the result:
 \begin{align}
   \frac{dY}{dt} & = D \: Y + E \nonumber \\
   Y(t) & = e^{D t} Y_0 + D^{-1} (e^{D t} - I) E \label{eq:modified-solution} \\
-  T(t) & = C^{-\frac{1}{2}} Y(t) \nonumber
+  T(t) & = C^{-\frac{1}{2}} Y(t) \label{eq:finalization}
 \end{align}
 
 In this case, $D$ is a symmetric matrix, therefore, it will be easier to find the matrix exponential of $D \: t$ using the above-mentioned eigenvalue decomposition (\equref{eq:eigenvalue-decomposition}):
@@ -68,7 +67,7 @@ In this case, $D$ is a symmetric matrix, therefore, it will be easier to find th
     \right] U^T
 \]
 
-Now we are going further and look at the power profile $B$. Each row of $B$ corresponds to a particular time interval $\triangle t_i$ and represents the power consumption $B_i$ during this interval of all processing elements. Each step $i = 1 \dots N_s$ of the iterative process we have a pair $(\triangle t_i, B_i)$ which gives us a temperature vector $T_i$ according to \equref{eq:modified-solution} where $t = \triangle t_i$. The iterative process can be described as the following:
+Now we shift our focus at the power profile $B$ and come closer to the SSDTP. Each row of $B$ corresponds to a particular time interval $\triangle t_i$ and represents the power consumption $B_i$ during this interval of all processing elements. Each step $i = 1 \dots N_s$ of the iterative process we have a pair $(\triangle t_i, B_i)$ which gives us a temperature vector $T_i$ according to \equref{eq:modified-solution} where $t = \triangle t_i$. The iterative process can be described as the following:
 \begin{align}
   & Y_{i+1} = K_i \: Y_i + G_i \: B_i \label{eq:recurrent-equation} \\
   & K_i = e^{D \: \triangle t_i} \nonumber \\
@@ -147,34 +146,36 @@ To get the whole picture, the system can be written as:
   \right] \nonumber
 \end{align}
 
-$\mathbb{A}$ is a square matrix of the dimensions $N_n N_s \times N_n N_s$. $\mathbb{Y}$ and $\mathbb{B}$ are vectors of the length $N_n N_s$. This is the system that can give us the desired SSDTP.
+where $\mathbb{A}$ is a square matrix of the dimensions $N_n N_s \times N_n N_s$. $\mathbb{Y}$ and $\mathbb{B}$ are vectors of the length $N_n N_s$.
 
-Such systems could be extremely big, especially when we want to achieve a high level of accuracy and, therefore, the power profile contains a lot of steps $N_s$. Each new step is $N_n$ new equations in the system given by \equref{eq:system}. Also the complexity grows very rapidly with the number of processing elements $N_p$, since in the HotSpot thermal model the number of thermal nodes $N_n$ is dependent on it according to the equation \cite{rao2008}:
+Apparently, we have obtained a regular system of liner equations with the SSDTP as its solution ($Y$ should also be processed with \equref{eq:finalization} in order to return back to $T$). The first straight-forward way to resolve the system is to use the LU factorization (decomposition). The problem here is that such systems could be extremely large, especially when we want to achieve a higher level of accuracy and, therefore, the power profile contains a lot of steps $N_s$. Each new step is $N_n$ new equations in the system given by \equref{eq:system}. Also the complexity grows very rapidly with the number of processing elements $N_p$, since in the HotSpot thermal model the number of thermal nodes $N_n$ dependents on it according to the equation \cite{rao2008}:
 \[
   N_n = 4 N_p + 12
 \]
 
-Therefore, \emph{each} new processing element increases \emph{each} matrix $K_i$ by 4 rows and 4 columns, and \emph{each} vector $Y_i$ and $Q_i$ by 4 elements. All in all, a fast and accurate approach to solve \equref{eq:system} is required.
+Therefore, \emph{each} new processing element increases \emph{each} matrix $K_i$ by 4 rows and 4 columns, and \emph{each} vector $Y_i$ and $Q_i$ by 4 elements. As an example, if the power profile for a single-processor system is composed of 1000 steps, then having the same discretization but with one additional core results in a linear system with 4000 additional equations. All in all, a fast and accurate approach to solve \equref{eq:system} is required.
+
+\image{sparseness-of-system}{50 200 50 190}{The sparseness of the system that we need to solve in order to obtain the SSDTP. Each blue point corresponds to a non-zero element of the matrix. All non-zero elements are located on the block diagonal of the matrix, one supdiagonal, and one subdiagonal in the left bottom corner.}
+One may notice that the matrix $\mathbb{A}$ is an extremely sparse matrix with a very specific structure, it can be observed on \figref{fig:sparseness-of-system}. The matrix has non-zero elements only on its block diagonal (composed of matrices $N_n \times N_n$), one \emph{sup}diagonal just above the block diagonal, and one \emph{sub}diagonal in the left bottom corner of it. Therefore, instead of the dense LU decomposition we can apply algorithms that are specially designed for such cases. In our experiments we use the UMFPACK library, a set of routines for solving unsymmetric sparse linear systems based on the Unsymmetric MultiFrontal method \cite{umfpack2004}.
 
 \subsection{Condensed Equation}
-In this section we shall describe the proposed solution. The system of linear equations, that we want to solve, has the following recurrent structure:
+Now we shall propose a much faster solution. Let us return back to the system of linear equations that we are to solve. It is described with the following recurrence:
 \begin{equation} \label{eq:ce-recurrent}
   Y_{i + 1} = K_i \: Y_i + Q_i, \; i = 1 \dots N_s
 \end{equation}
 
-The same configuration arises in multiple shooting methods for boundary value problems of ordinary differential equations \cite{stoer2002}.
+Systems with similar structures can be found in multiple shooting methods for boundary value problems of ordinary differential equations \cite{stoer2002}. A common technique to solve such systems is to form a so-called \emph{condensed equation}, or \emph{condensed system}. Let us undertake this procedure step by step.
 
 The iterative repetition of this equation leads us to:
-\begin{align}
-  Y_i & = \prod_{j = 1}^{i} K_j \: Y_1 + P_{i - 1}, \; i = 2 \dots N_s + 1 \label{eq:y-recurrent} \\
-  P_1 & = Q_1 \nonumber \\
-  P_i & = \sum_{l = 2}^i \prod_{j = l}^i K_j \: Q_{l - 1} + Q_i, \: i = 2 \dots N_s \nonumber
-\end{align}
-
-The recurrent version of the last equation:
-\begin{equation} \label{eq:p-recurrent}
-  P_i = K_i \: P_{i - 1} + Q_i, \; i = 2 \dots N_s
+\begin{equation} \label{eq:y-recurrent}
+  Y_i = \prod_{j = 1}^{i} K_j \: Y_1 + P_{i - 1}, \; i = 2 \dots N_s + 1
 \end{equation}
+where $P_i$ are defined as the following:
+\begin{align}
+  P_1 & = Q_1 \nonumber \\
+  P_i & = \sum_{l = 2}^i \prod_{j = l}^i K_j \: Q_{l - 1} + Q_i, \: i = 2 \dots N_s \nonumber \\
+  P_i & = K_i \: P_{i - 1} + Q_i, \; i = 2 \dots N_s \label{eq:p-recurrent}
+\end{align}
 
 Therefore, we can calculate the final value $Y_{N_s + 1}$ from \equref{eq:y-recurrent}:
 \[
@@ -186,11 +187,15 @@ Taking into account the boundary condition given by \equref{eq:boundary-conditio
   (I - \prod_{j = 1}^{N_s} K_j) \: Y_1 = P_{N_s}
 \]
 
-Solving this system, we obtain the first component of the vector $\mathbb{Y}$, that is $Y_1$. ($P_{N_s}$ can be calculated using \equref{eq:p-recurrent}.) All other vectors $Y_i$ for $i = 2 \dots N_s$ are successively found with help of \equref{eq:ce-recurrent}. We also recall that $K_i$ is the matrix exponential, therefore, we use the following simplification:
+Solving this system, we find the first component of the vector $\mathbb{Y}$, that is $Y_1$. ($P_{N_s}$ can be calculated using \equref{eq:p-recurrent}.) All other vectors $Y_i$ for $i = 2 \dots N_s$ are successively found with help of \equref{eq:ce-recurrent}.
+
+We also recall that $K_i$ is the matrix exponential, therefore, we use the following simplification:
 \[
   \prod_{j = i}^l K_j = \prod_{j = i}^l e^{D t_j} = e^{D \sum_{j = i}^l t_j}
 \]
 since the product of each pair $D \: t_j$ and $D \: t_k$ is commutative.
+
+The experimental results show that this approach has the highest performance without any loss of accuracy among other methods that we have considered in our analysis. Before going to the comparison, let us perform an important modification of the system given in the following subsection.
 
 \subsection{Sampling Interval}
 Now, we make an important assumption about the time intervals $\triangle t_i$ in order to perform all the calculations in a much more efficient manner. We assume that \emph{the time intervals are equal}, $\triangle t_i = \triangle t$ for $i = 1 \dots N_s$, i.e., the distance in time between two successive power measurements stays constant. We refer to this distance as the \emph{sampling interval}. The preferable size of this sampling interval depends on a particular application and the level of accuracy that we want to achieve. Having this assumption, the iterative process (\equref{eq:recurrent-equation}) turns into:
@@ -203,9 +208,14 @@ where:
   & G = D^{-1} \left( e^{D \: \triangle t} - I \right) C^{-\frac{1}{2}}
 \end{align*}
 
-It should be noted that $K$ and $G$ are constants, since they depend only on the matrices $D$, $C$, and the sampling interval $\triangle t$. Both $Y_i$ and $B_i$ are vectors of the length $N_n$. In this case, the block diagonal of the matrix $\mathbb{A}$ in \equref{eq:system} is composed of the same block, since $K_i = K$ for $i = 1 \dots N_s$.
+It should be noted that now $K$ and $G$ are constants, since they depend only on the matrices $D$, $C$, and the sampling interval $\triangle t$, which is fixed. In this case, the block diagonal of the matrix $\mathbb{A}$ in \equref{eq:system} is composed of the same repeating block $K_i = K$ for $i = 1 \dots N_s$. The matrix of the system becomes a block Toeplitz matrix, because inner blocks $\mathbb{A}_{ij}$ satisfy the following criterion:
+\[
+  \mathbb{A}_{ij} = \mathbb{A}_{i+1, j+1}, \; i, j = 1 \cdots N_s - 1
+\]
 
-Let us come back to the condensed equation presented in the previous section. The recurrent expressions in case of equal time intervals are the following:
+To be more specific, the matrix is a block-circulant matrix where each block row vector is rotated one block element to the right relative to the preceding block row vector. This leads us to a wide range of possible techniques to solve \mbox{$\mathbb{A} \: \mathbb{Y} = \mathbb{B}$}, for example, the Fast Fourier Transform \cite{mazancourt1983}, \cite{vescovo1997}. In spite of the fact that this approach is \emph{much faster} then the solution obtained with the UMFPACK, our experiments have shown that the condensed equation method is even faster, therefore, we return back to it.
+
+The recurrent expressions in case of equal time intervals are the following:
 \begin{align}
   & Y_{i + 1} = K \: Y_i + Q_i, \; i = 1 \dots N_s \nonumber \\
   & P_i = K \: P_{i - 1} + Q_i, \; i = 2 \dots N_s \nonumber \\
@@ -250,8 +260,11 @@ where $M$ is a diagonal matrix with the following structure:
 As we see, in this approach there is no need to inverse any matrix, the solution of the system is obtained by scalar divisions and a similarity transformation with $U$.
 
 \subsection{Performance Comparison}
-We have discussed three different approaches to calculate the steady-state dynamic temperature profile:
+We have discussed several different approaches to the steady-state dynamic temperature profile calculation:
 \begin{itemize}
   \item The iterative solution with the HotSpot simulator.
-  \item The direct analytical solution
+  \item The direct solution of the system of linear equation as a sparse system using the UMFPACK.
+  \item The condensed equation method.
 \end{itemize}
+
+We shall now compare them with each other.

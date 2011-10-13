@@ -51,19 +51,6 @@ classdef Hotspot < handle
 
       time = toc(start);
     end
-  end
-
-  methods (Access = private)
-    function [ expDt, G ] = calculateCoefficients(hs, t)
-      % exp(D * t) = U diag(exp(li * t)) UT
-      %
-      expDt = hs.DV * diag(exp(t * hs.DL)) * hs.DVT;
-
-      % G = D^(-1) (exp(D * t) - I) C^(-1/2) =
-      % U diag((exp(li * t) - 1) / li) UT C^(-1/2)
-      %
-      G = hs.DV * diag((exp(t * hs.DL) - 1) ./ hs.DL) * hs.DVT * hs.sinvC;
-    end
 
     function [ A, B ] = constructFull(hs, P, t)
       [ m, cores ] = size(P);
@@ -89,6 +76,19 @@ classdef Hotspot < handle
         A(j:(j + o), k:(k + o)) = -eye(n);
         B(j:(j + o), 1) = - G * transpose(P(i, :));
       end
+    end
+  end
+
+  methods (Access = private)
+    function [ expDt, G ] = calculateCoefficients(hs, t)
+      % exp(D * t) = U diag(exp(li * t)) UT
+      %
+      expDt = hs.DV * diag(exp(t * hs.DL)) * hs.DVT;
+
+      % G = D^(-1) (exp(D * t) - I) C^(-1/2) =
+      % U diag((exp(li * t) - 1) / li) UT C^(-1/2)
+      %
+      G = hs.DV * diag((exp(t * hs.DL) - 1) ./ hs.DL) * hs.DVT * hs.sinvC;
     end
 
     function [ A, B ] = constructBand(hs, P, t)
