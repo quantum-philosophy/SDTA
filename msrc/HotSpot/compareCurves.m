@@ -15,9 +15,19 @@ param_line = Utils.configStream(...
   'verbose', 0, ...
   'leakage', 0);
 
-[ Tce, dummy, dummy, dummy, Ths, dummy ] = ...
-  Optima.verify(config.system, config.floorplan, ...
-    config.hotspot, config.params, param_line, 1, 0);
+chunks = 15;
+
+Tce = zeros(0, 0);
+Ths = zeros(0, 0);
+
+for i = 1:chunks
+  [ chunkTce, dummy, dummy, dummy, chunkThs, dummy ] = ...
+    Optima.verify(config.system, config.floorplan, ...
+      config.hotspot, config.params, param_line, i, 0);
+
+  Tce = [ Tce; chunkTce ];
+  Ths = [ Ths; chunkThs ];
+end
 
 [ stepCount, processorCount ] = size(Tce);
 time = ((1:stepCount) - 1) * config.samplingInterval;
@@ -30,6 +40,15 @@ figure;
 options = struct( ...
   'xlabel', 'Time, s', ...
   'ylabel', 'Temperature, C');
-options.legend = { 'Ground truth', 'HotSpot' };
+options.legend = { 'Repeating SSDTC', 'Simulation with HotSpot' };
 
 Utils.draw(time, [ Tce, Ths ], options);
+
+chunkLength = length(Tce) / chunks;
+
+lims = get(gca, 'YLim');
+
+for i = 1:(chunks - 1)
+  t = time(chunkLength * i);
+  line([ t, t ], lims, 'Line', '--', 'Color', [ 64, 64, 64 ] / 255);
+end

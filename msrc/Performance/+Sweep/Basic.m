@@ -1,10 +1,12 @@
 classdef Basic < handle
   properties (Constant)
-    max_iterations = 2;
+    max_iterations = 1;
     tolerance = 0;
     hotspot_line = '';
 
     tryCount = 10;
+
+    includeSS = false;
   end
 
   properties (SetAccess = protected)
@@ -61,10 +63,10 @@ classdef Basic < handle
 
         sweep.values(end + 1) = value;
 
-        sweep.times(end + 1, 1:4) = [ tce, tml, ths, tss ];
+        sweep.times(end + 1, 1:4) = [ ths, tml, tce, tss ];
 
-        Eml = sweep.error(Tce, Tml);
         Ehs = sweep.error(Tce, Ths);
+        Eml = sweep.error(Tce, Tml);
         Ess = sweep.error(Tce, Tss);
 
         fprintf('%15.4f%15.4f%15.2e%15.4f%15.2e%15.4f%15.2e\n', ...
@@ -83,10 +85,15 @@ classdef Basic < handle
         'ylabel', 'log(Computational Time, s)', ...
         'marker', true);
 
-      Utils.draw(sweep.values, sweep.times, options);
-      set(gca, 'YScale', 'log');
+      if sweep.includeSS
+        Utils.draw(sweep.values, sweep.times, options);
+        legend('HS', 'UMF', 'CE', 'SS');
+      else
+        Utils.draw(sweep.values, sweep.times(:, 1:3), options);
+        legend('HS', 'UMF', 'CE');
+      end
 
-      legend('CE', 'UMF', 'HS', 'SS');
+      set(gca, 'YScale', 'log');
     end
   end
 
@@ -106,21 +113,13 @@ classdef Basic < handle
           'leakage', 0, config{:});
 
       % Condensed Equation
-      [ Tce, tce ] = sweep.solveOnAverage( ...
-        sweep.system, sweep.floorplan, sweep.hotspot_config, ...
-        sweep.params, param_line);
+      [ Tce, tce ] = sweep.optimaSolveOnAverage(param_line);
 
       % HotSpot
-      [ dummy, dummy, dummy, dummy, Ths, ths ] = Optima.verify( ...
-        sweep.system, sweep.floorplan, sweep.hotspot_config, ...
-        sweep.params, param_line, sweep.max_iterations, sweep.tolerance);
+      [ Ths, ths ] = sweep.optimaVerifyOnAverage(param_line);
 
       % UMF in Matlab
-      power = Optima.get_power( ...
-        sweep.system, sweep.floorplan, sweep.hotspot_config, ...
-        sweep.params, param_line);
-
-      [ Tml, tml ] = sweep.hotspot.solve(power, 'band');
+      [ Tml, tml ] = sweep.matlabOnAverage(param_line);
 
       param_line = Utils.configStream(...
           'verbose', 0, ...
@@ -128,21 +127,49 @@ classdef Basic < handle
           'leakage', 0, config{:});
 
       % Steady-State approximation
-      [ Tss, tss ] = sweep.solveOnAverage( ...
-        sweep.system, sweep.floorplan, sweep.hotspot_config, ...
-        sweep.params, param_line);
+      [ Tss, tss ] = sweep.optimaSolveOnAverage(param_line);
     end
 
-    function [ out, t ] = solveOnAverage(sweep, varargin)
-      t = 0;
+    function [ T, time ] = optimaSolveOnAverage(sweep, param_line)
+      total = 0;
 
       for i = 1:sweep.tryCount
         tic;
-        out = Optima.solve(varargin{:});
-        t = t + toc;
+        T = Optima.solve( ...
+          sweep.system, sweep.floorplan, sweep.hotspot_config, ...
+          sweep.params, param_line);
+        total = total + toc;
       end
 
-      t = t / sweep.tryCount;
+      time = total / sweep.tryCount;
+    end
+
+    function [ T, time ] = optimaVerifyOnAverage(sweep, param_line)
+      total = 0;
+
+      for i = 1:sweep.tryCount
+        [ dummy, dummy, dummy, dummy, T, t ] = Optima.verify( ...
+          sweep.system, sweep.floorplan, sweep.hotspot_config, ...
+          sweep.params, param_line, sweep.max_iterations, sweep.tolerance);
+        total = total + t;
+      end
+
+      time = total / sweep.tryCount;
+    end
+
+    function [ T, time ] = matlabOnAverage(sweep, param_line)
+      power = Optima.get_power( ...
+        sweep.system, sweep.floorplan, sweep.hotspot_config, ...
+        sweep.params, param_line);
+
+      total = 0;
+
+      for i = 1:sweep.tryCount
+        [ T, t ] = sweep.hotspot.solve(power, 'band');
+        total = total + t;
+      end
+
+      time = total / sweep.tryCount;
     end
 
     function e = error(sweep, T1, T2)
