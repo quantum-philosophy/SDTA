@@ -12,7 +12,6 @@ f = figure;
 spy(A);
 xlabel('');
 ylabel('');
-title('Sparseness of the System', 'FontSize', 16);
 
 line = findobj(f, 'type', 'Line');
 set(line, 'Color', Constants.roundRobinColors{1});
