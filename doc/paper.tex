@@ -10,29 +10,32 @@
   \maketitle
 
   \begin{abstract}
-    The temperature analysis is one of the most important components of a well-established design of an embedded system. Whenever it is possible, system architects are trying to take it into account in order to produce results of a higher quality in the sense of, for example, reliability and energy consumption. An accurate and fast temperature estimation is not an easy goal to achieve, since the temperature variation is a considerably complicated process that depends on a lot of different parameters, such as the dynamic power consumption and power leakage of the die. The problem becomes much more severe when we make a little step further and put it inside an optimization loop where this type of estimation needs to be performed thousands of times. In this case, the solution should be not only accurate, but also computationally cheap to find. In this paper we propose such a technique that satisfies both criteria, accuracy and speed. Our particular focus of interest is \emph{multiprocessor} system-on-chips that have \emph{periodic} power and, consequently, temperature profiles (for instance, systems executing periodic applications). The proposed solution is analytical, therefore, it is exact from the perspective of the underlying model, also it is fast enough to be used in such search heuristics as the genetic algorithms, that we have chosen to demonstrate our approach.
+    Admittedly, an accurate and fast temperature estimation of a multiprocessor system is not an easy goal to achieve. This is mainly due to the fact that the underlying process has a significantly complex nature. The temperature variation within a die depends on a lot of different parameters, both extrinsic (e.g., the ambient conditions) and intrinsic (e.g., the dynamic power consumption and power leakage). The problem becomes even more severe when one takes a little step further and puts it inside of an optimization loop where this type of estimation has to be performed thousands of times. In this case, the solution should be not only accurate, but also computationally cheap to find. In this paper we propose such a technique that satisfies both criteria, accuracy and speed. Our particular focus of interest is \emph{multiprocessor} system-on-chips that have \emph{periodic} power and, consequently, temperature profiles (for instance, embedded systems executing periodic applications). The proposed solution is \emph{analytical}, therefore, it is \emph{exact} from the perspective of the underlying model, also it is \emph{fast} enough to be used in a wide range of search heuristics. In order to demonstrate our approach to the steady-state dynamic temperature analysis, we perform the temperature-aware reliability optimization of multiprocessor systems with periodic applications. The thermal model that we use in our analysis is \emph{leakage-aware}, since the power leakage is still an important issue that should be carefully taken into account. The reliability model, that we have chosen as an example, is based on the thermal cycling failure mechanism. The optimization process is held by a genetic algorithm that varies task allocation and scheduling in order to achieve the longest mean time to failure of the system within curtain constrains. We also conduct a multi-objective optimization with the energy consumption as one additional goal. In this case, the solution is a Pareto front for the designer to choose from.
 
   \end{abstract}
 
   \section{Introduction}
   \input{include/introduction.tex}
 
-  \section{Preliminaries}
+  \section{Preliminaries} \label{sec:preliminaries}
   \input{include/preliminaries.tex}
 
-  \section{Prior Work and Motivation}
+  \section{Prior Work and Motivation} \label{sec:motivation}
   \input{include/motivation.tex}
 
-  \section{Steady-State Dynamic Temperature Profile}
+  \section{Problem Formulation} \label{sec:problem}
+  \input{include/problem.tex}
+
+  \section{Proposed Solution} \label{sec:solution}
   \input{include/ssdtc.tex}
 
-  \section{Reliability Model}
+  \section{Reliability Model} \label{sec:reliability}
   \input{include/reliability.tex}
 
   \section{Experimental Results} \label{sec:results}
   \input{include/results.tex}
 
-  \section{Conclusion}
+  \section{Conclusion} \label{sec:conclusion}
   \input{include/conclusion.tex}
 
   \input{include/bibliography.tex}
