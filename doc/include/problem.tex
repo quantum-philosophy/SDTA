@@ -1,15 +1,47 @@
-We consider a multiprocessor system-on-chip with a set of processing elements $\Pi = \{ \pi_i: i = 1 \dots N_p \}$. The system executes a periodic application with the overall period $\mathcal{T}$ which is discretized into $N_s$ intervals $\triangle t_j$ for $j = 1 \dots N_s$. The time intervals $\triangle t_j$ are small enough to assume that the power consumption and the temperature of each processing element $\Pi_i$ are constant within these intervals. We assume that the power profile $P = \{ P_{ij}: i = 1 \dots N_p, \; j = 1 \dots N_s \}$, where $P_{ij}$ is the power consumption of the $i$th core during the $j$th time interval, is also periodic. After the stabilization process, the temperature profile of the system becomes periodic as well and defined as $T = \{ T_{ij}: i = 1 \dots N_p, \; j = 1 \dots N_s \}$, ${T_{ij}}$ corresponds to the temperature of the ${i}$th core on the $j$th time interval. Such periodic temperature profile is called the steady-state dynamic temperature profile (SSDTP).
+We consider a multiprocessor system-on-a-chip with a set of processing elements $\Pi = \{ \pi_k: k = 1 \dots N_p \}$. The system executes a periodic application with the overall period $\mathcal{T}$ which is discretized into $N_s$ intervals $\triangle t_i$ for $i = 1 \dots N_s$. The time intervals $\triangle t_i$ are small enough to assume that the power consumption and the temperature of each processing element $\Pi_k$ are constant within these intervals. We assume that the power profile:
+\begin{equation*}
+  \mathbb{P} = \left[
+    \begin{array}{c}
+      P_1^T \\
+      \vdots \\
+      P_{N_s}^T
+    \end{array}
+  \right] = \left[
+    \begin{array}{ccc}
+      P_{11} & \cdots & P_{1 N_p} \\
+      \vdots & \ddots & \vdots \\
+      P_{N_s 1} & \cdots & P_{N_s N_p}
+    \end{array}
+  \right]
+\end{equation*}
+where $P_{ik}$ is the power consumption of the $k$th core during the $i$th time interval, is also periodic. After the stabilization process, the temperature profile of the system becomes periodic as well and defined as:
+\begin{equation*}
+  \mathbb{T} = \left[
+    \begin{array}{c}
+      T_1^T \\
+      \vdots \\
+      T_{N_s}^T
+    \end{array}
+  \right] = \left[
+    \begin{array}{ccc}
+      T_{11} & \cdots & T_{1 N_p} \\
+      \vdots & \ddots & \vdots \\
+      T_{N_s 1} & \cdots & T_{N_s N_p}
+    \end{array}
+  \right]
+\end{equation*}
+where $T_{ik}$ corresponds to the temperature of the $k$th core on the $i$th time interval. Such periodic temperature profile is called the steady-state dynamic temperature profile (SSDTP).
 
 Now we can formulate the problem. Given:
 \begin{itemize}
-  \item A \emph{periodic} power profile $P$ of a multiprocessor system-on-chip with a set of processing elements $\Pi$.
-  \item The floorplan of the chip, i.e., the location and size of each processing element $\pi_i \in \Pi$.
+  \item A \emph{periodic} power profile $\mathbb{P}$ of a multiprocessor system-on-chip with a set of processing elements $\Pi$.
+  \item The floorplan of the chip, i.e., the location and size of each processing element $\pi_k \in \Pi$.
   \item The configuration of the package including the thermal interface material, heat spreader, and heat sink.
   \item The thermal parameters of the die and package (the thermal conductivity, thermal capacitance, etc.).
 \end{itemize}
 Find:
 \begin{itemize}
-  \item The corresponding \emph{periodic} temperature profile $T$ of the system in its steady state (when the temperature stabilization process is finished).
+  \item The corresponding \emph{periodic} temperature profile $\mathbb{T}$ of the system in its steady state (when the temperature stabilization process is finished).
 \end{itemize}
 
 Reasonable requirements for a solution are speed and accuracy, since the temperature analysis is usually a part of an intensive optimization procedure where this solution have to be computed thousands of times. An example of such problems is the reliability-aware task allocation and scheduling given in \secref{sec:reliability}.

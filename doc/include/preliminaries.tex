@@ -1,8 +1,8 @@
 In our analysis we use the well-known thermal model called HotSpot \cite{huang2006}. The model is based on the analogy between electrical and thermal circuits and can be described with the following differential equation \cite{rao2008}:
-\[
+\begin{equation} \label{eq:thermal-ode}
   C \frac{dT}{dt} + G T = P
-\]
-where $C$ is the thermal capacitance matrix, $G$ is the thermal conductance matrix (equal to $\frac{1}{R}$, where $R$ is the resistance matrix), $P$ is the power dissipation, and $T$ is the temperature vector. The matrices are of the dimensions $N_n \times N_n$, the vector is of the length $N_n$, where $N_n$ is the number of thermal nodes.
+\end{equation}
+where $C$ is the thermal capacitance matrix, $G$ is the thermal conductance matrix (equal to $\frac{1}{R}$, where $R$ is the resistance matrix), $P$ is a vector of the power dissipation, and $T$ is the temperature vector. The matrices are of the dimensions $N_n \times N_n$, the vector is of the length $N_n$, where $N_n$ is the number of thermal nodes.
 
 For convenience, in the rest of the paper we use the following denotation:
 \begin{equation} \label{eq:initial}

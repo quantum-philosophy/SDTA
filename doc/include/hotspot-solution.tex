@@ -1,0 +1,33 @@
+Before going to the proposed solution, we first descuss what can be achieved with the HotSpot simulator without additional efforts.
+
+\subsection{Iterative Simulation}
+A rough approximation of the SSDTP can be obtained by running the simulator with a very long power profile composed of one repeating chunk. In this case, HotSpot produces a temperature profile of the same enormous length, and we can take only the last part of it that corresponds to the last chunk of the power profile. Another way is to call the simulator a number of times each time starting from the temperature that we got during the previous call.
+
+\image{hotspot-simulation}{50 200 50 200}{An example of 15 simulations (separated by dashed lines) using HotSpot for one processing element running a 1-second application. The blue curve represents the repeating SSDTC that HotSpot is supposed to reach after a number of iterations. The power profile contains $10^4$ steps that corresponds to $10^{-4} s$ sampling interval.}
+The number of iterations required to reach the steady-state temperature profile depends on the accuracy that we are trying to achieve. It also depends a lot on the application itself and, consequently, on its power profile. This is an especially urgent issue for tasks that have short execution times relative to the thermal time constant of the die. In this case temperature does not have time to reach its steady-state value during executing of a task, but it is still gradually increasing on average. This leads to a large number iterations that the simulator is required to perform. An example is given on \figref{fig:hotspot-simulation}, where the blue curve corresponds to the repeating SSDTC, and the orange one shows 15 simulations of HotSpot. The sampling interval was chosen to be $10^{-4} \; s$ to capture all power fluctuations due to the task switching activities, resulting in a power profile with $10^4$ steps. The situation is getting \emph{much worse} if we want to take into consideration the leakage power, since in this case we have a loop between temperature and power, and we need to perform extra iterations (indifferent of the chosen solution approach) for temperature and power to converge \cite{liu2007}.
+
+\subsection{Steady-State Approximation}
+Another approach that can be applied is an approximation using the steady-state temperature \cite{huang2009}. The idea is in the following. The steady-state temperature behaviour is described with the following system of linear equation that can be directly obtained from \equref{eq:thermal-ode} when the derivative is zero:
+\[
+  T = G^{-1} P
+\]
+where the conductance matrix, $G$, is a symmetric matrix, $P$ is a vector of the power consumption. The solution is temperature of the system in its steady state. Therefore, if we assume that all processing elements $\pi_k$ during each time interval $\triangle t_i$ with the dynamic power consumption $P_i = ( P_{i1}, \dots, P_{i N_p } )^T$ have their steady-state temperature $T_i = ( T_{i1}, \dots, T_{i N_p} )^T$, then the SSDTP can be found as the following:
+\begin{equation*}
+  \mathbb{T} = \left[
+    \begin{array}{c}
+      T_1^T \\
+      \vdots \\
+      T_{N_s}^T
+    \end{array}
+  \right] = \left[
+    \begin{array}{c}
+      (G^{-1} P_1)^T \\
+      \vdots \\
+      (G^{-1} P_{N_s})^T
+    \end{array}
+  \right]
+\end{equation*}
+
+The approximation can be taken to the application level where one can say that if each task has a constant level of the power consumption and during a curtain period of time there is no switching activity, then we do not need to discretize this period into smaller ones, and can compute it as a whole.
+
+As it was mentioned earlier, the approximation holds when the assumption about the steady-state temperature can reasonably be applied. For instance, this is the case when the time to reach steady-state temperatures of all processing element after a power switch is much shorter then the following time interval without any switching activities \cite{huang2009}.

@@ -1,9 +1,3 @@
-\subsection{Iterative Simulation}
-Before going to the proposed solution, we first describe what can be achieved with the HotSpot simulator without additional efforts. A rough approximation of the SSDTP can be obtained by running the simulator with a very long power profile composed of one repeating chunk. In this case, HotSpot produces a temperature profile of the same enormous length, and we can take only the last part of it that corresponds to the last chunk of the power profile. Another way is to call the simulator a number of times each time starting from the temperature that we got during the previous call.
-
-\image{hotspot-simulation}{50 200 50 200}{An example of 15 simulations (separated by dashed lines) using HotSpot for one processing element running a 1-second application. The blue curve represents the repeating SSDTC that HotSpot is supposed to reach after a number of iterations. The power profile contains $10^4$ steps that corresponds to $10^{-4} s$ sampling interval.}
-The number of iterations required to reach the steady-state temperature profile depends on the accuracy that we are trying to achieve. It also depends a lot on the application itself and, consequently, on its power profile. This is an especially urgent issue for tasks that have short execution times relative to the thermal time constant of the die. In this case temperature does not have time to reach its steady-state value during executing of a task, but it is still gradually increasing on average. This leads to a large number iterations that the simulator is required to perform. An example is given on \figref{fig:hotspot-simulation}, where the blue curve corresponds to the repeating SSDTC, and the orange one shows 15 simulations of HotSpot. The sampling interval was chosen to be $10^{-4} \; s$ to capture all power fluctuations due to the task switching activities, resulting in a power profile with $10^4$ steps. The situation is getting \emph{much worse} if we want to take into consideration the leakage power, since in this case we have a loop between temperature and power, and we need to perform extra iterations (indifferent of the chosen solution approach) for temperature and power to converge \cite{liu2007}.
-
 \subsection{Analytical Solution}
 In order to resolve the problem, we use an analytical approach. The direct solution of \equref{eq:initial} is given by the following equation:
 \begin{equation} \label{eq:solution}
@@ -79,7 +73,7 @@ therefore:
       \right] U^T \: C^{-\frac{1}{2}}
 \end{align*}
 
-Therefore, in order to find SSDTC, we need to solve the following system of linear equations:
+Consequently, in order to find SSDTC, we need to solve the following system of linear equations:
 \[
   \begin{cases}
     K_1 \: Y_1 - Y_2 & = -Q_1 \\
