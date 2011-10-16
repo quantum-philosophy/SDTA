@@ -1,89 +1,107 @@
-The proposed solution of the steady-state dynamic temperature analysis can be used in a wide range of optimization procedures. One of them is the space exploration of the reliability charachteristics of embedded systems. We performing the temperature-aware mapping and scheduling in order to address the aging effect while keeping the energy consumption on an appropriate level. Both mapping and scheduling are based on genetic algorithms described in \cite{schmitz2004}. The genetic scheduling internally relies on the list scheduler.
-
-Let us start from the overall description of the system that we use.
+The proposed solution of the steady-state dynamic temperature estimation can be used in a wide range of optimization procedures. One of them is the reliability optimization that we discuss in this section. We performing the temperature-aware task mapping and scheduling in order to address the thermal cycling aging effect while keeping the energy consumption on an appropriate level. Both mapping and scheduling are based on the genetic algorithms \cite{schmitz2004}. Let us start with the overall description of the system.
 
 \subsection{Architecture Model}
-We consider a multiprocessor system with heterogeneous architecture that is composed of a number of processing elements (PE). Each processing element $PE_i$ is characterized by its supply voltage $V_i$, frequency $f_i$, and the number of gates:
-\begin{align*}
-  & PE = \{ PE_i \} \\
-  & PE_i \rightarrow (V_i, f_i, N_{gate i})
-\end{align*}
+We consider a multiprocessor system-on-a-chip with a heterogeneous architecture composed of a number of processing elements $\Pi = \{ \pi_k: \; k = 1 \dots N_p \}$. Each processing element $\pi_k$ is characterized by its supply voltage $V_k$, frequency $f_k$, and the number of gates $N_{gate \: k}$:
+\[
+  \pi_k \rightarrow (V_k, f_k, N_{gate \: k})
+\]
+
+The first two parameters are essential for the dynamic power calculation while the last one is used for the static power (the power leakage).
 
 \subsection{Application Model}
-The system runs a periodic application $A$ which contains a number of tasks. The period of the application $T$ can be thought as a shared deadline for all the tasks. The tasks themselves and the data dependencies between them are described with a task graph:
+The system executes a periodic application with a set of data-dependent tasks. The overall structure of the application is defined by a task graph:
 \begin{align*}
-  & A \rightarrow (G, T) \\
-  & G = (\Pi, \Gamma) \\
-  & \Pi = \{\tau_i\} \\
-  & \Gamma = \{\gamma_i\}
+  & G = (\mathcal{V}, \: E, \: \mathcal{T}) \\
+  & \mathcal{V} = \{ v_i \} \\
+  & E = \{ e_{ij} \}
 \end{align*}
-
-Each pair of a processing element $PE_i$ and a task $\tau_j$ is described by the effective switched capacitance $C_{eff \; ij}$ and the number of clock cycles $NC_{ij}$ that are requited for the given task to perform on the given core:
+where $\mathcal{V}$ is a set of vertices of the graph (tasks), $E$ is a set of edges (data dependencies between tasks), and $\mathcal{T}$ is the period of the application. Each pair of a task $v_i$ and a processing element $\pi_k$ is characterized by two parameters:
 \begin{equation*}
-  (PE_i, \tau_j) \rightarrow (C_{eff \; ij}, NC_{ij})
+  (v_i, \pi_k) \rightarrow (C_{eff \; ik}, N_{cycles \; ik})
 \end{equation*}
-
-\subsection{Mapping and Scheduling}
-We use genetic algorithms for mapping and scheduling presented in \cite{schmitz2004}.
+where $C_{eff \; ik}$ is the effective switched capacitance and $N_{cycles \: ik}$ is the number of clock cycles. These parameters determine the processor load and execution time of the task, correspondingly.
 
 \subsection{Power Model}
-The total power consumption of a task is a sum of the dynamic power and the leakage power:
+The power model used in our experiments is leakage-aware. Consequently, the total power dissipation is defined as a sum of the dynamic and leakage power:
 \begin{align*}
   & P = P_{dyn} + P_{leak} \\
-  & P_{dyn} = C_{eff} \cdot f \cdot V_{dd}^2
+  & P_{dyn} = C_{eff} \; f \; V_{dd}^2
 \end{align*}
-where $C_{eff}$ is the effective switched capacitance of a task, $V_{dd}$ and $f$ are the supplied voltage and frequency of a processing element correspondingly. For the leakage part, the model presented in \cite{liao2005} is used\footnote{Although, the leakage model can be computational intensive, the linear approximation presented in \cite{liu2007} can be used.}:
+where $C_{eff}$ is the effective switched capacitance of a task, $V_{dd}$ and $f$ are the supplied voltage and frequency of the processing element that executes this task. The model for the leakage part of the power dissipation is presented in \cite{liao2005}\footnote{Although, the leakage model can be computational intensive, the linear approximation presented in \cite{liu2007} can be used.}:
 \begin{align*}
-  & P_{leak} = N_{gate} \cdot I_{avg} \cdot V_{dd} \\
-  & I_{avg} = I_s(T_0, V_0) \cdot f_{avg}(T, V_{dd}) \\
-  & f(T, V_{dd}) = A \cdot T^2 \cdot e^{((\alpha \cdot V_{dd} + \beta)/T)} + B \cdot e^{(\gamma \cdot V_{dd} + \delta)}
+  & P_{leak} = N_{gate} \: I_{avg} \: V_{dd} \\
+  & I_{avg} = I_s(T_0, V_0) \: f_{avg}(T, V_{dd}) \\
+  & f(T, V_{dd}) = A \: T^2 e^{((\alpha \: V_{dd} + \beta)/T)} + B e^{(\gamma \: V_{dd} + \delta)}
 \end{align*}
-where $N_{gate}$ is the number of gates in the circuit,\footnote{The number of gates in a circuit can be estimated using the technique described in \cite{li2004}.} $I_s (T_0, V_0)$ is the average leakage current at the given temperature $T_0$ and supply voltage $V_0$, $f_{avg}$ is the scaling function. The last two form $I_{avg}$, the average leakage current at the current temperature $T$ and voltage $V_{dd}$. $A$, $B$, $\alpha$, $\beta$, $\gamma$, and $\delta$ are the technology dependent constants given in \cite{liao2005}.
+where $N_{gate}$ is the number of gates in the circuit,\footnote{The number of gates in a circuit can be estimated using the technique described in \cite{li2004}.} $I_s (T_0, V_0)$ is the average leakage current at the given temperature $T_0$ and supply voltage $V_0$, $f_{avg}$ is the scaling function. $I_{avg}$ is the average leakage current at the current temperature $T$ and voltage $V_{dd}$. $A$, $B$, $\alpha$, $\beta$, $\gamma$, and $\delta$ are the technology dependent constants found in \cite{liao2005}. It can be seen that the dynamic power consumption does not depend on temperature, it is a constant for each combination of a processing element and a task while the power leakage is a strong function of the operating temperature.
 
-In should be noted that the dynamic power consumption does not depend on temperature, it is a constant for each combination of a processing element with its voltage/frequency pair and a task with its effective switched capacitance. That is not the case with the leakage power.
-
-\subsection{Temperature-Aware Reliability Optimization}
-We address the thermal cycling (TC) component of the common packaging/interfacial failure mechanisms \cite{jedec2010}. The reliability model, presented in \cite{xiang2010}, is used. The number of cycles to failure ($N_{TC}$) can be estimated using a modified version of the well-known Coffin-Manson equation with the Arrhenius term \cite{jedec2010}, \cite{xiang2010}, \cite{ciappa2003}:
+\subsection{Thermal Cycling Failure Mechanism}
+We address the thermal cycling component of the common packaging and interfacial failure mechanisms \cite{jedec2010}. The reliability model presented in \cite{xiang2010} is used. The number of cycles to failure can be estimated using a modified version of the well-known Coffin-Manson equation with the Arrhenius term \cite{jedec2010}, \cite{xiang2010}, \cite{ciappa2003}:
 \begin{equation} \label{eq:cycles-to-failure}
-  N = A_{TC} (\triangle T - \triangle T_0)^{-b} e^{\frac{E_{a_{TC}}}{k T_{max}}}
+  \mathcal{N} = A (\triangle T - \triangle T_0)^{-b} e^{\frac{E_a}{k T_{max}}}
 \end{equation}
-where $A_{TC}$ is an empirically determined constant, $\triangle T$ is the thermal cycle amplitude, $\triangle T_0$ is the portion of the temperature range in the elastic region which does not cause damage, $b$ is the Coffin-Manson exponent which also empirically determined, $E_{a_{TC}}$ is the activation energy, $k$ is the Boltzmann constant, and $T_{max}$ is the maximal temperature during the thermal cycle.
+where $A$ is an empirically determined constant, $\triangle T$ is the thermal cycle amplitude, $\triangle T_0$ is the portion of the temperature range in the elastic region which does not cause damage, $b$ is the Coffin-Manson exponent which also empirically determined, $E_{a}$ is the activation energy, $k$ is the Boltzmann constant, and $T_{max}$ is the maximal temperature during the thermal cycle.
 
-The failure rate is modeled with the Weibull distribution:
+The failure rate is modeled by the Weibull distribution \cite{xiang2010}:
 \[
   R(t) = e^{(\frac{t}{\eta})^\beta}
 \]
-where $\eta$ is the scaling parameter, $\beta$ is the shape parameter. The last one is assumed to be constant with temperature variation, which is not the case with the scaling parameter $\eta$. Therefore, the distribution can vary from one set of conditions to another. Suppose, the overall period of the application is split into $m$ time intervals with durations $\triangle t_i = t_{i+1} - t_i$, so that on each interval the scaling parameter is constant and equal to $\eta_i$. In this case, the cumulative distribution function for the end of the first execution of the application is the following \cite{xiang2010}:
+where $\eta$ is the scaling parameter, $\beta$ is the shape parameter. The last one is found to be independent on the temperature variation, which is not the case with the scaling parameter $\eta$. Therefore, the distribution can vary from one set of conditions to another. Here we are coming back to the discretization of the overall period of the application $\mathcal{T}$ into $N_s$ small time intervals $\triangle t_i$, so that during each time interval $\triangle t_i$ all parameters of the system are assumed to be constant and, therefore, $\eta_i$ is also constant. In this case, the cumulative distribution function for the end of the first execution of the application is the following \cite{xiang2010}:
 \[
-  R = e^{(\sum_{i=0}^{m-1} \frac{\triangle t_i}{\eta_i})^\beta}
+  R = e^{(\sum_{i=1}^{N_s} \frac{\triangle t_i}{\eta_i})^\beta}
 \]
 
-If the period of the application is $T$, then the formula takes the following continuous form for any point of time $t$:
+The following continuous approximation can take place for any time $t$:
 \[
-  R(t) = e^{(\frac{t}{T} \sum_{i=0}^{m-1} \frac{\triangle t_i}{\eta_i})^\beta}
+  R(t) = e^{(\frac{t}{\mathcal{T}} \sum_{i=1}^{N_s} \frac{\triangle t_i}{\eta_i})^\beta}
 \]
-where $T / \sum_{i=0}^{m-1} \frac{\triangle t_i}{\eta_i}$ and be thought as a new scaling parameter $\eta$. The mean time to failure in case of the Weibull distribution is the following:
+
+The formula still keeps the form of the Weibull distribution, we can extract the scaling parameter of it:
+\[
+  \eta = \frac{\mathcal{T}}{\sum_{i=1}^{N_s} \frac{\triangle t_i}{\eta_i}}
+\]
+
+The mean time to failure (MTTF) in case of the Weibull distribution is defined as:
 \begin{equation} \label{eq:general-mttf}
-  MTTF = \eta \cdot \Gamma(1 + \frac{1}{\beta})
+  MTTF = \eta \; \Gamma(1 + \frac{1}{\beta})
 \end{equation}
-where $\Gamma$ is the gamma function. Now, we need to determine the scaling parameters $\eta_i$ for all time intervals. These parameters can be derived using the same \equref{eq:general-mttf}:
+where $\Gamma$ is the gamma function. Now we need to determine the scaling parameters $\eta_i$ for all time intervals. These parameters can be derived using the same \equref{eq:general-mttf}:
 \[
   \eta_i = \frac{MTTF_i}{\Gamma(1 + \frac{1}{\beta})}
 \]
-where $MTTF_i$ is the mean time to failure for each interval (if we had the same distribution all the time), which can be modeled as a product of the average number of cycles to failure \equref{eq:cycles-to-failure} and the duration of a cycle:
+where $MTTF_i$ is the mean time to failure for each interval (if we had the same failure distribution all the time), which can be modeled as a product of the average number of cycles to failure \equref{eq:cycles-to-failure} and the duration of a cycle:
 \[
-  MTTF_i = N_i \cdot \triangle t_i
+  MTTF_i = \mathcal{N}_i \; \triangle t_i
 \]
 
-Taking everything together, we get:
-\begin{align}
-  MTTF & = \frac{T}{\sum_{i=0}^{m-1} \frac{\triangle t_i}{\eta_i}} \cdot \Gamma(1 + \frac{1}{\beta}) \nonumber \\
-  & = \frac{T}{\Gamma(1 + \frac{1}{\beta}) \cdot \sum_{i=0}^{m-1} \frac{\triangle t_i}{\triangle t_i \cdot N_i}} \cdot \Gamma(1 + \frac{1}{\beta}) \nonumber \\
-  & = \frac{T}{\sum_{i=0}^{m-1} \frac{1}{N_i}} \nonumber \\
-  & = \frac{A_{TC} \cdot T}{\sum_{i=0}^{m-1} (\triangle T_i - \triangle T_0)^b e^{- \frac{E_{a_{TC}}}{k T_{max i}}}} \label{eq:one-mttf}
-\end{align}
+Taking everything together, we get the following equation:
+\begin{equation} \label{eq:one-mttf}
+  MTTF = \frac{\mathcal{T}}{\sum_{i=1}^{N_s} \frac{1}{\mathcal{N}_i}}
+\end{equation}
 
-\equref{eq:one-mttf} describes the mean time to failure of one processing element. We assume that each processing element is essential for the proper work of the system, therefore, one failure of one core leads to the total failure of the whole system. Hence, the MTTF of a system with $k$ processing elements is the following:
+\equref{eq:one-mttf} describes the MTTF of one processing element. We assume that \emph{each} processing element is essential for the proper work of the system, therefore, a failure of \emph{any} core leads to the total failure of the whole system. The MTTF of the system can be estimated as the minimal MTTF of its processing elements:
 \[
-  MTTF_{total} = min_{i=0}^{k-1}(MTTF_i)
+  MTTF_{sys} = \min_{k=1}^{N_p} \; MTTF_k
 \]
+where:
+\[
+  MTTF_k = \frac{\mathcal{T}}{\sum_{i=1}^{N_s} \frac{1}{\mathcal{N}_{ik}}}
+\]
+
+Note that the shape parameter $\beta_k$ can be different for different processing elements. If we assume that all $\beta_k$ are equal, we can use another approach to estimate the total MTTF. Since each component is essential, the reliability of the whole system is a product of reliabilities of each of the components:
+\begin{align*}
+  R_{sys}(t) & = \prod_{k=1}^{N_p} e^{-\left( \frac{t}{\mathcal{T}} \sum_{i=1}^{N_s} \frac{\triangle t_i}{\eta_{ik}} \right)^{\beta}} \\
+  & = e^{- \left(\frac{t}{\mathcal{T}}\right)^{\beta} \; \sum_{k = 1}^{N_p} \left(  \sum_{i=1}^{N_s} \frac{\triangle t_i}{\eta_{ik}} \right)^{\beta}}
+\end{align*}
+
+We can define the scaling parameter for the whole system as the following:
+\[
+  \eta_{sys} = \frac{\mathcal{T}}{\left(\sum_{k=1}^{N_p} \left(\sum_{i=1}^{N_s}\frac{\triangle t_i}{\eta_{ik}}\right)^{\beta} \right)^{1/\beta}} \\
+\]
+consequently, using \equref{eq:general-mttf}:
+\[
+  MTTF_{sys} = \frac{\mathcal{T}}{\left(\sum_{k=1}^{N_p} \left(\sum_{i=1}^{N_s}\frac{1}{\mathcal{N}_{ik}}\right)^{\beta} \right)^{1/\beta}}
+\]
+
+\subsection{Mapping and Scheduling}
+We use genetic algorithms for mapping and scheduling presented in \cite{schmitz2004}.
