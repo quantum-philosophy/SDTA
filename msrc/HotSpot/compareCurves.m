@@ -40,7 +40,7 @@ figure;
 options = struct( ...
   'xlabel', 'Time, s', ...
   'ylabel', 'Temperature, C');
-options.legend = { 'Repeating SSDTC', 'Simulation with HotSpot' };
+options.legend = { 'Repeating SSDTC', 'Iterative HotSpot Simulation' };
 
 Utils.draw(time, [ Tce, Ths ], options);
 
