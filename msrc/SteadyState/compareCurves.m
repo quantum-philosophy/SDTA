@@ -1,20 +1,13 @@
-clear all;
-clc;
+setup;
 
-name = '001_030';
-processorArea = 4e-6;
-powerScale = 1;
+config = Optima('001_030');
 
-tgffopt = Utils.path([ name, '.tgffopt' ]);
-system = Utils.path([ name, '.sys' ]);
-hotspot = Utils.path('hotspot.config');
-floorplan = Utils.path([ name, '_temp.flp' ]);
-params = Utils.path('parameters.config');
+processorArea = 81e-6;
+powerScale = 10;
 
-processorCount = Utils.readParameter(tgffopt, 'table_cnt');
-Utils.generateFloorplan(floorplan, processorCount, processorArea);
+config.changeArea(processorArea);
 
-config = @(leakage, solution, power_scale) ...
+param_line = @(leakage, solution, power_scale) ...
   Utils.configStream(...
     'verbose', 0, ...
     'deadline_ratio', 1, ...
@@ -22,16 +15,14 @@ config = @(leakage, solution, power_scale) ...
     'solution', solution, ...
     'power_scale', power_scale);
 
-Tce = Optima.solve(system, floorplan, hotspot, params, ...
-  config(0, 'condensed_equation', powerScale));
+Tce = Optima.solve(config.system, config.floorplan, config.hotspot, config.params, ...
+  param_line(0, 'condensed_equation', powerScale));
 
-Tss = Optima.solve(system, floorplan, hotspot, params, ...
-  config(0, 'steady_state', powerScale));
-
-samplingInterval = Utils.readParameter(hotspot, '-sampling_intvl');
+Tss = Optima.solve(config.system, config.floorplan, config.hotspot, config.params, ...
+  param_line(0, 'steady_state', powerScale));
 
 [ stepCount, processorCount ] = size(Tce);
-time = ((1:stepCount) - 1) * samplingInterval;
+time = ((1:stepCount) - 1) * config.samplingInterval;
 
 Tce = Tce - Constants.degreeKelvin;
 Tss = Tss - Constants.degreeKelvin;
@@ -42,8 +33,7 @@ subplot(2, 1, 1);
 Utils.compareLines('Steady-State Dynamic Temperature Curve', ...
   'Time, s', 'Temperature, C', time, 'CE', Tce, 'SS', Tss);
 
-tgff = Utils.path([ name, '.tgff' ]);
-tgff = TestCase.TGFF(tgff);
+tgff = TestCase.TGFF(config.tgff);
 graph = tgff.graphs{1};
 pes = tgff.pes;
 LS.mapEarliestAndSchedule(graph, pes);

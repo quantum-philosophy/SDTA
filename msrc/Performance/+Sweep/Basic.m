@@ -1,7 +1,8 @@
 classdef Basic < handle
   properties (Constant)
-    max_iterations = 1;
+    maxIterations = 1;
     tolerance = 0;
+
     hotspot_line = '';
 
     tryCount = 10;
@@ -87,10 +88,10 @@ classdef Basic < handle
 
       if sweep.includeSS
         Utils.draw(sweep.values, sweep.times, options);
-        legend('HS', 'UMF', 'CE', 'SS');
+        legend('Iterative HotSpot Simulation (one)', 'Unsymmetric MultiFrontal Method', 'Condensed Equation Method', 'Steady-State Approximation');
       else
         Utils.draw(sweep.values, sweep.times(:, 1:3), options);
-        legend('HS', 'UMF', 'CE');
+        legend('Iterative HotSpot Simulation (one)', 'Unsymmetric MultiFrontal Method', 'Condensed Equation Method');
       end
 
       set(gca, 'YScale', 'log');
@@ -150,7 +151,7 @@ classdef Basic < handle
       for i = 1:sweep.tryCount
         [ dummy, dummy, dummy, dummy, T, t ] = Optima.verify( ...
           sweep.system, sweep.floorplan, sweep.hotspot_config, ...
-          sweep.params, param_line, sweep.max_iterations, sweep.tolerance);
+          sweep.params, param_line, sweep.maxIterations, sweep.tolerance);
         total = total + t;
       end
 
