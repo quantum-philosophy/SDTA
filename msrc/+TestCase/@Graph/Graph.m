@@ -168,9 +168,11 @@ classdef Graph < handle
     end
 
     function fitTime(graph, desiredTime)
-      if ~graph.isScheduled, error('Should be scheduled'); end
+      graph.scale(desiredTime / graph.deadline);
+    end
 
-      factor = desiredTime / graph.deadline;
+    function scale(graph, factor)
+      if ~graph.isScheduled, error('Should be scheduled'); end
 
       for task = graph.tasks, task = task{1};
         task.scale(factor);
