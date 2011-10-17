@@ -40,7 +40,7 @@ We address the thermal cycling component of the common packaging and interfacial
 \begin{equation} \label{eq:cycles-to-failure}
   \mathcal{N} = A (\triangle T - \triangle T_0)^{-b} e^{\frac{E_a}{k T_{max}}}
 \end{equation}
-where $A$ is an empirically determined constant, $\triangle T$ is the thermal cycle amplitude, $\triangle T_0$ is the portion of the temperature range in the elastic region which does not cause damage, $b$ is the Coffin-Manson exponent which also empirically determined, $E_{a}$ is the activation energy, $k$ is the Boltzmann constant, and $T_{max}$ is the maximal temperature during the thermal cycle.
+where $A$ is an empirically determined constant, $\triangle T$ is the thermal cycle amplitude, $\triangle T_0$ is the portion of the temperature range in the elastic region which does not cause damage, $b$ is the Coffin-Manson exponent which also empirically determined\footnote{This constant is found to be 6--9 for brittle fracture such as Si and its dielectrics \cite{jedec2010}.}, $E_{a}$ is the activation energy\footnote{For the thermal cycling failure mechanism the activation energy lies between 0.5 and 0.7~eV \cite{vigrass}.}, $k$ is the Boltzmann constant, and $T_{max}$ is the maximal temperature during the thermal cycle.
 
 The failure rate is modeled by the Weibull distribution \cite{xiang2010}:
 \[
@@ -88,7 +88,7 @@ where:
   MTTF_k = \frac{\mathcal{T}}{\sum_{i=1}^{N_s} \frac{1}{\mathcal{N}_{ik}}}
 \]
 
-Note that the shape parameter $\beta_k$ can be different for different processing elements. If we assume that all $\beta_k$ are equal, we can use another approach to estimate the total MTTF. Since each component is essential, the reliability of the whole system is a product of reliabilities of each of the components:
+Note that the shape parameter $\beta_k$ can be different for different processing elements. If we assume that all $\beta_k$ are equal (a homogeneous architecture), we can use another approach to estimate the total MTTF. Since each component is essential, the reliability of the whole system is a product of reliabilities of each of the components:
 \begin{align*}
   R_{sys}(t) & = \prod_{k=1}^{N_p} e^{-\left( \frac{t}{\mathcal{T}} \sum_{i=1}^{N_s} \frac{\triangle t_i}{\eta_{ik}} \right)^{\beta}} \\
   & = e^{- \left(\frac{t}{\mathcal{T}}\right)^{\beta} \; \sum_{k = 1}^{N_p} \left(  \sum_{i=1}^{N_s} \frac{\triangle t_i}{\eta_{ik}} \right)^{\beta}}
@@ -103,5 +103,5 @@ consequently, using \equref{eq:general-mttf}:
   MTTF_{sys} = \frac{\mathcal{T}}{\left(\sum_{k=1}^{N_p} \left(\sum_{i=1}^{N_s}\frac{1}{\mathcal{N}_{ik}}\right)^{\beta} \right)^{1/\beta}}
 \]
 
-\subsection{Mapping and Scheduling}
-We use genetic algorithms for mapping and scheduling presented in \cite{schmitz2004}.
+\subsection{Genetic Algorithm}
+TO BE DONE.

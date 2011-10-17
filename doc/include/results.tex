@@ -1,11 +1,20 @@
-\subsection{Experimental Setup}
-Each processing element is described with a supply voltage in the diapason 0.6--1.0~V, a frequency in 2--4~GHz, and a number of gates in $15 \cdot 10^5$--$25 \cdot 10^5$. The application, that is being run on this multiprocessor system, consists of a number of tasks in the range 10--250. The effective switched capacitance and the number of clock cycles of each task are in the ranges $15 \cdot 10^{-9}$--$25 \cdot 10^{-9}$ and $2 \cdot 10^8$--$4 \cdot 10^8$ respectively. In \equref{eq:cycles-to-failure} the constant $b$ for brittle fracture (Si and its dielectrics) is found to be 6--9 \cite{jedec2010}, $E_{a_{TC}}$ for TC lies between 0.5--0.7~eV \cite{vigrass}.
+\subsection{SSDTP Computation Performance} \label{sec:results-ssdtp}
+\image{performance}{50 200 50 200}{A performance comparison on the semilogarithmic scale of three methods for the SSDTP calculation: the HotSpot simulator, the Unsymmetric MultiFrontal method, and the Condensed Equation method. HotSpot is restricted to one iteration. The performance is given for different application periods with a constant sampling interval of $1 ms$. One second on the horizontal axis corresponds to 1000 steps in the power profile.}
+We have discussed several ways to perform the steady-state dynamic temperature profile calculation:
+\begin{itemize}
+  \item The iterative HotSpot simulation.
+  \item The steady-state approximation using HotSpot.
+  \item Direct dense solutions, namely, the dense LU decomposition (the Gaussian elimination).
+  \item Direct sparse solutions with such techniques as the Unsymmetric MultiFrontal method.
+  \item Solutions for Toeplitz matrices, and in particular for block-circulant matrices, e.g., the Fast Fourier Transform.
+  \item The solution based on the Condensed Equation method.
+\end{itemize}
 
-\subsection{SSDTC Performance}
-TODO.
+In should be noted that the first solution, the HotSpot simulator, has nothing to do with the system of linear equations given by \equref{eq:system}, which is not the case with the other approaches. The second solution, the LU decomposition, is not a competitor to the rest of the methods, since it does not take into account any special properties of the system. Moreover, direct solvers (in this case, the LU decomposition and the Unsymmetric MultiFrontal method) are known to consume a lot of memory and, therefore, have problems with considerably large systems of linear equations. The last two seem to be the most promising solutions, although, according to our experiments, the Condensed Equation method is significantly faster than the FFT. The explanation to this is the following. The approach based on the fact that the matrix of the system is a block-circulant matrix is aware of the recurrent nature of the system, but it does not consider its sparseness, while the Condensed Equation has both of these features.
 
-\subsection{Reliability Space Exploration}
-TODO.
+Another possible technique, that we considered but do not discuss here in details due to the shortage of space, is iterative methods for solving systems of linear systems (e.g. the Jacobi, Gauss–Seidel, Successive over-relaxation methods). These methods are designed to overcome problems of direct solvers. For instance, they do not operate on full matrices and, therefore, they consume much less memory and can be applied for large systems. The most important issues with these methods are their convergence and accuracy. In our analysis we did not observe any advantages of using this methods for this particular problem, they demonstrated slow convergence and poor accuracy.
 
-\subsection{Real-Life Example}
-TODO.
+Now we shall compare three of the methods listed above: the HotSpot simulator, the Unsymmetric MultiFrontal method, and the Condensed Equation method. We restrict HotSpot to \emph{one iteration} in order to have a cleaner comparison, since this number varies dramatically between different application periods and significantly depends on the stopping condition (we calculate the error relative to the CE method as to the ground truth). The comparison is given on \figref{fig:performance} where we vary the period of the simulated application keeping the sampling interval constant and equal to $1 ms$. For instance, an application with an 8-second period, 8000 power steps, and $(4 \times 1 + 12) \times 8000 = 128000$ linear equations requires 0.725, 2.509, and 0.0085 seconds to compute\footnote{All the experiments are done on a Linux machine with Intel Core i7-2600 (3.4GHz, 4 cores, 8 threads) and 8Gb of RAM.} for one iteration of HotSpot, the UMF method, and the CE method, correspondingly. Therefore, the CE method is approximately \emph{85 times faster} than one iteration of the HotSpot simulator, and around \emph{300 times faster} than the UMF method. The application period proportionally corresponds to the number of steps in the power profile (one second equals to 1000 steps in the power profile). Hence, we would see the same curves, if we were investigating dependency on the power profile discretization. The same holds for the number of processing elements, since, at the end of the day, the only difference is in the number of linear equations that the system (\equref{eq:system}) contains.
+
+\subsection{Reliability Optimization}
+TO BE DONE.
