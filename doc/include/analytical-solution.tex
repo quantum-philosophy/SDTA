@@ -141,7 +141,7 @@ Now we shall propose a much faster solution. Let us return back to the system of
   Y_{i + 1} = K_i \: Y_i + Q_i, \; i = 1 \dots N_s
 \end{equation}
 
-Systems with similar structures can be found in multiple shooting methods for boundary value problems of ordinary differential equations \cite{stoer2002}. A common technique to solve such systems is to form a so-called \emph{condensed equation}, or \emph{condensed system}. Let us undertake this procedure step by step.
+Systems with similar structures can be found in multiple shooting methods for boundary value problems of ordinary differential equations \cite{stoer2002}. A common technique to solve such systems is to form a so-called \emph{condensed equation} (CE), or \emph{condensed system}. Let us undertake this procedure step by step.
 
 The iterative repetition of this equation leads us to:
 \begin{equation} \label{eq:y-recurrent}
@@ -204,12 +204,9 @@ where $M$ is a diagonal matrix with the following structure:
 
 The solution of this system, $Y_1$, is the first component of the vector $\mathbb{Y}$. $P_{N_s}$ can be calculated using \equref{eq:p-recurrent}. All other vectors $Y_i$ for $i = 2 \dots N_s$ are successively found with help of \equref{eq:ce-recurrent}.
 
-As we see, in this approach there is no need to inverse any matrix, the solution of the system is obtained by scalar divisions and a similarity transformation with $U$.
+As we see, in this approach there is no need to inverse any matrix, the solution of the system is obtained by scalar divisions and a similarity transformation with $U$. The experimental results given in \secref{sec:results-ssdtp} show that this solution has the highest performance without any loss of accuracy among other methods that we have considered in our analysis.
 
-The experimental results given in \secref{sec:results-ssdtp} show that this approach has the highest performance without any loss of accuracy among other methods that we have considered in our analysis.
-
-\subsection{Sampling Interval}
-In this section we make one assumption concerning the time intervals $\triangle t_i$ that allows us to perform all the calculations in a more efficient manner. We assume that \emph{the time intervals are equal}, $\triangle t_i = \triangle t$ for $i = 1 \dots N_s$, i.e., the distance in time between two successive power measurements stays constant. We refer to this distance as the \emph{sampling interval}. The preferable size of this sampling interval depends on a particular application and the level of accuracy that we want to achieve. Having this assumption, the recurrent process (\equref{eq:recurrent-equation}) turns into:
+Let us now consider one specific case, we make one assumption concerning the time intervals $\triangle t_i$ that allows us to perform all the calculations in a more efficient manner. We assume that \emph{the time intervals are equal}, $\triangle t_i = \triangle t$ for $i = 1 \dots N_s$, i.e., the distance in time between two successive power measurements stays constant. We refer to this distance as the \emph{sampling interval}. The preferable size of this sampling interval depends on a particular application and the level of accuracy that we want to achieve. Having this assumption, the recurrent process (\equref{eq:recurrent-equation}) turns into:
 \[
   Y_{i+1} = K \: Y_i + G \: B_i
 \]
@@ -225,9 +222,12 @@ It should be noted that now $K$ and $G$ are constants, since they depend only on
   & P_i = K \: P_{i - 1} + Q_i, \; i = 2 \dots N_s \nonumber
 \end{align}
 
-One can also notice that the overall matrix of the system under this assumption becomes a block Toeplitz matrix, because inner blocks $\mathbb{A}_{ij}$ satisfy the following criterion:
+\subsection{Other solutions}
+One can notice that the overall matrix of the system under the assumption of the equal time intervals becomes a block Toeplitz matrix, because inner blocks $\mathbb{A}_{ij}$ satisfy the following criterion:
 \[
-  \mathbb{A}_{ij} = \mathbb{A}_{i+1, j+1}, \; i, j = 1 \cdots N_s - 1
+  \mathbb{A}_{ij} = \mathbb{A}_{i+1, j+1}, \; i, j = 1 \dots N_s - 1
 \]
 
-To be more specific, the matrix is a block-circulant matrix where each block row vector is rotated one block element to the right relative to the preceding block row vector. This leads us to a wide range of possible techniques to solve \mbox{$\mathbb{A} \: \mathbb{Y} = \mathbb{B}$}, for example, the Fast Fourier Transform \cite{mazancourt1983}, \cite{vescovo1997}. In spite of the fact that this approach is \emph{much faster} then the solution obtained with the UMFPACK, our experiments have shown that the condensed equation method is even faster (see \secref{sec:results-ssdtp}), therefore, we concentrate on it.
+To be more specific, the matrix is a block-circulant matrix where each block row vector is rotated one block element to the right relative to the preceding block row vector. This leads us to a wide range of possible techniques to solve \mbox{$\mathbb{A} \: \mathbb{Y} = \mathbb{B}$}, for example, the Fast Fourier Transform \cite{mazancourt1983}, \cite{vescovo1997}. In spite of the fact that this approach is \emph{much faster} then the solution obtained with the UMFPACK, our experiments have shown that the Condensed Equation method is even faster (see \secref{sec:results-ssdtp}), therefore, we concentrate on it.
+
+Another possible technique, that we considered but do not discuss here in details due to the shortage of space, is iterative methods for solving systems of linear systems (e.g. the Jacobi, Gauss–Seidel, Successive over-relaxation methods). These methods are designed to overcome problems of direct solvers. For instance, they do not operate on full matrices and, therefore, they consume much less memory and can be applied for large systems. The most important issues with these methods are their convergence and accuracy. In our analysis we did not observe any advantages of using this methods for this particular problem, they demonstrated slow convergence and poor accuracy.
