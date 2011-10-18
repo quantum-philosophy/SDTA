@@ -22,8 +22,8 @@ classdef Time < Sweep.Basic
       config = { 'time_scale', sweep.timeScale(i) };
     end
 
-    function [ value, retake ] = valueStep(sweep, i, Tce, Tml, Ths, Tss)
-      value = size(Tce, 1) * sweep.hotspot.samplingInterval;
+    function [ value, retake ] = valueStep(sweep, i, T, t)
+      value = size(T, 2) * sweep.hotspot.samplingInterval;
       retake = false;
     end
   end

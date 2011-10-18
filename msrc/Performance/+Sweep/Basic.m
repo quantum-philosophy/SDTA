@@ -5,9 +5,7 @@ classdef Basic < handle
 
     hotspot_line = '';
 
-    tryCount = 10;
-
-    includeSS = false;
+    tryCount = 30;
   end
 
   properties (SetAccess = protected)
@@ -20,6 +18,7 @@ classdef Basic < handle
 
     title
     variable
+    legend
 
     hotspot
 
@@ -38,40 +37,48 @@ classdef Basic < handle
 
       sweep.title = 'Performance';
       sweep.variable = 'Variable';
+      sweep.legend = { ...
+        'Condensed Equation Method', ...
+        'One HotSpot Simulation', ...
+        'Steady-State Approximation', ...
+        'Unsymmetric MultiFrontal Method', ...
+        'FFT Method (Block-Circulant)' };
 
       sweep.hotspot = Hotspot(sweep.floorplan, ...
         sweep.hotspot_config, sweep.hotspot_line);
     end
 
     function perform(sweep)
-      fprintf('%15s%15s%15s%15s%15s%15s%15s\n', ...
+      fprintf('%15s%15s%15s%15s%15s%15s%15s%15s%15s\n', ...
         'CE, s', ...
-        'UMF, s', 'Error(UMF)', ...
         'HS, s', 'Error(HS)', ...
-        'SS, s', 'Error(SS)');
+        'SS, s', 'Error(SS)', ...
+        'UMF, s', 'Error(UMF)', ...
+        'BC, s', 'Error(BC)');
 
       sweep.values = zeros(0, 0);
-      sweep.times = zeros(0, 4);
+      sweep.times = zeros(0, 5);
 
       i = 1;
 
       while sweep.continueStep(i)
         while true
-          [ Tce, tce, Tml, tml, Ths, ths, Tss, tss ] = sweep.makeStep(i);
-          [ value, retake ] = sweep.valueStep(i, Tce, Tml, Ths, Tss);
+          [ T, t ] = sweep.makeStep(i);
+          [ value, retake ] = sweep.valueStep(i, T, t);
           if ~retake, break; end
         end
 
         sweep.values(end + 1) = value;
+        sweep.times(end + 1, 1:length(t)) = t;
 
-        sweep.times(end + 1, 1:4) = [ ths, tml, tce, tss ];
+        fprintf('%15.4f', t(1));
 
-        Ehs = sweep.error(Tce, Ths);
-        Eml = sweep.error(Tce, Tml);
-        Ess = sweep.error(Tce, Tss);
+        for j = 2:size(T, 1)
+          E = sweep.error(T(1, :, :), T(j, :, :));
+          fprintf('%15.4f%15.2e', t(j), mean(E));
+        end
 
-        fprintf('%15.4f%15.4f%15.2e%15.4f%15.2e%15.4f%15.2e\n', ...
-          tce, tml, mean(Eml), ths, mean(Ehs), tss, mean(Ess));
+        fprintf('\n');
 
         i = i + 1;
       end
@@ -86,13 +93,8 @@ classdef Basic < handle
         'ylabel', 'log(Computational Time, s)', ...
         'marker', true);
 
-      if sweep.includeSS
-        Utils.draw(sweep.values, sweep.times, options);
-        legend('Iterative HotSpot Simulation (one)', 'Unsymmetric MultiFrontal Method', 'Condensed Equation Method', 'Steady-State Approximation');
-      else
-        Utils.draw(sweep.values, sweep.times(:, 1:3), options);
-        legend('Iterative HotSpot Simulation (one)', 'Unsymmetric MultiFrontal Method', 'Condensed Equation Method');
-      end
+      Utils.draw(sweep.values, sweep.times, options);
+      legend(sweep.legend{:});
 
       set(gca, 'YScale', 'log');
     end
@@ -101,11 +103,11 @@ classdef Basic < handle
   methods (Abstract, Access = protected)
     result = continueStep(i)
     config = setupStep(i)
-    [ value, retake ] = valueStep(i, Tce, Tml, Ths, Tss)
+    [ value, retake ] = valueStep(i, T, t)
   end
 
   methods (Access = private)
-    function [ Tce, tce, Tml, tml, Ths, ths, Tss, tss ] = makeStep(sweep, i)
+    function [ T, t ] = makeStep(sweep, i)
       config = sweep.setupStep(i);
 
       param_line = Utils.configStream(...
@@ -113,14 +115,24 @@ classdef Basic < handle
           'solution', 'condensed_equation', ...
           'leakage', 0, config{:});
 
+      T = zeros(5, 0, 0);
+      t = zeros(1, 5);
+
       % Condensed Equation
-      [ Tce, tce ] = sweep.optimaSolveOnAverage(param_line);
+      [ temp, t(1) ] = sweep.optimaSolveOnAverage(param_line);
+      T(1, 1:size(temp, 1), 1:size(temp, 2)) = temp;
 
       % HotSpot
-      [ Ths, ths ] = sweep.optimaVerifyOnAverage(param_line);
+      [ temp, t(2) ] = sweep.optimaVerifyOnAverage(param_line);
+      T(2, 1:size(temp, 1), 1:size(temp, 2)) = temp;
 
       % UMF in Matlab
-      [ Tml, tml ] = sweep.matlabOnAverage(param_line);
+      [ temp, t(4) ] = sweep.matlabOnAverage(param_line, 'band');
+      T(4, 1:size(temp, 1), 1:size(temp, 2)) = temp;
+
+      % Block-Circulant
+      [ temp, t(5) ] = sweep.matlabOnAverage(param_line, 'bc');
+      T(5, 1:size(temp, 1), 1:size(temp, 2)) = temp;
 
       param_line = Utils.configStream(...
           'verbose', 0, ...
@@ -128,18 +140,18 @@ classdef Basic < handle
           'leakage', 0, config{:});
 
       % Steady-State approximation
-      [ Tss, tss ] = sweep.optimaSolveOnAverage(param_line);
+      [ temp, t(3) ] = sweep.optimaSolveOnAverage(param_line);
+      T(3, 1:size(temp, 1), 1:size(temp, 2)) = temp;
     end
 
     function [ T, time ] = optimaSolveOnAverage(sweep, param_line)
       total = 0;
 
       for i = 1:sweep.tryCount
-        tic;
-        T = Optima.solve( ...
+        [ T, dummy, t ] = Optima.solve( ...
           sweep.system, sweep.floorplan, sweep.hotspot_config, ...
           sweep.params, param_line);
-        total = total + toc;
+        total = total + t;
       end
 
       time = total / sweep.tryCount;
@@ -158,7 +170,9 @@ classdef Basic < handle
       time = total / sweep.tryCount;
     end
 
-    function [ T, time ] = matlabOnAverage(sweep, param_line)
+    function [ T, time ] = matlabOnAverage(sweep, param_line, method)
+      if nargin < 3, method = 'band'; end
+
       power = Optima.get_power( ...
         sweep.system, sweep.floorplan, sweep.hotspot_config, ...
         sweep.params, param_line);
@@ -166,7 +180,7 @@ classdef Basic < handle
       total = 0;
 
       for i = 1:sweep.tryCount
-        [ T, t ] = sweep.hotspot.solve(power, 'band');
+        [ T, t ] = sweep.hotspot.solve(power, method);
         total = total + t;
       end
 

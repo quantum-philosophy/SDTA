@@ -162,5 +162,40 @@ classdef Hotspot < handle
         Y(on:(on + n - 1)) = K * Y(op:(op + n - 1)) + Q(:, i - 1);
       end
     end
+
+    function YY = bc(hs, B)
+      [ m, cores ] = size(B);
+      n = hs.nodes;
+      nm = n * m;
+
+      B = [ B, zeros(m, n - cores) ];
+
+      t = hs.samplingInterval;
+
+      [ expDt, G ] = hs.calculateCoefficients(t);
+
+      AA = zeros(2, n, n);
+      AA(1, :, :) = expDt;
+      AA(2, :, :) = -eye(n);
+
+      BB = zeros(n, m);
+
+      for i = 1:m
+        BB(:, i) = - G * transpose(B(i, :));
+      end
+
+      % Solve
+      %
+      AA = conj(fft(AA, m, 1));
+      BB = fft(BB, m, 2);
+
+      YY = zeros(n, m);
+
+      for i = 1:m
+        YY(:, i) = squeeze(AA(i, :, :)) \ BB(:, i);
+      end
+
+      YY = Utils.flatten(ifft(YY, m, 2));
+    end
   end
 end
