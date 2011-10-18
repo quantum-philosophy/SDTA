@@ -1,7 +1,7 @@
 The proposed solution of the steady-state dynamic temperature estimation can be used in a wide range of optimization procedures. One of them is the reliability optimization that we discuss in this section. We performing the temperature-aware task mapping and scheduling in order to address the thermal cycling aging effect while keeping the energy consumption on an appropriate level. Both mapping and scheduling are based on the genetic algorithms \cite{schmitz2004}. Let us start with the overall description of the system.
 
 \subsection{Architecture Model}
-We consider a multiprocessor system-on-a-chip with a heterogeneous architecture composed of a number of processing elements $\Pi = \{ \pi_k: \; k = 1 \dots N_p \}$. Each processing element $\pi_k$ is characterized by its supply voltage $V_k$, frequency $f_k$, and the number of gates $N_{gate \: k}$:
+We consider a multiprocessor system-on-a-chip with a heterogeneous architecture composed of a number of processing elements $\Pi = \{ \pi_k: \; k = 0 \dots N_p - 1 \}$. Each processing element $\pi_k$ is characterized by its supply voltage $V_k$, frequency $f_k$, and the number of gates $N_{gate \: k}$:
 \[
   \pi_k \rightarrow (V_k, f_k, N_{gate \: k})
 \]
@@ -15,7 +15,7 @@ The system executes a periodic application with a set of data-dependent tasks. T
   & \mathcal{V} = \{ v_i \} \\
   & E = \{ e_{ij} \}
 \end{align*}
-where $\mathcal{V}$ is a set of vertices of the graph (tasks), $E$ is a set of edges (data dependencies between tasks), and $\mathcal{T}$ is the period of the application. Each pair of a task $v_i$ and a processing element $\pi_k$ is characterized by two parameters:
+where $\mathcal{V}$ is a set of $N_t$ vertices of the graph (tasks), $E$ is a set of edges (data dependencies between tasks), and $\mathcal{T}$ is the period of the application. Each pair of a task $v_i$ and a processing element $\pi_k$ is characterized by two parameters:
 \begin{equation*}
   (v_i, \pi_k) \rightarrow (C_{eff \; ik}, N_{cycles \; ik})
 \end{equation*}
@@ -48,17 +48,17 @@ The failure rate is modeled by the Weibull distribution \cite{xiang2010}:
 \]
 where $\eta$ is the scaling parameter, $\beta$ is the shape parameter. The last one is found to be independent on the temperature variation, which is not the case with the scaling parameter $\eta$. Therefore, the distribution can vary from one set of conditions to another. Here we are coming back to the discretization of the overall period of the application $\mathcal{T}$ into $N_s$ small time intervals $\triangle t_i$, so that during each time interval $\triangle t_i$ all parameters of the system are assumed to be constant and, therefore, $\eta_i$ is also constant. In this case, the cumulative distribution function for the end of the first execution of the application is the following \cite{xiang2010}:
 \[
-  R = e^{(\sum_{i=1}^{N_s} \frac{\triangle t_i}{\eta_i})^\beta}
+  R = e^{(\sum_{i=0}^{N_s - 1} \frac{\triangle t_i}{\eta_i})^\beta}
 \]
 
 The following continuous approximation can take place for any time $t$:
 \[
-  R(t) = e^{(\frac{t}{\mathcal{T}} \sum_{i=1}^{N_s} \frac{\triangle t_i}{\eta_i})^\beta}
+  R(t) = e^{(\frac{t}{\mathcal{T}} \sum_{i=0}^{N_s - 1} \frac{\triangle t_i}{\eta_i})^\beta}
 \]
 
 The formula still keeps the form of the Weibull distribution, we can extract the scaling parameter of it:
 \[
-  \eta = \frac{\mathcal{T}}{\sum_{i=1}^{N_s} \frac{\triangle t_i}{\eta_i}}
+  \eta = \frac{\mathcal{T}}{\sum_{i=0}^{N_s - 1} \frac{\triangle t_i}{\eta_i}}
 \]
 
 The mean time to failure (MTTF) in case of the Weibull distribution is defined as:
@@ -76,31 +76,31 @@ where $MTTF_i$ is the mean time to failure for each interval (if we had the same
 
 Taking everything together, we get the following equation:
 \begin{equation} \label{eq:one-mttf}
-  MTTF = \frac{\mathcal{T}}{\sum_{i=1}^{N_s} \frac{1}{\mathcal{N}_i}}
+  MTTF = \frac{\mathcal{T}}{\sum_{i=0}^{N_s - 1} \frac{1}{\mathcal{N}_i}}
 \end{equation}
 
 \equref{eq:one-mttf} describes the MTTF of one processing element. We assume that \emph{each} processing element is essential for the proper work of the system, therefore, a failure of \emph{any} core leads to the total failure of the whole system. The MTTF of the system can be estimated as the minimal MTTF of its processing elements:
 \[
-  MTTF_{sys} = \min_{k=1}^{N_p} \; MTTF_k
+  MTTF_{sys} = \min_{k=0}^{N_p - 1} \; MTTF_k
 \]
 where:
 \[
-  MTTF_k = \frac{\mathcal{T}}{\sum_{i=1}^{N_s} \frac{1}{\mathcal{N}_{ik}}}
+  MTTF_k = \frac{\mathcal{T}}{\sum_{i=0}^{N_s - 1} \frac{1}{\mathcal{N}_{ik}}}
 \]
 
 Note that the shape parameter $\beta_k$ can be different for different processing elements. If we assume that all $\beta_k$ are equal (a homogeneous architecture), we can use another approach to estimate the total MTTF. Since each component is essential, the reliability of the whole system is a product of reliabilities of each of the components:
 \begin{align*}
-  R_{sys}(t) & = \prod_{k=1}^{N_p} e^{-\left( \frac{t}{\mathcal{T}} \sum_{i=1}^{N_s} \frac{\triangle t_i}{\eta_{ik}} \right)^{\beta}} \\
-  & = e^{- \left(\frac{t}{\mathcal{T}}\right)^{\beta} \; \sum_{k = 1}^{N_p} \left(  \sum_{i=1}^{N_s} \frac{\triangle t_i}{\eta_{ik}} \right)^{\beta}}
+  R_{sys}(t) & = \prod_{k=0}^{N_p - 1} e^{-\left( \frac{t}{\mathcal{T}} \sum_{i=0}^{N_s - 1} \frac{\triangle t_i}{\eta_{ik}} \right)^{\beta}} \\
+  & = e^{- \left(\frac{t}{\mathcal{T}}\right)^{\beta} \; \sum_{k = 0}^{N_p - 1} \left( \sum_{i=0}^{N_s - 1} \frac{\triangle t_i}{\eta_{ik}} \right)^{\beta}}
 \end{align*}
 
 We can define the scaling parameter for the whole system as the following:
 \[
-  \eta_{sys} = \frac{\mathcal{T}}{\left(\sum_{k=1}^{N_p} \left(\sum_{i=1}^{N_s}\frac{\triangle t_i}{\eta_{ik}}\right)^{\beta} \right)^{1/\beta}} \\
+  \eta_{sys} = \frac{\mathcal{T}}{\left(\sum_{k=0}^{N_p - 1} \left(\sum_{i=0}^{N_s - 1}\frac{\triangle t_i}{\eta_{ik}}\right)^{\beta} \right)^{1/\beta}} \\
 \]
 consequently, using \equref{eq:general-mttf}:
 \[
-  MTTF_{sys} = \frac{\mathcal{T}}{\left(\sum_{k=1}^{N_p} \left(\sum_{i=1}^{N_s}\frac{1}{\mathcal{N}_{ik}}\right)^{\beta} \right)^{1/\beta}}
+  MTTF_{sys} = \frac{\mathcal{T}}{\left(\sum_{k=0}^{N_p - 1} \left(\sum_{i=0}^{N_s - 1}\frac{1}{\mathcal{N}_{ik}}\right)^{\beta} \right)^{1/\beta}}
 \]
 
 \subsection{Genetic Algorithm}

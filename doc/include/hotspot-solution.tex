@@ -11,19 +11,19 @@ Another approach that can be applied is an approximation using the steady-state 
 \[
   T = G^{-1} P
 \]
-where the conductance matrix, $G$, is a symmetric matrix, $P$ is a vector of the power consumption. The solution is temperature of the system in its steady state. Therefore, if we assume that all processing elements $\pi_k$ during each time interval $\triangle t_i$ with the dynamic power consumption $P_i = ( P_{i1}, \dots, P_{i N_p } )^T$ have their steady-state temperature $T_i = ( T_{i1}, \dots, T_{i N_p} )^T$, then the SSDTP can be found as the following:
+where the conductance matrix, $G$, is a symmetric matrix, $P$ is a vector of the power consumption. The solution is temperature of the system in its steady state. Therefore, if we assume that all processing elements $\pi_k$ during each time interval $\triangle t_i$ with the dynamic power consumption $P_i = ( P_{i, \: 0}, \dots, P_{i, \: N_p - 1} )^T$ have their steady-state temperature $T_i = ( T_{i, \: 0}, \dots, T_{i, \: N_p - 1} )^T$, then the SSDTP can be found as the following:
 \begin{equation*}
   \mathbb{T} = \left[
     \begin{array}{c}
-      T_1^T \\
+      T_0^T \\
       \vdots \\
-      T_{N_s}^T
+      T_{N_s - 1}^T
     \end{array}
   \right] = \left[
     \begin{array}{c}
-      (G^{-1} P_1)^T \\
+      (G^{-1} P_0)^T \\
       \vdots \\
-      (G^{-1} P_{N_s})^T
+      (G^{-1} P_{N_s - 1})^T
     \end{array}
   \right]
 \end{equation*}

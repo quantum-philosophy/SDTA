@@ -1,16 +1,16 @@
-We consider a multiprocessor system-on-a-chip with a set of processing elements $\Pi = \{ \pi_k: k = 1 \dots N_p \}$. The system executes a periodic application with the overall period $\mathcal{T}$ which is discretized into $N_s$ intervals $\triangle t_i$ for $i = 1 \dots N_s$. The time intervals $\triangle t_i$ are small enough to assume that the power consumption and the temperature of each processing element $\Pi_k$ are constant within these intervals. We assume that the power profile:
+We consider a multiprocessor system-on-a-chip with a set of processing elements $\Pi = \{ \pi_k: k = 0 \dots N_p - 1 \}$. The system executes a periodic application with the overall period $\mathcal{T}$ which is discretized into $N_s$ intervals $\triangle t_i$ for $i = 0 \dots N_s - 1$. The time intervals $\triangle t_i$ are small enough to assume that the power consumption and the temperature of each processing element $\Pi_k$ are constant within these intervals. We assume that the power profile:
 \begin{equation*}
   \mathbb{P} = \left[
     \begin{array}{c}
-      P_1^T \\
+      P_0^T \\
       \vdots \\
-      P_{N_s}^T
+      P_{N_s - 1}^T
     \end{array}
   \right] = \left[
     \begin{array}{ccc}
-      P_{11} & \cdots & P_{1 N_p} \\
+      P_{0, \: 0} & \cdots & P_{0, \: N_p - 1} \\
       \vdots & \ddots & \vdots \\
-      P_{N_s 1} & \cdots & P_{N_s N_p}
+      P_{N_s - 1, \: 0} & \cdots & P_{N_s - 1, \: N_p - 1}
     \end{array}
   \right]
 \end{equation*}
@@ -18,15 +18,15 @@ where $P_{ik}$ is the power consumption of the $k$th core during the $i$th time 
 \begin{equation*}
   \mathbb{T} = \left[
     \begin{array}{c}
-      T_1^T \\
+      T_0^T \\
       \vdots \\
-      T_{N_s}^T
+      T_{N_s - 1}^T
     \end{array}
   \right] = \left[
     \begin{array}{ccc}
-      T_{11} & \cdots & T_{1 N_p} \\
+      T_{0, \: 0} & \cdots & T_{0, \: N_p - 1} \\
       \vdots & \ddots & \vdots \\
-      T_{N_s 1} & \cdots & T_{N_s N_p}
+      T_{N_s - 1, \: 0} & \cdots & T_{N_s - 1, \: N_p - 1}
     \end{array}
   \right]
 \end{equation*}
