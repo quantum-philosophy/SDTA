@@ -3,7 +3,16 @@
 
 #include <mex.h>
 #include <string>
+#include <time.h>
 #include "common.h"
+
+double substract(struct timespec *time1, struct timespec *time2)
+{
+	int64_t elapsed = ((time1->tv_sec * 1e9) + time1->tv_nsec) -
+		((time2->tv_sec * 1e9) + time2->tv_nsec);
+
+	return double(elapsed) / double(1e9);
+}
 
 void from_matlab(double *dest, const double *src, size_t rows, size_t cols)
 {

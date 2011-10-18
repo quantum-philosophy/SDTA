@@ -33,6 +33,7 @@ set (MEX_FLAGS
 	-I${TINYMT_DIR}
 	-DHOTSPOT_VERSION="${HOTSPOT_VERSION}"
 	CFLAGS='-std=c99'
+	LDFLAGS='$$LDFLAGS -lrt'
 )
 
 add_custom_target (matlab-optima

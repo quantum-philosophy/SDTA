@@ -1,6 +1,7 @@
 #include <mex.h>
 #include <mex_utils.h>
 #include <TestCase.h>
+#include <time.h>
 
 using namespace std;
 
@@ -29,7 +30,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	matrix_t power;
 	matrix_t temperature;
 
-	clock_t begin, end;
+	struct timespec begin, end;
 	double elapsed;
 
 	if (tuning.solution == "condensed_equation") {
@@ -39,17 +40,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 		dynamic_power.compute(test.schedule, power);
 
-		begin = clock();
+		clock_gettime(CLOCK_MONOTONIC, &begin);
 		test.hotspot->solve(power, temperature);
-		end = clock();
+		clock_gettime(CLOCK_MONOTONIC, &end);
 	}
 	else {
-		begin = clock();
+		clock_gettime(CLOCK_MONOTONIC, &begin);
 		test.hotspot->solve(test.schedule, temperature, power);
-		end = clock();
+		clock_gettime(CLOCK_MONOTONIC, &end);
 	}
 
-	elapsed = (double)(end - begin) / CLOCKS_PER_SEC;
+	elapsed = substract(&end, &begin);
 
 	plhs[0] = to_matlab(temperature);
 	plhs[1] = to_matlab(power);
