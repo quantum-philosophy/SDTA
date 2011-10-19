@@ -39,7 +39,11 @@ set (MEX_FLAGS
 add_custom_target (matlab-optima
 	COMMAND mex ${CMAKE_CURRENT_SOURCE_DIR}/solve.cpp
 		${MEX_SRCS} ${MEX_LIBS} ${MEX_FLAGS}
+	COMMAND mex ${CMAKE_CURRENT_SOURCE_DIR}/solve_power.cpp
+		${MEX_SRCS} ${MEX_LIBS} ${MEX_FLAGS}
 	COMMAND mex ${CMAKE_CURRENT_SOURCE_DIR}/verify.cpp
+		${MEX_SRCS} ${MEX_LIBS} ${MEX_FLAGS}
+	COMMAND mex ${CMAKE_CURRENT_SOURCE_DIR}/verify_power.cpp
 		${MEX_SRCS} ${MEX_LIBS} ${MEX_FLAGS}
 	COMMAND mex ${CMAKE_CURRENT_SOURCE_DIR}/get_coefficients.cpp
 		${MEX_SRCS} ${MEX_LIBS} ${MEX_FLAGS}

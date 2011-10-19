@@ -21,37 +21,22 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		params.update(param_stream);
 	}
 
+	matrix_t power;
+	from_matlab(prhs[5], power);
+
 	SystemTuning tuning;
 	tuning.setup(params);
 
 	TestCase test(system, floorplan, hotspot, tuning);
 
-	matrix_t power;
+	struct timespec begin, end;
+
 	matrix_t temperature;
 
-	struct timespec begin, end;
-	double elapsed;
-
-	if (tuning.solution == "condensed_equation") {
-		DynamicPower dynamic_power(test.architecture->get_processors(),
-			test.graph->get_tasks(), test.graph->get_deadline(),
-			test.hotspot->get_sampling_interval());
-
-		dynamic_power.compute(test.schedule, power);
-
-		clock_gettime(CLOCK_MONOTONIC, &begin);
-		test.hotspot->solve(power, temperature);
-		clock_gettime(CLOCK_MONOTONIC, &end);
-	}
-	else {
-		clock_gettime(CLOCK_MONOTONIC, &begin);
-		test.hotspot->solve(test.schedule, temperature, power);
-		clock_gettime(CLOCK_MONOTONIC, &end);
-	}
-
-	elapsed = substract(&end, &begin);
+	clock_gettime(CLOCK_MONOTONIC, &begin);
+	test.hotspot->solve(power, temperature);
+	clock_gettime(CLOCK_MONOTONIC, &end);
 
 	plhs[0] = to_matlab(temperature);
-	plhs[1] = to_matlab(power);
-	plhs[2] = to_matlab(elapsed);
+	plhs[1] = to_matlab(substract(&end, &begin));
 }
