@@ -5,16 +5,11 @@ classdef Basic < handle
 
     hotspot_line = '';
 
-    tryCount = 30;
+    tryCount = 10;
   end
 
   properties (SetAccess = protected)
-    tgffopt
-    tgff
-    system
-    hotspot_config
-    floorplan
-    params
+    config
 
     title
     variable
@@ -28,12 +23,8 @@ classdef Basic < handle
 
   methods
     function sweep = Basic(test)
-      sweep.tgffopt = Utils.path([ test, '.tgffopt' ]);
-      sweep.tgff = Utils.path([ test, '.tgff' ]);
-      sweep.system = Utils.path([ test, '.sys' ]);
-      sweep.hotspot_config = Utils.path('hotspot.config');
-      sweep.floorplan = Utils.path([ test, '.flp' ]);
-      sweep.params = Utils.path('parameters.config');
+      config = Optima(test);
+      sweep.config = config;
 
       sweep.title = 'Performance';
       sweep.variable = 'Variable';
@@ -44,12 +35,13 @@ classdef Basic < handle
         'Unsymmetric MultiFrontal Method', ...
         'FFT Method (Block-Circulant)' };
 
-      sweep.hotspot = Hotspot(sweep.floorplan, ...
-        sweep.hotspot_config, sweep.hotspot_line);
+      sweep.hotspot = Hotspot(config.floorplan, ...
+        config.hotspot, sweep.hotspot_line);
     end
 
     function perform(sweep)
-      fprintf('%15s%15s%15s%15s%15s%15s%15s%15s%15s\n', ...
+      fprintf('%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s\n', ...
+        'Parameter', ...
         'CE, s', ...
         'HS, s', 'Error(HS)', ...
         'SS, s', 'Error(SS)', ...
@@ -68,14 +60,16 @@ classdef Basic < handle
           if ~retake, break; end
         end
 
+        fprintf('%15s', num2str(value));
+
         sweep.values(end + 1) = value;
         sweep.times(end + 1, 1:length(t)) = t;
 
-        fprintf('%15.4f', t(1));
+        fprintf('%15.2e', t(1));
 
         for j = 2:size(T, 1)
           E = sweep.error(T(1, :, :), T(j, :, :));
-          fprintf('%15.4f%15.2e', t(j), mean(E));
+          fprintf('%15.2e%15.2e', t(j), mean(E));
         end
 
         fprintf('\n');
@@ -106,7 +100,7 @@ classdef Basic < handle
     [ value, retake ] = valueStep(i, T, t)
   end
 
-  methods (Access = private)
+  methods (Access = protected)
     function [ T, t ] = makeStep(sweep, i)
       config = sweep.setupStep(i);
 
@@ -145,12 +139,13 @@ classdef Basic < handle
     end
 
     function [ T, time ] = optimaSolveOnAverage(sweep, param_line)
+      config = sweep.config;
       total = 0;
 
       for i = 1:sweep.tryCount
         [ T, dummy, t ] = Optima.solve( ...
-          sweep.system, sweep.floorplan, sweep.hotspot_config, ...
-          sweep.params, param_line);
+          config.system, config.floorplan, config.hotspot, ...
+          config.params, param_line);
         total = total + t;
       end
 
@@ -158,12 +153,13 @@ classdef Basic < handle
     end
 
     function [ T, time ] = optimaVerifyOnAverage(sweep, param_line)
+      config = sweep.config;
       total = 0;
 
       for i = 1:sweep.tryCount
         [ dummy, dummy, dummy, dummy, T, t ] = Optima.verify( ...
-          sweep.system, sweep.floorplan, sweep.hotspot_config, ...
-          sweep.params, param_line, sweep.maxIterations, sweep.tolerance);
+          config.system, config.floorplan, config.hotspot, ...
+          config.params, param_line, sweep.maxIterations, sweep.tolerance);
         total = total + t;
       end
 
@@ -171,11 +167,12 @@ classdef Basic < handle
     end
 
     function [ T, time ] = matlabOnAverage(sweep, param_line, method)
+      config = sweep.config;
       if nargin < 3, method = 'band'; end
 
       power = Optima.get_power( ...
-        sweep.system, sweep.floorplan, sweep.hotspot_config, ...
-        sweep.params, param_line);
+        config.system, config.floorplan, config.hotspot, ...
+        config.params, param_line);
 
       total = 0;
 
