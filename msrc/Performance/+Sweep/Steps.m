@@ -4,8 +4,8 @@ classdef Steps < Sweep.PowerBasic
   end
 
   methods
-    function sweep = Steps(test, stepCount)
-      sweep = sweep@Sweep.PowerBasic(test);
+    function sweep = Steps(test, stepCount, varargin)
+      sweep = sweep@Sweep.PowerBasic(test, varargin{:});
       sweep.variable = 'Application Period, s';
       sweep.stepCount = stepCount;
     end
@@ -23,8 +23,7 @@ classdef Steps < Sweep.PowerBasic
 
       o = sweep.config;
 
-      sweep.power = Power.generateRandomProfile( ...
-        o.processorCount, sweep.stepCount(i), o.processorCount * sweep.powerPerCore);
+      sweep.power = ones(sweep.stepCount(i), o.processorCount);
 
       config = {};
     end

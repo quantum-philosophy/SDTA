@@ -1,15 +1,11 @@
 classdef PowerBasic < Sweep.Basic
-  properties (Constant)
-    powerPerCore = 12;
-  end
-
   properties (SetAccess = protected)
     power
   end
 
   methods
-    function sweep = PowerBasic(test)
-      sweep = sweep@Sweep.Basic(test);
+    function sweep = PowerBasic(test, varargin)
+      sweep = sweep@Sweep.Basic(test, varargin{:});
     end
   end
 
@@ -45,14 +41,20 @@ classdef PowerBasic < Sweep.Basic
     function [ T, time ] = matlabOnAverage(sweep, param_line, method)
       if nargin < 3, method = 'band'; end
 
+      if strcmp(method, 'band')
+        n = 1;
+      else
+        n = sweep.tryCount;
+      end
+
       total = 0;
 
-      for i = 1:sweep.tryCount
+      for i = 1:n
         [ T, t ] = sweep.hotspot.solve(sweep.power, method);
         total = total + t;
       end
 
-      time = total / sweep.tryCount;
+      time = total / n;
     end
   end
 end

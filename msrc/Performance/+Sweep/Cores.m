@@ -9,9 +9,9 @@ classdef Cores < Sweep.PowerBasic
   end
 
   methods
-    function sweep = Cores(test, processorCount)
-      sweep = sweep@Sweep.PowerBasic(test);
-      sweep.variable = 'Number of Processing Units';
+    function sweep = Cores(test, processorCount, varargin)
+      sweep = sweep@Sweep.PowerBasic(test, varargin{:});
+      sweep.variable = 'Number of Cores';
       sweep.processorCount = processorCount;
     end
   end
@@ -34,8 +34,7 @@ classdef Cores < Sweep.PowerBasic
       sweep.hotspot = Hotspot(o.floorplan, ...
         o.hotspot, sweep.hotspot_line);
 
-      sweep.power = Power.generateRandomProfile( ...
-        processorCount, sweep.stepCount, processorCount * sweep.powerPerCore);
+      sweep.power = ones(sweep.stepCount, processorCount);
 
       config = {};
     end
