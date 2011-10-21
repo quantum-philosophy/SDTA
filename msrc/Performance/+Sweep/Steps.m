@@ -1,8 +1,4 @@
 classdef Steps < Sweep.PowerBasic
-  properties (Constant)
-    powerPerCore = 12;
-  end
-
   properties (SetAccess = private)
     stepCount
   end

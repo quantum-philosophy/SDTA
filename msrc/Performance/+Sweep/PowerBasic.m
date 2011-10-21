@@ -1,4 +1,8 @@
 classdef PowerBasic < Sweep.Basic
+  properties (Constant)
+    powerPerCore = 12;
+  end
+
   properties (SetAccess = protected)
     power
   end

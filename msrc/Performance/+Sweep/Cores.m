@@ -2,7 +2,6 @@ classdef Cores < Sweep.PowerBasic
   properties (Constant)
     processorArea = 4e-6;
     stepCount = 100;
-    maxPower = 80;
   end
 
   properties (SetAccess = private)
@@ -36,7 +35,7 @@ classdef Cores < Sweep.PowerBasic
         o.hotspot, sweep.hotspot_line);
 
       sweep.power = Power.generateRandomProfile( ...
-        processorCount, sweep.stepCount, sweep.maxPower);
+        processorCount, sweep.stepCount, processorCount * sweep.powerPerCore);
 
       config = {};
     end
