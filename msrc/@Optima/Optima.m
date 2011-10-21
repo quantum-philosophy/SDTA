@@ -16,6 +16,7 @@ classdef Optima < handle
     processorArea
     processorCount
     samplingInterval
+    ambientTemperature
   end
 
   methods
@@ -30,6 +31,7 @@ classdef Optima < handle
 
       o.processorCount = Utils.readParameter(o.tgffopt, 'table_cnt');
       o.samplingInterval = Utils.readParameter(o.hotspot, '-sampling_intvl');
+      o.ambientTemperature = Utils.readParameter(o.hotspot, '-ambient');
     end
 
     function changeArea(o, area)
@@ -81,7 +83,7 @@ classdef Optima < handle
 
     [ temperature, power, time ] = ...
       solve(system, floorplan, hotspot, params, param_line);
-    [ temperature, time ] = ...
+    [ temperature, time, total_power ] = ...
       solve_power(system, floorplan, hotspot, params, param_line, power);
 
     [ reference_temperature, refeference_time, power, iterations, temperature, time ] = ...

@@ -31,12 +31,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	struct timespec begin, end;
 
-	matrix_t temperature;
+	matrix_t temperature, total_power;
 
 	clock_gettime(CLOCK_MONOTONIC, &begin);
-	test.hotspot->solve(power, temperature);
+	test.hotspot->solve(power, temperature, total_power);
 	clock_gettime(CLOCK_MONOTONIC, &end);
 
 	plhs[0] = to_matlab(temperature);
 	plhs[1] = to_matlab(substract(&end, &begin));
+	plhs[2] = to_matlab(total_power);
 }
