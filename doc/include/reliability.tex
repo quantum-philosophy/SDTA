@@ -1,7 +1,7 @@
 The proposed solution of the steady-state dynamic temperature estimation can be used in a wide range of optimization procedures. One of them is the reliability optimization that we discuss in this section. We performing the temperature-aware task mapping and scheduling in order to address the thermal cycling aging effect while keeping the energy consumption on an appropriate level. Both mapping and scheduling are based on the genetic algorithms \cite{schmitz2004}. Let us start with the overall description of the system.
 
 \subsection{Architecture Model}
-We consider a multiprocessor system-on-a-chip with a heterogeneous architecture composed of a number of processing elements $\Pi = \{ \pi_k: \; k = 0 \dots N_p - 1 \}$. Each processing element $\pi_k$ is characterized by its supply voltage $V_k$, frequency $f_k$, and the number of gates $N_{gate \: k}$:
+A multiprocessor system with a heterogeneous architecture is composed of a number of processing elements $\Pi = \{ \pi_k: \; k = 0 \dots N_p - 1 \}$. Each processing element $\pi_k$ is characterized by its supply voltage $V_k$, frequency $f_k$, and the number of gates $N_{gate \: k}$:
 \[
   \pi_k \rightarrow (V_k, f_k, N_{gate \: k})
 \]
@@ -44,16 +44,16 @@ where $A$ is an empirically determined constant, $\triangle T$ is the thermal cy
 
 The failure rate is modeled by the Weibull distribution \cite{xiang2010}:
 \[
-  R(t) = e^{(\frac{t}{\eta})^\beta}
+  R(t) = e^{-(\frac{t}{\eta})^\beta}
 \]
 where $\eta$ is the scaling parameter, $\beta$ is the shape parameter. The last one is found to be independent on the temperature variation, which is not the case with the scaling parameter $\eta$. Therefore, the distribution can vary from one set of conditions to another. Here we are coming back to the discretization of the overall period of the application $\mathcal{T}$ into $N_s$ small time intervals $\triangle t_i$, so that during each time interval $\triangle t_i$ all parameters of the system are assumed to be constant and, therefore, $\eta_i$ is also constant. In this case, the cumulative distribution function for the end of the first execution of the application is the following \cite{xiang2010}:
 \[
-  R = e^{(\sum_{i=0}^{N_s - 1} \frac{\triangle t_i}{\eta_i})^\beta}
+  R = e^{-(\sum_{i=0}^{N_s - 1} \frac{\triangle t_i}{\eta_i})^\beta}
 \]
 
 The following continuous approximation can take place for any time $t$:
 \[
-  R(t) = e^{(\frac{t}{\mathcal{T}} \sum_{i=0}^{N_s - 1} \frac{\triangle t_i}{\eta_i})^\beta}
+  R(t) = e^{-(\frac{t}{\mathcal{T}} \sum_{i=0}^{N_s - 1} \frac{\triangle t_i}{\eta_i})^\beta}
 \]
 
 The formula still keeps the form of the Weibull distribution, we can extract the scaling parameter of it:

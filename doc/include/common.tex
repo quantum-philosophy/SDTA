@@ -5,6 +5,7 @@
 \usepackage{amssymb}
 \usepackage{graphicx}
 \usepackage{textcomp}
+\usepackage{amsthm}
 
 \newcommand{\equref}[1]{Equation~\ref{#1}}
 \newcommand{\figref}[1]{Figure~\ref{#1}}
@@ -26,4 +27,17 @@
     \centering
     \innerimage{#1}{#2}{#3}
   \end{figure}
+}
+
+\newenvironment{itable}[4]{\pushQED{#4}
+  \begin{table}
+    \caption{#3}
+    \label{tab:#1}
+    \begin{center}
+    \begin{tabular}{#2}
+}{
+    \end{tabular}
+    \end{center}
+    \popQED
+  \end{table}
 }

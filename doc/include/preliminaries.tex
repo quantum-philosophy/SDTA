@@ -10,3 +10,10 @@ For convenience, in the rest of the paper we use the following denotation:
 \end{equation}
 
 HotSpot comes with a tool of the same name to perform all the calculations. If we are interested in the transient temperature, it solves \equref{eq:initial} using the Runge-Kutta numerical method. When we need to get only the steady-state temperature, $\frac{dT}{dt}$ becomes zero, and \equref{eq:initial} turns into a linear system, which HotSpot solves using the LU decomposition.
+
+Note the number of thermal nodes $N_n$ depends on a particular realization of the model, i.e., its granularity. The HotSpot simulator includes two different implementations: the block and grid models. In the block model each core of a multiprocessor system is given one thermal node, while with the grid model the whole die is covered is an adjustable mesh of thermal nodes. Both models have a number of extra nodes for the package of the die\footnote{The HotSpot thermal model includes the thermal interface material, heat spreader, and heat sink.}. For instance, in case of the block model with $N_p$ processing elements, the total number of thermal nodes can be computed as the following \cite{rao2008}:
+\begin{equation} \label{eq:nodes}
+  N_n = 4 \times N_p + 12
+\end{equation}
+
+The choice of the model depends on a desired accuracy. Without loss of generality, we shall use the block model.

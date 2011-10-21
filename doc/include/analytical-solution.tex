@@ -125,15 +125,10 @@ To get the whole picture, the system can be written as:
 
 where $\mathbb{A}$ is a square matrix of the dimensions $N_n N_s \times N_n N_s$. $\mathbb{Y}$ and $\mathbb{B}$ are vectors of the length $N_n N_s$.
 
-Apparently, we have obtained a regular system of liner equations with the SSDTP as its solution ($Y$ should also be processed with \equref{eq:finalization} in order to return back to $T$). The first straight-forward way to resolve the system is to use the LU factorization (decomposition). The problem here is that such systems could be extremely large, especially when we want to achieve a higher level of accuracy and, therefore, the power profile contains a lot of steps $N_s$. Each new step is $N_n$ new equations in the system given by \equref{eq:system}. Also the complexity grows very rapidly with the number of processing elements $N_p$, since in the HotSpot thermal model the number of thermal nodes $N_n$ dependents on it according to the equation \cite{rao2008}:
-\[
-  N_n = 4 N_p + 12
-\]
-
-Therefore, \emph{each} new processing element increases \emph{each} matrix $K_i$ by 4 rows and 4 columns, and \emph{each} vector $Y_i$ and $Q_i$ by 4 elements. As an example, if the power profile for a single-processor system is composed of 1000 steps, then having the same discretization but with one additional core results in a linear system with 4000 additional equations. All in all, a fast and accurate approach to solve \equref{eq:system} is required.
+Apparently, we have obtained a regular system of liner equations with the SSDTP as its solution ($Y$ should also be processed with \equref{eq:finalization} in order to return back to $T$). The first straight-forward way to resolve the system is to use the LU factorization (decomposition). The problem here is that such systems could be extremely large, especially when we want to achieve a higher level of accuracy and, therefore, the power profile contains a lot of steps $N_s$. Each new step is $N_n$ new equations in the system given by \equref{eq:system}. Also the complexity grows very rapidly with the number of processing elements $N_p$ (see \equref{eq:nodes}), where \emph{each} new processing element increases \emph{each} matrix $K_i$ by 4 rows and 4 columns, and \emph{each} vector $Y_i$ and $Q_i$ by 4 elements. As an example, if the power profile for a single-processor system is composed of 1000 steps, then having the same discretization but with one additional core results in a linear system with 4000 additional equations. All in all, a fast and accurate approach to solve \equref{eq:system} is required.
 
 \image{sparseness-of-system}{50 200 50 200}{The sparseness of the system that we need to solve in order to obtain the SSDTP. Each blue point corresponds to a non-zero element of the matrix. All non-zero elements are located on the block diagonal of the matrix, one supdiagonal, and one subdiagonal in the left bottom corner.}
-One may notice that the matrix $\mathbb{A}$ is an extremely sparse matrix with a very specific structure, it can be observed on \figref{fig:sparseness-of-system}. The matrix has non-zero elements only on its block diagonal (composed of matrices $N_n \times N_n$), one \emph{sup}diagonal just above the block diagonal, and one \emph{sub}diagonal in the left bottom corner of it. Therefore, instead of the dense LU decomposition we can apply algorithms that are specially designed for such cases. In our experiments we use the UMFPACK library, a set of routines for solving unsymmetric sparse linear systems based on the Unsymmetric MultiFrontal method \cite{umfpack2004}.
+One may notice that the matrix $\mathbb{A}$ is an extremely sparse matrix with a very specific structure, it can be observed on \figref{fig:sparseness-of-system}. The matrix has non-zero elements only on its block diagonal (composed of matrices $N_n \times N_n$), one \emph{sup}diagonal just above the block diagonal, and one \emph{sub}diagonal in the left bottom corner of it. Therefore, instead of the dense LU decomposition we can apply algorithms that are specially designed for such cases. In our experiments we use the UMFPACK library, a set of routines for solving unsymmetric sparse linear systems based on the Unsymmetric MultiFrontal method (UMF) \cite{umfpack2004}.
 
 \subsection{Condensed Equation}
 Now we shall propose a much faster solution. Let us return back to the system of linear equations that we are to solve. It is described with the following recurrence:
@@ -228,15 +223,15 @@ One can notice that the overall matrix of the system under the assumption of the
   \mathbb{A}(i, j) = \mathbb{A}(i+1, \: j+1), \; i, j = 0 \dots N_s - 2
 \]
 
-To be more specific, the matrix is a block-circulant matrix where each block row vector is rotated one block element to the right relative to the preceding block row vector. This leads us to a wide range of possible techniques to solve \mbox{$\mathbb{A} \: \mathbb{Y} = \mathbb{B}$}, for example, the Fast Fourier Transform \cite{mazancourt1983}, \cite{vescovo1997}.
+To be more specific, the matrix is a block-circulant matrix where each block row vector is rotated one block element to the right relative to the preceding block row vector. This leads us to a wide range of possible techniques to solve \mbox{$\mathbb{A} \: \mathbb{Y} = \mathbb{B}$}, for example, the Fast Fourier Transform (FFT) \cite{mazancourt1983}, \cite{vescovo1997}.
 
-In spite of the fact that the FFT approach is \emph{much faster} then the solution obtained with the UMFPACK, our experiments have shown that the Condensed Equation method is even faster (see \secref{sec:results-ssdtp}), therefore, we concentrate on it and discuss the FFT in brief as a possible alternative.
+In spite of the fact that the FFT approach is \emph{much faster} then the solution obtained with the UMF, our experiments have shown that the condensed equation method is even faster (see \secref{sec:results-ssdtp}), therefore, we concentrate on it and discuss the FFT in brief as a possible alternative.
 
 $\mathbb{A}$ has $N_s \times N_s$ blocks, each block is a $N_n \times N_n$ submatrix. Since the matrix is a block-circulant matrix, it can be represented with only $N_s$ blocks that form the top block row:
 \[
   \mathbb{A}(j), \; j = 0 \dots N_s - 1
 \]
-and all other rows can be easily found shifting this one. To solve the system, we need to apply the Discrete Fourier Transform (DFT) to these $N_s$ blocks:
+and all other rows can be easily found shifting this one. To solve the system, we need to apply the Discrete Fourier Transform to these $N_s$ blocks:
 \[
   \mathbb{A}(k)^f = \sum_{j = 0}^{N_s - 1} \mathbb{A}(j) \; \omega_{N_s}^{jk}, \; k = 0 \dots N_s - 1
 \]
@@ -255,7 +250,7 @@ The next step is to solve $N_s$ systems with matrices $(\mathbb{A}(k)^f)^{\ast}$
 \]
 where all matrices $\mathbb{A}(k)^f$ ($N_n \times N_n$ matrices) are symmetric, since $\mathbb{A}(k)$ are so, therefore, the eigenvalue decomposition takes place and can significantly simplify the solution process.
 
-The last step is to return back to the time domain with the Inverse Discrete Fourier Transform (IDFT):
+The last step is to return back to the time domain with the Inverse Discrete Fourier Transform:
 \[
   \mathbb{Y}(k) = \frac{1}{N_s} \sum_{j = 0}^{N_s - 1} \mathbb{Y}(j)^f \; \omega_{N_s}^{-jk}, \; k = 0 \dots N_s - 1
 \]
