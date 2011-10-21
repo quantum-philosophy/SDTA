@@ -4,42 +4,58 @@ We have discussed several ways to perform the steady-state dynamic temperature p
   \item The iterative HotSpot simulation.
   \item The steady-state approximation using HotSpot.
   \item Direct dense solutions, namely, the dense LU decomposition (the Gaussian elimination).
-  \item Direct sparse solutions with such techniques as the Unsymmetric MultiFrontal method.
-  \item The solution based on the Condensed Equation method.
-  \item Solutions for Toeplitz matrices, and in particular for block-circulant matrices, e.g., the Fast Fourier Transform.
+  \item Direct sparse solutions with such techniques as the unsymmetric multifrontal method.
+  \item The solution based on the condensed equation method.
+  \item Solutions for Toeplitz matrices, and in particular for block-circulant matrices, e.g., the fast Fourier transform.
   \item Iterative solution of the linear system (e.g. the Jacobi, Gauss–Seidel methods, Successive over-relaxation methods, etc.).
 \end{itemize}
 
-In should be noted that the first two solutions with the HotSpot simulator have nothing to do with the system of linear equations given by \equref{eq:system}, which is not the case with the other approaches. The iterative simulation, steady-state approximation, and iterative methods for linear systems are not analytical and produce approximated solutions (see \secref{sec:hotspot-solution}). The LU decomposition is not a competitor to the rest of the analytical approaches, since it does not take into account any special properties of the system. Moreover, direct solvers (in this case, the LU decomposition and the UMF method) are known to consume a lot of memory and, therefore, have problems with considerably large systems of linear equations. The CE method and the FFT seem to be the most promising solutions, although, according to our experiments, the former is significantly faster. The explanation to this is the following. The approach based on the fact that the matrix of the system is a block-circulant matrix is aware of the recurrent nature of the system, but it does not consider its sparseness, while the CE has both of these features.
+In should be noted that the first two solutions with the HotSpot simulator have nothing to do with the system of linear equations given by \equref{eq:system}, which is not the case with the other approaches. The iterative simulation, steady-state approximation, and iterative methods for linear systems are not analytical and produce approximated solutions (see \secref{sec:hotspot-solution}). The LU decomposition is not a competitor to the rest of the analytical approaches, since it does not take into account any special properties of the system. Moreover, direct solvers (in this case, the LU decomposition and the UMF method) are known to consume a lot of memory and, therefore, have problems with considerably large systems of linear equations. The CE and FFT methods seem to be the most promising solutions, although, according to our experiments, the former is significantly faster. The explanation to this is the following. The approach based on the fact that the matrix of the system is a block-circulant matrix is aware of the recurrent nature of the system, but it does not consider its sparseness, while the CE has both of these features.
 
-\image{scaling-time}{50 200 50 200}{The scaling with the application period. HotSpot is restricted to one iteration, the steady-state approximation is computed to each time interval. The sampling interval is fixed to 1 millisecond where 1 second on the horizontal axis corresponds to 1000 steps in the power profile. The comparison is given on the semilogarithmic scale.}
-\begin{table}
-  \caption{The scaling with the application period shown on \figref{fig:scaling-time}.}
-  \label{tab:scaling-time}
-  \begin{center}
-  \begin{tabular}{ |l|l|l|l|l|l| }
+\image{scaling-time}{50 200 50 200}{Scaling with the application period for a single-processor system. HotSpot is restricted to one iteration, the steady-state approximation is computed to each time interval. The sampling interval is fixed to 1 millisecond where 1 second on the horizontal axis corresponds to 1000 steps in the power profile. The comparison is given on the semilogarithmic scale.}
+\begin{itable}{scaling-time}{|r|r|r|r|r|r|}
+  {Scaling with the application period shown on \figref{fig:scaling-time}.}
+  {$\mathcal{T}$ --- the application period, CE --- the Condensed Equation method, HS --- one HotSpot simulation, SS --- the Steady-State approximation, UMF --- the Unsymmetric MultiFrontal method, FFT --- the Fast Fourier Transform method.}
   \hline
-  $\mathcal{T}$, s & HS, s & SS, s & UMF, s & CE, s & FFT, s \\
+  $\mathcal{T}$, s & CE, ms & HS, ms & SS, ms & UMF, ms & FFT, ms \\
   \hline
   \hline
-  0.8080 & 0.0731 & 0.0007 & 0.1568 & 0.0008 & 0.0920 \\
-  1.6150 & 0.1469 & 0.0012 & 0.3435 & 0.0016 & 0.1842 \\
-  2.4220 & 0.2186 & 0.0019 & 0.5515 & 0.0023 & 0.2980 \\
-  3.2290 & 0.2920 & 0.0021 & 0.8224 & 0.0031 & 0.3971 \\
-  4.0360 & 0.3620 & 0.0023 & 1.0567 & 0.0039 & 0.4673 \\
-  4.8430 & 0.4358 & 0.0031 & 1.3256 & 0.0047 & 0.6017 \\
-  5.6510 & 0.5081 & 0.0031 & 1.5905 & 0.0054 & 0.6883 \\
-  6.4580 & 0.5801 & 0.0036 & 1.8270 & 0.0062 & 0.6434 \\
-  7.2650 & 0.6558 & 0.0040 & 2.1246 & 0.0070 & 0.7211 \\
-  8.0720 & 0.7313 & 0.0045 & 2.4173 & 0.0078 & 0.7318 \\
+  0.05 & 0.05 &   4.56 & 0.03 &   10.55 &   5.18 \\
+   \bf 0.1 & \bf 0.10 & \bf 9.03 & \bf 0.06 & \bf 17.78 & \bf 8.34 \\
+   0.5 & 0.49 &  44.14 & 0.28 &   94.48 &  42.46 \\
+     1 & 0.97 &  90.30 & 0.54 &  207.77 &  87.79 \\
+     2 & 1.94 & 178.43 & 1.09 &  454.90 & 173.38 \\
+     3 & 2.92 & 265.39 & 1.64 &  761.47 & 268.29 \\
+     4 & 3.86 & 358.64 & 2.17 & 1042.83 & 359.94 \\
+     5 & 4.82 & 447.86 & 2.72 & 1347.74 & 450.55 \\
+     6 & 5.78 & 536.63 & 3.27 & 1707.03 & 546.00 \\
+     7 & 6.73 & 624.36 & 3.80 & 2047.31 & 639.70 \\
+     8 & 7.68 & 716.17 & 4.34 & 2479.85 & 728.85 \\
+     9 & 8.65 & 809.32 & 4.88 & 2818.25 & 818.89 \\
+    10 & 9.61 & 896.77 & 5.45 & 3215.41 & 897.58 \\
   \hline
-  \end{tabular}
-  \end{center}
-  $\mathcal{T}$ --- the application period, HS --- one HotSpot simulation, SS --- the Steady-State approximation, UMF --- the Unsymmetric MultiFrontal method, CE --- the Condensed Equation method, FFT --- the Fast Fourier Transform method.
-\end{table}
-Now we shall compare the methods listed above excluding the dense and iterative solvers for systems of linear equations. We restrict HotSpot to \emph{one iteration} in order to have a cleaner comparison, since this number varies dramatically between different application periods and significantly depends on the stopping condition (we calculate the error relative to the CE method as to the ground truth). The steady-state approximation is computed for each interval. The comparison is given on \figref{fig:scaling-time} and \tabref{tab:scaling-time} where we vary the period of the simulated application keeping the sampling interval constant and equal to $1 ms$. For instance, an application with an 8-second period, 8000 power steps, and $(4 \times 1 + 12) \times 8000 = 128000$ linear equations requires 0.0078 seconds to compute\footnote{All the experiments are done on a Linux machine with Intel\textregistered\ Core\texttrademark\ i7-2600 (3.4GHz, 4 cores, 8 threads) and 8Gb of RAM.} for the CE method, that is more than 90 times faster than \emph{one} iteration of HotSpot, and more than 300 times faster that the direct solution with the UMF method. The results for one iteration of HotSpot and the FFT are almost the same with the only difference that the FFT gives the exact solution and HotSpot still have a long way to go to an approximated solution.
+\end{itable}
+Now we shall compare the methods listed above excluding the dense and iterative solvers for systems of linear equations\footnote{The solutions based on the UMF and FFT methods are implemented in Matlab, while the rest is in C. For the calculations Matlab uses the UMFPACK and FFTW C-libraries, correspondingly, but probably some room for the performance improvement is still left.}. We restrict HotSpot to \emph{one iteration} in order to have a cleaner comparison, since this number varies dramatically between different application periods and significantly depends on the stopping condition (we calculate the error relative to the CE method as to the ground truth). The SS approximation is computed for each interval. The comparison is given on \figref{fig:scaling-time} and \tabref{tab:scaling-time} where we vary the period of the simulated application keeping the sampling interval constant and equal to 1 millisecond. For the sake of simplicity, this example is given for a single-processor system. It can be observed that the SS approach is roughly twice faster than the CE method, but its solutions can be completely inaccurate and in some cases just useless, whereas, solutions by the CE are precise in the boundaries of the thermal model. An application with a 10-second period, 10000 power steps, and $(4 \times 1 + 12) \times 10000 = 160000$ linear equations requires 10 milliseconds to compute\footnote{All the experiments are done on a Linux machine with Intel\textregistered\ Core\texttrademark\ i7-2600 (3.4GHz, 4 cores, 8 threads) and 8Gb of RAM.} for the CE method, that is more than 90 times faster than \emph{one} iteration of HotSpot, and more than 330 times faster that the direct solution with the UMF method. The results for one iteration of HotSpot and the FFT are almost the same with the only difference that the FFT gives the exact solution and HotSpot still have a long way to go to an approximated solution.
 
 The application period proportionally corresponds to the number of steps in the power profile (one second equals to 1000 steps in the power profile in the above-mentioned example). Hence, we would see the same curves, if we were investigating dependency on the power profile discretization.
+
+\image{scaling-cores}{50 200 50 200}{Scaling with the number of processing elements. HotSpot is restricted to one iteration, the steady-state approximation is computed to each time interval. The application period is fixed to 0.1 seconds that correspond to 100 steps in the power profile. The comparison is given on the semilogarithmic scale.}
+\begin{itable}{scaling-cores}{|r|r|r|r|r|r|}
+  {Scaling with the number of processing elements shown on \figref{fig:scaling-cores}.}
+  {$N_p$ --- the number of processing elements, CE --- the Condensed Equation method, HS --- one HotSpot simulation, SS --- the Steady-State approximation, UMF --- the Unsymmetric MultiFrontal method, FFT --- the Fast Fourier Transform method.}
+  \hline
+  $N_p$ & CE, ms & HS, ms & SS, ms & UMF, s & FFT, ms \\
+  \hline
+  \hline
+   \bf 1 & \bf 0.10 & \bf 9.00 & \bf 0.09 & \bf 0.020 & \bf 12.26 \\
+   4 &  0.48 &   23.95 &  0.22 &    0.983 &  15.96 \\
+   9 &  1.56 &   67.35 &  0.58 &   3.941 &  27.22 \\
+  16 &  3.39 &  161.04 &  1.36 &  14.320 &  49.94 \\
+  32 & 13.21 &  541.40 &  4.31 &  84.793 & 158.84 \\
+  64 & 59.73 & 2009.21 & 11.45 & 534.568 & 633.45 \\
+  \hline
+\end{itable}
+Now we shall look at the scaling characteristics of the methods with the number of processing elements in the system. The comparison is shown on \figref{fig:scaling-cores} and \tabref{tab:scaling-cores}.
 
 \subsection{Reliability Optimization}
 We use the following experimental setup. Multiprocessor systems consist of a number of processing element $N_p$ in the range from 2 to 128. The number of tasks $N_t$ varies between 10 and 500. TO BE CONTINUED.
