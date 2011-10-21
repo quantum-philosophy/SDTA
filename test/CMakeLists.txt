@@ -8,22 +8,6 @@ set (system ${CMAKE_BINARY_DIR}/tools/system)
 set (floorplan ${CMAKE_BINARY_DIR}/tools/floorplan)
 set (optima ${CMAKE_BINARY_DIR}/tools/optima)
 
-# Parameters (shared)
-set (template_params_config ${CMAKE_CURRENT_SOURCE_DIR}/parameters.config)
-set (params_config ${test_path}/parameters.config)
-add_custom_command (OUTPUT ${params_config}
-	DEPENDS ${template_params_config}
-	COMMAND cp ${template_params_config} ${params_config}
-)
-
-# Hotspot configuration (shared)
-set (template_hotspot_config ${CMAKE_CURRENT_SOURCE_DIR}/hotspot.config)
-set (hotspot_config ${test_path}/hotspot.config)
-add_custom_command (OUTPUT ${hotspot_config}
-	DEPENDS ${template_hotspot_config}
-	COMMAND cp ${template_hotspot_config} ${hotspot_config}
-)
-
 file (GLOB templates "${CMAKE_CURRENT_SOURCE_DIR}/*.tgffopt")
 foreach (template_tgffopt_config ${templates})
 	string (REGEX REPLACE ".*/([^/]+).tgffopt" "\\1" test_name ${template_tgffopt_config})
@@ -42,17 +26,33 @@ foreach (template_tgffopt_config ${templates})
 	)
 
 	# System configuration
-	set (system_config ${test_path}/${test_name}.sys)
+	set (system_config ${test_path}/${test_name}_system.config)
 	add_custom_command (OUTPUT ${system_config}
 		COMMAND ${system} ${test_path}/${test_name}.tgff > ${system_config}
 		DEPENDS system
 	)
 
 	# Floorplan configuration
-	set (floorplan_config ${test_path}/${test_name}.flp)
+	set (floorplan_config ${test_path}/${test_name}_floorplan.config)
 	add_custom_command (OUTPUT ${floorplan_config}
 		COMMAND ${floorplan} ${processor_count} > ${floorplan_config}
 		DEPENDS floorplan
+	)
+
+	# HotSpot configuration
+	set (template_hotspot_config ${CMAKE_CURRENT_SOURCE_DIR}/hotspot.config)
+	set (hotspot_config ${test_path}/${test_name}_hotspot.config)
+	add_custom_command (OUTPUT ${hotspot_config}
+		DEPENDS ${template_hotspot_config}
+		COMMAND cp ${template_hotspot_config} ${hotspot_config}
+	)
+
+	# Parameters
+	set (template_params_config ${CMAKE_CURRENT_SOURCE_DIR}/parameters.config)
+	set (params_config ${test_path}/${test_name}_params.config)
+	add_custom_command (OUTPUT ${params_config}
+		DEPENDS ${template_params_config}
+		COMMAND cp ${template_params_config} ${params_config}
 	)
 
 	add_custom_target (test_${test_name}

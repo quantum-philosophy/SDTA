@@ -43,7 +43,7 @@ class Generator
       :output => options[:output]
   end
 
-  def self.genetic options
+  def self.params options
     tournament_size = POPULATION_FACTOR * options[:task_count] / 100 + 1
     population_size = tournament_size * 100
 

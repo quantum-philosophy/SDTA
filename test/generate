@@ -4,7 +4,7 @@ require File.join File.dirname(__FILE__), 'generator'
 require File.join File.dirname(__FILE__), 'template'
 
 # The area of the die in square miters
-DIE_AREA = 81e-6
+DIE_AREA = 16e-6
 
 # Multiplied by the number of tasks
 POPULATION_FACTOR = 4
@@ -14,21 +14,19 @@ GA_REALIZATIONS_PER_GRAPH = 10
 
 STALL_GENERATIONS = 200
 
-if ARGV.length != 5
+if ARGV.length != 4
   puts 'Need some arguments...'
   puts '1. the template directory'
-  puts '2. the number of processors, e.g. "(1..16)"'
-  puts '3. the number of tasks, e.g. "[ 60, 90, 120 ]"'
-  puts '4. the number of repetitions of each combination'
-  puts '5. the output directory'
+  puts '2. pairs of the number of processors and tasks, e.g., "[ [ 4, 60 ], [ 8, 90 ] ]"'
+  puts '3. the number of repetitions of each pair'
+  puts '4. the output directory'
   exit
 end
 
 input = ARGV[0]
-processors = eval ARGV[1]
-tasks = eval ARGV[2]
-repeat = ARGV[3].to_i
-output = ARGV[4]
+pairs = eval ARGV[1]
+repeat = ARGV[2].to_i
+output = ARGV[3]
 
 unless File.directory? input
   puts 'Need a real template directory...'
@@ -41,7 +39,7 @@ unless File.directory? output
 end
 
 tgff_template = File.join input, 'tgff.template'
-genetic_template = File.join input, 'genetic.template'
+params_template = File.join input, 'params.template'
 thermal_template = File.join input, 'hotspot.template'
 
 unless File.exist? tgff_template
@@ -49,8 +47,8 @@ unless File.exist? tgff_template
   exit
 end
 
-unless File.exist? genetic_template
-  puts "Cannot find '#{ genetic_template }'"
+unless File.exist? params_template
+  puts "Cannot find '#{ params_template }'"
   exit
 end
 
@@ -62,51 +60,48 @@ end
 srand Time.now.to_i
 
 tgff_template = Template.new tgff_template
-genetic_template = Template.new genetic_template
+params_template = Template.new params_template
 thermal_template = Template.new thermal_template
 
-processors.each do |processor_count|
-  tasks.each do |task_count|
+pairs.each do |processor_count, task_count|
+  name = "%03d_%03d" % [ processor_count, task_count ]
+  directory = File.join output, name
 
-    name = "%03d_%03d" % [ processor_count, task_count ]
-    directory = File.join output, name
+  puts "Test case %d x %d: %s" % [ processor_count, task_count, directory ]
 
-    puts "Test case %d x %d: %s" % [ processor_count, task_count, directory ]
+  Dir::mkdir directory unless File.directory? directory
 
-    Dir::mkdir directory unless File.directory? directory
+  (1..repeat).each do |i|
+    puts "  #{ i }:"
 
-    (1..repeat).each do |i|
-      puts "  #{ i }:"
-
-      begin
-        tgffopt = File.join directory, ("%03d.tgffopt" % i)
-        puts "    - TGFF options: #{ tgffopt }"
-        Generator.tgffopt :template => tgff_template,
-          :processor_count => processor_count, :task_count => task_count,
-          :output => tgffopt
-
-        tgff = File.join directory, ("%03d.tgff" % i)
-        puts "    - TGFF: #{ tgff }"
-        Generator.tgff :input => tgffopt, :output => tgff
-      end until Generator.validate_tgff(:input => tgff, :task_count => task_count)
-
-      system = File.join directory, ("%03d_system.config" % i)
-      puts "    - system configuration: #{ system }"
-      Generator.system :input => tgff, :output => system
-
-      genetic = File.join directory, ("%03d_genetic.config" % i)
-      puts "    - genetic configuration: #{ genetic }"
-      Generator.genetic :template => genetic_template,
+    begin
+      tgffopt = File.join directory, ("%03d.tgffopt" % i)
+      puts "    - TGFF options: #{ tgffopt }"
+      Generator.tgffopt :template => tgff_template,
         :processor_count => processor_count, :task_count => task_count,
-        :output => genetic
+        :output => tgffopt
 
-      floorplan = File.join directory, ("%03d_floorplan.config" % i)
-      puts "    - floorplan configuration: #{ floorplan }"
-      Generator.floorplan :processor_count => processor_count, :output => floorplan
+      tgff = File.join directory, ("%03d.tgff" % i)
+      puts "    - TGFF: #{ tgff }"
+      Generator.tgff :input => tgffopt, :output => tgff
+    end until Generator.validate_tgff(:input => tgff, :task_count => task_count)
 
-      thermal = File.join directory, ("%03d_thermal.config" % i)
-      puts "    - thermal configuration: #{ thermal }"
-      Generator.thermal :template => thermal_template, :output => thermal
-    end
+    system = File.join directory, ("%03d_system.config" % i)
+    puts "    - system configuration: #{ system }"
+    Generator.system :input => tgff, :output => system
+
+    params = File.join directory, ("%03d_params.config" % i)
+    puts "    - parameters: #{ params }"
+    Generator.params :template => params_template,
+      :processor_count => processor_count, :task_count => task_count,
+      :output => params
+
+    floorplan = File.join directory, ("%03d_floorplan.config" % i)
+    puts "    - floorplan configuration: #{ floorplan }"
+    Generator.floorplan :processor_count => processor_count, :output => floorplan
+
+    thermal = File.join directory, ("%03d_hotspot.config" % i)
+    puts "    - thermal configuration: #{ thermal }"
+    Generator.thermal :template => thermal_template, :output => thermal
   end
 end

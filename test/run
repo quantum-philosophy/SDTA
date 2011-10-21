@@ -1,0 +1,20 @@
+#!/usr/bin/env ruby
+
+name = ARGV[0]
+
+unless name =~ /\//
+  name = File.join '.', 'test', name
+end
+
+command = []
+
+command.push "./tools/optima"
+command.push "-s #{ name }_system.config"
+command.push "-f #{ name }_floorplan.config"
+command.push "-h #{ name }_hotspot.config"
+command.push "-p #{ name }_params.config"
+
+command = command.join ' '
+
+puts "Executing: #{ command }"
+system command

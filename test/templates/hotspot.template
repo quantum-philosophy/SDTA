@@ -41,7 +41,7 @@
 		-k_interface				4.0
 		# interface material specific heat in J/(m^3-K)
 		-p_interface				4.0e6
-		
+
 	# secondary path (C4/underfill, package substrate, solder balls etc)
 	# ONLY AVAILABLE IN THE GRID MODEL
 		# model secondary path or not?
@@ -53,13 +53,13 @@
 		#	number of on-chip metal layers
 		-n_metal	8
 		#	one metal layer thickness in meters
-		-t_metal	100.0e-6 
+		-t_metal	100.0e-6
 		#	C4/underfill thickness in meters
 		-t_c4	0.0001
 		#	side size of EACH C4 pad
 		-s_c4	20.0e-6
 		# number of C4 pads
-		-n_c4	400 
+		-n_c4	400
 		# package substrate side in meters
 		-s_sub	0.021
 		# package substrate thickness in meters
@@ -71,7 +71,7 @@
 		# PCB side in meters
 		-s_pcb	0.1
 		# PCB thickness in meters
-		-t_pcb	0.002	
+		-t_pcb	0.002
 
 	# others
 		# ambient temperature in kelvin
@@ -83,17 +83,17 @@
 		# steady state temperatures to file
 		-steady_file		(null)
 		# hotspot calling interval - 10K cycles at 3GHz
-		-sampling_intvl		10e-03
+		-sampling_intvl		2e-03
 		# base processor frequency in Hz
 		-base_proc_freq		3e+09
 		# is DTM employed?
 		-dtm_used			0
 		# model type - block or grid
 		-model_type			block
-		
+
 		# consider temperature-leakage loop within HotSpot?
 		-leakage_used 0
-		
+
 		# leakage calculation modes: (only valid when -leakage_used=1)
 		# 0 user-defined leakage power model, do temp-leakage loop within HotSpot
 		#	1 use HotLeakage -- !NOT implemented in this release!, coming later.
@@ -117,7 +117,7 @@
 		# dump internal grid steady state temperatures
 		-grid_steady_file	(null)
 		# grid to block mapping mode - (avg|min|max|center)
-		# i.e., a block's temperature is the avg, min or max 
+		# i.e., a block's temperature is the avg, min or max
 		# of all the grid cells in it or equal to that of
 		# the grid cell in its center
 		-grid_map_mode		center
@@ -129,19 +129,19 @@
 		-wrap_l2			1
 		# name of the L2 unit to look for
 		-l2_label			L2
-	
+
 	# rim modeling
 		# model dead space around the rim of the chip?
 		-model_rim			0
 		# thickness of the rim in meters
 		-rim_thickness		5e-05
-	
+
 	# others
 		# area ratio below which to ignore dead space
 		-compact_ratio		0.005
 		# no. of discrete orientations for a shape curve (even no. > 1)
 		-n_orients			300
-	
+
 	# annealing parameters
 		# initial acceptance probability
 		-P0					0.99
