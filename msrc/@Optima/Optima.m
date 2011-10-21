@@ -24,10 +24,10 @@ classdef Optima < handle
       o.name = name;
       o.tgffopt = Utils.path([ name, '.tgffopt' ]);
       o.tgff = Utils.path([ name, '.tgff' ]);
-      o.system = Utils.path([ name, '.sys' ]);
-      o.hotspot = Utils.path('hotspot.config');
-      o.floorplan = Utils.path([ name, '.flp' ]);
-      o.params = Utils.path('parameters.config');
+      o.system = Utils.path([ name, '_system.config' ]);
+      o.hotspot = Utils.path([ name, '_hotspot.config' ]);
+      o.floorplan = Utils.path([ name, '_floorplan.config' ]);
+      o.params = Utils.path([ name, '_params.config' ]);
 
       o.processorCount = Utils.readParameter(o.tgffopt, 'table_cnt');
       o.samplingInterval = Utils.readParameter(o.hotspot, '-sampling_intvl');
