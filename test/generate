@@ -40,7 +40,7 @@ end
 
 tgff_template = File.join input, 'tgff.template'
 params_template = File.join input, 'params.template'
-thermal_template = File.join input, 'hotspot.template'
+hotspot_template = File.join input, 'hotspot.template'
 
 unless File.exist? tgff_template
   puts "Cannot find '#{ tgff_template }'"
@@ -52,8 +52,8 @@ unless File.exist? params_template
   exit
 end
 
-unless File.exist? thermal_template
-  puts "Cannot find '#{ thermal_template }'"
+unless File.exist? hotspot_template
+  puts "Cannot find '#{ hotspot_template }'"
   exit
 end
 
@@ -61,7 +61,7 @@ srand Time.now.to_i
 
 tgff_template = Template.new tgff_template
 params_template = Template.new params_template
-thermal_template = Template.new thermal_template
+hotspot_template = Template.new hotspot_template
 
 pairs.each do |processor_count, task_count|
   name = "%03d_%03d" % [ processor_count, task_count ]
@@ -100,8 +100,8 @@ pairs.each do |processor_count, task_count|
     puts "    - floorplan configuration: #{ floorplan }"
     Generator.floorplan :processor_count => processor_count, :output => floorplan
 
-    thermal = File.join directory, ("%03d_hotspot.config" % i)
-    puts "    - thermal configuration: #{ thermal }"
-    Generator.thermal :template => thermal_template, :output => thermal
+    hotspot = File.join directory, ("%03d_hotspot.config" % i)
+    puts "    - HotSpot configuration: #{ hotspot }"
+    Generator.hotspot :template => hotspot_template, :output => hotspot
   end
 end

@@ -56,9 +56,9 @@ Dir[File.join(input, '*')].each do |entry|
   variants.each do |variant|
     system_config = variant
 
-    genetic_config = variant.gsub /_system.config$/, '_genetic.config'
-    unless File.exist? genetic_config
-      puts "The genetic configuration is missing '#{ genetic_config }'"
+    params_config = variant.gsub /_system.config$/, '_params.config'
+    unless File.exist? params_config
+      puts "The genetic configuration is missing '#{ params_config }'"
       next
     end
 
@@ -68,9 +68,9 @@ Dir[File.join(input, '*')].each do |entry|
       next
     end
 
-    thermal_config = variant.gsub /_system.config$/, '_thermal.config'
-    unless File.exist? thermal_config
-      puts "The thermal configuration is missing '#{ thermal_config }'"
+    hotspot_config = variant.gsub /_system.config$/, '_hotspot.config'
+    unless File.exist? hotspot_config
+      puts "The thermal configuration is missing '#{ hotspot_config }'"
       next
     end
 
@@ -79,7 +79,7 @@ Dir[File.join(input, '*')].each do |entry|
 
     log = File.join out_entry, "#{ name }.log"
 
-    memcache = read_param genetic_config, 'cache'
+    memcache = read_param params_config, 'cache'
 
     start = Time.now
     puts "  - #{ name }:"
@@ -96,8 +96,8 @@ Dir[File.join(input, '*')].each do |entry|
     begin
       run \
         :tool => [ 'tools', 'optima' ],
-        :arguments => [ '-s', system_config, '-g', genetic_config,
-          '-f', floorplan_config, '-t', thermal_config ],
+        :arguments => [ '-s', system_config, '-p', params_config,
+          '-f', floorplan_config, '-h', hotspot_config ],
         :output => log
       success = true
     rescue

@@ -68,7 +68,7 @@ class Generator
       :output => options[:output]
   end
 
-  def self.thermal options
+  def self.hotspot options
     File.open(options[:output], 'w') do |file|
       options[:template].complete({}) do |line|
         file << line
