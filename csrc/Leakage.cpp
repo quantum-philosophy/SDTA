@@ -69,3 +69,30 @@ void Leakage::inject(
 		}
 	}
 }
+
+LinearLeakage::LinearLeakage(const processor_vector_t &processors) :
+	Leakage(processors) {}
+
+void LinearLeakage::inject(
+	size_t step_count, const double *dynamic_power,
+	const double *temperature, double *total_power) const
+{
+	size_t i, j, k;
+
+	for (i = 0, k = 0; i < step_count; i++)
+		for (j = 0; j < processor_count; j++, k++)
+			total_power[k] = dynamic_power[k] +
+				temperature[k] * this->k + this->b;
+}
+
+void LinearLeakage::inject(
+	size_t step_count, const double *dynamic_power,
+	double temperature, double *total_power) const
+{
+	size_t i, j, k;
+
+	for (i = 0, k = 0; i < step_count; i++)
+		for (j = 0; j < processor_count; j++, k++)
+			total_power[k] = dynamic_power[k] +
+				temperature * this->k + this->b;
+}

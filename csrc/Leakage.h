@@ -5,6 +5,8 @@
 
 class Leakage
 {
+	protected:
+
 	static const double A = 1.1432e-12;
 	static const double B = 1.0126e-14;
 	static const double alpha = 466.4029;
@@ -23,7 +25,7 @@ class Leakage
 	 * Iavg = [ 23.44, 29.56, 19.44, 25.14, 16.00, 21.33 ] * 1e-6
 	 * Is = mean(Iavg(i) / favg(T(i), V(i)))
 	 *
-	 * Where favg is the scaling factor (see calc_scaling).
+	 * Where favg is the scaling factor.
 	 */
 	static const double Is = 995.7996;
 
@@ -34,6 +36,22 @@ class Leakage
 	public:
 
 	Leakage(const processor_vector_t &processors);
+
+	virtual void inject(size_t step_count, const double *dynamic_power,
+		const double *temperature, double *total_power) const;
+
+	virtual void inject(size_t step_count, const double *dynamic_power,
+		double temperature, double *total_power) const;
+};
+
+class LinearLeakage: public Leakage
+{
+	static const double k = 0.033437;
+	static const double b = -7.390365;
+
+	public:
+
+	LinearLeakage(const processor_vector_t &processors);
 
 	void inject(size_t step_count, const double *dynamic_power,
 		const double *temperature, double *total_power) const;

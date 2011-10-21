@@ -253,7 +253,7 @@ class SteadyStateLeakageHotspot: public BasicSteadyStateHotspot
 	static const double tol = 0.01;
 	static const size_t maxit = 10;
 
-	Leakage leakage;
+	LinearLeakage leakage;
 
 	public:
 
