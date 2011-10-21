@@ -39,14 +39,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 		dynamic_power.compute(test.schedule, power);
 
-		clock_gettime(CLOCK_MONOTONIC, &begin);
+		measure(&begin);
 		test.hotspot->solve(power, temperature);
-		clock_gettime(CLOCK_MONOTONIC, &end);
+		measure(&end);
 	}
 	else {
-		clock_gettime(CLOCK_MONOTONIC, &begin);
+		measure(&begin);
 		test.hotspot->solve(test.schedule, temperature, power);
-		clock_gettime(CLOCK_MONOTONIC, &end);
+		measure(&end);
 	}
 
 	elapsed = substract(&end, &begin);

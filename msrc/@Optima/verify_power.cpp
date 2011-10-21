@@ -36,9 +36,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	matrix_t reference_temperature;
 
-	clock_gettime(CLOCK_MONOTONIC, &begin);
+	measure(&begin);
 	test.hotspot->solve(power, reference_temperature);
-	clock_gettime(CLOCK_MONOTONIC, &end);
+	measure(&end);
 
 	plhs[0] = to_matlab(reference_temperature);
 	plhs[1] = to_matlab(substract(&end, &begin));
@@ -48,9 +48,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	IterativeHotspot hotspot(floorplan, _hotspot, tuning.hotspot,
 		max_iterations, tolerance);
 
-	clock_gettime(CLOCK_MONOTONIC, &begin);
+	measure(&begin);
 	size_t iterations = hotspot.verify(power, reference_temperature, temperature);
-	clock_gettime(CLOCK_MONOTONIC, &end);
+	measure(&end);
 
 	plhs[2] = to_matlab(iterations);
 	plhs[3] = to_matlab(temperature);

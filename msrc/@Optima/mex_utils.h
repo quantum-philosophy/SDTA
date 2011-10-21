@@ -3,7 +3,14 @@
 
 #include <mex.h>
 #include <string>
+
 #include <time.h>
+
+#ifdef __MACH__
+#include <mach/clock.h>
+#include <mach/mach.h>
+#endif
+
 #include "common.h"
 
 double substract(struct timespec *time1, struct timespec *time2)
@@ -12,6 +19,21 @@ double substract(struct timespec *time1, struct timespec *time2)
 		((time2->tv_sec * 1e9) + time2->tv_nsec);
 
 	return double(elapsed) / double(1e9);
+}
+
+void measure(struct timespec *time)
+{
+#ifdef __MACH__
+	clock_serv_t cclock;
+	mach_timespec_t mts;
+	host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
+	clock_get_time(cclock, &mts);
+	mach_port_deallocate(mach_task_self(), cclock);
+	time->tv_sec = mts.tv_sec;
+	time->tv_nsec = mts.tv_nsec;
+#else
+	clock_gettime(CLOCK_REALTIME, time);
+#endif
 }
 
 void from_matlab(double *dest, const double *src, size_t rows, size_t cols)

@@ -33,9 +33,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	matrix_t temperature, total_power;
 
-	clock_gettime(CLOCK_MONOTONIC, &begin);
+	measure(&begin);
 	test.hotspot->solve(power, temperature, total_power);
-	clock_gettime(CLOCK_MONOTONIC, &end);
+	measure(&end);
 
 	plhs[0] = to_matlab(temperature);
 	plhs[1] = to_matlab(substract(&end, &begin));
