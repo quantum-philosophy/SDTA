@@ -85,6 +85,7 @@ class BasicCondensedEquationHotspot: public Hotspot
 	~BasicCondensedEquationHotspot();
 
 	void solve(const matrix_t &power, matrix_t &temperature);
+	void solve(const matrix_t &power, matrix_t &temperature, matrix_t &total_power);
 };
 
 class CondensedEquationHotspot: public BasicCondensedEquationHotspot

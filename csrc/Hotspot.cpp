@@ -400,6 +400,18 @@ void BasicCondensedEquationHotspot::solve(const matrix_t &power, matrix_t &tempe
 	equation->solve(power.pointer(), temperature.pointer(), power.rows());
 }
 
+void BasicCondensedEquationHotspot::solve(const matrix_t &power,
+	matrix_t &temperature, matrix_t &total_power)
+{
+	temperature.resize(power);
+	total_power.resize(power);
+
+	__COPY(total_power.pointer(), power.pointer(), power.rows() * power.cols());
+
+	CondensedEquation *equation = (CondensedEquation *)condensed_equation;
+	equation->solve(power.pointer(), temperature.pointer(), power.rows());
+}
+
 /******************************************************************************/
 
 CondensedEquationHotspot::CondensedEquationHotspot(
