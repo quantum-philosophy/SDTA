@@ -241,7 +241,7 @@ where $\omega_{N_s} = e^{\frac{-2 \pi i}{N_s}}$. Here we perform a bulk transfor
 \]
 Note that in our case only two matrices are non-zero, therefore, this procedure can be shrunk. By applying the transformation, we come from the time domain to the frequency domain. Also we need to perform the same operation on the right-hand vector $\mathbb{B}$ splitted into $N_s$ chunks, denoted $\mathbb{B}(j)$, of $N_n$ successive elements:
 \[
-  \mathbb{B}(k)^f = \sum_{j = 0}^{m - 1} \mathbb{B}(j) \; \omega_m^{jk}, \; k = 0 \dots N_s - 1
+  \mathbb{B}(k)^f = \sum_{j = 0}^{N_s - 1} \mathbb{B}(j) \; \omega_{N_s}^{jk}, \; k = 0 \dots N_s - 1
 \]
 
 The next step is to solve $N_s$ systems with matrices $(\mathbb{A}(k)^f)^{\ast}$ and corresponding vectors $\mathbb{B}(k)^f$, the asterisk here denotes the complex conjugate:
