@@ -16,8 +16,6 @@ extern "C" {
 		some = NULL; \
 	} while(0)
 
-#define __COPY(dest, src, size) memcpy(dest, src, sizeof(double) * size)
-
 #include "Leakage.h"
 #include "DynamicPower.h"
 

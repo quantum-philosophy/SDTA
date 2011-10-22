@@ -19,6 +19,9 @@
 #define __MEMSET(some, value, size) \
 	memset(some, value, sizeof(double) * size)
 
+#define __NULLIFY(some, size) \
+	memset(some, 0, sizeof(double) * size)
+
 #define __MEMCPY(dst, src, size) \
 	memcpy(dst, src, sizeof(double) * size)
 
@@ -54,7 +57,7 @@ struct vector_t
 
 	inline void nullify()
 	{
-		__MEMSET(_data, 0, _size);
+		__NULLIFY(_data, _size);
 	}
 
 	inline void resize(size_t __size)

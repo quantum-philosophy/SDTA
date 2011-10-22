@@ -127,8 +127,8 @@ CondensedEquation::CondensedEquation(
 	 */
 	Symmeig S(D);
 
-	copy_vector(&L[0], &S.d[0], node_count);
-	copy_vector(U[0], S.z[0], node_count * node_count); /* matrix */
+	__MEMCPY(&L[0], &S.d[0], node_count);
+	__MEMCPY(U[0], S.z[0], node_count * node_count); /* matrix */
 
 	transpose_matrix(U, UT);
 
@@ -164,7 +164,7 @@ void CondensedEquation::solve(const double *power, double *temperature,
 	/* Q(0) = G * B(0) */
 	multiply_matrix_incomplete_vector(G, power, processor_count, Q[0]);
 	/* P(0) = Q(0) */
-	copy_vector(P[0], Q[0], node_count);
+	__MEMCPY(P[0], Q[0], node_count);
 
 	for (i = 1; i < step_count; i++) {
 		/* Q(i) = G * B(i) */
@@ -225,7 +225,7 @@ size_t LeakageCondensedEquation::solve(const double *dynamic_power,
 		/* Q(0) = G * B(0) */
 		multiply_matrix_incomplete_vector(G, total_power, processor_count, Q[0]);
 		/* P(0) = Q(0) */
-		copy_vector(P[0], Q[0], node_count);
+		__MEMCPY(P[0], Q[0], node_count);
 
 		for (i = 1; i < step_count; i++) {
 			/* Q(i) = G * B(i) */
@@ -406,7 +406,7 @@ void BasicCondensedEquationHotspot::solve(const matrix_t &power,
 	temperature.resize(power);
 	total_power.resize(power);
 
-	__COPY(total_power.pointer(), power.pointer(), power.rows() * power.cols());
+	__MEMCPY(total_power.pointer(), power.pointer(), power.rows() * power.cols());
 
 	CondensedEquation *equation = (CondensedEquation *)condensed_equation;
 	equation->solve(power.pointer(), temperature.pointer(), power.rows());
@@ -555,7 +555,7 @@ void BasicSteadyStateHotspot::solve(const Schedule &schedule,
 			const double *slot_temperature = get(trace);
 
 			for (i = start; i < end && i < step_count; i++)
-				__COPY(temperature[i], slot_temperature, processor_count);
+				__MEMCPY(temperature[i], slot_temperature, processor_count);
 
 			start = end;
 		}
@@ -590,7 +590,7 @@ double *SteadyStateHotspot::compute(const SlotTrace &trace) const
 	double *power = __ALLOC(node_count);
 	double *temperature = __ALLOC(node_count);
 
-	memset(power, 0, sizeof(double) * node_count);
+	__NULLIFY(power, node_count);
 
 	for (size_t i = 0; i < processor_count; i++) {
 		if (trace[i] < 0) continue;
@@ -627,8 +627,8 @@ double *SteadyStateLeakageHotspot::compute(const SlotTrace &trace) const
 	double *last_temperature = __ALLOC(node_count);
 	double *temperature = __ALLOC(node_count);
 
-	memset(dynamic_power, 0, sizeof(double) * node_count);
-	memset(last_temperature, 0, sizeof(double) * node_count);
+	__NULLIFY(dynamic_power, node_count);
+	__NULLIFY(last_temperature, node_count);
 
 	for (size_t i = 0; i < processor_count; i++) {
 		if (trace[i] < 0) continue;
@@ -693,12 +693,12 @@ void PreciseSteadyStateHotspot::solve(const matrix_t &_power, matrix_t &_tempera
 	const double *power = _power.pointer();
 	double *temperature = _temperature.pointer();
 
-	memset(extended_power, 0, sizeof(double) * node_count);
+	__NULLIFY(extended_power, node_count);
 
 	for (size_t i = 0; i < step_count; i++) {
-		__COPY(extended_power, power + i * processor_count, processor_count);
+		__MEMCPY(extended_power, power + i * processor_count, processor_count);
 		steady_state_temp(model, extended_power, extended_temperature);
-		__COPY(temperature + i * processor_count, extended_temperature, processor_count);
+		__MEMCPY(temperature + i * processor_count, extended_temperature, processor_count);
 	}
 
 	__FREE(extended_power);
@@ -740,7 +740,7 @@ size_t IterativeHotspot::verify(const matrix_t &power,
 
 	extended_power.nullify();
 	for (size_t i = 0; i < step_count; i++)
-		__COPY(_extended_power + i * node_count,
+		__MEMCPY(_extended_power + i * node_count,
 			_power + i * processor_count, processor_count);
 
 	return solve(_extended_power, _reference_temperature, _temperature, step_count);
@@ -774,7 +774,7 @@ size_t IterativeHotspot::solve(double *extended_power,
 			}
 
 			/* Copy the new values */
-			__COPY(temperature + i * processor_count,
+			__MEMCPY(temperature + i * processor_count,
 				extended_temperature, processor_count);
 		}
 
