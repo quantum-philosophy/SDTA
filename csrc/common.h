@@ -16,6 +16,7 @@
 #include <string.h>
 
 #include "Random.h"
+#include "matrix.h"
 
 #define __DELETE(some) 			\
 	do { 						\
@@ -261,69 +262,6 @@ struct system_t
 	double deadline;
 
 	system_t(const std::string &filename);
-};
-
-/******************************************************************************/
-/* Calculations                                                               */
-/******************************************************************************/
-
-typedef std::vector<double> vector_t;
-
-class matrix_t: public vector_t
-{
-	size_t m_rows;
-	size_t m_cols;
-
-	public:
-
-	matrix_t(size_t _rows = 0, size_t _cols = 0) :
-		vector_t(_rows * _cols, 0), m_rows(_rows), m_cols(_cols) {}
-
-	inline double *operator[] (unsigned int row)
-	{
-		return &vector_t::operator[](m_cols * row);
-	}
-
-	inline const double *operator[] (unsigned int row) const
-	{
-		return &vector_t::operator[](m_cols * row);
-	}
-
-	inline double *pointer()
-	{
-		return &vector_t::operator[](0);
-	}
-
-	inline const double *pointer() const
-	{
-		return &vector_t::operator[](0);
-	}
-
-	inline void resize(size_t _rows, size_t _cols)
-	{
-		m_rows = _rows; m_cols = _cols;
-		vector_t::resize(_rows * _cols);
-	}
-
-	inline void resize(const matrix_t &another)
-	{
-		resize(another.m_rows, another.m_cols);
-	}
-
-	inline size_t rows() const
-	{
-		return m_rows;
-	}
-
-	inline size_t cols() const
-	{
-		return m_cols;
-	}
-
-	inline void nullify()
-	{
-		memset(pointer(), 0, sizeof(double) * m_rows * m_cols);
-	}
 };
 
 /******************************************************************************/

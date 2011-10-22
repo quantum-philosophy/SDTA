@@ -26,6 +26,8 @@ void DynamicPower::compute(const Schedule &schedule, matrix_t &_dynamic_power) c
 	pid_t pid;
 
 	_dynamic_power.resize(step_count, processor_count);
+	_dynamic_power.nullify();
+
 	double *dynamic_power = _dynamic_power.pointer();
 
 	size_t i, j, task_count, start, end;
