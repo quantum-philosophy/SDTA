@@ -10,7 +10,7 @@ double ThermalCyclingLifetime::predict(
 	size_t processor_count = temperature.cols();
 	size_t step_count = temperature.rows();
 
-	vector_t amplitudes, means;
+	std::vector<double> amplitudes, means;
 
 	/* Get extrema */
 	std::vector<extrema_t> peaks;
@@ -145,7 +145,7 @@ void ThermalCyclingLifetime::detect_peaks(
 }
 
 void ThermalCyclingLifetime::rainflow(const extrema_t &extrema,
-	vector_t &amplitudes, vector_t &means) const
+	std::vector<double> &amplitudes, std::vector<double> &means) const
 {
 	int i, j;
 	double amplitude, mean;
@@ -213,7 +213,7 @@ double CombinedThermalCyclingLifetime::predict(
 	size_t processor_count = temperature.cols();
 	size_t step_count = temperature.rows();
 
-	vector_t amplitudes, means;
+	std::vector<double> amplitudes, means;
 
 	/* Get extrema */
 	std::vector<extrema_t> peaks;

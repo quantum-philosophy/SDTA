@@ -59,8 +59,8 @@ class ThermalCyclingLifetime: public Lifetime
 
 	void detect_peaks(const matrix_t &temperature,
 		std::vector<extrema_t> &peaks) const;
-	void rainflow(const extrema_t &extrema, vector_t &amplitudes,
-		vector_t &means) const;
+	void rainflow(const extrema_t &extrema, std::vector<double> &amplitudes,
+		std::vector<double> &means) const;
 };
 
 class CombinedThermalCyclingLifetime: public ThermalCyclingLifetime
