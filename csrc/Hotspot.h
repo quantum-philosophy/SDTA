@@ -8,14 +8,6 @@ extern "C" {
 #include <hotspot/temperature_block.h>
 }
 
-#define __ALLOC(size) (double *)malloc(sizeof(double) * size)
-
-#define __FREE(some) \
-	do { \
-		if (some) free(some); \
-		some = NULL; \
-	} while(0)
-
 #include "Leakage.h"
 #include "DynamicPower.h"
 #include "CondensedEquation.h"
@@ -121,6 +113,21 @@ class CondensedEquationLeakageHotspot: public BasicCondensedEquationLeakageHotsp
 	public:
 
 	CondensedEquationLeakageHotspot(
+		const Architecture &architecture, const Graph &graph,
+		const std::string &floorplan, const std::string &config,
+		const std::string &config_line = std::string());
+
+	void solve(const Schedule &schedule, matrix_t &temperature, matrix_t &power);
+};
+
+class CoarseCondensedEquationHotspot: public Hotspot
+{
+	const DynamicPower dynamic_power;
+	CoarseCondensedEquation equation;
+
+	public:
+
+	CoarseCondensedEquationHotspot(
 		const Architecture &architecture, const Graph &graph,
 		const std::string &floorplan, const std::string &config,
 		const std::string &config_line = std::string());

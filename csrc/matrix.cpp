@@ -101,6 +101,18 @@ void multiply_matrix_matrix_vector(
 	}
 }
 
+void multiply_matrix_vector(
+	const matrix_t &M, const vector_t &V, double *R)
+{
+	int i, j;
+	int n = M.rows();
+	for (i = 0; i < n; i++) {
+		R[i] = 0;
+		for (j = 0; j < n; j++)
+			R[i] += M[i][j] * V[j];
+	}
+}
+
 const double EigenvalueDecomposition::epsilon = std::numeric_limits<double>::epsilon();
 
 void EigenvalueDecomposition::tred2()

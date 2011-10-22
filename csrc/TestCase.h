@@ -152,6 +152,12 @@ class TestCase
 				hotspot = new CondensedEquationHotspot(
 					*architecture, *graph, _floorplan, _hotspot, tuning.hotspot);
 		}
+		else if (tuning.solution == "coarse_condensed_equation") {
+			if (tuning.leakage)
+				throw std::runtime_error("Not implemented yet.");
+			hotspot = new CoarseCondensedEquationHotspot(
+				*architecture, *graph, _floorplan, _hotspot, tuning.hotspot);
+		}
 		else if (tuning.solution == "steady_state") {
 			if (tuning.leakage)
 				hotspot = new SteadyStateLeakageHotspot(

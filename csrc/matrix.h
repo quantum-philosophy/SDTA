@@ -200,6 +200,8 @@ void multiply_matrix_vector_plus_vector(
 	const matrix_t &M, const double *V, const double *A, double *R);
 void multiply_matrix_matrix_vector(
 	const matrix_t &M, const matrix_t &N, const double *V, double *R);
+void multiply_matrix_vector(
+	const matrix_t &M, const vector_t &V, double *R);
 
 class EigenvalueDecomposition
 {

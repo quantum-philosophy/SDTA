@@ -22,7 +22,7 @@ class CondensedEquation
 
 	/* Eigenvector decomposition
 	 *
-	 * K = U * L * UT
+	 * D = U * L * UT
 	 */
 	vector_t L;
 	matrix_t U;
@@ -61,6 +61,50 @@ class LeakageCondensedEquation: public CondensedEquation
 	/* NOTE: dynamic_power should be of size (step_count x processor_count) */
 	size_t solve(const double *dynamic_power,
 		double *temperature, double *total_power, size_t step_count);
+};
+
+class CoarseCondensedEquation
+{
+	protected:
+
+	const size_t processor_count;
+	const size_t node_count;
+	const double ambient_temperature;
+
+	matrix_t D;
+	vector_t sinvC;
+	matrix_t K;
+	matrix_t H;
+	matrix_t G;
+
+	/* Eigenvector decomposition
+	 *
+	 * D = U * L * UT
+	 */
+	vector_t L;
+	matrix_t U;
+	matrix_t UT;
+
+	matrix_t P;
+	matrix_t Q;
+	matrix_t Y;
+
+	matrix_t m_temp;
+	vector_t v_temp;
+
+	public:
+
+	CoarseCondensedEquation(size_t processor_count, size_t node_count,
+		const double **conductivity, const double *capacitance,
+		double ambient_temperature);
+
+	void solve(double total_time, const vector_t &time,
+		const matrix_t &power, matrix_t &temperature);
+
+	protected:
+
+	void calculate_Q(double t, const double *power, double *Q);
+	void update_K(double t);
 };
 
 #endif

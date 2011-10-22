@@ -196,6 +196,35 @@ void CondensedEquationLeakageHotspot::solve(const Schedule &schedule,
 
 /******************************************************************************/
 
+CoarseCondensedEquationHotspot::CoarseCondensedEquationHotspot(
+	const Architecture &architecture, const Graph &graph,
+	const std::string &floorplan, const std::string &config,
+	const std::string &config_line) :
+
+	Hotspot(floorplan, config, config_line),
+	dynamic_power(architecture.get_processors(), graph.get_tasks(),
+		graph.get_deadline(), sampling_interval),
+	equation(processor_count, node_count, (const double **)model->block->b,
+		model->block->a, ambient_temperature)
+{
+}
+
+void CoarseCondensedEquationHotspot::solve(const Schedule &schedule,
+	matrix_t &temperature, matrix_t &power)
+{
+	dynamic_power.compute(schedule, power);
+
+	size_t step_count = power.rows();
+
+	vector_t time(step_count, sampling_interval);
+
+	double total_time = double(step_count) * sampling_interval;
+
+	equation.solve(total_time, time, power, temperature);
+}
+
+/******************************************************************************/
+
 BasicSteadyStateHotspot::BasicSteadyStateHotspot(
 	const Architecture &architecture, const Graph &graph,
 	const std::string &floorplan, const std::string &config,

@@ -61,7 +61,7 @@ CondensedEquation::CondensedEquation(
 	transpose_matrix(U, UT);
 
 	/* Matrix exponential:
-	 * K = exp(D * t) = U * exp(L * t) UT
+	 * K = exp(D * t) = U * exp(L * t) * UT
 	 */
 	for (i = 0; i < node_count; i++) v_temp[i] = exp(sampling_interval * L[i]);
 	multiply_matrix_diagonal_matrix(U, v_temp, m_temp);
@@ -87,7 +87,7 @@ void CondensedEquation::solve(const double *power, double *temperature,
 
 	Q.nullify();
 
-	/* M = diag(1/(1 - exp(m * l0)), ....) */
+	/* M = diag(1/(1 - exp(Tau * l0)), ...) */
 	for (i = 0; i < node_count; i++)
 		v_temp[i] = 1.0 / (1.0 - exp(sampling_interval * step_count * L[i]));
 
@@ -146,7 +146,7 @@ size_t LeakageCondensedEquation::solve(const double *dynamic_power,
 
 	Q.nullify();
 
-	/* M = diag(1/(1 - exp(m * l0)), ....) */
+	/* M = diag(1/(1 - exp(Tau * l0)), ...) */
 	for (i = 0; i < node_count; i++)
 		v_temp[i] = 1.0 / (1.0 - exp(sampling_interval * step_count * L[i]));
 
@@ -200,4 +200,156 @@ size_t LeakageCondensedEquation::solve(const double *dynamic_power,
 	}
 
 	return it;
+}
+
+CoarseCondensedEquation::CoarseCondensedEquation(
+	size_t _processor_count, size_t _node_count,
+	const double **conductivity, const double *capacitance,
+	double _ambient_temperature) :
+
+	processor_count(_processor_count),
+	node_count(_node_count),
+	ambient_temperature(_ambient_temperature)
+{
+	size_t i, j;
+
+	D.resize(node_count, node_count);
+	sinvC.resize(node_count);
+	K.resize(node_count, node_count);
+
+	L.resize(node_count);
+	U.resize(node_count, node_count);
+	UT.resize(node_count, node_count);
+
+	H.resize(node_count, node_count);
+	G.resize(node_count, node_count);
+
+	m_temp.resize(node_count, node_count);
+	v_temp.resize(node_count);
+
+	/* We have:
+	 * C * dT/dt = A * T + B
+	 */
+	matrix_t &A = D;
+
+	for (i = 0; i < node_count; i++) {
+		for (j = 0; j < node_count; j++)
+			A[i][j] = -conductivity[i][j];
+		sinvC[i] = sqrt(1.0 / capacitance[i]);
+	}
+
+	/* We want to get rid of everything in front of dX/dt,
+	 * but at the same time we want to keep the matrix in front of X
+	 * symmetric, so we do the following substitution:
+	 * Y = C^(1/2) * T
+	 * D = C^(-1/2) * A * C^(-1/2)
+	 * E = C^(-1/2) * B
+	 *
+	 * Eventually, we have:
+	 * dY/dt = DY + E
+	 */
+	multiply_diagonal_matrix_matrix(sinvC, A, m_temp);
+	multiply_matrix_diagonal_matrix(m_temp, sinvC, D);
+
+	/* Eigenvalue decomposition:
+	 * D = U * L * UT
+	 *
+	 * Where:
+	 * L = diag(l0, ..., l(n-1))
+	 */
+	EigenvalueDecomposition S(D, U, L);
+
+	transpose_matrix(U, UT);
+
+	/* Coefficient matrix G:
+	 * G = D^(-1) * (exp(D * t) - I) * C^(-1/2) =
+	 * = U * diag((exp(t * l0) - 1) / l0, ...) * UT * C^(-1/2) =
+	 * = U * diag((exp(t * l0) - 1) / l0, ...) * H
+	 *
+	 * H = UT * C^(-1/2)
+	 */
+	multiply_matrix_diagonal_matrix(UT, sinvC, H);
+}
+
+void CoarseCondensedEquation::solve(double total_time,
+	const vector_t &time, const matrix_t &_power, matrix_t &_temperature)
+{
+	size_t step_count = time.size();
+	_temperature.resize(_power);
+
+	const double *power = _power;
+	double *temperature = _temperature;
+
+	size_t i, j, k;
+
+	P.resize(step_count, node_count);
+	Q.resize(step_count, node_count);
+	Y.resize(step_count, node_count);
+
+	Q.nullify();
+
+	/* Q(0) = G(0) * B(0) =
+	 * = U * diag(0) * UT * C^(-1/2) * B(0) =
+	 * = U * diag(0) * H * B(0)
+	 */
+	calculate_Q(time[0], power, Q[0]);
+
+	/* P(0) = Q(0) */
+	__MEMCPY(P[0], Q[0], node_count);
+
+	for (i = 1; i < step_count; i++) {
+		/* Q(i) = G(i) * B(i) */
+		calculate_Q(time[i], power + i * processor_count, Q[i]);
+
+		update_K(time[i]);
+
+		/* P(i) = K(i) * P(i-1) + Q(i) */
+		multiply_matrix_vector_plus_vector(K, P[i - 1], Q[i], P[i]);
+	}
+
+	/* M = diag(1/(1 - exp(Tau * l0)), ...) */
+	for (i = 0; i < node_count; i++)
+		v_temp[i] = 1.0 / (1.0 - exp(total_time * L[i]));
+
+	/* Y(0) = U * M * UT * P(m-1), for M see above ^ */
+	multiply_matrix_diagonal_matrix(U, v_temp, m_temp);
+	multiply_matrix_matrix_vector(m_temp, UT, P[step_count - 1], Y[0]);
+
+	/* Y(i+1) = K(i) * Y(i) + Q(i) */
+	for (i = 1; i < step_count; i++) {
+		update_K(time[i - 1]);
+		multiply_matrix_vector_plus_vector(K, Y[i - 1], Q[i - 1], Y[i]);
+	}
+
+	/* Return back to T from Y:
+	 * T = C^(-1/2) * Y
+	 *
+	 * And do not forget about the ambient temperature.
+	 */
+	for (i = 0, k = 0; i < step_count; i++)
+		for (j = 0; j < processor_count; j++, k++)
+			temperature[k] = Y[i][j] * sinvC[j] + ambient_temperature;
+}
+
+void CoarseCondensedEquation::calculate_Q(
+	double t, const double *P, double *Q)
+{
+	multiply_matrix_incomplete_vector(H, P, processor_count, v_temp);
+
+	for (size_t i = 0; i < node_count; i++)
+		v_temp[i] = ((exp(t * L[i]) - 1) / L[i]) * v_temp[i];
+
+	multiply_matrix_vector(U, v_temp, Q);
+}
+
+void CoarseCondensedEquation::update_K(double t)
+{
+	/* Matrix exponential:
+	 * K = exp(D * t) = U * exp(L * t) * UT
+	 */
+	for (size_t i = 0; i < node_count; i++)
+		v_temp[i] = exp(t * L[i]);
+
+	multiply_matrix_diagonal_matrix(U, v_temp, m_temp);
+	multiply_matrix_matrix(m_temp, UT, K);
 }
