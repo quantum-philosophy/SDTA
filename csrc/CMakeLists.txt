@@ -3,6 +3,7 @@ set (TINYMT_DIR ${VENDOR_DIR}/tinymt-1.0.1/tinymt)
 
 set (COMMON_SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/Architecture.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/CondensedEquation.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Constrain.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/DynamicPower.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Evaluation.cpp

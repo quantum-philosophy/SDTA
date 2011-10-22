@@ -99,6 +99,16 @@ struct vector_t
 		return *this;
 	}
 
+	inline operator double *()
+	{
+		return _data;
+	}
+
+	inline operator const double *() const
+	{
+		return _data;
+	}
+
 	inline double *pointer()
 	{
 		return _data;

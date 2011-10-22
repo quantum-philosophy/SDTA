@@ -18,6 +18,7 @@ extern "C" {
 
 #include "Leakage.h"
 #include "DynamicPower.h"
+#include "CondensedEquation.h"
 
 class Hotspot
 {
@@ -72,7 +73,7 @@ class Hotspot
 
 class BasicCondensedEquationHotspot: public Hotspot
 {
-	void *condensed_equation;
+	CondensedEquation equation;
 
 	public:
 
@@ -80,7 +81,6 @@ class BasicCondensedEquationHotspot: public Hotspot
 		const std::string &floorplan_filename,
 		const std::string &config_filename,
 		const std::string &config_line = std::string());
-	~BasicCondensedEquationHotspot();
 
 	void solve(const matrix_t &power, matrix_t &temperature);
 	void solve(const matrix_t &power, matrix_t &temperature, matrix_t &total_power);
@@ -102,7 +102,7 @@ class CondensedEquationHotspot: public BasicCondensedEquationHotspot
 
 class BasicCondensedEquationLeakageHotspot: public Hotspot
 {
-	void *condensed_equation;
+	LeakageCondensedEquation equation;
 
 	public:
 
@@ -110,7 +110,6 @@ class BasicCondensedEquationLeakageHotspot: public Hotspot
 		const Architecture &architecture,
 		const std::string &floorplan, const std::string &config,
 		const std::string &config_line = std::string());
-	~BasicCondensedEquationLeakageHotspot();
 
 	void solve(const matrix_t &power, matrix_t &temperature, matrix_t &total_power);
 };
