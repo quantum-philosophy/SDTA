@@ -1,10 +1,8 @@
+#include <sstream>
+
 #include "Processor.h"
 #include "Architecture.h"
 
-#include <nr3.h>
-#include <eigen_sym.h>
-
-#include "utils.h"
 #include "Hotspot.h"
 #include "Schedule.h"
 #include "Graph.h"
@@ -21,25 +19,25 @@ class CondensedEquation
 	const double ambient_temperature;
 
 	/* Matrix exponent */
-	MatDoub K;
+	matrix_t K;
 
-	VecDoub sinvC;
-	MatDoub G;
+	vector_t sinvC;
+	matrix_t G;
 
 	/* Eigenvector decomposition
 	 *
 	 * K = U * L * UT
 	 */
-	VecDoub L;
-	MatDoub U;
-	MatDoub UT;
+	vector_t L;
+	matrix_t U;
+	matrix_t UT;
 
-	MatDoub P;
-	MatDoub Q;
-	MatDoub Y;
+	matrix_t P;
+	matrix_t Q;
+	matrix_t Y;
 
-	MatDoub m_temp;
-	VecDoub v_temp;
+	matrix_t m_temp;
+	vector_t v_temp;
 
 	public:
 
@@ -96,7 +94,7 @@ CondensedEquation::CondensedEquation(
 	/* We have:
 	 * C * dT/dt = A * T + B
 	 */
-	MatDoub &A = K;
+	matrix_t &A = K;
 
 	for (i = 0; i < node_count; i++) {
 		for (j = 0; j < node_count; j++)
@@ -104,7 +102,7 @@ CondensedEquation::CondensedEquation(
 		sinvC[i] = sqrt(inv_capacitance[i]);
 	}
 
-	MatDoub &D = A;
+	matrix_t &D = A;
 
 	/* We want to get rid of everything in front of dX/dt,
 	 * but at the same time we want to keep the matrix in front of X
@@ -125,7 +123,7 @@ CondensedEquation::CondensedEquation(
 	 * Where:
 	 * L = diag(l0, ..., l(n-1))
 	 */
-	Symmeig S(D);
+	EigenvalueDecomposition S(D);
 
 	__MEMCPY(&L[0], &S.d[0], node_count);
 	__MEMCPY(U[0], S.z[0], node_count * node_count); /* matrix */
@@ -156,6 +154,8 @@ void CondensedEquation::solve(const double *power, double *temperature,
 	P.resize(step_count, node_count);
 	Q.resize(step_count, node_count);
 	Y.resize(step_count, node_count);
+
+	Q.nullify();
 
 	/* M = diag(1/(1 - exp(m * l0)), ....) */
 	for (i = 0; i < node_count; i++)
@@ -213,6 +213,8 @@ size_t LeakageCondensedEquation::solve(const double *dynamic_power,
 	P.resize(step_count, node_count);
 	Q.resize(step_count, node_count);
 	Y.resize(step_count, node_count);
+
+	Q.nullify();
 
 	/* M = diag(1/(1 - exp(m * l0)), ....) */
 	for (i = 0; i < node_count; i++)
@@ -389,6 +391,7 @@ BasicCondensedEquationHotspot::~BasicCondensedEquationHotspot()
 {
 	CondensedEquation *equation =
 		(CondensedEquation *)condensed_equation;
+
 	__DELETE(equation);
 }
 

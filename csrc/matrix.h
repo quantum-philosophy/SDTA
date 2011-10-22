@@ -50,6 +50,12 @@ struct vector_t
 		}
 	}
 
+	vector_t(const vector_t &another) : _size(another._size)
+	{
+		_data = __ALLOC(_size);
+		__MEMCPY(_data, another._data, _size);
+	}
+
 	~vector_t()
 	{
 		__FREE(_data);
@@ -120,6 +126,11 @@ struct matrix_t: public vector_t
 
 	matrix_t(size_t __rows, size_t __cols) :
 		vector_t(__rows * __cols), _rows(__rows), _cols(__cols)
+	{
+	}
+
+	matrix_t(const matrix_t &another) :
+		vector_t(another), _rows(another._rows), _cols(another._cols)
 	{
 	}
 

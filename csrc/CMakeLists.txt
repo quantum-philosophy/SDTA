@@ -24,15 +24,11 @@ set (COMMON_SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/Tuning.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/common.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/matrix.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
 	${TINYMT_DIR}/tinymt64.c
 )
 
 set_property(SOURCE ${TINYMT_DIR}/tinymt64.c
 	APPEND PROPERTY COMPILE_FLAGS "-std=c99")
-
-set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/Hotspot.cpp
-	APPEND PROPERTY COMPILE_FLAGS "-Wno-reorder")
 
 add_executable (optima optima.cpp ${COMMON_SRCS})
 
@@ -42,7 +38,6 @@ include_directories (
 	${PARADISEO_DIR}/paradiseo-eo/src
 	${PARADISEO_DIR}/paradiseo-mo/src
 	${PARADISEO_DIR}/paradiseo-moeo/src
-	${VENDOR_DIR}/numerical_recipes
 	${VENDOR_DIR}
 	${TINYMT_DIR}
 )
