@@ -103,14 +103,6 @@ void multiply_matrix_matrix_vector(
 
 const double EigenvalueDecomposition::epsilon = std::numeric_limits<double>::epsilon();
 
-EigenvalueDecomposition::EigenvalueDecomposition(const matrix_t &a) :
-	n(a.rows()), z(a), d(n), e(n)
-{
-	tred2();
-	tqli();
-	eigsrt(d, z);
-}
-
 void EigenvalueDecomposition::tred2()
 {
 	int l,k,j,i;

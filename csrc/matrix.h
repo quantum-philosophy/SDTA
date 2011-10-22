@@ -206,12 +206,19 @@ class EigenvalueDecomposition
 	static const double epsilon;
 	const int n;
 
+	matrix_t &z;
+	vector_t &d, e;
+
 	public:
 
-	matrix_t z;
-	vector_t d, e;
-
-	EigenvalueDecomposition(const matrix_t &a);
+	EigenvalueDecomposition(const matrix_t &M, matrix_t &U, vector_t &L) :
+		n(M.rows()), z(U), d(L), e(n)
+	{
+		z = M;
+		tred2();
+		tqli();
+		eigsrt(d, z);
+	}
 
 	private:
 

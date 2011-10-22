@@ -56,10 +56,7 @@ CondensedEquation::CondensedEquation(
 	 * Where:
 	 * L = diag(l0, ..., l(n-1))
 	 */
-	EigenvalueDecomposition S(D);
-
-	__MEMCPY(&L[0], &S.d[0], node_count);
-	__MEMCPY(U[0], S.z[0], node_count * node_count); /* matrix */
+	EigenvalueDecomposition S(D, U, L);
 
 	transpose_matrix(U, UT);
 
