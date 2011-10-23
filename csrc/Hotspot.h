@@ -122,8 +122,9 @@ class CondensedEquationLeakageHotspot: public BasicCondensedEquationLeakageHotsp
 
 class CoarseCondensedEquationHotspot: public Hotspot
 {
-	const DynamicPower dynamic_power;
+	const double deadline;
 	CoarseCondensedEquation equation;
+	CoarseDynamicPower dynamic_power;
 
 	public:
 
@@ -132,7 +133,8 @@ class CoarseCondensedEquationHotspot: public Hotspot
 		const std::string &floorplan, const std::string &config,
 		const std::string &config_line = std::string());
 
-	void solve(const Schedule &schedule, matrix_t &temperature, matrix_t &power);
+	void solve(const Schedule &schedule, vector_t &intervals,
+		matrix_t &temperature, matrix_t &power);
 };
 
 typedef std::vector<int> SlotTrace;

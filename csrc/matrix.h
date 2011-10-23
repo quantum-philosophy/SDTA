@@ -1,6 +1,7 @@
 #ifndef __MATRIX_H__
 #define __MATRIX_H__
 
+#include <stdexcept>
 #include <iostream>
 #include <stdlib.h>
 #include <string.h>
@@ -74,6 +75,16 @@ struct vector_t
 
 		_size = __size;
 		_data = __ALLOC(_size);
+	}
+
+	inline void shrink(size_t __size)
+	{
+#ifndef SHALLOW_CHECK
+		if (_size < __size)
+			throw std::runtime_error("Cannot shrink.");
+#endif
+
+		_size = __size;
 	}
 
 	inline double &operator[](unsigned int i)
@@ -171,6 +182,12 @@ struct matrix_t: public vector_t
 	{
 		_rows = another._rows; _cols = another._cols;
 		vector_t::resize(_rows * _cols);
+	}
+
+	inline void shrink(size_t __rows)
+	{
+		_rows = __rows;
+		vector_t::shrink(_rows * _cols);
 	}
 
 	inline size_t rows() const

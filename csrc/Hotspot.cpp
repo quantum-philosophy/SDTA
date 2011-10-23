@@ -202,25 +202,18 @@ CoarseCondensedEquationHotspot::CoarseCondensedEquationHotspot(
 	const std::string &config_line) :
 
 	Hotspot(floorplan, config, config_line),
-	dynamic_power(architecture.get_processors(), graph.get_tasks(),
-		graph.get_deadline(), sampling_interval),
+	deadline(graph.get_deadline()),
 	equation(processor_count, node_count, (const double **)model->block->b,
-		model->block->a, ambient_temperature)
+		model->block->a, ambient_temperature),
+	dynamic_power(architecture.get_processors(), graph.get_tasks(), deadline)
 {
 }
 
 void CoarseCondensedEquationHotspot::solve(const Schedule &schedule,
-	matrix_t &temperature, matrix_t &power)
+	vector_t &intervals, matrix_t &temperature, matrix_t &power)
 {
-	dynamic_power.compute(schedule, power);
-
-	size_t step_count = power.rows();
-
-	vector_t time(step_count, sampling_interval);
-
-	double total_time = double(step_count) * sampling_interval;
-
-	equation.solve(total_time, time, power, temperature);
+	dynamic_power.compute(schedule, intervals, power);
+	equation.solve(deadline, intervals, power, temperature);
 }
 
 /******************************************************************************/

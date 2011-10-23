@@ -114,9 +114,7 @@ classdef Hotspot < handle
 
       A = spdiags(A, d, nm, nm);
     end
-  end
 
-  methods (Access = private)
     function [ expDt, G ] = calculateCoefficients(hs, t)
       % exp(D * t) = U diag(exp(li * t)) UT
       %
@@ -127,7 +125,9 @@ classdef Hotspot < handle
       %
       G = hs.DV * diag((exp(t * hs.DL) - 1) ./ hs.DL) * hs.DVT * hs.sinvC;
     end
+  end
 
+  methods (Access = private)
     function Y = band(hs, P)
       [ A, B ] = hs.constructBand(P, hs.samplingInterval);
       Y = A \ B;
