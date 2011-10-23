@@ -44,6 +44,20 @@ void multiply_matrix_matrix(
 	}
 }
 
+void multiply_matrix_matrix(
+	const matrix_t &M, const matrix_t &N, double *R)
+{
+	int i, j, k, l;
+	int n = M.rows();
+	for (i = 0, l = 0; i < n; i++) {
+		for (j = 0; j < n; j++, l++) {
+			R[l] = 0;
+			for (k = 0; k < n; k++)
+				R[l] += M[i][k] * N[k][j];
+		}
+	}
+}
+
 void multiply_matrix_matrix_diagonal_matrix(
 	const matrix_t &M, const matrix_t &N, const vector_t &V, matrix_t &R)
 {
@@ -80,6 +94,18 @@ void multiply_matrix_vector_plus_vector(
 		R[i] = 0;
 		for (j = 0; j < n; j++)
 			R[i] += M[i][j] * V[j];
+		R[i] += A[i];
+	}
+}
+
+void multiply_matrix_vector_plus_vector(
+	size_t n, const double *M, const double *V, const double *A, double *R)
+{
+	int i, j;
+	for (i = 0; i < n; i++) {
+		R[i] = 0;
+		for (j = 0; j < n; j++)
+			R[i] += M[i * n + j] * V[j];
 		R[i] += A[i];
 	}
 }

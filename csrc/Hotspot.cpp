@@ -210,6 +210,13 @@ CoarseCondensedEquationHotspot::CoarseCondensedEquationHotspot(
 }
 
 void CoarseCondensedEquationHotspot::solve(const Schedule &schedule,
+	matrix_t &temperature, matrix_t &power)
+{
+	vector_t intervals;
+	solve(schedule, intervals, temperature, power);
+}
+
+void CoarseCondensedEquationHotspot::solve(const Schedule &schedule,
 	vector_t &intervals, matrix_t &temperature, matrix_t &power)
 {
 	dynamic_power.compute(schedule, intervals, power);

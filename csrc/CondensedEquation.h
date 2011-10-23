@@ -104,7 +104,7 @@ class CoarseCondensedEquation
 	protected:
 
 	void calculate_Q(double t, const double *power, double *Q);
-	void update_K(double t);
+	void calculate_K(double t, double *K);
 };
 
 #endif

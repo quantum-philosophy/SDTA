@@ -209,12 +209,16 @@ void multiply_matrix_diagonal_matrix(
 	const matrix_t &M, const vector_t &V, matrix_t &R);
 void multiply_matrix_matrix(
 	const matrix_t &M, const matrix_t &N, matrix_t &R);
+void multiply_matrix_matrix(
+	const matrix_t &M, const matrix_t &N, double *R);
 void multiply_matrix_matrix_diagonal_matrix(
 	const matrix_t &M, const matrix_t &N, const vector_t &V, matrix_t &R);
 void multiply_matrix_incomplete_vector(
 	const matrix_t &M, const double *V, int m, double *R);
 void multiply_matrix_vector_plus_vector(
 	const matrix_t &M, const double *V, const double *A, double *R);
+void multiply_matrix_vector_plus_vector(
+	size_t n, const double *M, const double *V, const double *A, double *R);
 void multiply_matrix_matrix_vector(
 	const matrix_t &M, const matrix_t &N, const double *V, double *R);
 void multiply_matrix_vector(

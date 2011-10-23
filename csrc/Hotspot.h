@@ -133,6 +133,7 @@ class CoarseCondensedEquationHotspot: public Hotspot
 		const std::string &floorplan, const std::string &config,
 		const std::string &config_line = std::string());
 
+	void solve(const Schedule &schedule, matrix_t &temperature, matrix_t &power);
 	void solve(const Schedule &schedule, vector_t &intervals,
 		matrix_t &temperature, matrix_t &power);
 };

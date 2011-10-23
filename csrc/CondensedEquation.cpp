@@ -282,6 +282,7 @@ void CoarseCondensedEquation::solve(double total_time,
 
 	size_t i, j, k;
 
+	K.resize(step_count, node_count * node_count);
 	P.resize(step_count, node_count);
 	Q.resize(step_count, node_count);
 	Y.resize(step_count, node_count);
@@ -297,14 +298,17 @@ void CoarseCondensedEquation::solve(double total_time,
 	/* P(0) = Q(0) */
 	__MEMCPY(P[0], Q[0], node_count);
 
+	calculate_K(time[0], K[0]);
+
 	for (i = 1; i < step_count; i++) {
 		/* Q(i) = G(i) * B(i) */
 		calculate_Q(time[i], power + i * processor_count, Q[i]);
 
-		update_K(time[i]);
+		calculate_K(time[i], K[i]);
 
 		/* P(i) = K(i) * P(i-1) + Q(i) */
-		multiply_matrix_vector_plus_vector(K, P[i - 1], Q[i], P[i]);
+		multiply_matrix_vector_plus_vector(
+			node_count, K[i], P[i - 1], Q[i], P[i]);
 	}
 
 	/* M = diag(1/(1 - exp(Tau * l0)), ...) */
@@ -316,10 +320,9 @@ void CoarseCondensedEquation::solve(double total_time,
 	multiply_matrix_matrix_vector(m_temp, UT, P[step_count - 1], Y[0]);
 
 	/* Y(i+1) = K(i) * Y(i) + Q(i) */
-	for (i = 1; i < step_count; i++) {
-		update_K(time[i - 1]);
-		multiply_matrix_vector_plus_vector(K, Y[i - 1], Q[i - 1], Y[i]);
-	}
+	for (i = 1; i < step_count; i++)
+		multiply_matrix_vector_plus_vector(
+			node_count, K[i - 1], Y[i - 1], Q[i - 1], Y[i]);
 
 	/* Return back to T from Y:
 	 * T = C^(-1/2) * Y
@@ -342,7 +345,7 @@ void CoarseCondensedEquation::calculate_Q(
 	multiply_matrix_vector(U, v_temp, Q);
 }
 
-void CoarseCondensedEquation::update_K(double t)
+void CoarseCondensedEquation::calculate_K(double t, double *K)
 {
 	/* Matrix exponential:
 	 * K = exp(D * t) = U * exp(L * t) * UT

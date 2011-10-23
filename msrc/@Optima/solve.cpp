@@ -30,28 +30,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	matrix_t temperature;
 
 	struct timespec begin, end;
-	double elapsed;
 
-	if (tuning.solution == "condensed_equation") {
-		DynamicPower dynamic_power(test.architecture->get_processors(),
-			test.graph->get_tasks(), test.graph->get_deadline(),
-			test.hotspot->get_sampling_interval());
-
-		dynamic_power.compute(test.schedule, power);
-
-		measure(&begin);
-		test.hotspot->solve(power, temperature);
-		measure(&end);
-	}
-	else {
-		measure(&begin);
-		test.hotspot->solve(test.schedule, temperature, power);
-		measure(&end);
-	}
-
-	elapsed = substract(&end, &begin);
+	measure(&begin);
+	test.hotspot->solve(test.schedule, temperature, power);
+	measure(&end);
 
 	plhs[0] = to_matlab(temperature);
 	plhs[1] = to_matlab(power);
-	plhs[2] = to_matlab(elapsed);
+	plhs[2] = to_matlab(substract(&end, &begin));
 }
