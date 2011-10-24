@@ -1,4 +1,4 @@
-We consider a multicore system that consists of a set of processing elements (cores) $\Pi = \{ \pi_k: k = 0 \dots N_p - 1 \}$ and executes a periodic application with an overall period $\mathcal{T}$. The processing elements along with the package of the die are mapped onto $N_n$ thermal nodes. The application period is discretized into $N_s$ intervals $\triangle t_i$ for $i = 0 \dots N_s - 1$ in such a way that the intervals are small enough to assume that the power dissipation\footnote{The power consumption of the thermal nodes that correspond to the package is equal to be zero.} and temperature of each thermal node are constant within them. The power profile is assumend to be periodic and defined as:
+We consider a multicore system that consists of a set of processing elements (cores) $\Pi = \{ \pi_k: k = 0 \dots N_p - 1 \}$ and executes a periodic application with an overall period $\mathcal{T}$. The processing elements along with the package of the die are mapped onto $N_n$ thermal nodes. The application period is discretized into $N_s$ intervals $\triangle t_i$ for $i = 0 \dots N_s - 1$ in such a way that the intervals are small enough to assume that the power dissipation\footnote{The nodes that belong to the thermal package dissipate no power.} and temperature of each thermal node are constant within them. The power profile is assumend to be periodic and defined as:
 \begin{equation*}
   \mathbb{P} = \left[
     \begin{array}{c}
@@ -14,7 +14,7 @@ We consider a multicore system that consists of a set of processing elements (co
     \end{array}
   \right]
 \end{equation*}
-where $P_{ij}$ is the power dissipation during the $i$th time interval of the $j$th thermal node. After the stabilization process, the temperature profile of the system becomes periodic as well and given as:
+where $P_{ij}$ is the power dissipation during the $i$th time interval of the $j$th thermal node\footnote{The power that a core dissipates depends on a lot of different parameters, e.g., the input data of the active task. We assume those parameters to be constant from one execution of the task to another within the core. As an approximation the average value of the power dissipation, as well as of the execution time, can be used.}. After the stabilization process, the temperature profile of the system becomes periodic as well and given as:
 \begin{equation*}
   \mathbb{T} = \left[
     \begin{array}{c}
@@ -30,15 +30,16 @@ where $P_{ij}$ is the power dissipation during the $i$th time interval of the $j
     \end{array}
   \right]
 \end{equation*}
-where $T_{ij}$ corresponds to the temperature of the $j$th node on the $i$th time interval. We refer to this profile as the Steady-State Dynamic Temperature Profile (SSDTP).
+where $T_{ij}$ corresponds to the temperature of the $j$th node on the $i$th time interval. We refer to this profile as the Steady-State Dynamic Temperature Profile (SSDTP). Now we can formulate the problem.
 
-Now we can formulate the problem. Given:
+Given:
 \begin{itemize}
-  \item A \emph{periodic} power profile $\mathbb{P}$ of a multicore system with a set of processing elements $\Pi$.
+  \item A \emph{periodic} power profile $\mathbb{P}$ of a multicore system\footnote{An adequate power profile is a separate topic to discuss. For instance, system profiling techniques with cycle-accurate simulators, e.g., MPARM \cite{benini2005} and Wattch \cite{brooks2000}, can be applied.} with a set of processing elements $\Pi$.
   \item The floorplan of the chip, i.e., the location and size of each processing element $\pi_k \in \Pi$.
   \item The configuration of the package including the thermal interface material, heat spreader, and heat sink.
   \item The thermal parameters of the die and package (the thermal conductivity, thermal capacitance, etc.).
 \end{itemize}
+
 Find:
 \begin{itemize}
   \item The corresponding \emph{periodic} temperature profile $\mathbb{T}$ of the system in its steady state (when the temperature stabilization process is finished).
