@@ -1,23 +1,26 @@
-function draw(graph, createFigure)
+function draw(graph, createFigure, proportionalPower)
   if nargin < 2, createFigure = true; end
+  if nargin < 3, proportionalPower = true; end
 
   if createFigure, figure; end
 
-  peCount = length(graph.pes);
+  processorCount = length(graph.pes);
 
   colors = Constants.roundRobinColors;
 
-  title(sprintf('Mapping and Scheduling (%.2f s)', graph.deadline));
-  xlabel('Time, s');
-  ylabel('Cores');
+  title('Mapping and Scheduling', 'FontSize', 16);
+  xlabel('Time, s', 'FontSize', 14);
+  set(gca,'YTick', [], 'YTickLabel', []);
 
   last = max(graph.deadline, graph.duration);
 
   taskPower = Power.calculateTask(graph);
   taskPower = taskPower ./ max(taskPower);
 
+  processorNames = {};
+
   maxHeight = 0.8;
-  for i = 1:peCount
+  for i = 1:processorCount
     pe = graph.pes{i};
 
     y0 = i;
@@ -29,7 +32,9 @@ function draw(graph, createFigure)
     y = [ y0 ];
     for id = schedule
       task = graph.tasks{id};
-      height = maxHeight * taskPower(id);
+
+      height = maxHeight;
+      if proportionalPower, height = height * taskPower(id); end
 
       x(end + 1) = task.start;
       y(end + 1) = y0;
@@ -43,7 +48,8 @@ function draw(graph, createFigure)
       x(end + 1) = task.start + task.duration;
       y(end + 1) = y0;
 
-      text(task.start, y0 + 0.5 * maxHeight, sprintf('  %d', id));
+      text(task.start + 0.2 * task.duration, y0 + 0.1 * maxHeight, ...
+        [ 'T', num2str(id) ]);
     end
 
     x(end + 1) = last;
@@ -51,11 +57,14 @@ function draw(graph, createFigure)
 
     color = colors{mod(i - 1, length(colors)) + 1};
     line(x, y, 'Color', color);
+
+    processorNames{end + 1} = [ 'Core', num2str(i) ];
   end
 
-  line([ graph.deadline, graph.deadline ], [ 1 (peCount + 1) ], ...
+  line([ graph.deadline, graph.deadline ], [ 1 (processorCount + 1) ], ...
     'Line', '--', 'Color', 'k');
 
-  set(gca, 'YTick', 1:peCount);
+  set(gca, 'YTickLabel', processorNames);
+  set(gca, 'YTick', 1:processorCount);
   set(gca, 'XLim', [ 0 last ]);
 end
