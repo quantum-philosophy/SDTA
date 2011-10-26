@@ -36,7 +36,7 @@ where $C_{eff}$ is the effective switched capacitance of a task, $V_{dd}$ and $f
 where $N_{gate}$ is the number of gates in the circuit,\footnote{The number of gates in a circuit can be estimated using the technique described in \cite{li2004}.} $I_s (T_0, V_0)$ is the average leakage current at the given temperature $T_0$ and supply voltage $V_0$, $f_{avg}$ is the scaling function. $I_{avg}$ is the average leakage current at the current temperature $T$ and voltage $V_{dd}$. $A$, $B$, $\alpha$, $\beta$, $\gamma$, and $\delta$ are the technology dependent constants found in \cite{liao2005}. It can be seen that the dynamic power consumption does not depend on temperature, it is a constant for each combination of a processing element and a task while the power leakage is a strong function of the operating temperature.
 
 \subsection{Temperature-Aware Reliability Model}
-In the paper we address temperature-driven failure mechanisms with the reliability model presented in \cite{xiang2010}. The model is based on the assumption that the failure rate has a Weibull distribution (e.g., the thermal cycling, electromigration, etc. \cite{jedec2010}):
+In the paper we address temperature-driven failure mechanisms with the reliability model presented in \cite{huang2009} (as well as in \cite{xiang2010}). The model is based on the assumption that the failure rate has a Weibull distribution (e.g., the thermal cycling, electromigration, etc. \cite{jedec2010}):
 \[
   R(t) = e^{-(\frac{t}{\eta})^\beta}
 \]
@@ -44,12 +44,12 @@ where $\eta$ is the scaling parameter, $\beta$ is the shape (slope) parameter. T
 \begin{equation} \label{eq:general-mttf}
   MTTF = \eta \; \Gamma(1 + \frac{1}{\beta})
 \end{equation}
-where $\Gamma$ is the gamma function. The shape parameter is found to be independent on the temperature variation \cite{chang2006}, which is not the case with the scaling parameter $\eta$. Therefore, the distribution can vary from one set of conditions to another. We can use the same approach as it was shown previously and split the overall period of the application $\mathcal{T}$ into $N_m$ small time intervals $\triangle t_i$, so that during each time interval $\triangle t_i$ all those conditions can be treated as constants, consequently, the corresponding $\eta_i$ is also constant. In this case, the cumulative distribution function by the end of the first execution of the application is the following \cite{xiang2010}:
+where $\Gamma$ is the gamma function. The shape parameter is found to be independent on the temperature variation \cite{chang2006}, which is not the case with the scaling parameter $\eta$. Therefore, the distribution can vary from one set of conditions to another. We can use the same approach as it was shown previously and split the overall period of the application $\mathcal{T}$ into $N_m$ time intervals $\triangle t_i$, so that during each time interval $\triangle t_i$ all those conditions can be treated as constants, consequently, the corresponding $\eta_i$ is also constant. In this case, the cumulative distribution function by the end of the first execution of the application is the following \cite{huang2009}, \cite{xiang2010}:
 \[
   R = e^{-(\sum_{i=0}^{N_m - 1} \frac{\triangle t_i}{\eta_i})^\beta}
 \]
 
-It can be shown that if $\eta_i$ are large enough\footnote{This is the case, since usually the MTTF is in order of tens of years (see \equref{eq:general-mttf}).}, the following continuous approximation can take place:
+It can be shown that if $\eta_i$ are large enough\footnote{This is the case, since usually the MTTF is in order of tens of years (see \equref{eq:general-mttf}).}, the following continuous approximation can take place \cite{xiang2010}:
 \[
   R(t) = e^{-(\frac{t}{\mathcal{T}} \sum_{i=0}^{N_m - 1} \frac{\triangle t_i}{\eta_i})^\beta}
 \]
@@ -58,7 +58,7 @@ The formula still keeps the form of the Weibull distribution with the following 
   \eta = \frac{\mathcal{T}}{\sum_{i=0}^{N_m - 1} \frac{\triangle t_i}{\eta_i}}
 \]
 
-As it was mentioned earlier, the reliability model can be plugged in to model different failure mechanisms. Let us now focus on one particular failure cause, the thermal cycling (TC) fatigue that is a common packaging and interfacial failure mechanism \cite{jedec2010}. The number of cycles to failure can be estimated using a modified version of the well-known Coffin-Manson equation with the Arrhenius term \cite{jedec2010}, \cite{xiang2010}, \cite{ciappa2003}:
+As it was mentioned earlier, the reliability model can be plugged in to model different failure mechanisms. Let us now focus on one particular failure cause, the thermal cycling (TC) fatigue, that is a common packaging and interfacial failure mechanism \cite{jedec2010}. The number of cycles to failure can be estimated using a modified version of the well-known Coffin-Manson equation with the Arrhenius term \cite{jedec2010}, \cite{xiang2010}, \cite{ciappa2003}:
 \begin{equation} \label{eq:cycles-to-failure}
   \mathcal{N} = A (\triangle T - \triangle T_0)^{-b} e^{\frac{E_a}{k T_{max}}}
 \end{equation}

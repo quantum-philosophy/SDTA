@@ -22,12 +22,14 @@
   \label{fig:#1}
 }
 
-\newcommand{\image}[3]{
+\newcommand{\iimage}[3]{
   \begin{figure}
     \centering
     \innerimage{#1}{#2}{#3}
   \end{figure}
 }
+
+\newcommand{\image}[3]{\iimage{#1}{#2}{#3}}
 
 \newenvironment{itable}[4]{\pushQED{#4}
   \begin{table}

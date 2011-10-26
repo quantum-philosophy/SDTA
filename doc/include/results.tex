@@ -58,11 +58,11 @@ The application period proportionally corresponds to the number of steps in the 
 In contrast, the scalability of the methods with the number of processing elements is different, since the effect of each new core varies between the solutions. The comparison is given on \figref{fig:scaling-cores} and \tabref{tab:scaling-cores}. It can be seen that the FFT method with the increasing number of cores overtakes one HotSpot simulation, i.e., the FFT method scales better. On the other hand, the complexity of the problem for the direct solver (UMF) increases dramatically.
 
 \subsection{Reliability Optimization}
-The experimental setup for the reliability optimization is the following. We consider 10 distinct levels of difficulty of the problem characterized by a pair $(N_p, N_t)$ where $N_p$ is the number of processing elements and $N_t$ is the number of tasks. For each level we generate 10 random task graphs of a similar structure \cite{dick1998} and apply the optimization procedure 10 times. The parameters of the architecture, i.e., the frequency $f$, voltage $V$, and number of gates $N_{gates}$, for each particular problem (task graph) are also generated randomly.
+The experimental setup for the reliability optimization is the following. We consider 10 distinct levels of difficulty of the problem characterized by pairs $(N_p, N_t)$ where $N_p$ is the number of processing elements and $N_t$ is the number of tasks. For each level we generate 10 random task graphs of a similar structure \cite{dick1998} and apply the optimization procedure 10 times. The parameters of the architecture, i.e., the frequency $f$, voltage $V$, and number of gates $N_{gates}$, for each particular problem (task graph) are also generated randomly.
 
 \begin{itable}{difficulty-levels}{|r|r|r|r|r|}
   {Reliability optimization}
-  {$N_p$ --- the number of cores, $N_t$ -- the number of tasks in the periodic application, Time --- the computational time, MTTF --- the improvement of the MTTF relative to the initial solution.}
+  {$N_p$ --- the number of cores, $N_t$ --- the number of tasks in the periodic application, Time --- the computational time, MTTF --- the improvement of the MTTF relative to the initial solution.}
   \hline
   Level & $N_p$ & $N_t$ & Time, m & MTTF, \% \\
   \hline

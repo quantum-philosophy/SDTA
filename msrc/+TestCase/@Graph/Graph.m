@@ -98,8 +98,6 @@ classdef Graph < handle
     end
 
     function assignDeadline(graph, time)
-      if ~graph.isMapped, error('Should be mapped'); end
-
       graph.deadline = time;
     end
 
@@ -313,7 +311,11 @@ classdef Graph < handle
     end
 
     function calculateALAP(graph)
-      duration = graph.calculateASAPDuration();
+      if isempty(graph.deadline)
+        duration = graph.calculateASAPDuration();
+      else
+        duration = graph.deadline;
+      end
       for task = graph.getLeaves
         task{1}.propagateALAP(duration);
       end
