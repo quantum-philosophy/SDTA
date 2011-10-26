@@ -12,24 +12,59 @@
 
 using namespace std;
 
-void optimize(const string &system, const string &floorplan,
-	const string &hotspot, const string &params, stringstream &param_stream);
-
-int main(int argc, char **argv)
+class OptimaCommandLine: public CommandLine
 {
-	try {
-		CommandLine arguments(argc, (const char **)argv);
-		optimize(arguments.system, arguments.floorplan, arguments.hotspot,
-			arguments.params, arguments.param_stream);
-	}
-	catch (exception &e) {
-		cerr << e.what() << endl;
-		CommandLine::usage();
-		return EXIT_FAILURE;
+	public:
+
+	string system;
+	string floorplan;
+	string hotspot;
+	string params;
+	stringstream param_stream;
+
+	OptimaCommandLine() : CommandLine() {}
+
+	void usage() const
+	{
+		cout
+			<< "Usage: optima [-<param name> <param value>]" << endl
+			<< endl
+			<< "  Available parameters:" << endl
+			<< "  * s, system      - a task graph with a number of PEs" << endl
+			<< "  * f, floorplan   - a floorplan for the PEs" << endl
+			<< "    h, hotspot     - the Hotspot configuration" << endl
+			<< "    p, parameters  - the tuning parameters" << endl
+			<< "    other          - overwrite the tuning parameters" << endl
+			<< endl
+			<< "  (* required parameters)" << endl;
 	}
 
-	return EXIT_SUCCESS;
-}
+	protected:
+
+	void verify() const
+	{
+		if (system.empty() || !File::exist(system))
+			throw runtime_error("The system configuration file does not exist.");
+
+		if (floorplan.empty() || !File::exist(floorplan))
+			throw runtime_error("The floorplan configuration file does not exist.");
+
+		if (!hotspot.empty() && !File::exist(hotspot))
+			throw runtime_error("The Hotspot configuration file does not exist.");
+
+		if (!params.empty() && !File::exist(params))
+			throw runtime_error("The tuning configuration file does not exist.");
+	}
+
+	void process(const string &name, const string &value)
+	{
+		if (name == "s" || name == "system") system = value;
+		else if (name == "f" || name == "floorplan") floorplan = value;
+		else if (name == "h" || name == "hotspot") hotspot = value;
+		else if (name == "p" || name == "parameters") params = value;
+		else param_stream << name << " " << value << endl;
+	}
+};
 
 void backup(const string &iname, int index)
 {
@@ -185,4 +220,22 @@ void optimize(const string &system, const string &floorplan,
 
 	__DELETE(evaluation);
 	__DELETE(evolution);
+}
+
+int main(int argc, char **argv)
+{
+	OptimaCommandLine arguments;
+
+	try {
+		arguments.parse(argc, (const char **)argv);
+		optimize(arguments.system, arguments.floorplan, arguments.hotspot,
+			arguments.params, arguments.param_stream);
+	}
+	catch (exception &e) {
+		cerr << e.what() << endl;
+		arguments.usage();
+		return EXIT_FAILURE;
+	}
+
+	return EXIT_SUCCESS;
 }

@@ -114,22 +114,14 @@ BasicCondensedEquationHotspot::BasicCondensedEquationHotspot(
 
 	Hotspot(_floorplan, config, config_line),
 	equation(processor_count, node_count, sampling_interval, ambient_temperature,
-		(const double **)model->block->b, model->block->inva)
+		(const double **)model->block->b, model->block->a)
 {
 }
 
-void BasicCondensedEquationHotspot::solve(const matrix_t &power, matrix_t &temperature)
+void BasicCondensedEquationHotspot::solve(
+	const matrix_t &power, matrix_t &temperature)
 {
 	temperature.resize(power);
-	equation.solve(power, temperature, power.rows());
-}
-
-void BasicCondensedEquationHotspot::solve(const matrix_t &power,
-	matrix_t &temperature, matrix_t &total_power)
-{
-	temperature.resize(power);
-	total_power.resize(power);
-	__MEMCPY(total_power, power, power.rows() * power.cols());
 	equation.solve(power, temperature, power.rows());
 }
 
@@ -161,7 +153,7 @@ BasicCondensedEquationLeakageHotspot::BasicCondensedEquationLeakageHotspot(
 
 	Hotspot(floorplan, config, config_line),
 	equation(architecture.get_processors(), node_count, sampling_interval,
-		ambient_temperature, (const double **)model->block->b, model->block->inva)
+		ambient_temperature, (const double **)model->block->b, model->block->a)
 {
 }
 
@@ -221,6 +213,35 @@ void CoarseCondensedEquationHotspot::solve(const Schedule &schedule,
 {
 	dynamic_power.compute(schedule, intervals, power);
 	equation.solve(deadline, intervals, power, temperature);
+}
+
+/******************************************************************************/
+
+TransientAnalyticalHotspot::TransientAnalyticalHotspot(
+	const Architecture &architecture, const Graph &graph,
+	const std::string &floorplan, const std::string &config,
+	const std::string &config_line) :
+
+	Hotspot(floorplan, config, config_line),
+	equation(processor_count, node_count, sampling_interval, ambient_temperature,
+		(const double **)model->block->b, model->block->a),
+	dynamic_power(architecture.get_processors(), graph.get_tasks(),
+		graph.get_deadline(), sampling_interval)
+{
+}
+
+void TransientAnalyticalHotspot::solve(
+	const matrix_t &power, matrix_t &temperature)
+{
+	temperature.resize(power);
+	equation.solve(power, temperature, power.rows());
+}
+
+void TransientAnalyticalHotspot::solve(const Schedule &schedule,
+	matrix_t &temperature, matrix_t &power)
+{
+	dynamic_power.compute(schedule, power);
+	solve(power, temperature);
 }
 
 /******************************************************************************/
@@ -518,8 +539,6 @@ size_t IterativeHotspot::solve(double *extended_power,
 	double *temperature, size_t step_count)
 {
 	double *extended_temperature = __ALLOC(node_count);
-
-	struct timespec begin, end;
 
 	set_temp(model, extended_temperature, config.init_temp);
 

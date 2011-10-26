@@ -1,8 +1,8 @@
 set (TINYMT_DIR ${VENDOR_DIR}/tinymt-1.0.1/tinymt)
 
 set (MEX_SRCS
+	${PROJECT_SOURCE_DIR}/csrc/AnalyticalSolution.cpp
 	${PROJECT_SOURCE_DIR}/csrc/Architecture.cpp
-	${PROJECT_SOURCE_DIR}/csrc/CondensedEquation.cpp
 	${PROJECT_SOURCE_DIR}/csrc/Constrain.cpp
 	${PROJECT_SOURCE_DIR}/csrc/DynamicPower.cpp
 	${PROJECT_SOURCE_DIR}/csrc/Graph.cpp
