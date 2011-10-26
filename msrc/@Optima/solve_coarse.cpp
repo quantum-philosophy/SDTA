@@ -38,12 +38,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	struct timespec begin, end;
 
-	measure(&begin);
+	Time::measure(&begin);
 	hotspot->solve(test.schedule, intervals, temperature, power);
-	measure(&end);
+	Time::measure(&end);
 
 	plhs[0] = to_matlab(intervals);
 	plhs[1] = to_matlab(temperature);
 	plhs[2] = to_matlab(power);
-	plhs[3] = to_matlab(substract(&end, &begin));
+	plhs[3] = to_matlab(Time::substract(&end, &begin));
 }

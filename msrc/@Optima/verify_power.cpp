@@ -36,23 +36,23 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	matrix_t reference_temperature;
 
-	measure(&begin);
+	Time::measure(&begin);
 	test.hotspot->solve(power, reference_temperature);
-	measure(&end);
+	Time::measure(&end);
 
 	plhs[0] = to_matlab(reference_temperature);
-	plhs[1] = to_matlab(substract(&end, &begin));
+	plhs[1] = to_matlab(Time::substract(&end, &begin));
 
 	matrix_t temperature;
 
 	IterativeHotspot hotspot(floorplan, _hotspot, tuning.hotspot,
 		max_iterations, tolerance);
 
-	measure(&begin);
+	Time::measure(&begin);
 	size_t iterations = hotspot.verify(power, reference_temperature, temperature);
-	measure(&end);
+	Time::measure(&end);
 
 	plhs[2] = to_matlab(iterations);
 	plhs[3] = to_matlab(temperature);
-	plhs[4] = to_matlab(substract(&end, &begin));
+	plhs[4] = to_matlab(Time::substract(&end, &begin));
 }

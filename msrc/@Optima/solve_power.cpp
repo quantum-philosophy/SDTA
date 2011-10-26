@@ -33,11 +33,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	matrix_t temperature, total_power;
 
-	measure(&begin);
-	test.hotspot->solve(power, temperature, total_power);
-	measure(&end);
+	if (tuning.leakage) {
+		Time::measure(&begin);
+		test.hotspot->solve(power, temperature, total_power);
+		Time::measure(&end);
+	}
+	else {
+		Time::measure(&begin);
+		test.hotspot->solve(power, temperature);
+		Time::measure(&end);
+	}
 
 	plhs[0] = to_matlab(temperature);
-	plhs[1] = to_matlab(substract(&end, &begin));
+	plhs[1] = to_matlab(Time::substract(&end, &begin));
 	plhs[2] = to_matlab(total_power);
 }
