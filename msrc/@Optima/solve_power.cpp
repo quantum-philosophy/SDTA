@@ -31,16 +31,36 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	struct timespec begin, end;
 
-	matrix_t temperature, total_power;
+	matrix_t temperature, total_power, extended_power;
+
+	matrix_t *used_power = &power;
+
+	if (tuning.solution == "hotspot") {
+		size_t step_count = power.rows();
+		size_t processor_count = test.architecture->size();
+		size_t node_count = 4 * processor_count + 12;
+
+		extended_power.resize(step_count, node_count);
+		extended_power.nullify();
+
+		double *_power = power;
+		double *_extended_power = extended_power;
+
+		for (size_t i = 0; i < step_count; i++)
+			__MEMCPY(_extended_power + i * node_count,
+				_power + i * processor_count, processor_count);
+
+		used_power = &extended_power;
+	}
 
 	if (tuning.leakage) {
 		Time::measure(&begin);
-		test.hotspot->solve(power, temperature, total_power);
+		test.hotspot->solve(*used_power, temperature, total_power);
 		Time::measure(&end);
 	}
 	else {
 		Time::measure(&begin);
-		test.hotspot->solve(power, temperature);
+		test.hotspot->solve(*used_power, temperature);
 		Time::measure(&end);
 	}
 

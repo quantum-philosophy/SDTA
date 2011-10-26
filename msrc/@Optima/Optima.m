@@ -58,9 +58,9 @@ classdef Optima < handle
     function scalePackage(o)
       if isempty(o.processorArea), error('The processor area is unknown'); end
 
-      original = Utils.path('hotspot.config');
+      original = Utils.path([ o.name, '_hotspot.config' ]);
 
-      o.hotspot = Utils.path('hotspot_temp.config');
+      o.hotspot = Utils.path([ o.name, '_hotspot_temp.config' ]);
 
       % Die
       dieArea = o.processorArea * o.processorCount;
