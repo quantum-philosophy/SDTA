@@ -40,13 +40,23 @@ class Time
 	}
 };
 
-class Helper
+class File
 {
 	public:
+
+	static bool exist(const std::string &filename)
+	{
+		return std::ifstream(filename.c_str()).is_open();
+	}
 
 	static void dump(const matrix_t &matrix, const char *filename)
 	{
 		dump(matrix.pointer(), matrix.rows(), matrix.cols(), filename);
+	}
+
+	static void dump(const matrix_t &matrix, const std::string &filename)
+	{
+		dump(matrix.pointer(), matrix.rows(), matrix.cols(), filename.c_str());
 	}
 
 	static void dump(const double *matrix, size_t rows, size_t cols,
@@ -64,6 +74,11 @@ class Helper
 
 		stream.close();
 	}
+};
+
+class Helper
+{
+	public:
 
 	template<class T>
 	static void permute(std::vector<T> &vector, const order_t &order)

@@ -118,18 +118,10 @@ BasicCondensedEquationHotspot::BasicCondensedEquationHotspot(
 {
 }
 
-void BasicCondensedEquationHotspot::solve(const matrix_t &power, matrix_t &temperature)
+void BasicCondensedEquationHotspot::solve(
+	const matrix_t &power, matrix_t &temperature)
 {
 	temperature.resize(power);
-	equation.solve(power, temperature, power.rows());
-}
-
-void BasicCondensedEquationHotspot::solve(const matrix_t &power,
-	matrix_t &temperature, matrix_t &total_power)
-{
-	temperature.resize(power);
-	total_power.resize(power);
-	__MEMCPY(total_power, power, power.rows() * power.cols());
 	equation.solve(power, temperature, power.rows());
 }
 
@@ -518,8 +510,6 @@ size_t IterativeHotspot::solve(double *extended_power,
 	double *temperature, size_t step_count)
 {
 	double *extended_temperature = __ALLOC(node_count);
-
-	struct timespec begin, end;
 
 	set_temp(model, extended_temperature, config.init_temp);
 

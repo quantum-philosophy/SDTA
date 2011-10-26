@@ -82,7 +82,7 @@ void CoarseDynamicPower::compute(const Schedule &schedule,
 	vector_t &intervals, matrix_t &power)
 {
 	size_t pos;
-	pid_t pid, next_pid;
+	pid_t pid, next_pid = 0;
 	double last_time, next_time;
 	double *ptr;
 

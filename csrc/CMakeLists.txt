@@ -1,7 +1,7 @@
 set (PARADISEO_DIR ${VENDOR_DIR}/paradiseo)
 set (TINYMT_DIR ${VENDOR_DIR}/tinymt-1.0.1/tinymt)
 
-set (COMMON_SRCS
+set (OPTIMA_SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/Architecture.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/CondensedEquation.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Constrain.cpp
@@ -28,12 +28,33 @@ set (COMMON_SRCS
 	${TINYMT_DIR}/tinymt64.c
 )
 
+set (SOLVE_SRCS
+	${CMAKE_CURRENT_SOURCE_DIR}/Architecture.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/CondensedEquation.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/DynamicPower.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Graph.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Hotspot.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Layout.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Leakage.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Mobility.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Pool.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Priority.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Processor.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Schedule.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Task.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Tuning.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/common.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/matrix.cpp
+)
+
 set_property(SOURCE ${TINYMT_DIR}/tinymt64.c
 	APPEND PROPERTY COMPILE_FLAGS "-std=c99")
 
-add_executable (optima optima.cpp ${COMMON_SRCS})
-
+add_executable (optima optima.cpp ${OPTIMA_SRCS})
 target_link_libraries (optima crypto memcached libeo libmoeo libeoutils libhotspot)
+
+add_executable (solve solve.cpp ${SOLVE_SRCS})
+target_link_libraries (solve libhotspot rt)
 
 include_directories (
 	${PARADISEO_DIR}/paradiseo-eo/src

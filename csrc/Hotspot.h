@@ -36,7 +36,8 @@ class Hotspot
 	/* Without leakage */
 	virtual void solve(const matrix_t &power, matrix_t &temperature)
 	{
-		throw std::runtime_error("Not implemented.");
+		matrix_t total_power;
+		solve(power, temperature, total_power);
 	}
 
 	/* With leakage */
@@ -44,6 +45,13 @@ class Hotspot
 		matrix_t &total_power)
 	{
 		throw std::runtime_error("Not implemented.");
+	}
+
+	/* With and without leakage from a schedule */
+	virtual void solve(const Schedule &schedule, matrix_t &temperature)
+	{
+		matrix_t power;
+		solve(schedule, temperature, power);
 	}
 
 	/* With and without leakage from a schedule */
@@ -75,7 +83,6 @@ class BasicCondensedEquationHotspot: public Hotspot
 		const std::string &config_line = std::string());
 
 	void solve(const matrix_t &power, matrix_t &temperature);
-	void solve(const matrix_t &power, matrix_t &temperature, matrix_t &total_power);
 };
 
 class CondensedEquationHotspot: public BasicCondensedEquationHotspot
