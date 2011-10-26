@@ -1,8 +1,9 @@
-The proposed SSDTA technique is based on the well-known RC thermal model that employs the analogy between electrical and thermal circuits. According to this model, the temperature behaviour can be predicted by constracting equivalent RC thermal circuits where electrical current, voltage, resistance, and capacitance are replaced by heat flow, temperature, thermal resistance, and thermal capacitance, correspondingly. The heat equation in this model takes the following matrix form:
+\subsection{RC Thermal Model}
+The proposed SSDTA technique is based on the well-known RC thermal model that employs the analogy between electrical and thermal circuits. According to this model, the temperature behaviour can be predicted by constructing equivalent RC thermal circuits where electrical current, voltage, resistance, and capacitance are replaced by heat flow, temperature, thermal resistance, and thermal capacitance, correspondingly. The heat equation of the model has the following matrix form:
 \begin{equation} \label{eq:thermal-ode}
   C \frac{dT}{dt} + G T = P
 \end{equation}
-where $T$ is a vector of temperature, $C$ is the thermal capacitance matrix, $G$ is the thermal conductance matrix (equal to $R^{-1}$, where $R$ is the resistance matrix), and $P$ is a vector of the power dissipation (the source of heat). $C$ and $G$ are $N_n \times N_n$ matrices, $T$ and $P$ are vectors of the length $N_n$, where $N_n$ is the number of thermal nodes. For convenience, in the rest of the paper we use the following denotation:
+where $T$ is a vector of temperature, $C$ is the thermal capacitance matrix, $G$ is the thermal conductance matrix (equal to $R^{-1}$, where $R$ is the resistance matrix), and $P$ is a vector of the power dissipation (the source of heat). $C$ and $G$ are $N_n \times N_n$ matrices, $T$ and $P$ are vectors of the length $N_n$, where $N_n$ is the number of thermal nodes. For convenience, in the rest of the paper we use the following notation:
 \begin{equation} \label{eq:initial}
   C \frac{dT}{dt} = A T + B
 \end{equation}
@@ -13,3 +14,25 @@ An equivalent circuit of a multiprocessor system with a thermal package can be b
 \end{equation}
 
 The choice of a particular model depends on a desired accuracy. Without loss of generality, we shall use the block model of HotSpot in our experiments.
+
+\subsection{Architecture Model}
+Consider a multiprocessor system with heterogeneous architecture that is composed of a number of processing elements $\Pi = \{ \pi_k: \; k = 0 \dots N_p - 1 \}$. Each processing element $\pi_k$ is characterized by its supply voltage $V_k$, frequency $f_k$, and the number of gates $N_{gate \: k}$ \cite{liao2005}:
+\[
+  \pi_k \rightarrow (V_k, f_k, N_{gate \: k}), \; k = 0 \dots N_p - 1
+\]
+
+The first two parameters are essential for the dynamic power estimation while the last one is used for the power leakage as described in the following subsection.
+
+\subsection{Power Model}
+The total power dissipation of a processing element is defined as a sum of the dynamic power and power leakage:
+\begin{align*}
+  & P = P_{dyn} + P_{leak} \\
+  & P_{dyn} = C_{eff} \; f \; V^2
+\end{align*}
+where $C_{eff}$ is the effective switched capacitance of the active task, $V$ and $f$ are the supplied voltage and frequency of the processing element, correspondingly. The model for the leakage part of the power dissipation is presented in \cite{liao2005}\footnote{Although, the leakage model can be computational intensive, the linear approximation presented in \cite{liu2007} can be used.}:
+\begin{align*}
+  & P_{leak} = N_{gate} \: I_{avg} \: V \\
+  & I_{avg} = I_s(T_0, V_0) \: f_{avg}(T, V) \\
+  & f(T, V) = A \: T^2 e^{((\alpha \: V + \beta)/T)} + B e^{(\gamma \: V + \delta)}
+\end{align*}
+where $N_{gate}$ is the number of gates in the circuit,\footnote{The number of gates in a circuit can be estimated using the technique described in \cite{li2004}.} $I_s (T_0, V_0)$ is the average leakage current at the given temperature $T_0$ and supply voltage $V_0$, $f_{avg}$ is the scaling function. $I_{avg}$ is the average leakage current at the current temperature $T$ and voltage $V$. $A$, $B$, $\alpha$, $\beta$, $\gamma$, and $\delta$ are the technology dependent constants found in \cite{liao2005}.
