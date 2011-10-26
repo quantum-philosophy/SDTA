@@ -1,5 +1,4 @@
-\subsection{Analytical Solution}
-In order to resolve the problem, we use an analytical approach. The direct solution of \equref{eq:initial} is given by the following equation:
+In order to solve the problem, we use an analytical approach. The direct solution of \equref{eq:initial} is given by the following equation:
 \begin{equation} \label{eq:solution}
   T(t) = e^{C^{-1}A t} \; T_0 + (C^{-1} A)^{-1}(e^{C^{-1}A t} - I)C^{-1} B
 \end{equation}
@@ -8,7 +7,7 @@ The solution provides us with the transient temperature and holds only when the 
 \begin{equation} \label{eq:eigenvalue-decomposition}
   M = U \Lambda U^T
 \end{equation}
-where $M$ is a real symmetric matrix, $U$ is a square matrix of the eigenvectors of $M$, $\Lambda$ is a diagonal matrix composed of the eigenvalues of $M$ ($\lambda_i$), the equation itself is called the eigenvalue decomposition. Once we have such decomposition, the matrix exponential becomes a trivial task:
+where $M$ is a real symmetric matrix, $U$ is a square matrix of the eigenvectors of $M$, $\Lambda$ is a diagonal matrix composed of the eigenvalues of $M$ ($\lambda_i$), the equation itself is called the eigenvalue decomposition. Once we have such a decomposition, calculating the matrix exponential becomes a trivial task:
 \begin{align}
   & e^M = e^{U \Lambda U^T} = U \: e^{\Lambda} \: U^T \nonumber \\
   & e^{\Lambda} = \left[
@@ -81,7 +80,7 @@ Consequently, in order to find SSDTC, we need to solve the following system of l
     K_{N_s - 1} \: Y_{N_s - 1} - Y_{N_s} & = -Q_{N_s - 1}
   \end{cases}
 \]
-where $Q_i = G_i \: B_i$. Also we should take into account the boundary condition which ensures that the temperature has the same values on both sides of the curve:
+where $Q_i = G_i \: B_i$. Also we should take into account the boundary condition which ensures that the temperature has the same values on both ends of the curve:
 \begin{equation} \label{eq:boundary-condition}
   Y_0 = Y_{N_s}
 \end{equation}
@@ -125,135 +124,19 @@ To get the whole picture, the system can be written as:
 
 where $\mathbb{A}$ is a square matrix of the dimensions $N_n N_s \times N_n N_s$. $\mathbb{Y}$ and $\mathbb{B}$ are vectors of the length $N_n N_s$.
 
-Apparently, we have obtained a regular system of liner equations with the SSDTP as its solution ($Y$ should also be processed with \equref{eq:finalization} in order to return back to $T$). The first straight-forward way to resolve the system is to use the LU factorization (decomposition). The problem here is that such systems could be extremely large, especially when we want to achieve a higher level of accuracy and, therefore, the power profile contains a lot of steps $N_s$. Each new step is $N_n$ new equations in the system given by \equref{eq:system}. Also the complexity grows very rapidly with the number of processing elements $N_p$ (see \equref{eq:nodes}), where \emph{each} new processing element increases \emph{each} matrix $K_i$ by 4 rows and 4 columns, and \emph{each} vector $Y_i$ and $Q_i$ by 4 elements. As an example, if the power profile for a single-processor system is composed of 1000 steps, then having the same discretization but with one additional core results in a linear system with 4000 additional equations. All in all, a fast and accurate approach to solve \equref{eq:system} is required.
+We have obtained a regular system of liner equations with the SSDTP as its solution ($Y$ should also be processed with \equref{eq:finalization} in order to return back to $T$).
 
-\image{sparseness-of-system}{50 200 50 200}{The sparseness of the system that we need to solve in order to obtain the SSDTP. Each blue point corresponds to a non-zero element of the matrix. All non-zero elements are located on the block diagonal of the matrix, one supdiagonal, and one subdiagonal in the left bottom corner.}
-One may notice that the matrix $\mathbb{A}$ is an extremely sparse matrix with a very specific structure, it can be observed on \figref{fig:sparseness-of-system}. The matrix has non-zero elements only on its block diagonal (composed of matrices $N_n \times N_n$), one \emph{sup}diagonal just above the block diagonal, and one \emph{sub}diagonal in the left bottom corner of it. Therefore, instead of the dense LU decomposition we can apply algorithms that are specially designed for such cases. In our experiments we use the UMFPACK library, a set of routines for solving unsymmetric sparse linear systems based on the Unsymmetric MultiFrontal method (UMF) \cite{umfpack2004}.
+\subsection{Direct Dense Solution}
+\input{include/direct-dense-solution}
+
+\subsection{Direct Sparse Solution}
+\input{include/direct-sparse-solution}
 
 \subsection{Condensed Equation}
-Now we shall propose a much faster solution. Let us return back to the system of linear equations that we are to solve. It is described with the following recurrence:
-\begin{equation} \label{eq:ce-recurrent}
-  Y_{i + 1} = K_i \: Y_i + Q_i, \; i = 0 \dots N_s - 1
-\end{equation}
-
-Systems with similar structures can be found in multiple shooting methods for boundary value problems of ordinary differential equations \cite{stoer2002}. A common technique to solve such systems is to form a so-called \emph{condensed equation} (CE), or \emph{condensed system}. Let us undertake this procedure step by step.
-
-The iterative repetition of this equation leads us to:
-\begin{equation} \label{eq:y-recurrent}
-  Y_i = \prod_{j = 0}^{i - 1} K_j \: Y_0 + P_{i - 1}, \; i = 1 \dots N_s
-\end{equation}
-where $P_i$ are defined as the following:
-\begin{align}
-  P_0 & = Q_0 \nonumber \\
-  P_i & = \sum_{l = 1}^i \prod_{j = l}^i K_j \: Q_{l - 1} + Q_i, \: i = 1 \dots N_s - 1 \nonumber \\
-  P_i & = K_i \: P_{i - 1} + Q_i, \; i = 1 \dots N_s - 1 \label{eq:p-recurrent}
-\end{align}
-
-Therefore, we can calculate the final value $Y_{N_s}$ from \equref{eq:y-recurrent}:
-\[
-  Y_{N_s} = \prod_{j = 0}^{N_s - 1} K_j \: Y_0 + P_{N_s - 1}
-\]
-
-Taking into account the boundary condition given by \equref{eq:boundary-condition}, we obtain the following system of linear equations:
-\begin{equation} \label{eq:core-system}
-  (I - \prod_{j = 0}^{N_s - 1} K_j) \: Y_0 = P_{N_s - 1}
-\end{equation}
-
-Now we recall that $K_i$ is the matrix exponential, therefore, the following simplification can take place:
-\begin{align*}
-  \prod_{j = i}^l K_j = \prod_{j = i}^l e^{D \triangle t_j} & = e^{D \sum_{j = i}^l \triangle t_j} \\
-  & = U e^{\left( \sum_{j = i}^l \triangle t_j \: \Lambda \right)} U^T
-\end{align*}
-since the product of each pair $D \: \triangle t_j$ and $D \: \triangle t_k$ is commutative. Therefore:
-\begin{align*}
-  \prod_{j = 0}^{N_s - 1} K_j & = e^{D \mathcal{T}} = U \: e^{\mathcal{T} \Lambda} \: U^T \\
-    & = U \left[
-      \begin{array}{ccc}
-        e^{\mathcal{T} \lambda_0} & \cdots & 0 \\
-        \vdots & \ddots & \vdots \\
-        0 & \cdots & e^{\mathcal{T} \lambda_{N_n - 1}}
-      \end{array}
-    \right] U^T
-\end{align*}
-where $U$ is a square matrix of the eigenvectors of $D$, $\Lambda$ is a diagonal matrix of the eigenvalues, and $\mathcal{T}$ is the period of the application. Substituting this product into \equref{eq:core-system}, we obtain the following system:
-\[
-  (I - U \: e^{\mathcal{T} \Lambda} \: U^T) Y_0 = P_{N_s - 1}
-\]
-
-The identity matrix $I$ can be represented as $U U^T$, consequently:
-\begin{align*}
-  & U (I - e^{\mathcal{T} \Lambda}) U^T \: Y_0 = P_{N_s - 1} \\
-  & Y_0 = U (I - e^{\mathcal{T} \Lambda})^{-1} U^T P_{N_s - 1} \\
-  & Y_0 = U M U^T P_{N_s - 1}
-\end{align*}
-where $M$ is a diagonal matrix with the following structure:
-\[
-  M = \left[
-    \begin{array}{ccc}
-      \frac{1}{1 - e^{\mathcal{T} \lambda_0}} & \cdots & 0 \\
-      \vdots & \ddots & \vdots \\
-      0 & \cdots & \frac{1}{1 - e^{\mathcal{T} \lambda_{N_n - 1}}}
-    \end{array}
-  \right]
-\]
-
-The solution of this system, $Y_0$, is the first component of the vector $\mathbb{Y}$. $P_{N_s - 1}$ can be calculated using \equref{eq:p-recurrent}. All other vectors $Y_i$ for $i = 1 \dots N_s - 1$ are successively found with help of \equref{eq:ce-recurrent}.
-
-As we see, in this approach there is no need to inverse any matrix, the solution of the system is obtained by scalar divisions and a similarity transformation with $U$. The experimental results given in \secref{sec:results-ssdtp} show that this solution has the highest performance without any loss of accuracy among other methods that we have considered in our analysis.
-
-Let us now consider one specific case, we make one assumption concerning the time intervals $\triangle t_i$ that allows us to perform all the calculations in a more efficient manner. We assume that \emph{the time intervals are equal}, $\triangle t_i = \triangle t$ for $i = 0 \dots N_s - 1$, i.e., the distance in time between two successive power measurements stays constant. We refer to this distance as the \emph{sampling interval}. The preferable size of this sampling interval depends on a particular application and the level of accuracy that we want to achieve. Having this assumption, the recurrent process (\equref{eq:recurrent-equation}) turns into:
-\[
-  Y_{i+1} = K \: Y_i + G \: B_i
-\]
-where:
-\begin{align*}
-  & K = e^{D \: \triangle t} \\
-  & G = D^{-1} \left( e^{D \: \triangle t} - I \right) C^{-\frac{1}{2}}
-\end{align*}
-
-It should be noted that now $K$ and $G$ are constants, since they depend only on the matrices $D$, $C$, and the sampling interval $\triangle t$, which is fixed. In this case, the block diagonal of the matrix $\mathbb{A}$ in \equref{eq:system} is composed of the same repeating block $K_i = K$ for $i = 0 \dots N_s - 1$, and the recurrent expressions take the following form:
-\begin{align}
-  & Y_{i + 1} = K \: Y_i + Q_i, \; i = 0 \dots N_s - 1 \nonumber \\
-  & P_i = K \: P_{i - 1} + Q_i, \; i = 1 \dots N_s - 1 \nonumber
-\end{align}
+\input{include/condensed-equation}
 
 \subsection{Fast Fourier Transform}
-One can notice that the overall matrix of the system under the assumption of the equal time intervals becomes a block Toeplitz matrix, because inner blocks $\mathbb{A}(i, \: j)$ satisfy the following criterion:
-\[
-  \mathbb{A}(i, j) = \mathbb{A}(i+1, \: j+1), \; i, j = 0 \dots N_s - 2
-\]
-
-To be more specific, the matrix is a block-circulant matrix where each block row vector is rotated one block element to the right relative to the preceding block row vector. This leads us to a wide range of possible techniques to solve \mbox{$\mathbb{A} \: \mathbb{Y} = \mathbb{B}$}, for example, the Fast Fourier Transform (FFT) \cite{mazancourt1983}, \cite{vescovo1997}.
-
-In spite of the fact that the FFT approach is \emph{much faster} then the solution obtained with the UMF, our experiments have shown that the condensed equation method is even faster (see \secref{sec:results-ssdtp}), therefore, we concentrate on it and discuss the FFT in brief as a possible alternative.
-
-$\mathbb{A}$ has $N_s \times N_s$ blocks, each block is a $N_n \times N_n$ submatrix. Since the matrix is a block-circulant matrix, it can be represented with only $N_s$ blocks that form the top block row:
-\[
-  \mathbb{A}(j), \; j = 0 \dots N_s - 1
-\]
-and all other rows can be easily found shifting this one. To solve the system, we need to apply the Discrete Fourier Transform to these $N_s$ blocks:
-\[
-  \mathbb{A}(k)^f = \sum_{j = 0}^{N_s - 1} \mathbb{A}(j) \; \omega_{N_s}^{jk}, \; k = 0 \dots N_s - 1
-\]
-where $\omega_{N_s} = e^{\frac{-2 \pi i}{N_s}}$. Here we perform a bulk transform of all $N_n \times N_n$ vectors at once, whereas the vector-by-vector version is the following for each $n$ and $m = 0 \dots N_n - 1$:
-\[
-  \mathbb{A}(k)^f_{nm} = \sum_{j = 0}^{N_s - 1} \mathbb{A}(j)_{nm} \; \omega_{N_s}^{jk}, \; k = 0 \dots N_s - 1
-\]
-Note that in our case only two matrices are non-zero, therefore, this procedure can be shrunk. By applying the transformation, we come from the time domain to the frequency domain. Also we need to perform the same operation on the right-hand vector $\mathbb{B}$ splitted into $N_s$ chunks, denoted $\mathbb{B}(j)$, of $N_n$ successive elements:
-\[
-  \mathbb{B}(k)^f = \sum_{j = 0}^{N_s - 1} \mathbb{B}(j) \; \omega_{N_s}^{jk}, \; k = 0 \dots N_s - 1
-\]
-
-The next step is to solve $N_s$ systems with matrices $(\mathbb{A}(k)^f)^{\ast}$ and corresponding vectors $\mathbb{B}(k)^f$, the asterisk here denotes the complex conjugate:
-\[
-  (\mathbb{A}(k)^f)^{\ast} \; \mathbb{Y}(k)^f = \mathbb{B}(k)^f, \; k = 0 \dots N_s - 1
-\]
-where all matrices $\mathbb{A}(k)^f$ ($N_n \times N_n$ matrices) are symmetric, since $\mathbb{A}(k)$ are so, therefore, the eigenvalue decomposition takes place and can significantly simplify the solution process.
-
-The last step is to return back to the time domain with the Inverse Discrete Fourier Transform:
-\[
-  \mathbb{Y}(k) = \frac{1}{N_s} \sum_{j = 0}^{N_s - 1} \mathbb{Y}(j)^f \; \omega_{N_s}^{-jk}, \; k = 0 \dots N_s - 1
-\]
+\input{include/fast-fourier-transform}
 
 \subsection{Other solutions}
 Another possible technique, that we considered but do not discuss here in details due to the shortage of space, is iterative methods for solving systems of linear systems (e.g. the Jacobi, Gauss–Seidel, Successive over-relaxation methods). These methods are designed to overcome problems of direct solvers. For instance, they do not operate on full matrices and, therefore, they consume much less memory and can be applied for large systems. The most important issues with these methods are their convergence and accuracy. In our analysis we did not observe any advantages of using this methods for this particular problem, they demonstrated slow convergence and poor accuracy.

@@ -1,13 +1,5 @@
 The proposed solution of the steady-state dynamic temperature estimation can be used in a wide range of optimization procedures. One of them is the reliability optimization that we discuss in this section. We performing the temperature-aware task mapping and scheduling in order to address the thermal cycling aging effect while keeping the energy consumption on an appropriate level. Both mapping and scheduling are based on the genetic algorithms \cite{schmitz2004}. Let us start with the overall description of the system.
 
-\subsection{Architecture Model}
-A multiprocessor system with a heterogeneous architecture is composed of a number of processing elements $\Pi = \{ \pi_k: \; k = 0 \dots N_p - 1 \}$. Each processing element $\pi_k$ is characterized by its supply voltage $V_k$, frequency $f_k$, and the number of gates $N_{gate \: k}$:
-\[
-  \pi_k \rightarrow (V_k, f_k, N_{gate \: k})
-\]
-
-The first two parameters are essential for the dynamic power calculation while the last one is used for the static power (the power leakage).
-
 \subsection{Application Model}
 The system executes a periodic application with a set of data-dependent tasks. The overall structure of the application is defined by a task graph:
 \begin{align*}
@@ -21,22 +13,8 @@ where $\mathcal{V}$ is a set of $N_t$ vertices of the graph (tasks), $E$ is a se
 \end{equation*}
 where $C_{eff \; ik}$ is the effective switched capacitance and $N_{cycles \: ik}$ is the number of clock cycles. These parameters determine the processor load and execution time of the task, correspondingly.
 
-\subsection{Temperature-Aware Power Model}
-The power model used in our experiments is leakage-aware. Consequently, the total power dissipation is defined as a sum of the dynamic and leakage power:
-\begin{align*}
-  & P = P_{dyn} + P_{leak} \\
-  & P_{dyn} = C_{eff} \; f \; V_{dd}^2
-\end{align*}
-where $C_{eff}$ is the effective switched capacitance of a task, $V_{dd}$ and $f$ are the supplied voltage and frequency of the processing element that executes this task. The model for the leakage part of the power dissipation is presented in \cite{liao2005}\footnote{Although, the leakage model can be computational intensive, the linear approximation presented in \cite{liu2007} can be used.}:
-\begin{align*}
-  & P_{leak} = N_{gate} \: I_{avg} \: V_{dd} \\
-  & I_{avg} = I_s(T_0, V_0) \: f_{avg}(T, V_{dd}) \\
-  & f(T, V_{dd}) = A \: T^2 e^{((\alpha \: V_{dd} + \beta)/T)} + B e^{(\gamma \: V_{dd} + \delta)}
-\end{align*}
-where $N_{gate}$ is the number of gates in the circuit,\footnote{The number of gates in a circuit can be estimated using the technique described in \cite{li2004}.} $I_s (T_0, V_0)$ is the average leakage current at the given temperature $T_0$ and supply voltage $V_0$, $f_{avg}$ is the scaling function. $I_{avg}$ is the average leakage current at the current temperature $T$ and voltage $V_{dd}$. $A$, $B$, $\alpha$, $\beta$, $\gamma$, and $\delta$ are the technology dependent constants found in \cite{liao2005}. It can be seen that the dynamic power consumption does not depend on temperature, it is a constant for each combination of a processing element and a task while the power leakage is a strong function of the operating temperature.
-
 \subsection{Temperature-Aware Reliability Model}
-In the paper we address temperature-driven failure mechanisms with the reliability model presented in \cite{huang2009} (as well as in \cite{xiang2010}). The model is based on the assumption that the failure rate has a Weibull distribution (e.g., the thermal cycling, electromigration, etc. \cite{jedec2010}):
+In the paper we address temperature-driven failure mechanisms with the reliability model presented in \cite{huang2009}, \cite{xiang2010}. The model is based on the assumption that the failure rate has a Weibull distribution (e.g., the thermal cycling, electromigration, etc. \cite{jedec2010}):
 \[
   R(t) = e^{-(\frac{t}{\eta})^\beta}
 \]
@@ -49,7 +27,7 @@ where $\Gamma$ is the gamma function. The shape parameter is found to be indepen
   R = e^{-(\sum_{i=0}^{N_m - 1} \frac{\triangle t_i}{\eta_i})^\beta}
 \]
 
-It can be shown that if $\eta_i$ are large enough\footnote{This is the case, since usually the MTTF is in order of tens of years (see \equref{eq:general-mttf}).}, the following continuous approximation can take place \cite{xiang2010}:
+It can be shown that if $\eta_i$ are large enough\footnote{This is the case, since usually the MTTF is in order of tens of years (see \equref{eq:general-mttf}).}, the following continuous approximation can be applied \cite{xiang2010}:
 \[
   R(t) = e^{-(\frac{t}{\mathcal{T}} \sum_{i=0}^{N_m - 1} \frac{\triangle t_i}{\eta_i})^\beta}
 \]
@@ -58,7 +36,7 @@ The formula still keeps the form of the Weibull distribution with the following 
   \eta = \frac{\mathcal{T}}{\sum_{i=0}^{N_m - 1} \frac{\triangle t_i}{\eta_i}}
 \]
 
-As it was mentioned earlier, the reliability model can be plugged in to model different failure mechanisms. Let us now focus on one particular failure cause, the thermal cycling (TC) fatigue, that is a common packaging and interfacial failure mechanism \cite{jedec2010}. The number of cycles to failure can be estimated using a modified version of the well-known Coffin-Manson equation with the Arrhenius term \cite{jedec2010}, \cite{xiang2010}, \cite{ciappa2003}:
+As it was mentioned earlier, the reliability model can be used to model different failure mechanisms. Let us now focus on one particular failure cause, the thermal cycling (TC) fatigue, that is a common packaging and interfacial failure mechanism \cite{jedec2010}. The number of cycles to failure can be estimated using a modified version of the well-known Coffin-Manson equation with the Arrhenius term \cite{jedec2010}, \cite{xiang2010}, \cite{ciappa2003}:
 \begin{equation} \label{eq:cycles-to-failure}
   \mathcal{N} = A (\triangle T - \triangle T_0)^{-b} e^{\frac{E_a}{k T_{max}}}
 \end{equation}
@@ -67,7 +45,7 @@ where $A$ is an empirically determined constant, $\triangle T$ is the thermal cy
   MTTF = \mathcal{N} \; \triangle t
 \]
 
-Since we consider the TC failure mechanism, the time intervals $\triangle t_i$ correspond to intervals of constant parameters of this particular mechanism that can be observed on \equref{eq:cycles-to-failure}. Each interval $\triangle t_i$ belongs to one thermal cycle with the scaling parameter $\eta_i$ derived using the same \equref{eq:general-mttf}:
+Since we consider the TC failure mechanism, the time intervals $\triangle t_i$ correspond to intervals of constant parameters of this particular mechanism that can be observed on \equref{eq:cycles-to-failure}. Each interval $\triangle t_i$ belongs to one thermal cycle with the scaling parameter $\eta_i$ derived using \equref{eq:general-mttf}:
 \[
   \eta_i = \frac{MTTF_i}{\Gamma(1 + \frac{1}{\beta})}
 \]
@@ -83,20 +61,8 @@ where $MTTF_i$ is the mean time to failure of the $i$th time interval as if we h
 \end{align*}
 where $N_{mk}$ is the number of thermal cycles of the $k$th processing element within the application period $\mathcal{T}$ and $\mathcal{N}_{ik}$ is the number of thermal cycles to failure if the $i$th cycle was repeated all the time.
 
-Note that the shape parameter $\beta_k$ can be different for different processing elements. If we assume that all $\beta_k$ are equal (a homogeneous architecture), we can use another approach to estimate the total MTTF. Since each component is essential, the reliability of the whole system is a product of reliabilities of each of the components:
-\begin{align*}
-  R_{sys}(t) & = \prod_{k=0}^{N_p - 1} e^{-\left( \frac{t}{\mathcal{T}} \sum_{i=0}^{N_{mk} - 1} \frac{\triangle t_{ik}}{\eta_{ik}} \right)^{\beta}} \\
-  & = e^{- \left(\frac{t}{\mathcal{T}}\right)^{\beta} \; \sum_{k = 0}^{N_p - 1} \left( \sum_{i=0}^{N_{mk} - 1} \frac{\triangle t_{ik}}{\eta_{ik}} \right)^{\beta}}
-\end{align*}
-
-We can define the scaling parameter for the whole system as the following:
-\[
-  \eta_{sys} = \frac{\mathcal{T}}{\left(\sum_{k=0}^{N_p - 1} \left(\sum_{i=0}^{N_{mk} - 1}\frac{\triangle t_{ik}}{\eta_{ik}}\right)^{\beta} \right)^{1/\beta}} \\
-\]
-Consequently, using \equref{eq:general-mttf}, we obtain:
-\[
-  MTTF_{sys} = \frac{\mathcal{T}}{\left(\sum_{k=0}^{N_p - 1} \left(\sum_{i=0}^{N_{mk} - 1}\frac{1}{\mathcal{N}_{ik}}\right)^{\beta} \right)^{1/\beta}}
-\]
+\subsection{Motivational Example} \label{sec:motivation}
+\input{include/motivation.tex}
 
 \subsection{Genetic Algorithm}
 TO BE DONE.

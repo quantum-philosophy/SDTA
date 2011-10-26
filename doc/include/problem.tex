@@ -14,7 +14,7 @@ We consider a multicore system that consists of a set of processing elements (co
     \end{array}
   \right]
 \end{equation*}
-where $P_{ij}$ is the power dissipation during the $i$th time interval of the $j$th thermal node\footnote{The power that a core dissipates depends on a lot of different parameters, e.g., the input data of the active task. We assume those parameters to be constant from one execution of the task to another within the core. As an approximation the average value of the power dissipation, as well as of the execution time, can be used.}. After the stabilization process, the temperature profile of the system becomes periodic as well and given as:
+where $P_{ij}$ is the power dissipation during the $i$th time interval of the $j$th thermal node\footnote{The power that a core dissipates depends on a lot of different parameters, e.g., the input data of the active task. We assume those parameters to be constant from one execution of the task to another within the core. As an approximation the average value of the power dissipation, as well as of the execution time, can be used.}. After the stabilization process, the temperature profile of the system becomes periodic and is given as:
 \begin{equation*}
   \mathbb{T} = \left[
     \begin{array}{c}
@@ -45,4 +45,4 @@ Find:
   \item The corresponding \emph{periodic} temperature profile $\mathbb{T}$ of the system in its steady state (when the temperature stabilization process is finished).
 \end{itemize}
 
-Reasonable requirements for a solution are speed and accuracy, since the temperature analysis is usually a part of an intensive optimization procedure where this solution have to be computed thousands of times. An example of such problems is the reliability-aware task allocation and scheduling given in \secref{sec:reliability}.
+Reasonable requirements for a solution are speed and accuracy, since the temperature analysis is often a part of an intensive optimization procedure where this solution have to be computed thousands of times. An example of such problems is the reliability-aware task allocation and scheduling given in \secref{sec:reliability}.
