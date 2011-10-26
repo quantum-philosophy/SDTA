@@ -10,7 +10,7 @@ extern "C" {
 
 #include "Leakage.h"
 #include "DynamicPower.h"
-#include "CondensedEquation.h"
+#include "AnalyticalSolution.h"
 
 class Hotspot
 {
@@ -143,6 +143,22 @@ class CoarseCondensedEquationHotspot: public Hotspot
 	void solve(const Schedule &schedule, matrix_t &temperature, matrix_t &power);
 	void solve(const Schedule &schedule, vector_t &intervals,
 		matrix_t &temperature, matrix_t &power);
+};
+
+class TransientAnalyticalHotspot: public Hotspot
+{
+	TransientAnalyticalSolution equation;
+	const DynamicPower dynamic_power;
+
+	public:
+
+	TransientAnalyticalHotspot(
+		const Architecture &architecture, const Graph &graph,
+		const std::string &floorplan, const std::string &config,
+		const std::string &config_line = std::string());
+
+	void solve(const matrix_t &power, matrix_t &temperature);
+	void solve(const Schedule &schedule, matrix_t &temperature, matrix_t &power);
 };
 
 typedef std::vector<int> SlotTrace;

@@ -1,9 +1,9 @@
-#include "CondensedEquation.h"
+#include "AnalyticalSolution.h"
 
-CondensedEquation::CondensedEquation(
+AnalyticalSolution::AnalyticalSolution(
 	size_t _processor_count, size_t _node_count,
 	double _sampling_interval, double _ambient_temperature,
-	const double **conductivity, const double *inv_capacitance) :
+	const double **conductivity, const double *capacitance) :
 
 	processor_count(_processor_count),
 	node_count(_node_count),
@@ -32,7 +32,7 @@ CondensedEquation::CondensedEquation(
 	for (i = 0; i < node_count; i++) {
 		for (j = 0; j < node_count; j++)
 			A[i][j] = -conductivity[i][j];
-		sinvC[i] = sqrt(inv_capacitance[i]);
+		sinvC[i] = sqrt(1.0 / capacitance[i]);
 	}
 
 	matrix_t &D = A;
@@ -76,6 +76,15 @@ CondensedEquation::CondensedEquation(
 	multiply_matrix_matrix_diagonal_matrix(m_temp, UT, sinvC, G);
 }
 
+CondensedEquation::CondensedEquation(size_t _processor_count, size_t _node_count,
+	double _sampling_interval, double _ambient_temperature,
+	const double **conductivity, const double *capacitance) :
+
+	AnalyticalSolution(_processor_count, _node_count, _sampling_interval,
+		_ambient_temperature, conductivity, capacitance)
+{
+}
+
 void CondensedEquation::solve(const double *power, double *temperature,
 	size_t step_count)
 {
@@ -87,9 +96,11 @@ void CondensedEquation::solve(const double *power, double *temperature,
 
 	Q.nullify();
 
+	double total_time = sampling_interval * step_count;
+
 	/* M = diag(1/(1 - exp(Tau * l0)), ...) */
 	for (i = 0; i < node_count; i++)
-		v_temp[i] = 1.0 / (1.0 - exp(sampling_interval * step_count * L[i]));
+		v_temp[i] = 1.0 / (1.0 - exp(total_time * L[i]));
 
 	/* Q(0) = G * B(0) */
 	multiply_matrix_incomplete_vector(G, power, processor_count, Q[0]);
@@ -125,11 +136,11 @@ void CondensedEquation::solve(const double *power, double *temperature,
 LeakageCondensedEquation::LeakageCondensedEquation(
 	const processor_vector_t &processors, size_t _node_count,
 	double _sampling_interval, double _ambient_temperature,
-	const double **conductivity, const double *inv_capacitance) :
+	const double **conductivity, const double *capacitance) :
 
 	CondensedEquation(processors.size(), _node_count,
 		_sampling_interval, _ambient_temperature,
-		conductivity, inv_capacitance),
+		conductivity, capacitance),
 	leakage(processors)
 {
 }
@@ -146,9 +157,11 @@ size_t LeakageCondensedEquation::solve(const double *dynamic_power,
 
 	Q.nullify();
 
+	double total_time = sampling_interval * step_count;
+
 	/* M = diag(1/(1 - exp(Tau * l0)), ...) */
 	for (i = 0; i < node_count; i++)
-		v_temp[i] = 1.0 / (1.0 - exp(sampling_interval * step_count * L[i]));
+		v_temp[i] = 1.0 / (1.0 - exp(total_time * L[i]));
 
 	leakage.inject(step_count, dynamic_power, ambient_temperature, total_power);
 
@@ -200,6 +213,55 @@ size_t LeakageCondensedEquation::solve(const double *dynamic_power,
 	}
 
 	return it;
+}
+
+TransientAnalyticalSolution::TransientAnalyticalSolution(
+	size_t _processor_count, size_t _node_count,
+	double _sampling_interval, double _ambient_temperature,
+	const double **conductivity, const double *capacitance) :
+
+	AnalyticalSolution(_processor_count, _node_count, _sampling_interval,
+		_ambient_temperature, conductivity, capacitance)
+{
+	Q.resize(node_count);
+	Q.nullify();
+}
+
+void TransientAnalyticalSolution::solve(
+	const double *power, double *temperature, size_t step_count)
+{
+	size_t i, j, k;
+
+	Y.resize(step_count, node_count);
+
+	/* We start from zero temperature, therefore, the first
+	 * multiplication by K is zero, hence:
+	 *
+	 * Y(1) = K * Y(0) + Q(0) = Q(0)
+	 *
+	 * NOTE: The indexes are shifted by 1 here, because we store
+	 * Y(i) in the place of Y(i-1), since we are not interested in
+	 * the initial temperature (we know it, it is ambient).
+	 */
+	multiply_matrix_incomplete_vector(G, power, processor_count, Y[0]);
+
+	for (i = 1; i < step_count; i++) {
+		/* Q(i) = G * B(i) */
+		multiply_matrix_incomplete_vector(G, power + i * processor_count,
+			processor_count, Q);
+
+		/* Y(i) = K * Y(i-1) + Q(i) */
+		multiply_matrix_vector_plus_vector(K, Y[i - 1], Q, Y[i]);
+	}
+
+	/* Return back to T from Y:
+	 * T = C^(-1/2) * Y
+	 *
+	 * And do not forget about the ambient temperature.
+	 */
+	for (i = 0, k = 0; i < step_count; i++)
+		for (j = 0; j < processor_count; j++, k++)
+			temperature[k] = Y[i][j] * sinvC[j] + ambient_temperature;
 }
 
 CoarseCondensedEquation::CoarseCondensedEquation(

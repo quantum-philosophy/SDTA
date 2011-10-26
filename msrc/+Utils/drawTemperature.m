@@ -1,10 +1,10 @@
-function drawTemperature(T, name, samplingInterval)
+function drawTemperature(T, name, samplingInterval, varargin)
   if nargin < 3, samplingInterval = Constants.samplingInterval; end
 
   [ stepCount, processorCount ] = size(T);
   time = ((1:stepCount) - 1) * samplingInterval;
 
-  Utils.drawLines(name, 'Time, s', 'Temperature, C', time, T);
+  Utils.drawLines(name, 'Time, s', 'Temperature, C', time, T, varargin{:});
   set(gca, 'XLim', [ 0 time(end) ]);
 
   YLim = get(gca, 'YLim');

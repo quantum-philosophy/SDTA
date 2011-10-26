@@ -1,6 +1,6 @@
 setup;
 
-config = Optima('001_030');
+config = Optima('004_060');
 
 repeat = 1;
 timeScale = 1;
