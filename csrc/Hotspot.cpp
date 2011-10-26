@@ -450,34 +450,94 @@ IterativeHotspot::IterativeHotspot(const std::string &floorplan,
 {
 }
 
+void IterativeHotspot::solve(const matrix_t &power, matrix_t &temperature)
+{
+	size_t step_count = power.rows();
+
+	temperature.resize(step_count, processor_count);
+
+	const double *_power = power;
+	double *_temperature = temperature;
+
+	if (power.cols() == node_count) {
+		(void)solve(const_cast<double *>(_power), _temperature, step_count);
+	}
+	else {
+		/* Since Hotspot works with power for all thermal nodes,
+		 * and our power is only for the processors, we need to extend it
+		 * with zeros for the rest of the thermal nodes.
+		 */
+		matrix_t extended_power(step_count, node_count);
+		double *_extended_power = extended_power;
+
+		for (size_t i = 0; i < step_count; i++)
+			__MEMCPY(_extended_power + i * node_count,
+				_power + i * processor_count, processor_count);
+
+		(void)solve(_extended_power, _temperature, step_count);
+	}
+}
+
 size_t IterativeHotspot::verify(const matrix_t &power,
 	const matrix_t &reference_temperature, matrix_t &temperature)
 {
 	size_t step_count = power.rows();
 
-	if (power.cols() != reference_temperature.cols() ||
+	if (processor_count != reference_temperature.cols() ||
 		step_count != reference_temperature.rows())
 		throw std::runtime_error("The reference temperature is wrong.");
 
-	temperature.resize(power);
+	temperature.resize(step_count, processor_count);
 
 	const double *_power = power;
 	double *_temperature = temperature;
 	const double *_reference_temperature = reference_temperature;
 
-	/* Since Hotspot works with power for all thermal nodes,
-	 * and our power is only for the processors, we need to extend it
-	 * with zeros for the rest of the thermal nodes.
-	 */
-	matrix_t extended_power(step_count, node_count);
-	double *_extended_power = extended_power;
+	if (power.cols() == node_count) {
+		return solve(const_cast<double *>(_power),
+			_reference_temperature, _temperature, step_count);
+	}
+	else {
+		/* Since Hotspot works with power for all thermal nodes,
+		 * and our power is only for the processors, we need to extend it
+		 * with zeros for the rest of the thermal nodes.
+		 */
+		matrix_t extended_power(step_count, node_count);
+		double *_extended_power = extended_power;
 
-	extended_power.nullify();
-	for (size_t i = 0; i < step_count; i++)
-		__MEMCPY(_extended_power + i * node_count,
-			_power + i * processor_count, processor_count);
+		for (size_t i = 0; i < step_count; i++)
+			__MEMCPY(_extended_power + i * node_count,
+				_power + i * processor_count, processor_count);
 
-	return solve(_extended_power, _reference_temperature, _temperature, step_count);
+		return solve(_extended_power, _reference_temperature,
+			_temperature, step_count);
+	}
+}
+
+size_t IterativeHotspot::solve(double *extended_power,
+	double *temperature, size_t step_count)
+{
+	double *extended_temperature = __ALLOC(node_count);
+
+	struct timespec begin, end;
+
+	set_temp(model, extended_temperature, config.init_temp);
+
+	size_t iterations;
+
+	for (iterations = 0; iterations < max_iterations; iterations++)
+		for (size_t i = 0; i < step_count; i++) {
+			compute_temp(model, extended_power + node_count * i,
+				extended_temperature, sampling_interval);
+
+			/* Copy the new values */
+			__MEMCPY(temperature + i * processor_count,
+				extended_temperature, processor_count);
+		}
+
+	__FREE(extended_temperature);
+
+	return iterations;
 }
 
 size_t IterativeHotspot::solve(double *extended_power,

@@ -67,6 +67,10 @@ void SystemTuning::setup(const parameters_t &params)
 			reorder_tasks = it->to_bool();
 		else if (it->name == "solution")
 			solution = it->value;
+		else if (it->name == "max_iterations")
+			max_iterations = it->to_int();
+		else if (it->name == "tolerance")
+			tolerance = it->to_double();
 		else if (it->name == "hotspot")
 			hotspot = it->value;
 		else if (it->name == "leakage")
@@ -85,6 +89,9 @@ void SystemTuning::display(std::ostream &o) const
 		<< "  Task time scale:      " << time_scale << std::endl
 		<< "  Reorder tasks:        " << reorder_tasks << std::endl
 		<< "  Solution method:      " << solution << std::endl
+		<< "  Max iterations:       " << max_iterations << std::endl
+		<< std::setprecision(4)
+		<< "  Tolerance:            " << tolerance << std::endl
 		<< "  Hotspot tuning:       " << hotspot << std::endl
 		<< "  Consider leakage:     " << leakage << std::endl
 		<< "  Verbose:              " << verbose << std::endl;

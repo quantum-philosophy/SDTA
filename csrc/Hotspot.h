@@ -300,11 +300,13 @@ class IterativeHotspot: public Hotspot
 		const std::string &config, const std::string &config_line,
 		size_t _max_iterations, double _tolerance);
 
+	void solve(const matrix_t &power, matrix_t &temperature);
 	size_t verify(const matrix_t &power, const matrix_t &reference_temperature,
 		matrix_t &temperature);
 
 	private:
 
+	size_t solve(double *extended_power, double *temperature, size_t step_count);
 	size_t solve(double *extended_power, const double *reference_temperature,
 		double *temperature, size_t step_count);
 };

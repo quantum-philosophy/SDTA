@@ -65,6 +65,8 @@ struct SystemTuning: public Tuning
 	bool reorder_tasks;
 	std::string solution;
 	std::string hotspot;
+	size_t max_iterations;
+	double tolerance;
 	bool leakage;
 	bool verbose;
 
@@ -74,6 +76,8 @@ struct SystemTuning: public Tuning
 		time_scale(1.0),
 		reorder_tasks(false),
 		solution("condensed_equation"),
+		max_iterations(100),
+		tolerance(0.1),
 		leakage(true),
 		verbose(false) {}
 
