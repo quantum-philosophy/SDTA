@@ -24,20 +24,6 @@ classdef PowerBasic < Sweep.Basic
       time = total / sweep.tryCount;
     end
 
-    function [ T, time ] = optimaVerifyOnAverage(sweep, param_line)
-      config = sweep.config;
-      total = 0;
-
-      for i = 1:sweep.tryCount
-        [ dummy, dummy, dummy, T, t ] = Optima.verify_power( ...
-          config.system, config.floorplan, config.hotspot, ...
-          config.params, param_line, sweep.power, sweep.maxIterations, sweep.tolerance);
-        total = total + t;
-      end
-
-      time = total / sweep.tryCount;
-    end
-
     function [ T, time ] = matlabOnAverage(sweep, param_line, method)
       if nargin < 3, method = 'band'; end
 

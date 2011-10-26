@@ -2,7 +2,7 @@ setup;
 
 repeat = 10;
 
-config = Optima('001_030');
+config = Optima('004_060');
 
 param_line = Utils.configStream(...
   'time_scale', 1, ...
@@ -41,9 +41,6 @@ time = time / repeat;
 
 fprintf('HS: %.4f s (as was)\n', time);
 
-Utils.drawTemperature(T, [], config.samplingInterval, ...
-  [], 'Color', 'g');
-
 param_line = Utils.configStream(...
     'verbose', 0, ...
     'solution', 'hotspot', ...
@@ -59,7 +56,7 @@ for i = 1:repeat
 end
 time = time / repeat;
 
-fprintf('HS: %.4f s (once again)\n', time);
+fprintf('HS: %.4f s (without control)\n', time);
 
 param_line = Utils.configStream(...
     'verbose', 0, ...
@@ -78,17 +75,8 @@ time = time / repeat;
 
 fprintf('HS: %.4f s (without control)\n', time);
 
-extendedPower = [ power, zeros(stepCount, 3 * processorCount + 12) ];
-
-time = 0;
-for i = 1:repeat
-  [ T, t ] = Optima.solve_power(config.system, config.floorplan, ...
-    config.hotspot, config.params, param_line, extendedPower);
-  time = time + t;
-end
-time = time / repeat;
-
-fprintf('HS: %.4f s (without control and without extension)\n', time);
+Utils.drawTemperature(T, [], config.samplingInterval, ...
+  [], 'Color', 'g');
 
 param_line = Utils.configStream(...
     'verbose', 0, ...
@@ -97,7 +85,7 @@ param_line = Utils.configStream(...
 
 time = 0;
 for i = 1:repeat
-  [ T, t ] = Optima.solve_power(config.system, config.floorplan, ...
+  [ Tta, t ] = Optima.solve_power(config.system, config.floorplan, ...
     config.hotspot, config.params, param_line, power);
   time = time + t;
 end
@@ -105,5 +93,8 @@ time = time / repeat;
 
 fprintf('AT: %.4f s\n', time);
 
-Utils.drawTemperature(T, [], config.samplingInterval, ...
+Utils.drawTemperature(Tta, [], config.samplingInterval, ...
   [], 'Color', 'b');
+
+fprintf('Transient RMSE: %.2f\n', Utils.RMSE(Tta, T));
+fprintf('Max delta: %.2f\n', max(max(abs(Tta - T))));
