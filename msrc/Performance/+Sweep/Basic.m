@@ -28,7 +28,7 @@ classdef Basic < handle
   methods
     function sweep = Basic(test, solutions)
       if nargin < 2 || isempty(solutions)
-        solutions = { 'ce', 'hs', 'ss', 'umf', 'fft' };
+        solutions = { 'ce', 'hs', 'ss', 'umf', 'fft', 'ta' };
       end
 
       sweep.solutions = solutions;
@@ -54,12 +54,17 @@ classdef Basic < handle
     end
 
     function perform(sweep)
-      fprintf('%15s%15s', 'Parameter', 'CE, ms');
+      fprintf('%15s', 'Parameter');
 
-      for i = 2:sweep.solutionCount
+      for i = 1:sweep.solutionCount
         name = sweep.header{i};
-        fprintf('%15s%15s%15s', ...
-          [ name, ', ms' ], [ name, ', x' ], [ 'Error(', name, ')' ]);
+
+        if i == 1
+          fprintf('%15s',[ name, ', ms' ]);
+        else
+          fprintf('%15s%15s%15s', ...
+            [ name, ', ms' ], [ name, ', x' ], [ 'Error(', name, ')' ]);
+        end
       end
 
       fprintf('\n');
@@ -137,6 +142,10 @@ classdef Basic < handle
       name = struct('short', 'FFT', 'long', 'FFT Method (Block-Circulant)');
     end
 
+    function name = taName(sweep)
+      name = struct('short', 'TA', 'long', 'One Analytical Simulation');
+    end
+
     function [ T, t ] = ceSolve(sweep, i, config)
       param_line = Utils.configStream(...
           'verbose', 0, ...
@@ -149,10 +158,12 @@ classdef Basic < handle
     function [ T, t ] = hsSolve(sweep, i, config)
       param_line = Utils.configStream(...
           'verbose', 0, ...
-          'solution', 'condensed_equation', ...
+          'solution', 'hotspot', ...
+          'max_iterations', 1, ...
+          'tolerance', 0, ...
           'leakage', 0, config{:});
 
-      [ T, t ] = sweep.optimaVerifyOnAverage(param_line);
+      [ T, t ] = sweep.optimaSolveOnAverage(param_line);
     end
 
     function [ T, t ] = ssSolve(sweep, i, config)
@@ -182,6 +193,15 @@ classdef Basic < handle
       [ T, t ] = sweep.matlabOnAverage(param_line, 'bc');
     end
 
+    function [ T, t ] = taSolve(sweep, i, config)
+      param_line = Utils.configStream(...
+          'verbose', 0, ...
+          'solution', 'transient_analytical', ...
+          'leakage', 0, config{:});
+
+      [ T, t ] = sweep.optimaSolveOnAverage(param_line);
+    end
+
     function [ T, time ] = makeStep(sweep, i)
       config = sweep.setupStep(i);
 
@@ -207,22 +227,6 @@ classdef Basic < handle
       end
 
       time = total / sweep.tryCount;
-    end
-
-    function [ T, time ] = optimaVerifyOnAverage(sweep, param_line)
-      config = sweep.config;
-      total = 0;
-
-      n = 1;
-
-      for i = 1:n
-        [ dummy, dummy, dummy, dummy, T, t ] = Optima.verify( ...
-          config.system, config.floorplan, config.hotspot, ...
-          config.params, param_line, sweep.maxIterations, sweep.tolerance);
-        total = total + t;
-      end
-
-      time = total / n;
     end
 
     function [ T, time ] = matlabOnAverage(sweep, param_line, method)
