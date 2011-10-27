@@ -1,7 +1,16 @@
-In order to solve the problem, we use an analytical approach. The direct solution of \equref{eq:initial} is given by the following equation:
+In order to solve the problem, we use an analytical approach. The same technique is employed in \cite{thiele2011}. Let the power consumption vector $P(t)$ be constant and equal to $P$, then the direct solution of \equref{eq:thermal-ode} is the following:
 \begin{equation} \label{eq:solution}
-  T(t) = e^{C^{-1}A t} \; T_0 + (C^{-1} A)^{-1}(e^{C^{-1}A t} - I)C^{-1} B
+  T(t) = e^{-C^{-1}G t} \; T_0 + (-C^{-1} G)^{-1}(e^{-C^{-1}G t} - I)C^{-1} P
 \end{equation}
+where $T_0$ is the initial temperature. Therefore, given a discrete power profile $\mathbb{P}$, the corresponding temperature profile $\mathbb{T}$ can be found using the following recurrence:
+\[
+  T_{i+1} = A_i \: T_i + B_i \: P_i
+\]
+where:
+\begin{align*}
+  & A_i = e^{-C^{-1} G \triangle t_i} \\
+  & B_i = (-C^{-1} G)^{-1}(e^{-C^{-1}G \triangle t_i} - I)C^{-1}
+\end{align*}
 
 The solution provides us with the transient temperature and holds only when the power vector $B$ is constant. If it is not the case, we need to simulate shorter time intervals where this assumption can take place. Before going to the steady-state case, we perform one important adjustment to the system in order to be more efficient in our future calculations. According to \equref{eq:solution}, we need to compute the matrix exponential of the matrix $C^{-1} A t$. It would be much easier to accomplish if the matrix were symmetric, because a real symmetric matrix is \emph{diagonalizable} and has \emph{independent} (orthogonal) real eigenvectors:
 \begin{equation} \label{eq:eigenvalue-decomposition}
