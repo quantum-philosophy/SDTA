@@ -1,20 +1,21 @@
-  Nowadays, power leakage is an important issue that should be carefully taken into account. We propose to employ two techniques to consider leakage in the analytical solution using the CE method \cite{liu2007}:
+  Nowadays, power leakage is an important issue that should be carefully taken into account. Two techniques can be applied to enhance the analytical solution with the leakage modeling \cite{liu2007}:
   \begin{itemize}
-    \item A linear approximation of the leakage current.
-    \item An alternate computation of the temperature and power profiles until a convergence of temperature.
+    \item A linear approximation of the power leakage.
+    \item A piecewise linear approximation with an alternate computation of the temperature and power profiles.
   \end{itemize}
 
 \subsection{Linear Approximation}
-In can be seen in \equref{eq:thermal-ode} that a linear approximation of the leakage power:
+A linear approximation of the leakage power has the following matrix form:
 \[
   P_{leak}(t) = A \: T(t) + B
 \]
-where $A$ is a diagonal matrix keeps all the equations of the proposed analytical solution untouched:
+where $A$ is a diagonal matrix and $B$ is a vector. It can be seen that the approximation keeps \equref{eq:thermal-ode} untouched:
 \begin{align*}
   & C \: \frac{dT(t)}{dt} + \bar{G} \: T(t) = \bar{P} \\
   & \bar{G} = G - A \\
   & \bar{P} = P_{dyn} + B
 \end{align*}
+Therefore, all solutions based on this equation can include the linearized leakage model with no additional costs.
 
 \subsection{Alternate Computation}
 In this case we have an iterative process where we calculate the temperature and power profiles in turns. With each new temperature profile we update the power profile by computing the power leakage and adding it to the dynamic power:

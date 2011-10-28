@@ -133,19 +133,27 @@ To get the whole picture, the system can be written as:
 
 where $\mathbb{A}$ is a square matrix of the dimensions $N_n N_s \times N_n N_s$. $\mathbb{Y}$ and $\mathbb{B}$ are vectors of the length $N_n N_s$.
 
-We have obtained a regular system of liner equations with the SSDTP as its solution ($Y$ should also be processed with \equref{eq:finalization} in order to return back to $T$).
+All in all, we have obtained a regular system of liner equations with the SSDTP as its solution ($Y$ should also be processed with \equref{eq:finalization} in order to return back to $T$). Possible solutions include the followings:
+\begin{itemize}
+  \item Direct dense solutions.
+  \item Direct sparse solutions.
+  \item Solutions for Toeplitz and block-circulat matrices.
+  \item Iterative methods for systems of linear equatins.
+  \item Proposed solution based on the condensed equation method.
+\end{itemize}
+Let us discuss the listed solutions in turns.
 
-\subsection{Direct Dense Solution}
+\subsection{Direct Dense Solutions}
 \input{include/direct-dense-solution}
 
-\subsection{Direct Sparse Solution}
+\subsection{Direct Sparse Solutions}
 \input{include/direct-sparse-solution}
+
+\subsection{Solutions for Toeplitz and Block-Circulant Systems}
+\input{include/fast-fourier-transform}
+
+\subsection{Iterative Methods for Systems of Linear Equations}
+\input{include/iterative-solutions}
 
 \subsection{Condensed Equation}
 \input{include/condensed-equation}
-
-\subsection{Fast Fourier Transform}
-\input{include/fast-fourier-transform}
-
-\subsection{Other solutions}
-Another possible technique, that we considered but do not discuss here in details due to the shortage of space, is iterative methods for solving systems of linear systems (e.g. the Jacobi, Gauss–Seidel, Successive over-relaxation methods). These methods are designed to overcome problems of direct solvers. For instance, they do not operate on full matrices and, therefore, they consume much less memory and can be applied for large systems. The most important issues with these methods are their convergence and accuracy. In our analysis we did not observe any advantages of using this methods for this particular problem, they demonstrated slow convergence and poor accuracy.

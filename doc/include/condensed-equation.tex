@@ -1,4 +1,4 @@
-Now we shall propose a much faster solution. Let us return back to the system of linear equations that we are to solve. It is described with the following recurrence:
+Now we shall propose a much faster solution. Let us return back to the system of linear equations that we are to solve. It is defined with the following recurrence:
 \begin{equation} \label{eq:ce-recurrent}
   Y_{i + 1} = K_i \: Y_i + Q_i, \; i = 0 \dots N_s - 1
 \end{equation}
@@ -68,7 +68,7 @@ The solution of this system, $Y_0$, is the first component of the vector $\mathb
 
 As we see, in this approach there is no need to inverse any matrix, the solution of the system is obtained by scalar divisions and a similarity transformation with $U$. The experimental results given in \secref{sec:results-ssdtp} show that this solution has the highest performance without any loss of accuracy among other methods that we have considered in our analysis.
 
-Let us now consider one specific case, we make one assumption concerning the time intervals $\triangle t_i$ that allows us to perform all the calculations in a more efficient manner. We assume that \emph{the time intervals are equal}, $\triangle t_i = \triangle t$ for $i = 0 \dots N_s - 1$, i.e., the distance in time between two successive power measurements stays constant. We refer to this distance as the \emph{sampling interval}. The preferable size of this sampling interval depends on a particular application and the level of accuracy that we want to achieve. Having this assumption, the recurrent process (\equref{eq:recurrent-equation}) turns into:
+Let us now consider one specific case, we make one assumption concerning the time intervals $\triangle t_i$ that allows us to perform all the calculations in a more efficient manner. We assume that the time intervals are equal, $\triangle t_i = \triangle t$ for $i = 0 \dots N_s - 1$, i.e., the distance in time between two successive power measurements stays constant. We refer to this distance as the \emph{sampling interval}. The preferable size of this sampling interval depends on a particular application and the level of accuracy that we want to achieve. Having this assumption, the recurrent process (\equref{eq:recurrent-equation}) turns into:
 \[
   Y_{i+1} = K \: Y_i + G \: B_i
 \]
