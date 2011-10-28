@@ -1,39 +1,99 @@
-Now we shall propose a much faster solution. Let us return back to the system of linear equations that we are to solve. It is defined with the following recurrence:
-\begin{equation} \label{eq:ce-recurrent}
-  Y_{i + 1} = K_i \: Y_i + Q_i, \; i = 0 \dots N_s - 1
+Before going to the solution itself, we first perform one important adjustment to \equref{eq:thermal-ode} in order to be more efficient in our future calculations. We notice that the analytical solution in \equref{eq:solution} includes the matrix exponential and inverse of the product $C^{-1} \: G$, which is an arbitrary matrix. It is preferable to have a symmetrix matrix to do such computations, since for a real symmetric matrix $M$ the following eigenvalue decomposition holds:
+\begin{equation} \label{eq:eigenvalue-decomposition}
+  M = U \Lambda U^T
 \end{equation}
+where $U$ is a square matrix of the eigenvectors of $M$ and $\Lambda$ is a diagonal matrix composed of the eigenvalues $\lambda_i$. Once we have obtained such a decomposition, calculation of the matrix exponential and inverse becomes a trivial task:
+\begin{align*}
+  & e^M = U \; e^{\Lambda} \; U^T = U \: \left[
+      \begin{array}{ccc}
+        e^{\lambda_0} & \cdots & 0 \\
+        \vdots & \ddots & \vdots \\
+        0 & \cdots & e^{\lambda_{n - 1}}
+      \end{array}
+    \right] \; U^T \\
+  & M^{-1} = U \: \Lambda^{-1} \: U^T = U \left[
+      \begin{array}{ccc}
+        \frac{1}{\lambda_0} & \cdots & 0 \\
+        \vdots & \ddots & \vdots \\
+        0 & \cdots & \frac{1}{\lambda_{n - 1}}
+      \end{array}
+    \right] U^T \\
+\end{align*}
+
+Since the conductance matrix $G$ is a symmetric matrix (and the capacitance $C$ a diagonal matrix) \cite{rao2007}, we can apply the following substitution:
+\begin{align*}
+  & \tilde{T}(t) = C^{\frac{1}{2}} T(t) \\
+  & \tilde{A} = -C^{-\frac{1}{2}} G \: C^{-\frac{1}{2}}
+\end{align*}
+with the result:
+\begin{align*}
+  & \frac{d\tilde{T}(t)}{dt} = \tilde{A} \: Y(t) + C^{-\frac{1}{2}} P \\
+  & \tilde{T}(t) = e^{\tilde{A} t} \tilde{T}_0 + \tilde{A}^{-1} (e^{\tilde{A} t} - I) C^{-\frac{1}{2}} P
+\end{align*}
+where $\tilde{A}$ is a symmetric matrix. Therefore, in case of the matrix exponential we have:
+\[
+  e^{\tilde{A} t} = U \: e^{\Lambda t} \: U^T = U \left[
+      \begin{array}{ccc}
+        e^{t \lambda_0} & \cdots & 0 \\
+        \vdots & \ddots & \vdots \\
+        0 & \cdots & e^{t \lambda_{N_n - 1}}
+      \end{array}
+    \right] U^T
+\]
+
+The next step is to update the SSDTP system given in \equref{eq:recurrent-system}:
+\begin{align}
+  & \tilde{T}_{i+1} = \tilde{K}_i \: \tilde{T}_i + \tilde{B}_i \: P_i \label{eq:recurrent-equation} \\
+  & \tilde{K}_i = e^{\tilde{A} \: \triangle t_i} \nonumber \\
+  & \tilde{B}_i = \tilde{A}^{-1} \left( e^{\tilde{A} \triangle t_i} - I \right) C^{-\frac{1}{2}} \nonumber
+\end{align}
+Using the eigenvalue decomposition, the last equation can be computed in the following way:
+\begin{align*}
+  \tilde{B}_i & = U \: \Lambda^{-1} \: U^T \left(U \: e^{\Lambda \triangle t_i} \: U^T - U \: U^T \right) C^{-\frac{1}{2}} = \\
+      & = U \left[
+        \begin{array}{ccc}
+          \frac{e^{\triangle t_i \: \lambda_0} - 1}{\lambda_0} & \cdots & 0 \\
+          \vdots & \ddots & \vdots \\
+          0 & \cdots & \frac{e^{\triangle t_i \: \lambda_{N_n - 1}} - 1}{\lambda_{N_n - 1}}
+        \end{array}
+      \right] U^T \: C^{-\frac{1}{2}}
+\end{align*}
+
+Now we shall describe the proposed solution. Let us return back to the recurrent system and denote $Q_i = \tilde{B}_i \: P_i$:
+\begin{align}
+  & \tilde{T}_{i + 1} = \tilde{K}_i \: \tilde{T}_i + Q_i, \; i = 0 \dots N_s - 1 \label{eq:ce-recurrent} \\
+  & \tilde{T}_0 = \tilde{T}_{N_s + 1} \nonumber
+\end{align}
 
 A common technique to solve such systems is to form a so-called \emph{condensed equation} (CE), or \emph{condensed system} \cite{stoer2002}. Let us undertake this procedure step by step.
 
-The iterative repetition of this equation leads us to:
+The iterative repetition of \equref{eq:ce-recurrent} results in:
 \begin{equation} \label{eq:y-recurrent}
-  Y_i = \prod_{j = 0}^{i - 1} K_j \: Y_0 + P_{i - 1}, \; i = 1 \dots N_s
+  \tilde{T}_i = \prod_{j = 0}^{i - 1} \tilde{K}_j \: \tilde{T}_0 + W_{i - 1}, \; i = 1 \dots N_s
 \end{equation}
-where $P_i$ are defined as the following:
+where $W_i$ are defined as the following:
 \begin{align}
-  P_0 & = Q_0 \nonumber \\
-  P_i & = \sum_{l = 1}^i \prod_{j = l}^i K_j \: Q_{l - 1} + Q_i, \: i = 1 \dots N_s - 1 \nonumber \\
-  P_i & = K_i \: P_{i - 1} + Q_i, \; i = 1 \dots N_s - 1 \label{eq:p-recurrent}
+  W_0 & = Q_0 \nonumber \\
+  W_i & = \sum_{l = 1}^i \prod_{j = l}^i \tilde{K}_j \: Q_{l - 1} + Q_i, \: i = 1 \dots N_s - 1 \nonumber \\
+  W_i & = \tilde{K}_i \: W_{i - 1} + Q_i, \; i = 1 \dots N_s - 1 \label{eq:p-recurrent}
 \end{align}
 
-Therefore, we can calculate the final value $Y_{N_s}$ from \equref{eq:y-recurrent}:
+Therefore, we can calculate the final value $\tilde{T}_{N_s}$ from \equref{eq:y-recurrent}:
 \[
-  Y_{N_s} = \prod_{j = 0}^{N_s - 1} K_j \: Y_0 + P_{N_s - 1}
+  \tilde{T}_{N_s} = \prod_{j = 0}^{N_s - 1} \tilde{K}_j \: \tilde{T}_0 + W_{N_s - 1}
 \]
-
 Taking into account the boundary condition given by \equref{eq:boundary-condition}, we obtain the following system of linear equations:
 \begin{equation} \label{eq:core-system}
-  (I - \prod_{j = 0}^{N_s - 1} K_j) \: Y_0 = P_{N_s - 1}
+  (I - \prod_{j = 0}^{N_s - 1} \tilde{K}_j) \: \tilde{T}_0 = W_{N_s - 1}
 \end{equation}
-
-Now we recall that $K_i$ is the matrix exponential, therefore, the following simplification holds:
+We recall that $\tilde{K}_i$ is the matrix exponential, therefore, the following simplification holds:
 \begin{align*}
-  \prod_{j = i}^l K_j = \prod_{j = i}^l e^{D \triangle t_j} & = e^{D \sum_{j = i}^l \triangle t_j} \\
+  \prod_{j = i}^l \tilde{K}_j = \prod_{j = i}^l e^{\tilde{A} \triangle t_j} & = e^{\tilde{A} \sum_{j = i}^l \triangle t_j} \\
   & = U e^{\left( \sum_{j = i}^l \triangle t_j \: \Lambda \right)} U^T
 \end{align*}
-since the product of each pair $D \: \triangle t_j$ and $D \: \triangle t_k$ is commutative. Therefore:
+Consequently:
 \begin{align*}
-  \prod_{j = 0}^{N_s - 1} K_j & = e^{D \mathcal{T}} = U \: e^{\mathcal{T} \Lambda} \: U^T \\
+  \prod_{j = 0}^{N_s - 1} \tilde{K}_j & = e^{\tilde{A} \mathcal{T}} = U \: e^{\mathcal{T} \Lambda} \: U^T \\
     & = U \left[
       \begin{array}{ccc}
         e^{\mathcal{T} \lambda_0} & \cdots & 0 \\
@@ -42,44 +102,34 @@ since the product of each pair $D \: \triangle t_j$ and $D \: \triangle t_k$ is 
       \end{array}
     \right] U^T
 \end{align*}
-where $U$ is a square matrix of the eigenvectors of $D$, $\Lambda$ is a diagonal matrix of the eigenvalues, and $\mathcal{T}$ is the period of the application. Substituting this product into \equref{eq:core-system}, we obtain the following system:
+where $\mathcal{T}$ is the overall period. Substituting this product into \equref{eq:core-system}, we obtain the following system:
 \[
-  (I - U \: e^{\mathcal{T} \Lambda} \: U^T) Y_0 = P_{N_s - 1}
+  (I - U \: e^{\mathcal{T} \Lambda} \: U^T) \: \tilde{T}_0 = W_{N_s - 1}
 \]
-
-The identity matrix $I$ can be represented as $U U^T$, consequently:
+Finally, the identity matrix $I$ can be splitted into $U U^T$, hence:
 \begin{align*}
-  & U (I - e^{\mathcal{T} \Lambda}) U^T \: Y_0 = P_{N_s - 1} \\
-  & Y_0 = U (I - e^{\mathcal{T} \Lambda})^{-1} U^T P_{N_s - 1} \\
-  & Y_0 = U M U^T P_{N_s - 1}
+  & \tilde{T}_0 = U \: (I - e^{\mathcal{T} \Lambda})^{-1} \: U^T \: W_{N_s - 1} \\
+  & \tilde{T}_0 = U \: \left[
+      \begin{array}{ccc}
+        \frac{1}{1 - e^{\mathcal{T} \lambda_0}} & \cdots & 0 \\
+        \vdots & \ddots & \vdots \\
+        0 & \cdots & \frac{1}{1 - e^{\mathcal{T} \lambda_{N_n - 1}}}
+      \end{array}
+    \right] \: U^T \: W_{N_s - 1}
 \end{align*}
-where $M$ is a diagonal matrix with the following structure:
+Here $W_{N_s - 1}$ can be calculated using \equref{eq:p-recurrent}. As we see, there is no need to inverse any matrix, the solution of the system is obtained by scalar divisions and a similarity transformation with $U$. All other vectors $\tilde{T}_i$ for $i = 1 \dots N_s - 1$ are successively found from \equref{eq:ce-recurrent}.
+
+Let us now consider one specific case, we make an assumption concerning the time intervals $\triangle t_i$ that allows us to perform all the calculations in a more efficient manner. We assume that the time intervals are equal: $\triangle t_i = \triangle t$ for $i = 0 \dots N_s - 1$. We refer to this distance as the \emph{sampling interval}. The preferable size of this interval depends on a particular application and accuracy that we want to achieve. Having this assumption, the recurrent process (\equref{eq:recurrent-equation}) turns into:
 \[
-  M = \left[
-    \begin{array}{ccc}
-      \frac{1}{1 - e^{\mathcal{T} \lambda_0}} & \cdots & 0 \\
-      \vdots & \ddots & \vdots \\
-      0 & \cdots & \frac{1}{1 - e^{\mathcal{T} \lambda_{N_n - 1}}}
-    \end{array}
-  \right]
-\]
-
-The solution of this system, $Y_0$, is the first component of the vector $\mathbb{Y}$. $P_{N_s - 1}$ can be calculated using \equref{eq:p-recurrent}. All other vectors $Y_i$ for $i = 1 \dots N_s - 1$ are successively found with help of \equref{eq:ce-recurrent}.
-
-As we see, in this approach there is no need to inverse any matrix, the solution of the system is obtained by scalar divisions and a similarity transformation with $U$. The experimental results given in \secref{sec:results-ssdtp} show that this solution has the highest performance without any loss of accuracy among other methods that we have considered in our analysis.
-
-Let us now consider one specific case, we make one assumption concerning the time intervals $\triangle t_i$ that allows us to perform all the calculations in a more efficient manner. We assume that the time intervals are equal, $\triangle t_i = \triangle t$ for $i = 0 \dots N_s - 1$, i.e., the distance in time between two successive power measurements stays constant. We refer to this distance as the \emph{sampling interval}. The preferable size of this sampling interval depends on a particular application and the level of accuracy that we want to achieve. Having this assumption, the recurrent process (\equref{eq:recurrent-equation}) turns into:
-\[
-  Y_{i+1} = K \: Y_i + G \: B_i
+  \tilde{T}_{i+1} = \tilde{K} \: \tilde{T}_i + \tilde{B} \: P_i
 \]
 where:
 \begin{align*}
-  & K = e^{D \: \triangle t} \\
-  & G = D^{-1} \left( e^{D \: \triangle t} - I \right) C^{-\frac{1}{2}}
+  & \tilde{K} = e^{\tilde{A} \: \triangle t} \\
+  & \tilde{B} = \tilde{A}^{-1} \left( e^{\tilde{A} \: \triangle t} - I \right) C^{-\frac{1}{2}}
 \end{align*}
-
-It should be noted that now $K$ and $G$ are constants, since they depend only on the matrices $D$, $C$, and the sampling interval $\triangle t$, which is fixed. In this case, the block diagonal of the matrix $\mathbb{A}$ in \equref{eq:system} is composed of the same repeating block $K_i = K$ for $i = 0 \dots N_s - 1$, and the recurrent expressions take the following form:
+It should be noted that now $\tilde{K}$ and $\tilde{B}$ are constants, since they depend only on the matrices $\tilde{A}$, $C$, and sampling interval $\triangle t$, which is fixed. In this case, the block diagonal of the matrix $\tilde{\mathbb{K}}$, similar to \equref{eq:system}, is composed of the same repeating block $\tilde{K}$ and the recurrent expressions take the following form:
 \begin{align}
-  & Y_{i + 1} = K \: Y_i + Q_i, \; i = 0 \dots N_s - 1 \nonumber \\
-  & P_i = K \: P_{i - 1} + Q_i, \; i = 1 \dots N_s - 1 \nonumber
+  & \tilde{T}_{i + 1} = \tilde{K} \: \tilde{T}_i + Q_i, \; i = 0 \dots N_s - 1 \nonumber \\
+  & W_i = \tilde{K} \: W_{i - 1} + Q_i, \; i = 1 \dots N_s - 1 \nonumber
 \end{align}

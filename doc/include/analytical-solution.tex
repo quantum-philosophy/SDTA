@@ -1,112 +1,36 @@
-In order to solve the problem, we use an analytical approach. The same technique is employed in \cite{thiele2011}. Let the power consumption vector $P(t)$ be constant and equal to $P$, then the direct solution of \equref{eq:thermal-ode} is the following:
+Let the power consumption vector $P(t)$ be constant and equal to $P$ in \equref{eq:thermal-ode}, then the direct solution of the ODE system is the following:
 \begin{equation} \label{eq:solution}
-  T(t) = e^{-C^{-1}G t} \; T_0 + (-C^{-1} G)^{-1}(e^{-C^{-1}G t} - I)C^{-1} P
+  T(t) = e^{A t} \; T_0 + A^{-1}(e^{A t} - I)C^{-1} P
 \end{equation}
-where $T_0$ is the initial temperature. Therefore, given a discrete power profile $\mathbb{P}$, the corresponding temperature profile $\mathbb{T}$ can be found using the following recurrence:
-\[
-  T_{i+1} = A_i \: T_i + B_i \: P_i
-\]
+where $A = -C^{-1} \: G$ and $T_0$ is the initial temperature. Therefore, given a discrete power profile $\mathbb{P}$, the corresponding temperature profile $\mathbb{T}$ can be found using the following recurrence:
+\begin{equation} \label{eq:recurrent-system}
+  T_{i+1} = K_i \: T_i + B_i \: P_i
+\end{equation}
 where:
 \begin{align*}
-  & A_i = e^{-C^{-1} G \triangle t_i} \\
-  & B_i = (-C^{-1} G)^{-1}(e^{-C^{-1}G \triangle t_i} - I)C^{-1}
+  & K_i = e^{A \triangle t_i} \\
+  & B_i = A^{-1}(e^{A \triangle t_i} - I)C^{-1}
 \end{align*}
 
-The solution provides the transient temperature and holds only when the power vector $B$ is constant. If it is not the case, we need to simulate shorter time intervals where this assumption can take place. Before going to the steady-state case, we perform one important adjustment to the system in order to be more efficient in our future calculations. According to \equref{eq:solution}, we need to compute the matrix exponential of the matrix $C^{-1} A t$. It would be much easier to accomplish if the matrix were symmetric, because a real symmetric matrix is \emph{diagonalizable} and has \emph{independent} (orthogonal) real eigenvectors:
-\begin{equation} \label{eq:eigenvalue-decomposition}
-  M = U \Lambda U^T
-\end{equation}
-where $M$ is a real symmetric matrix, $U$ is a square matrix of the eigenvectors of $M$, $\Lambda$ is a diagonal matrix composed of the eigenvalues of $M$ ($\lambda_i$), the equation itself is called the eigenvalue decomposition. Once we have such a decomposition, calculating the matrix exponential becomes a trivial task:
-\begin{align}
-  & e^M = e^{U \Lambda U^T} = U \: e^{\Lambda} \: U^T \nonumber \\
-  & e^{\Lambda} = \left[
-      \begin{array}{ccc}
-        e^{\lambda_0} & \cdots & 0 \\
-        \vdots & \ddots & \vdots \\
-        0 & \cdots & e^{\lambda_{n - 1}}
-      \end{array}
-    \right] \nonumber
-\end{align}
+The above-mentioned recurrence can be applied for the transient temperature analysis, and our experiments shown that in case of equal time intervals, where $K_i$ and $B_i$ are constants, this approach demonstrates a significant performance improvement relative to iterative solutions of ODEs. The same observation is made in \cite{thiele2011}.
 
-Hence, instead of $C^{-1} A$ in front of the variable vector we want to have a symmetry matrix. In order to achieve this, we perform the following substitution:
-\begin{align*}
-  Y & = C^{\frac{1}{2}} T \\
-  D & = C^{-\frac{1}{2}} A \: C^{-\frac{1}{2}} \\
-  E & = C^{-\frac{1}{2}} B
-\end{align*}
-with the result:
-\begin{align}
-  \frac{dY}{dt} & = D \: Y + E \nonumber \\
-  Y(t) & = e^{D t} Y_0 + D^{-1} (e^{D t} - I) E \label{eq:modified-solution} \\
-  T(t) & = C^{-\frac{1}{2}} Y(t) \label{eq:finalization}
-\end{align}
-
-In this case, $D$ is a symmetric matrix, therefore, it will be easier to find the matrix exponential of $D \: t$ using the above-mentioned eigenvalue decomposition (\equref{eq:eigenvalue-decomposition}):
-\[
-  e^{D t} = U \: e^{\Lambda t} \: U^T = U \left[
-      \begin{array}{ccc}
-        e^{t \lambda_0} & \cdots & 0 \\
-        \vdots & \ddots & \vdots \\
-        0 & \cdots & e^{t \lambda_{N_n - 1}}
-      \end{array}
-    \right] U^T
-\]
-
-Now we shift our focus at the power profile $B$ and come closer to the SSDTP. Each row of $B$ corresponds to a particular time interval $\triangle t_i$ and represents the power consumption $B_i$ during this interval of all processing elements. Each step $i = 0 \dots N_s - 1$ of the iterative process we have a pair $(\triangle t_i, B_i)$ which gives us a temperature vector $T_i$ according to \equref{eq:modified-solution} where $t = \triangle t_i$. The iterative process can be described as the following:
-\begin{align}
-  & Y_{i+1} = K_i \: Y_i + G_i \: B_i \label{eq:recurrent-equation} \\
-  & K_i = e^{D \: \triangle t_i} \nonumber \\
-  & G_i = D^{-1} \left( e^{D \triangle t_i} - I \right) C^{-\frac{1}{2}} \nonumber
-\end{align}
-
-Since we perform the eigenvalue decomposition of D (\equref{eq:eigenvalue-decomposition}), $D^{-1}$ can be efficiently computed in the following way:
-\[
-  D^{-1} = U \: \Lambda^{-1} \: U^T = U \left[
-      \begin{array}{ccc}
-        \frac{1}{\lambda_0} & \cdots & 0 \\
-        \vdots & \ddots & \vdots \\
-        0 & \cdots & \frac{1}{\lambda_{N_n - 1}}
-      \end{array}
-    \right] U^T \\
-\]
-therefore:
-\begin{align*}
-  G_i & = U \: \Lambda^{-1} \: U^T \left(U \: e^{\Lambda \triangle t_i} \: U^T - U \: U^T \right) C^{-\frac{1}{2}} = \\
-      & = U \left[
-        \begin{array}{ccc}
-          \frac{e^{\triangle t_i \: \lambda_0} - 1}{\lambda_0} & \cdots & 0 \\
-          \vdots & \ddots & \vdots \\
-          0 & \cdots & \frac{e^{\triangle t_i \: \lambda_{N_n - 1}} - 1}{\lambda_{N_n - 1}}
-        \end{array}
-      \right] U^T \: C^{-\frac{1}{2}}
-\end{align*}
-
-Consequently, in order to find SSDTC, we need to solve the following system of linear equations:
+For the steady-state case with a periodic power profile $\mathbb{P}$ the following system of linear equations can be derived:
 \[
   \begin{cases}
-    K_0 \: Y_0 - Y_1 & = -Q_0 \\
+    K_0 \: T_0 - T_1 & = -B_0 \: P_0 \\
     ... \\
-    K_{N_s - 1} \: Y_{N_s - 1} - Y_{N_s} & = -Q_{N_s - 1}
+    -T_0 + K_{N_s - 1} \: T_{N_s - 1} & = -B_{N_s - 1} \: P_{N_s - 1}
   \end{cases}
 \]
-where $Q_i = G_i \: B_i$. Also we should take into account the boundary condition which ensures that the temperature has the same values on both ends of the curve:
+where the last equation respectes the boundary condition and ensures the equality of temperature values on both ends of the overall period:
 \begin{equation} \label{eq:boundary-condition}
-  Y_0 = Y_{N_s}
+  T_0 = T_{N_s}
 \end{equation}
-
-Hence, the system of linear equations takes the following form:
-\[
-  \begin{cases}
-    K_0 \: Y_0 - Y_1 & = -Q_0 \\
-    ... \\
-    -Y_0 + K_{N_s - 1} \: Y_{N_s - 1} & = -Q_{N_s - 1}
-  \end{cases}
-\]
 
 To get the whole picture, the system can be written as:
 \begin{align}
-  & \mathbb{A} \: \mathbb{Y} = \mathbb{B} \label{eq:system} \\
-  & \mathbb{A} = \left[
+  & \mathbb{K} \: \mathbb{X} = \mathbb{B} \label{eq:system} \\
+  & \mathbb{K} = \left[
     \begin{array}{ccccc}
       K_0 & -I & 0 & \cdots & 0 \\
       0 & K_1 & -I &  & \vdots \\
@@ -115,25 +39,25 @@ To get the whole picture, the system can be written as:
       -I & 0 & \cdots & 0 & K_{N_s - 1}
     \end{array}
   \right] \nonumber \\
-  & \mathbb{Y} = \left[
+  & \mathbb{X} = \left[
     \begin{array}{c}
-      Y_0 \\
+      T_0 \\
       \vdots \\
-      Y_{N_s - 1}
+      T_{N_s - 1}
     \end{array}
   \right] \nonumber \\
   & \mathbb{B} = \left[
     \begin{array}{c}
-      -Q_0 \\
+      -B_0 \: P_0 \\
       \vdots \\
-      -Q_{N_s - 1}
+      -B_{N_s - 1} \: P_{N_s - 1}
     \end{array}
   \right] \nonumber
 \end{align}
 
-where $\mathbb{A}$ is a square matrix of the dimensions $N_n N_s \times N_n N_s$. $\mathbb{Y}$ and $\mathbb{B}$ are vectors of the length $N_n N_s$.
+where $\mathbb{K}$ is a $N_n N_s \times N_n N_s$ matrix, $\mathbb{X}$ and $\mathbb{B}$ are vectors with $N_n N_s$ elements.
 
-All in all, we have obtained a regular system of liner equations with the SSDTP as its solution ($Y$ should also be processed with \equref{eq:finalization} in order to return back to $T$). Possible solutions include the followings:
+All in all, we have obtained a regular system of liner equations with a specific structure. Now we shall discuss possible solutions:
 \begin{itemize}
   \item Direct dense solutions.
   \item Direct sparse solutions.
@@ -141,7 +65,6 @@ All in all, we have obtained a regular system of liner equations with the SSDTP 
   \item Iterative methods for systems of linear equatins.
   \item Proposed solution based on the condensed equation method.
 \end{itemize}
-Let us discuss the listed solutions in turns.
 
 \subsection{Direct Dense Solutions}
 \input{include/direct-dense-solution}

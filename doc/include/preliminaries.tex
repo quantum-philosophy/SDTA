@@ -21,7 +21,7 @@ where $C_{eff}$ is the effective switched capacitance, $V$ and $f$ are the suppl
 where $N_{gate}$ is the number of gates in the circuit\footnote{The number of gates in a circuit can be estimated using the technique described in \cite{li2004}.}, $I_s (T_0, V_0)$ is the average leakage current at the given temperature $T_0$ and supply voltage $V_0$, $f_{avg}$ is the scaling function. $I_{avg}$ is the average leakage current at the current temperature $T$ and voltage $V$. $A$, $B$, $\alpha$, $\beta$, $\gamma$, and $\delta$ are the technology dependent constants found in \cite{liao2005}.
 
 \subsection{RC Thermal Model}
-The proposed SSDTA technique is based on the well-known RC thermal model that employs the analogy between electrical and thermal circuits \cite{kreith2000}. Heat transfer is modeled with the following system of ordinary differential equations:
+The proposed SSDTA technique is based on the well-known RC thermal model that employs the analogy between electrical and thermal circuits \cite{kreith2000}. Heat transfer is modeled with the following system of ordinary differential equations (ODE):
 \begin{equation} \label{eq:thermal-ode}
   C \: \frac{dT(t)}{dt} + G \: T(t) = P(t)
 \end{equation}
