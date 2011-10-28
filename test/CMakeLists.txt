@@ -17,12 +17,10 @@ foreach (template_tgffopt_config ${templates})
 	# TGFF configuration
 	set (tgff_config ${test_path}/${test_name}.tgff)
 	set (tgffopt_config ${test_path}/${test_name}.tgffopt)
-	add_custom_command (OUTPUT ${tgff_config} ${tgffopt_config}
+	add_custom_command (OUTPUT ${tgff_config} ${tgffopt_config} ${test_path}/${test_name}.eps ${test_path}/${test_name}.vcg
 		DEPENDS ${template_tgffopt_config}
 		COMMAND cp ${template_tgffopt_config} ${tgffopt_config}
 		COMMAND ${tgff} ${test_path}/${test_name}
-		COMMAND rm -f ${test_path}/${test_name}.eps
-		COMMAND rm -f ${test_path}/${test_name}.vcg
 	)
 
 	# System configuration
