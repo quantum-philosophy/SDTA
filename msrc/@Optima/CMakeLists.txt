@@ -8,7 +8,6 @@ set (MEX_SRCS
 	${PROJECT_SOURCE_DIR}/csrc/Graph.cpp
 	${PROJECT_SOURCE_DIR}/csrc/Hotspot.cpp
 	${PROJECT_SOURCE_DIR}/csrc/Layout.cpp
-	${PROJECT_SOURCE_DIR}/csrc/Leakage.cpp
 	${PROJECT_SOURCE_DIR}/csrc/Mobility.cpp
 	${PROJECT_SOURCE_DIR}/csrc/Pool.cpp
 	${PROJECT_SOURCE_DIR}/csrc/Priority.cpp

@@ -45,7 +45,13 @@ void parameters_t::update(std::istream &main_stream)
 
 		stream >> name;
 
-		std::getline(stream, value);
+		try {
+			std::getline(stream, value);
+		}
+		catch (...) {
+			value = "";
+		}
+
 		Helper::chomp(value);
 
 		push_back(parameter_t(name, value));
@@ -74,7 +80,7 @@ void SystemTuning::setup(const parameters_t &params)
 		else if (it->name == "hotspot")
 			hotspot = it->value;
 		else if (it->name == "leakage")
-			leakage = it->to_bool();
+			leakage = it->value;
 		else if (it->name == "verbose")
 			verbose = it->to_bool();
 	}
@@ -93,7 +99,7 @@ void SystemTuning::display(std::ostream &o) const
 		<< std::setprecision(4)
 		<< "  Tolerance:            " << tolerance << std::endl
 		<< "  Hotspot tuning:       " << hotspot << std::endl
-		<< "  Consider leakage:     " << leakage << std::endl
+		<< "  Leakage:              " << leakage << std::endl
 		<< "  Verbose:              " << verbose << std::endl;
 }
 

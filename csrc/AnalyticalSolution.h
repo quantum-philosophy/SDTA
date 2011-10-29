@@ -56,18 +56,16 @@ class CondensedEquation: public AnalyticalSolution
 	void solve(const double *power, double *temperature, size_t step_count);
 };
 
-class LeakageCondensedEquation: public CondensedEquation
+class IterativeCondensedEquation: public CondensedEquation
 {
-	static const double tol = 0.01;
-	static const size_t maxit = 10;
-
-	Leakage leakage;
+	const Leakage &leakage;
 
 	public:
 
-	LeakageCondensedEquation(const processor_vector_t &processors,
-		size_t _node_count, double _sampling_interval, double _ambient_temperature,
-		const double **conductivity, const double *capacitance);
+	IterativeCondensedEquation(size_t _processor_count, size_t _node_count,
+		double _sampling_interval, double _ambient_temperature,
+		double **conductivity, const double *capacitance,
+		const Leakage &_leakage);
 
 	/* NOTE: dynamic_power should be of size (step_count x processor_count) */
 	size_t solve(const double *dynamic_power,

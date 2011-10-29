@@ -21,6 +21,7 @@ class TestCase
 	Graph *graph;
 	Architecture *architecture;
 	BasicListScheduler *scheduler;
+	Leakage *leakage;
 	Hotspot *hotspot;
 
 	mapping_t mapping;
@@ -30,7 +31,8 @@ class TestCase
 	TestCase(const std::string &_system, const std::string &_floorplan,
 		const std::string &_hotspot, const SystemTuning &tuning) :
 
-		graph(NULL), architecture(NULL), scheduler(NULL), hotspot(NULL)
+		graph(NULL), architecture(NULL), scheduler(NULL),
+		leakage(NULL), hotspot(NULL)
 	{
 		system_t system(_system);
 
@@ -143,47 +145,75 @@ class TestCase
 #endif
 		}
 
+		/* Leakage model */
+		if (tuning.leakage == "linear") {
+			leakage = new LinearLeakage(architecture->get_processors());
+		}
+		else if (tuning.leakage == "piecewise_linear") {
+			leakage = new PiecewiseLinearLeakage(architecture->get_processors());
+		}
+		else if (tuning.leakage == "exponential") {
+			leakage = new ExponentialLeakage(architecture->get_processors());
+		}
+		else if (!tuning.leakage.empty())
+			throw std::runtime_error("The leakage model is unknown.");
+
+		/* Thermal model */
 		if (tuning.solution == "condensed_equation") {
-			/* People want leakage! */
-			if (tuning.leakage)
-				hotspot = new CondensedEquationLeakageHotspot(
-					*architecture, *graph, _floorplan, _hotspot, tuning.hotspot);
+			if (leakage)
+				hotspot = new LeakageCondensedEquationHotspot(
+					*architecture, *graph, _floorplan, _hotspot,
+					tuning.hotspot, *leakage);
 			else
 				hotspot = new CondensedEquationHotspot(
-					*architecture, *graph, _floorplan, _hotspot, tuning.hotspot);
+					*architecture, *graph, _floorplan, _hotspot,
+					tuning.hotspot);
 		}
 		else if (tuning.solution == "transient_analytical") {
-			if (tuning.leakage)
-				throw std::runtime_error("Not implemented yet.");
+			if (leakage)
+				throw std::runtime_error("Not implemented.");
+
 			hotspot = new TransientAnalyticalHotspot(
-				*architecture, *graph, _floorplan, _hotspot, tuning.hotspot);
+				*architecture, *graph, _floorplan, _hotspot,
+				tuning.hotspot);
 		}
 		else if (tuning.solution == "coarse_condensed_equation") {
-			if (tuning.leakage)
-				throw std::runtime_error("Not implemented yet.");
+			if (leakage)
+				throw std::runtime_error("Not implemented.");
+
 			hotspot = new CoarseCondensedEquationHotspot(
-				*architecture, *graph, _floorplan, _hotspot, tuning.hotspot);
+				*architecture, *graph, _floorplan, _hotspot,
+				tuning.hotspot);
 		}
 		else if (tuning.solution == "hotspot") {
-			if (tuning.leakage)
-				throw std::runtime_error("Not implemented yet.");
+			if (leakage)
+				throw std::runtime_error("Not implemented.");
+
 			hotspot = new IterativeHotspot(
 				_floorplan, _hotspot, tuning.hotspot,
 				tuning.max_iterations, tuning.tolerance);
 		}
 		else if (tuning.solution == "steady_state") {
-			if (tuning.leakage)
-				hotspot = new SteadyStateLeakageHotspot(
-					*architecture, *graph, _floorplan, _hotspot, tuning.hotspot);
+			if (leakage) {
+				if (tuning.leakage == "linear")
+					throw std::runtime_error("Not implemented.");
+
+				hotspot = new LeakageSteadyStateHotspot(
+					*architecture, *graph, _floorplan, _hotspot,
+					tuning.hotspot, *leakage);
+			}
 			else
 				hotspot = new SteadyStateHotspot(
-					*architecture, *graph, _floorplan, _hotspot, tuning.hotspot);
+					*architecture, *graph, _floorplan, _hotspot,
+					tuning.hotspot);
 		}
 		else if (tuning.solution == "precise_steady_state") {
-			if (tuning.leakage)
-				throw std::runtime_error("Not implemented yet.");
+			if (leakage)
+				throw std::runtime_error("Not implemented.");
+
 			hotspot = new PreciseSteadyStateHotspot(
-				*architecture, *graph, _floorplan, _hotspot, tuning.hotspot);
+				*architecture, *graph, _floorplan, _hotspot,
+				tuning.hotspot);
 		}
 		else throw std::runtime_error("The solution method is unknown.");
 	}
@@ -193,6 +223,7 @@ class TestCase
 		__DELETE(graph);
 		__DELETE(architecture);
 		__DELETE(scheduler);
+		__DELETE(leakage);
 		__DELETE(hotspot);
 	}
 };

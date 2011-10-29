@@ -147,17 +147,18 @@ void CondensedEquationHotspot::solve(const Schedule &schedule,
 
 /******************************************************************************/
 
-BasicCondensedEquationLeakageHotspot::BasicCondensedEquationLeakageHotspot(
+BasicLeakageCondensedEquationHotspot::BasicLeakageCondensedEquationHotspot(
 	const Architecture &architecture, const std::string &floorplan,
-	const std::string &config, const std::string &config_line) :
+	const std::string &config, const std::string &config_line,
+	const Leakage &leakage) :
 
 	Hotspot(floorplan, config, config_line),
-	equation(architecture.get_processors(), node_count, sampling_interval,
-		ambient_temperature, (const double **)model->block->b, model->block->a)
+	equation(processor_count, node_count, sampling_interval,
+		ambient_temperature, model->block->b, model->block->a, leakage)
 {
 }
 
-void BasicCondensedEquationLeakageHotspot::solve(const matrix_t &dynamic_power,
+void BasicLeakageCondensedEquationHotspot::solve(const matrix_t &dynamic_power,
 	matrix_t &temperature, matrix_t &total_power)
 {
 	temperature.resize(dynamic_power);
@@ -167,23 +168,24 @@ void BasicCondensedEquationLeakageHotspot::solve(const matrix_t &dynamic_power,
 
 /******************************************************************************/
 
-CondensedEquationLeakageHotspot::CondensedEquationLeakageHotspot(
+LeakageCondensedEquationHotspot::LeakageCondensedEquationHotspot(
 	const Architecture &architecture, const Graph &graph,
 	const std::string &floorplan, const std::string &config,
-	const std::string &config_line) :
+	const std::string &config_line, const Leakage &leakage) :
 
-	BasicCondensedEquationLeakageHotspot(architecture, floorplan, config, config_line),
+	BasicLeakageCondensedEquationHotspot(
+		architecture, floorplan, config, config_line, leakage),
 	dynamic_power(architecture.get_processors(), graph.get_tasks(),
 		graph.get_deadline(), sampling_interval)
 {
 }
 
-void CondensedEquationLeakageHotspot::solve(const Schedule &schedule,
+void LeakageCondensedEquationHotspot::solve(const Schedule &schedule,
 	matrix_t &temperature, matrix_t &total_power)
 {
 	matrix_t power;
 	dynamic_power.compute(schedule, power);
-	BasicCondensedEquationLeakageHotspot::solve(power, temperature, total_power);
+	BasicLeakageCondensedEquationHotspot::solve(power, temperature, total_power);
 }
 
 /******************************************************************************/
@@ -359,18 +361,17 @@ double *SteadyStateHotspot::compute(const SlotTrace &trace) const
 	return temperature;
 }
 
-SteadyStateLeakageHotspot::SteadyStateLeakageHotspot(
+LeakageSteadyStateHotspot::LeakageSteadyStateHotspot(
 	const Architecture &architecture, const Graph &graph,
 	const std::string &floorplan, const std::string &config,
-	const std::string &config_line) :
+	const std::string &config_line, const Leakage &_leakage) :
 
 	BasicSteadyStateHotspot(architecture, graph, floorplan,
-		config, config_line),
-	leakage(architecture.get_processors())
+		config, config_line), leakage(_leakage)
 {
 }
 
-double *SteadyStateLeakageHotspot::compute(const SlotTrace &trace) const
+double *LeakageSteadyStateHotspot::compute(const SlotTrace &trace) const
 {
 	size_t i, it;
 
@@ -390,25 +391,40 @@ double *SteadyStateLeakageHotspot::compute(const SlotTrace &trace) const
 		dynamic_power[i] = processors[i]->calc_power((unsigned int)trace[i]);
 	}
 
-	leakage.inject(1, dynamic_power, ambient_temperature, total_power);
+	const size_t max_iterations = leakage.get_max_iterations();
+	const double tolerance = leakage.get_tolerance();
 
-	for (it = 0;;) {
+	leakage.inject(ambient_temperature, dynamic_power, total_power);
+
+	for (it = 1;; it++) {
 		steady_state_temp(model, total_power, temperature);
 
-		max_error = 0;
+		if (it < max_iterations) {
+			/* There is a reason to check the error.
+			 */
+			max_error = 0;
+			for (i = 0; i < processor_count; i++) {
+				error = abs(temperature[i] - last_temperature[i]);
+				if (max_error < error) max_error = error;
+				last_temperature[i] = temperature[i];
+			}
 
-		for (i = 0; i < processor_count; i++) {
-			error = abs(temperature[i] - last_temperature[i]);
-			if (max_error < error) max_error = error;
-			last_temperature[i] = temperature[i];
+			/* Still have some iterations left,
+			 * the only question is the error.
+			 */
+			if (max_error < tolerance) break;
+		}
+		else {
+			/* Limit of iterations is reached,
+			 * quite right now.
+			 */
+			break;
 		}
 
-		it++;
-
-		if (max_error < tol || it >= maxit) break;
-
-		leakage.inject(1, dynamic_power, temperature, total_power);
+		leakage.inject(temperature, dynamic_power, total_power);
 	}
+
+	leakage.finalize(temperature, dynamic_power, total_power);
 
 	__FREE(dynamic_power);
 	__FREE(total_power);

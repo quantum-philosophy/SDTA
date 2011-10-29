@@ -30,7 +30,7 @@ class Hotspot
 
 	Hotspot(const std::string &floorplan_filename,
 		const std::string &config_filename,
-		const std::string &config_line = std::string());
+		const std::string &config_line);
 	virtual ~Hotspot();
 
 	/* Without leakage */
@@ -80,7 +80,7 @@ class BasicCondensedEquationHotspot: public Hotspot
 	BasicCondensedEquationHotspot(
 		const std::string &floorplan_filename,
 		const std::string &config_filename,
-		const std::string &config_line = std::string());
+		const std::string &config_line);
 
 	void solve(const matrix_t &power, matrix_t &temperature);
 };
@@ -94,35 +94,35 @@ class CondensedEquationHotspot: public BasicCondensedEquationHotspot
 	CondensedEquationHotspot(
 		const Architecture &architecture, const Graph &graph,
 		const std::string &floorplan, const std::string &config,
-		const std::string &config_line = std::string());
+		const std::string &config_line);
 
 	void solve(const Schedule &schedule, matrix_t &temperature, matrix_t &power);
 };
 
-class BasicCondensedEquationLeakageHotspot: public Hotspot
+class BasicLeakageCondensedEquationHotspot: public Hotspot
 {
-	LeakageCondensedEquation equation;
+	IterativeCondensedEquation equation;
 
 	public:
 
-	BasicCondensedEquationLeakageHotspot(
+	BasicLeakageCondensedEquationHotspot(
 		const Architecture &architecture,
 		const std::string &floorplan, const std::string &config,
-		const std::string &config_line = std::string());
+		const std::string &config_line, const Leakage &leakage);
 
 	void solve(const matrix_t &power, matrix_t &temperature, matrix_t &total_power);
 };
 
-class CondensedEquationLeakageHotspot: public BasicCondensedEquationLeakageHotspot
+class LeakageCondensedEquationHotspot: public BasicLeakageCondensedEquationHotspot
 {
 	const DynamicPower dynamic_power;
 
 	public:
 
-	CondensedEquationLeakageHotspot(
+	LeakageCondensedEquationHotspot(
 		const Architecture &architecture, const Graph &graph,
 		const std::string &floorplan, const std::string &config,
-		const std::string &config_line = std::string());
+		const std::string &config_line, const Leakage &leakage);
 
 	void solve(const Schedule &schedule, matrix_t &temperature, matrix_t &power);
 };
@@ -138,7 +138,7 @@ class CoarseCondensedEquationHotspot: public Hotspot
 	CoarseCondensedEquationHotspot(
 		const Architecture &architecture, const Graph &graph,
 		const std::string &floorplan, const std::string &config,
-		const std::string &config_line = std::string());
+		const std::string &config_line);
 
 	void solve(const Schedule &schedule, matrix_t &temperature, matrix_t &power);
 	void solve(const Schedule &schedule, vector_t &intervals,
@@ -155,7 +155,7 @@ class TransientAnalyticalHotspot: public Hotspot
 	TransientAnalyticalHotspot(
 		const Architecture &architecture, const Graph &graph,
 		const std::string &floorplan, const std::string &config,
-		const std::string &config_line = std::string());
+		const std::string &config_line);
 
 	void solve(const matrix_t &power, matrix_t &temperature);
 	void solve(const Schedule &schedule, matrix_t &temperature, matrix_t &power);
@@ -250,7 +250,7 @@ class BasicSteadyStateHotspot: public Hotspot
 	BasicSteadyStateHotspot(
 		const Architecture &architecture, const Graph &graph,
 		const std::string &floorplan, const std::string &config,
-		const std::string &config_line = std::string());
+		const std::string &config_line);
 	~BasicSteadyStateHotspot();
 
 	void solve(const Schedule &schedule, matrix_t &temperature, matrix_t &power);
@@ -268,7 +268,7 @@ class SteadyStateHotspot: public BasicSteadyStateHotspot
 	SteadyStateHotspot(
 		const Architecture &architecture, const Graph &graph,
 		const std::string &floorplan, const std::string &config,
-		const std::string &config_line = std::string()) :
+		const std::string &config_line) :
 
 		BasicSteadyStateHotspot(architecture, graph, floorplan,
 			config, config_line) {}
@@ -278,19 +278,16 @@ class SteadyStateHotspot: public BasicSteadyStateHotspot
 	double *compute(const SlotTrace &trace) const;
 };
 
-class SteadyStateLeakageHotspot: public BasicSteadyStateHotspot
+class LeakageSteadyStateHotspot: public BasicSteadyStateHotspot
 {
-	static const double tol = 0.01;
-	static const size_t maxit = 10;
-
-	LinearLeakage leakage;
+	const Leakage &leakage;
 
 	public:
 
-	SteadyStateLeakageHotspot(
+	LeakageSteadyStateHotspot(
 		const Architecture &architecture, const Graph &graph,
 		const std::string &floorplan, const std::string &config,
-		const std::string &config_line = std::string());
+		const std::string &config_line, const Leakage &leakage);
 
 	protected:
 

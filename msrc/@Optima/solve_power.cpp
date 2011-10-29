@@ -53,7 +53,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		used_power = &extended_power;
 	}
 
-	if (tuning.leakage) {
+	if (!tuning.leakage.empty()) {
 		Time::measure(&begin);
 		test.hotspot->solve(*used_power, temperature, total_power);
 		Time::measure(&end);

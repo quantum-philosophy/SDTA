@@ -133,19 +133,20 @@ void CondensedEquation::solve(const double *power, double *temperature,
 			temperature[k] = Y[i][j] * sinvC[j] + ambient_temperature;
 }
 
-LeakageCondensedEquation::LeakageCondensedEquation(
-	const processor_vector_t &processors, size_t _node_count,
+IterativeCondensedEquation::IterativeCondensedEquation(
+	size_t _processor_count, size_t _node_count,
 	double _sampling_interval, double _ambient_temperature,
-	const double **conductivity, const double *capacitance) :
+	double **conductivity, const double *capacitance,
+	const Leakage &_leakage) :
 
-	CondensedEquation(processors.size(), _node_count,
-		_sampling_interval, _ambient_temperature,
-		conductivity, capacitance),
-	leakage(processors)
+	CondensedEquation(_processor_count, _node_count, _sampling_interval,
+		_ambient_temperature,
+		(const double **)_leakage.setup(conductivity, _ambient_temperature),
+		capacitance), leakage(_leakage)
 {
 }
 
-size_t LeakageCondensedEquation::solve(const double *dynamic_power,
+size_t IterativeCondensedEquation::solve(const double *dynamic_power,
 	double *temperature, double *total_power, size_t step_count)
 {
 	size_t i, j, k, it;
@@ -163,10 +164,13 @@ size_t LeakageCondensedEquation::solve(const double *dynamic_power,
 	for (i = 0; i < node_count; i++)
 		v_temp[i] = 1.0 / (1.0 - exp(total_time * L[i]));
 
-	leakage.inject(step_count, dynamic_power, ambient_temperature, total_power);
+	const size_t max_iterations = leakage.get_max_iterations();
+	const double tolerance = leakage.get_tolerance();
+
+	leakage.inject(ambient_temperature, dynamic_power, total_power, step_count);
 
 	/* We come to the iterative part */
-	for (it = 0;;) {
+	for (it = 1;; it++) {
 		/* Q(0) = G * B(0) */
 		multiply_matrix_incomplete_vector(G, total_power, processor_count, Q[0]);
 		/* P(0) = Q(0) */
@@ -194,23 +198,40 @@ size_t LeakageCondensedEquation::solve(const double *dynamic_power,
 		 * And do not forget about the ambient temperature. Also perform
 		 * the error control.
 		 */
-		max_error = 0;
-		for (i = 0, k = 0; i < step_count; i++)
-			for (j = 0; j < processor_count; j++, k++) {
-				tmp = Y[i][j] * sinvC[j] + ambient_temperature;
+		if (it < max_iterations) {
+			/* There is a reason to check the error.
+			 */
+			max_error = 0;
+			for (i = 0, k = 0; i < step_count; i++)
+				for (j = 0; j < processor_count; j++, k++) {
+					tmp = Y[i][j] * sinvC[j] + ambient_temperature;
 
-				error = abs(temperature[k] - tmp);
-				if (max_error < error) max_error = error;
+					error = abs(temperature[k] - tmp);
+					if (max_error < error) max_error = error;
 
-				temperature[k] = tmp;
-			}
+					temperature[k] = tmp;
+				}
 
-		it++;
+			/* Still have some iterations left,
+			 * the only question is the error.
+			 */
+			if (max_error < tolerance) break;
+		}
+		else {
+			for (i = 0, k = 0; i < step_count; i++)
+				for (j = 0; j < processor_count; j++, k++)
+					temperature[k] = Y[i][j] * sinvC[j] + ambient_temperature;
 
-		if (max_error < tol || it >= maxit) break;
+			/* Limit of iterations is reached,
+			 * quite right now.
+			 */
+			break;
+		}
 
-		leakage.inject(step_count, dynamic_power, temperature, total_power);
+		leakage.inject(temperature, dynamic_power, total_power, step_count);
 	}
+
+	leakage.finalize(temperature, dynamic_power, total_power, step_count);
 
 	return it;
 }
