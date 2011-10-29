@@ -40,12 +40,12 @@ Utils.drawLines('Dynamic Power Profile', 'Time, s', 'Power, W', ...
 line(x, sum(dynamicPowerProfile, 2), 'Color', 'k', 'Line', '--');
 
 [ T, t ] = Optima.solve_power(config.system, config.floorplan, config.hotspot, ...
-  config.params, param_line(0), dynamicPowerProfile);
+  config.params, param_line(''), dynamicPowerProfile);
 
 T = T - Constants.degreeKelvin;
 
 [ Tleak, tleak, totalPowerProfile ] = Optima.solve_power(config.system, ...
-  config.floorplan, config.hotspot, config.params, param_line(1), ...
+  config.floorplan, config.hotspot, config.params, param_line('exponential'), ...
   dynamicPowerProfile);
 
 Tleak = Tleak - Constants.degreeKelvin;
@@ -56,9 +56,9 @@ Edynamic = sum(sum(dynamicPowerProfile * samplingInterval));
 Etotal = sum(sum(totalPowerProfile * samplingInterval));
 Eleakage = sum(sum(leakagePowerProfile * samplingInterval));
 
-fprintf('Energy without leakage:    %.2f J\n', Edynamic);
-fprintf('Energy with leakage:       %.2f J\n', Etotal);
-fprintf('Energy because of leakage: %.2f J\n', Eleakage);
+fprintf('Energy without leakage:  %.2f J\n', Edynamic);
+fprintf('Energy with leakage:     %.2f J\n', Etotal);
+fprintf('Energy due to leakage:   %.2f J\n', Eleakage);
 
 fprintf('Leakage part in total:   %.2f %%\n', Eleakage / Etotal * 100);
 fprintf('Leakage part in dynamic: %.2f %%\n', Eleakage / Edynamic * 100);

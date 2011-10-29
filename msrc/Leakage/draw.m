@@ -17,4 +17,17 @@ end
 
 fprintf(' + %f\n', polynomial(end));
 
-plot(T, P, T, P2);
+Ta = T(1);
+Tb = T(end);
+Tc = (Tb + Ta) / 2;
+
+Pa = Power.calculateStatic(Ngate, Ta, Vdd);
+Pb = Power.calculateStatic(Ngate, Tb, Vdd);
+Pc = Power.calculateStatic(Ngate, Tc, Vdd);
+
+k = (Pb - Pa) / (Tb - Ta);
+b1 = Pa - k * Ta;
+b2 = Pc - k * Tc;
+b = (b1 + b2) / 2;
+
+plot(T, P, T, P2, T, k * T + b);
