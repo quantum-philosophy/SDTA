@@ -2,66 +2,43 @@ setup;
 
 config = Optima('001_030');
 
-processorArea = 81e-6;
-powerScale = 10;
-time_scale = 1;
+processorArea = 16e-6;
+totalTime = 1;
+maxPower = 20;
+samplingInterval = 1e-4;
 
 config.changeArea(processorArea);
+config.scalePackage();
+config.changeSamplingInterval(samplingInterval);
 
-ratio = (37.5 * 37.5) / 81;
+power = Optima.get_power(config.system, config.floorplan, ...
+  config.hotspot, config.params, 'deadline_ratio 1');
 
-% Die
-dieArea = processorArea * config.processorCount;
-dieSide = sqrt(dieArea);
-% Sink
-sinkSide = sqrt(ratio * dieArea);
-% Spreader
-spreaderSide = (dieSide + sinkSide) / 2;
+timeScale = totalTime / (samplingInterval * size(power, 1));
+powerScale = maxPower / max(max(power));
 
-hotspot_line = sprintf( ...
-  's_sink %.4f s_spreader %.4f', ...
-  sinkSide, spreaderSide);
-
-param_line = @(leakage, solution, power_scale) ...
+param_line = @(solution) ...
   Utils.configStream(...
-    'hotspot', hotspot_line, ...
+    'hotspot', 'r_convec 0.1', ...
     'verbose', 0, ...
     'deadline_ratio', 1, ...
-    'leakage', leakage, ...
+    'leakage', 'exponential', ...
     'solution', solution, ...
-    'time_scale', time_scale, ...
-    'power_scale', power_scale);
+    'time_scale', timeScale, ...
+    'power_scale', powerScale);
 
-[ Tce, power ] = Optima.solve(config.system, config.floorplan, config.hotspot, config.params, ...
-  param_line(0, 'condensed_equation', powerScale));
+Tce = Optima.solve(config.system, config.floorplan, config.hotspot, config.params, ...
+  param_line('condensed_equation')) - Constants.degreeKelvin;
 
 Tss = Optima.solve(config.system, config.floorplan, config.hotspot, config.params, ...
-  param_line(0, 'steady_state', powerScale));
+  param_line('steady_state')) - Constants.degreeKelvin;
 
 [ stepCount, processorCount ] = size(Tce);
-time = ((1:stepCount) - 1) * config.samplingInterval;
-
-Pmax = max(max(power));
-fprintf('Maximal power consumption: %.2f W\n', Pmax);
-
-Tce = Tce - Constants.degreeKelvin;
-Tss = Tss - Constants.degreeKelvin;
+time = ((1:stepCount) - 1) * samplingInterval;
 
 figure;
 
-subplot(2, 1, 1);
 Utils.compareLines('Steady-State Dynamic Temperature Curve', ...
   'Time, s', 'Temperature, C', time, ...
-  'SSDTC', Tce, 'Steady-State Approximation', Tss);
-
-tgff = TestCase.TGFF(config.tgff);
-graph = tgff.graphs{1};
-pes = tgff.pes;
-LS.mapEarliestAndSchedule(graph, pes);
-graph.assignDeadline(graph.duration);
-graph.scale(time_scale);
-
-subplot(2, 1, 2);
-graph.draw(false);
-
-graph.inspect();
+  'Steady-State Dynamic Temperature Profile', Tce, ...
+  'Steady-State Approximation', Tss);

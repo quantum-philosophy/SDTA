@@ -58,8 +58,7 @@ classdef Optima < handle
     function [ sinkSide, spreaderSide, dieSide ] = scalePackage(o)
       if isempty(o.processorArea), error('The processor area is unknown'); end
 
-      original = Utils.path([ o.name, '_hotspot.config' ]);
-
+      original = o.hotspot;
       o.hotspot = Utils.path([ o.name, '_hotspot_temp.config' ]);
 
       % Die
@@ -72,6 +71,15 @@ classdef Optima < handle
 
       Utils.writeParameter(original, o.hotspot, '-s_sink', sinkSide);
       Utils.writeParameter(o.hotspot, o.hotspot, '-s_spreader', spreaderSide);
+    end
+
+    function changeSamplingInterval(o, samplingInterval)
+      o.samplingInterval = samplingInterval;
+
+      original = o.hotspot;
+      o.hotspot = Utils.path([ o.name, '_hotspot_temp.config' ]);
+
+      Utils.writeParameter(original, o.hotspot, '-sampling_intvl', samplingInterval);
     end
   end
 
