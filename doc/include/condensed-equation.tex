@@ -1,4 +1,4 @@
-Before going to the solution itself, we first perform one important adjustment to \equref{eq:thermal-ode} in order to be more efficient in our future calculations. We notice that the analytical solution in \equref{eq:solution} includes the matrix exponential and inverse of the product $C^{-1} \: G$, which is an arbitrary matrix. It is preferable to have a symmetrix matrix to do such computations, since for a real symmetric matrix $M$ the following eigenvalue decomposition holds:
+Before going to the proposed solution itself, we first perform one important adjustment to \equref{eq:fourier-model} in order to be more efficient in our future calculations. We notice that the analytical solution in \equref{eq:solution} includes the matrix exponential and inverse of the product $C^{-1} \: G$, which is an arbitrary matrix. It is preferable to have a symmetrix matrix to do such computations, since for a real symmetric matrix $M$ the following eigenvalue decomposition holds:
 \begin{equation} \label{eq:eigenvalue-decomposition}
   M = U \Lambda U^T
 \end{equation}
@@ -40,6 +40,7 @@ where $\tilde{A}$ is a symmetric matrix. Therefore, in case of the matrix expone
       \end{array}
     \right] U^T
 \]
+In the same way the matrix inverse can be obtained.
 
 The next step is to update the SSDTP system given in \equref{eq:recurrent-system}:
 \begin{align}
@@ -64,7 +65,6 @@ Now we shall describe the proposed solution. Let us return back to the recurrent
   & \tilde{T}_{i + 1} = \tilde{K}_i \: \tilde{T}_i + Q_i, \; i = 0 \dots N_s - 1 \label{eq:ce-recurrent} \\
   & \tilde{T}_0 = \tilde{T}_{N_s + 1} \nonumber
 \end{align}
-
 A common technique to solve such systems is to form a so-called \emph{condensed equation} (CE), or \emph{condensed system} \cite{stoer2002}. Let us undertake this procedure step by step.
 
 The iterative repetition of \equref{eq:ce-recurrent} results in:
@@ -77,7 +77,6 @@ where $W_i$ are defined as the following:
   W_i & = \sum_{l = 1}^i \prod_{j = l}^i \tilde{K}_j \: Q_{l - 1} + Q_i, \: i = 1 \dots N_s - 1 \nonumber \\
   W_i & = \tilde{K}_i \: W_{i - 1} + Q_i, \; i = 1 \dots N_s - 1 \label{eq:p-recurrent}
 \end{align}
-
 Therefore, we can calculate the final value $\tilde{T}_{N_s}$ from \equref{eq:y-recurrent}:
 \[
   \tilde{T}_{N_s} = \prod_{j = 0}^{N_s - 1} \tilde{K}_j \: \tilde{T}_0 + W_{N_s - 1}
@@ -119,7 +118,7 @@ Finally, the identity matrix $I$ can be splitted into $U U^T$, hence:
 \end{align*}
 Here $W_{N_s - 1}$ can be calculated using \equref{eq:p-recurrent}. As we see, there is no need to inverse any matrix, the solution of the system is obtained by scalar divisions and a similarity transformation with $U$. All other vectors $\tilde{T}_i$ for $i = 1 \dots N_s - 1$ are successively found from \equref{eq:ce-recurrent}.
 
-Let us now consider one specific case, we make an assumption concerning the time intervals $\triangle t_i$ that allows us to perform all the calculations in a more efficient manner. We assume that the time intervals are equal: $\triangle t_i = \triangle t$ for $i = 0 \dots N_s - 1$. We refer to this distance as the \emph{sampling interval}. The preferable size of this interval depends on a particular application and accuracy that we want to achieve. Having this assumption, the recurrent process (\equref{eq:recurrent-equation}) turns into:
+Let us now consider one special case, we make an assumption concerning the time intervals $\triangle t_i$ that allows us to perform all the calculations in a more efficient manner. We assume that the time intervals are equal: $\triangle t_i = \triangle t$ for $i = 0 \dots N_s - 1$. We refer to this distance as the \emph{sampling interval}. The preferable size of this interval depends on a particular application and accuracy that we want to achieve. Having this assumption, the recurrent process (\equref{eq:recurrent-equation}) turns into:
 \[
   \tilde{T}_{i+1} = \tilde{K} \: \tilde{T}_i + \tilde{B} \: P_i
 \]

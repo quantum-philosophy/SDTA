@@ -7,13 +7,13 @@
 \subsection{Linear Approximation}
 A linear approximation of the leakage power has the following matrix form:
 \[
-  P_{leak}(t) = A \: T(t) + B
+  P_{leak}(T) = A \: T(t) + B
 \]
-where $A$ is a diagonal matrix and $B$ is a vector. It can be seen that the approximation keeps \equref{eq:thermal-ode} untouched:
+where $A$ is a diagonal matrix and $B$ is a vector. It can be seen that the approximation keeps \equref{eq:fourier-model} untouched:
 \begin{align*}
-  & C \: \frac{dT(t)}{dt} + \bar{G} \: T(t) = \bar{P} \\
+  & C \: \frac{dT(t)}{dt} + \bar{G} \: (T(t) - T_{amb}) = \bar{P} \\
   & \bar{G} = G - A \\
-  & \bar{P} = P_{dyn} + B
+  & \bar{P} = P_{dyn} + A \: T_{amb} + B
 \end{align*}
 Therefore, all solutions based on this equation can include the linearized leakage model with no additional costs.
 
@@ -22,4 +22,4 @@ In this case we have an iterative process where we calculate the temperature and
 \[
   P_i = P_{dyn} + P_{leak}(T_i)
 \]
-The process continues until the temperature converges, i.e., the different between two successive temperature profile is below a redefined bound.
+The process continues until the temperature converges, i.e., the different between two successive temperature profile is below a predefined bound.

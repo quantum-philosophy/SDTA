@@ -14,17 +14,17 @@ The total power dissipation of a processing element is defined as a sum of the d
 \end{align*}
 where $C_{eff}$ is the effective switched capacitance, $V$ and $f$ are the supplied voltage and frequency, correspondingly. The model for the leakage part of the power dissipation is presented in \cite{liao2005} and defined as:
 \begin{align*}
-  & P_{leak} = N_{gate} \: I_{avg} \: V \\
-  & I_{avg} = I_s(T_0, V_0) \: f_{avg}(T, V) \\
-  & f(T, V) = A \: T^2 e^{((\alpha \: V + \beta)/T)} + B e^{(\gamma \: V + \delta)}
+  & P_{leak}(T) = N_{gate} \: I_{avg}(T) \: V \\
+  & I_{avg}(T) = I_0 \: f_{avg}(T) \\
+  & f_{avg}(T) = A \: T^2 e^{((\alpha \: V + \beta)/T)} + B e^{(\gamma \: V + \delta)}
 \end{align*}
-where $N_{gate}$ is the number of gates in the circuit\footnote{The number of gates in a circuit can be estimated using the technique described in \cite{li2004}.}, $I_s (T_0, V_0)$ is the average leakage current at the given temperature $T_0$ and supply voltage $V_0$, $f_{avg}$ is the scaling function. $I_{avg}$ is the average leakage current at the current temperature $T$ and voltage $V$. $A$, $B$, $\alpha$, $\beta$, $\gamma$, and $\delta$ are the technology dependent constants found in \cite{liao2005}.
+where $N_{gate}$ is the number of gates in the circuit\footnote{The number of gates in a circuit can be estimated using the technique described in \cite{li2004}.}, $I_0$ is the average leakage current at the reference temperature $T_0$ and supply voltage $V_0$, $f_{avg}$ is the scaling function. $I_{avg}$ is the average leakage current at the current temperature $T$ and voltage $V$. $A$, $B$, $\alpha$, $\beta$, $\gamma$, and $\delta$ are the technology dependent constants found in \cite{liao2005}.
 
 \subsection{RC Thermal Model}
-The proposed SSDTA technique is based on the well-known RC thermal model that employs the analogy between electrical and thermal circuits \cite{kreith2000}. Heat transfer is modeled with the following system of ordinary differential equations (ODE):
-\begin{equation} \label{eq:thermal-ode}
-  C \: \frac{dT(t)}{dt} + G \: T(t) = P(t)
+The proposed SSDTA technique is based on the well-known RC thermal model that employs the analogy between electrical and thermal circuits \cite{kreith2000}. Heat transfer is modeled with the following system of differential equations:
+\begin{equation} \label{eq:fourier-model}
+  C \: \frac{dT(t)}{dt} + G \: (T(t) - T_{amb})= P(t)
 \end{equation}
-where $T$ is a vector of temperature, $C$ is the thermal capacitance matrix, $G$ is the thermal conductance matrix (equal to $R^{-1}$, where $R$ is the resistance matrix), and $P$ is a vector of the power dissipation (the source of heat). $C$ and $G$ are $N_n \times N_n$ matrices, $T$ and $P$ are vectors of the length $N_n$, where $N_n$ is the number of thermal nodes.
+where $T$ is the temperature vector, $T_{amb}$ is the ambient temperature vector, $C$ is the thermal capacitance matrix, $G$ is the thermal conductance matrix, and $P$ is the power dissipation vector (the source of heat). The dimensions of the system are $N_n \times N_n$, where $N_n$ is the number of thermal nodes.
 
 An equivalent circuit of a multiprocessor system with a thermal package can be built in a wide range of different ways, therefore, the number of thermal nodes $N_n$ and structure of matrices $C$ and $G$ depend on a particular implementation of the model.

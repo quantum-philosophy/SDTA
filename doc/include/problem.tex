@@ -1,4 +1,4 @@
-Consider a multicore system that consists of $N_p$ processing elements $\Pi = \{ \pi_k: k = 0 \dots N_p - 1 \}$ and executes a periodic application with an overall period $\mathcal{T}$. The application period is discretized into $N_s$ intervals $\triangle t_i$ for $i = 0 \dots N_s - 1$ in such a way that the power dissipation and temperature of each core are assumed to be constant within them. The discrete power profile is defined as a matrix:
+Consider a multicore system that consists of $N_p$ processing elements $\Pi = \{ \pi_k: k = 0 \dots N_p - 1 \}$ and executes a periodic application with an overall period $\mathcal{T}$. The application period is discretized into $N_s$ intervals $\triangle t_i$ for $i = 0 \dots N_s - 1$ in such a way that the power dissipation and temperature of each core are assumed to be constant within them. The discrete power profile is defined as the following matrix:
 \begin{equation*}
   \mathbb{P} = \left[
     \begin{array}{c}
@@ -14,7 +14,7 @@ Consider a multicore system that consists of $N_p$ processing elements $\Pi = \{
     \end{array}
   \right]
 \end{equation*}
-where $P_{ij}$ is the power dissipation during the $i$th time interval of the $j$th processing element\footnote{For instance, system profiling techniques with cycle-accurate simulators, e.g., MPARM \cite{benini2005} and Wattch \cite{brooks2000}, can be employed to obtain such a power profile.}. After the stabilization process is finished, the corresponding temperature profile becomes periodic and is defined as the following:
+where $P_{ij}$ is the power dissipation during the $i$th time interval of the $j$th processing element\footnote{For instance, system profiling techniques with cycle-accurate simulators, e.g., MPARM \cite{benini2005} and Wattch \cite{brooks2000}, can be employed to obtain such a power profile.}. After the stabilization process is finished, the corresponding temperature profile becomes periodic and is defined as:
 \begin{equation*}
   \mathbb{T} = \left[
     \begin{array}{c}
