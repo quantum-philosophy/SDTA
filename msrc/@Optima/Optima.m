@@ -1,7 +1,7 @@
 classdef Optima < handle
   properties (Constant)
-    spreaderRatio = (37.5 * 37.5) / 81;
-    sinkRatio = 2 * Optima.spreaderRatio;
+    spreaderRatio = 30;
+    sinkRatio = 90;
   end
 
   properties (SetAccess = private)
@@ -55,7 +55,7 @@ classdef Optima < handle
       o.changeArea(area);
     end
 
-    function scalePackage(o)
+    function [ sinkSide, spreaderSide, dieSide ] = scalePackage(o)
       if isempty(o.processorArea), error('The processor area is unknown'); end
 
       original = Utils.path([ o.name, '_hotspot.config' ]);

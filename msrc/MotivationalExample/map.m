@@ -5,7 +5,7 @@ config = Optima('002_006');
 
 param_line = Utils.configStream( ...
   'verbose', 0, ...
-  'leakage', 1, ...
+  'leakage', 'exponential', ...
   'solution', 'condensed_equation');
 
 deadlineRatio = Utils.readParameter(config.params, 'deadline_ratio');
@@ -50,14 +50,14 @@ subplot(2, 2, 1);
 graph.draw(false, false);
 
 power = Power.calculateDynamicProfile(graph) * powerScale;
-T = Optima.solve_power(config.system, config.floorplan, ...
+T1 = Optima.solve_power(config.system, config.floorplan, ...
   config.hotspot, config.params, param_line, power) - Constants.degreeKelvin;
 
 subplot(2, 2, 2);
-Utils.drawTemperature(T, 'SSDTC');
+Utils.drawTemperature(T1, 'SSDTC');
 
-mn1 = min(min(T));
-mx1 = max(max(T));
+mn1 = min(min(T1));
+mx1 = max(max(T1));
 
 % After optimization
 chromosome = [ 0, 1, 2, 5, 3, 4, 0, 1, 1, 0, 1, 0 ];
@@ -75,11 +75,11 @@ subplot(2, 2, 3);
 graph.draw(false, false);
 
 power = Power.calculateDynamicProfile(graph) * powerScale;
-T = Optima.solve_power(config.system, config.floorplan, ...
+T2 = Optima.solve_power(config.system, config.floorplan, ...
   config.hotspot, config.params, param_line, power) - Constants.degreeKelvin;
 
-mn2 = min(min(T));
-mx2 = max(max(T));
+mn2 = min(min(T2));
+mx2 = max(max(T2));
 
 YLim = [ -0.5 + min(mn1, mn2), 0.5 + max(mx1, mx2) ];
 
@@ -87,5 +87,8 @@ subplot(2, 2, 2);
 set(gca, 'YLim', YLim);
 
 subplot(2, 2, 4);
-Utils.drawTemperature(T, 'SSDTC');
+Utils.drawTemperature(T2, 'SSDTC');
 set(gca, 'YLim', YLim);
+
+Lifetime.predictMultipleAndDraw(T1 + Constants.degreeKelvin)
+Lifetime.predictMultipleAndDraw(T2 + Constants.degreeKelvin)
