@@ -1,6 +1,6 @@
 setup;
 
-chunks = 30;
+chunks = 1:2:30;
 totalTime = 1;
 
 config = Optima('001_030');
@@ -13,9 +13,10 @@ variants = [ ...
   81e-6, 35 ... % Intel i7 620M
 ];
 
+chunkCount = length(chunks);
 variantCount = size(variants, 1);
 
-Error = zeros(chunks, variantCount);
+Error = zeros(chunkCount, variantCount);
 legend = {};
 
 fprintf('%20s%20s%20s%20s%20s%20s%20s%20s\n', ...
@@ -43,16 +44,16 @@ for k = 1:variantCount
     'verbose', 0, ...
     'leakage', '');
 
-  for i = 1:chunks
+  for i = 1:chunkCount
     [ chunkTce, dummy, power, dummy, chunkThs, dummy ] = ...
       Optima.verify(config.system, config.floorplan, ...
-        config.hotspot, config.params, param_line, i, 0);
+        config.hotspot, config.params, param_line, chunks(i), 0);
 
     Error(i, k) = Utils.RMSE(chunkTce, chunkThs);
   end
 
-  legend{end + 1} = [ 'Die ', num2str(processorArea * 1e6), ' mm^2, Power ', ...
-    num2str(maxPower),' W' ];
+  legend{end + 1} = sprintf('%4.1f mm^2, %4.1f W', ...
+    processorArea * 1e6, maxPower);
 
   fprintf('%20.2f%20.2f%20.2f%20.2f%20.f%20.2f%20.2f%20.2f\n', ...
     processorArea * 1e6, dieSide * 1e3, spreaderSide * 1e3, sinkSide * 1e3, ...
@@ -70,4 +71,4 @@ options = struct( ...
   'marker', true);
 options.legend = legend;
 
-Utils.draw(1:chunks, Error, options);
+Utils.draw(chunks, Error, options);
