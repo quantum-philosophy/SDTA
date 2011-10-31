@@ -27,7 +27,7 @@ foreach (template_tgffopt_config ${templates})
 	set (system_config ${test_path}/${test_name}_system.config)
 	add_custom_command (OUTPUT ${system_config}
 		COMMAND ${system} ${test_path}/${test_name}.tgff > ${system_config}
-		DEPENDS system
+		DEPENDS ${tgff_config} system
 	)
 
 	# Floorplan configuration
