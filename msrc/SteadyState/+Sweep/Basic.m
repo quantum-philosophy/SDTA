@@ -1,42 +1,32 @@
 classdef Basic < handle
   properties (SetAccess = protected)
-    tgffopt
-    tgff
-    system
-    hotspot
-    floorplan
-    params
-
-    processorCount
+    config
 
     title
     variable
 
     values
-    Terror
+    error
   end
 
   methods
     function sweep = Basic(test)
-      sweep.tgffopt = Utils.path([ test, '.tgffopt' ]);
-      sweep.tgff = Utils.path([ test, '.tgff' ]);
-      sweep.system = Utils.path([ test, '.sys' ]);
-      sweep.hotspot = Utils.path('hotspot.config');
-      sweep.floorplan = Utils.path([ test, '.flp' ]);
-      sweep.params = Utils.path('parameters.config');
+      config = Optima(test);
+      sweep.config = config;
 
-      sweep.processorCount = Utils.readParameter(sweep.tgffopt, 'table_cnt');
-      sweep.title = 'Temperature RMSE';
+      sweep.title = 'Steady-State Error';
       sweep.variable = 'Variable';
     end
 
     function perform(sweep)
-      fprintf('%15s%15s%15s%15s%15s%15s%15s\n', ...
-        'P max, W', 'Tce max, C', 'dT CE, C', 'Tss max, C', 'dT SS, C', ...
-        'Ratio', 'RMSE');
+      fprintf('%15s%15s%15s%15s%15s%15s%15s%15s%15s\n', ...
+        'Parameter', 'P max, W', ...
+        'Tce max, C', 'dT CE, C', ...
+        'Tss max, C', 'dT SS, C', ...
+        'Ratio', 'RMSE', 'NRMSE');
 
       sweep.values = zeros(0, 0);
-      sweep.Terror = zeros(0, sweep.processorCount);
+      sweep.error = zeros(0);
 
       i = 1;
 
@@ -64,30 +54,31 @@ classdef Basic < handle
         ratio = dTSS / dTCE;
 
         stepCount = size(power, 1);
-        error = sqrt(sum((Tce - Tss).^ 2) / stepCount);
+        rmse = Utils.RMSE(Tce, Tss);
+        nrmse = Utils.NRMSE(Tce, Tss);
 
-        fprintf('%15.2f%15.2f%15.2f%15.2f%15.2f%15.2f%15.2f\n', ...
-          Pmax, TmaxCE, dTCE, TmaxSS, dTSS, ratio, mean(error));
+        fprintf('%15s%15.2f%15.2f%15.2f%15.2f%15.2f%15.2f%15.2f%15.2f\n', ...
+          num2str(value), Pmax, TmaxCE, dTCE, TmaxSS, dTSS, ratio, rmse, nrmse);
 
-        sweep.Terror(end + 1, :) = error;
+        sweep.error(end + 1) = nrmse * 100;
 
         i = i + 1;
       end
     end
 
-    function draw(sweep)
-      figure;
+    function draw(sweep, createFigure)
+      if nargin < 2 || createFigure, figure; end
 
       values = sweep.values;
-      Terror = sweep.Terror;
+      error = sweep.error;
 
-      Utils.drawLines(sweep.title, sweep.variable, 'RMSE', ...
-        values, Terror, [], 'Line', '--', 'Color', 'k');
+      Utils.drawLines(sweep.title, sweep.variable, 'Normalized RMSE, %', ...
+        values, error, [], 'Line', '--', 'Color', 'k');
 
       step = (max(values) - min(values)) / (10 * length(values));
 
       x = values(1):step:values(end);
-      y = interp1(values, mean(Terror, 2), x, 'cubic');
+      y = interp1(values, mean(error, 2), x, 'cubic');
 
       line(x, y, 'Color', Constants.roundRobinColors{1}, 'LineWidth', 2);
     end
@@ -101,25 +92,27 @@ classdef Basic < handle
 
   methods (Access = private)
     function [ Tce, Tss, power ] = makeStep(sweep, i)
-      config = sweep.setupStep(i);
+      params = sweep.setupStep(i);
 
-      configCE = Utils.configStream(...
+      config = sweep.config;
+
+      param_line = Utils.configStream(...
         'verbose', 0, ...
         'deadline_ratio', 1, ...
         'solution', 'condensed_equation', ...
-        'leakage', 0, config{:});
+        'leakage', '', params{:});
 
-      configSS = Utils.configStream(...
+      [ Tce, power ] = Optima.solve(...
+        config.system, config.floorplan, config.hotspot, config.params, param_line);
+
+      param_line = Utils.configStream(...
         'verbose', 0, ...
         'deadline_ratio', 1, ...
         'solution', 'steady_state', ...
-        'leakage', 0, config{:});
-
-      [ Tce, power ] = Optima.solve(...
-        sweep.system, sweep.floorplan, sweep.hotspot, sweep.params, configCE);
+        'leakage', '', params{:});
 
       Tss = Optima.solve(...
-        sweep.system, sweep.floorplan, sweep.hotspot, sweep.params, configSS);
+        config.system, config.floorplan, config.hotspot, config.params, param_line);
     end
   end
 end

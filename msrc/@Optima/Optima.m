@@ -1,7 +1,8 @@
 classdef Optima < handle
   properties (Constant)
-    spreaderRatio = 30;
-    sinkRatio = 90;
+    spreaderRatio = 21 / 3.99; % Relative to the die
+    sinkRatio = sqrt(25 * 28) / 21; % Relative to the spreader
+    sinkThicknessRatio = 15 / sqrt(25 * 28); % Relative to the sink
   end
 
   properties (SetAccess = private)
@@ -55,8 +56,14 @@ classdef Optima < handle
       o.changeArea(area);
     end
 
-    function [ sinkSide, spreaderSide, dieSide ] = scalePackage(o)
+    function [ sinkSide, spreaderSide, dieSide, sinkThickness ] = ...
+      scalePackage(o, spreaderRatio, sinkRatio, sinkThicknessRatio)
+
       if isempty(o.processorArea), error('The processor area is unknown'); end
+
+      if nargin < 2, spreaderRatio = o.spreaderRatio; end
+      if nargin < 3, sinkRatio = o.sinkRatio; end
+      if nargin < 4, sinkThicknessRatio = o.sinkThicknessRatio; end
 
       original = o.hotspot;
       o.hotspot = Utils.path([ o.name, '_hotspot_temp.config' ]);
@@ -65,11 +72,14 @@ classdef Optima < handle
       dieArea = o.processorArea * o.processorCount;
       dieSide = sqrt(dieArea);
       % Spreader
-      spreaderSide = sqrt(o.spreaderRatio * dieArea);
+      spreaderSide = spreaderRatio * dieSide;
       % Sink
-      sinkSide = sqrt(o.sinkRatio * dieArea);
+      sinkSide = sinkRatio * spreaderSide;
+      % Sink thickness
+      sinkThickness = sinkThicknessRatio * sinkSide;
 
       Utils.writeParameter(original, o.hotspot, '-s_sink', sinkSide);
+      Utils.writeParameter(o.hotspot, o.hotspot, '-t_sink', sinkThickness);
       Utils.writeParameter(o.hotspot, o.hotspot, '-s_spreader', spreaderSide);
     end
 

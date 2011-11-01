@@ -1,28 +1,48 @@
 classdef Area < Sweep.Basic
-  properties (Constant)
-    keepRatio = true;
-    ratio = (37.5 * 37.5) / 81; % Heat sink area to die area
-  end
-
   properties (SetAccess = private)
+    totalTime = 1;
+
+    convectionResistance = 0.1;
+    powerDensity = 40e4;
+    spreaderRatio = 20;
+
     processorArea
-    powerScale
-    nominalTemperature
+    maximalPower
+
+    nominalTime
+    nominalPower
   end
 
   methods
-    function sweep = Area(test, processorArea)
+    function sweep = Area(test, processorArea, ...
+      convectionResistance, powerDensity, spreaderRatio);
+
       sweep = sweep@Sweep.Basic(test);
-      if sweep.processorCount == 1
+
+      if nargin >= 3, sweep.convectionResistance = convectionResistance; end
+      if nargin >= 4, sweep.powerDensity = powerDensity; end
+      if nargin >= 5, sweep.spreaderRatio = spreaderRatio; end
+
+      if sweep.config.processorCount == 1
         sweep.variable = 'Area of the die, mm^2';
       else
         sweep.variable = 'Area of one processing element, mm^2';
       end
-      sweep.floorplan = Utils.path([ test, '_tmp.flp' ]);
 
       sweep.processorArea = processorArea;
-      sweep.powerScale = 1;
-      sweep.nominalTemperature = [];
+      sweep.maximalPower = processorArea * sweep.powerDensity;
+
+      config = sweep.config;
+
+      param_line = Utils.configStream(...
+        'deadline_ratio', 1, ...
+        'leakage', '');
+
+      power = Optima.get_power(config.system, config.floorplan, ...
+        config.hotspot, config.params, param_line);
+
+      sweep.nominalTime = size(power, 1) * config.samplingInterval;
+      sweep.nominalPower = max(max(power));
     end
   end
 
@@ -35,41 +55,24 @@ classdef Area < Sweep.Basic
 
     function config = setupStep(sweep, i)
       area = sweep.processorArea(i);
+      power = sweep.maximalPower(i);
 
-      Utils.generateFloorplan(sweep.floorplan, ...
-        sweep.processorCount, area);
+      sweep.config.changeArea(area);
+      sweep.config.scalePackage(sweep.spreaderRatio);
 
-      if sweep.keepRatio
-        % Die
-        dieArea = area * sweep.processorCount;
-        dieSide = sqrt(dieArea);
-        % Sink
-        sinkSide = sqrt(sweep.ratio * dieArea);
-        % Spreader
-        spreaderSide = (dieSide + sinkSide) / 2;
+      timeScale = sweep.totalTime / sweep.nominalTime;
+      powerScale = power / sweep.nominalPower;
 
-        hotspot_line = sprintf('s_sink %.4f s_spreader %.4f', sinkSide, spreaderSide);
-
-        config = { 'hotspot', hotspot_line, 'power_scale', sweep.powerScale };
-      else
-        config = { 'power_scale', sweep.powerScale };
-      end
+      config = { ...
+        'time_scale', timeScale, ...
+        'power_scale', powerScale, ...
+        'hotspot', [ 'r_convec ', num2str(sweep.convectionResistance) ] ...
+      };
     end
 
     function [ value, retake ] = valueStep(sweep, i, Tce, Tss, power)
       value = sweep.processorArea(i) * 1e6;
       retake = false;
-
-      Tavg = mean(mean(Tce));
-
-      if isempty(sweep.nominalTemperature)
-        sweep.nominalTemperature = Tavg;
-      end
-
-      if Tavg < sweep.nominalTemperature
-        sweep.powerScale = sweep.powerScale + 0.01;
-        retake = true;
-      end
     end
   end
 end

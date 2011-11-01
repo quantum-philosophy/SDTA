@@ -1,10 +1,8 @@
-function rmse = RMSE(one, another)
-  if nargin < 2, another = zeros(size(one)); end
+function rmse = RMSE(observed, predicted)
+  observed = observed(:);
+  predicted = predicted(:);
 
-  one = one(:);
-  another = another(:);
+  count = length(observed);
 
-  count = length(one);
-
-  rmse = sqrt(sum((one - another) .^ 2) / count);
+  rmse = sqrt(sum((observed - predicted) .^ 2) / count);
 end
