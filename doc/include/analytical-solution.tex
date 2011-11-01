@@ -1,4 +1,4 @@
-In the onwards explanation without loss of generality we assume $T(t) \equiv T(t) - T_{amb}$. Let the power consumption vector $P(t)$ be constant and equal to $P$, then the system given by \equref{eq:fourier-model} is a system of ordinary differential equations with the following solution:
+In the onwards explanation without loss of generality we assume $T(t) \equiv T(t) - T_{amb}$. Let the power consumption vector $P(t)$ be constant and equal to $P$, then the system given by \equref{eq:fourier-model} is a system of ordinary differential equations (ODE) with the following solution:
 \begin{equation} \label{eq:solution}
   T(t) = e^{A t} \; T_0 + A^{-1}(e^{A t} - I)C^{-1} P
 \end{equation}
@@ -22,11 +22,10 @@ For the steady-state case with a periodic power profile $\mathbb{P}$ the followi
     -T_0 + K_{N_s - 1} \: T_{N_s - 1} & = -B_{N_s - 1} \: P_{N_s - 1}
   \end{cases}
 \]
-where the last equation respectes the boundary condition and ensures the equality of temperature values on both ends of the overall period:
+where the last equation respects the boundary condition and ensures the equality of temperature values on both ends of the overall period:
 \begin{equation} \label{eq:boundary-condition}
   T_0 = T_{N_s}
 \end{equation}
-
 To get the whole picture, the system can be written as:
 \begin{align}
   & \mathbb{K} \: \mathbb{X} = \mathbb{B} \label{eq:system} \\
@@ -54,10 +53,9 @@ To get the whole picture, the system can be written as:
     \end{array}
   \right] \nonumber
 \end{align}
-
 where $\mathbb{K}$ is a $N_n N_s \times N_n N_s$ matrix, $\mathbb{X}$ and $\mathbb{B}$ are vectors with $N_n N_s$ elements.
 
-All in all, we have obtained a regular system of liner equations with a specific structure. Now we shall discuss possible solutions:
+All in all, we have obtained a regular system of liner equations with a specific structure. Now we shall discuss the following alternatives to solve it:
 \begin{itemize}
   \item Direct dense solutions.
   \item Direct sparse solutions.

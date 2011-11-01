@@ -1,42 +1,11 @@
-Consider a multicore system that consists of $N_p$ processing elements $\Pi = \{ \pi_k: k = 0 \dots N_p - 1 \}$ and executes a periodic application with an overall period $\mathcal{T}$. The application period is discretized into $N_s$ intervals $\triangle t_i$ for $i = 0 \dots N_s - 1$ in such a way that the power dissipation and temperature of each core are assumed to be constant within them. The discrete power profile is defined as the following matrix:
-\begin{equation*}
-  \mathbb{P} = \left[
-    \begin{array}{c}
-      P_0^T \\
-      \vdots \\
-      P_{N_s - 1}^T
-    \end{array}
-  \right] = \left[
-    \begin{array}{ccc}
-      P_{0, \: 0} & \cdots & P_{0, \: N_p - 1} \\
-      \vdots & \ddots & \vdots \\
-      P_{N_s - 1, \: 0} & \cdots & P_{N_s - 1, \: N_p - 1}
-    \end{array}
-  \right]
-\end{equation*}
-where $P_{ij}$ is the power dissipation during the $i$th time interval of the $j$th processing element\footnote{For instance, system profiling techniques with cycle-accurate simulators, e.g., MPARM \cite{benini2005} and Wattch \cite{brooks2000}, can be employed to obtain such a power profile.}. After the stabilization process is finished, the corresponding temperature profile becomes periodic and is defined as:
-\begin{equation*}
-  \mathbb{T} = \left[
-    \begin{array}{c}
-      T_0^T \\
-      \vdots \\
-      T_{N_s - 1}^T
-    \end{array}
-  \right] = \left[
-    \begin{array}{ccc}
-      T_{0, \: 0} & \cdots & T_{0, \: N_p - 1} \\
-      \vdots & \ddots & \vdots \\
-      T_{N_s - 1, \: 0} & \cdots & T_{N_s - 1, \: N_p - 1}
-    \end{array}
-  \right]
-\end{equation*}
-where $T_{ij}$ is the temperature of the $j$th core on the $i$th time interval. We refer to this profile as the \emph{Steady-State Dynamic Temperature Profile} (SSDTP).
+Consider a multicore system that consists of $N_p$ processing elements $\Pi = \{ \pi_k: k = 0 \dots N_p - 1 \}$ and executes a periodic application with a period $\mathcal{T}$. The application period is discretized into $N_s$ intervals $\triangle \mathcal{T} = \{ \triangle t_i: \: i = 0 \dots N_s - 1 \}$ in such a way that the power dissipation and temperature of each core are assumed to be constant within them. The discrete power profile is defined as $\mathbb{P} = \{ P_{ij}: \: i = 0 \dots N_s - 1, \: j = 0 \dots N_p - 1 \}$ where $P_{ij}$ is the power dissipation during the $i$th time interval of the $j$th processing element\footnote{For instance, system profiling techniques with cycle-accurate simulators, e.g., MPARM \cite{benini2005} and Wattch \cite{brooks2000}, can be employed to obtain such a power profile.}. After the stabilization process is finished, the corresponding temperature profile becomes periodic and is defined as $\mathbb{T} = \{ T_{ij}: \: i = 0 \dots N_s - 1, \: j = 0 \dots N_p - 1 \}$ where $T_{ij}$ is the temperature on the $i$th time interval of the $j$th core. The profile is called the \emph{Steady-State Dynamic Temperature Profile} (SSDTP).
 
 Given:
 \begin{itemize}
-  \item A periodic power profile $\mathbb{P}$ of a multicore system with a set of processing elements $\Pi$.
-  \item The floorplan of the chip, i.e., the location and size of each processing element $\pi_k \in \Pi$.
-  \item The configuration of the package including the thermal interface material, heat spreader, and heat sink.
+  \item A multicore system with a set of processing elements $\Pi$.
+  \item A periodic power profile of the system $\mathbb{P}$ with a discretization $\triangle \mathcal{T}$.
+  \item The floorplan of the chip, i.e., the location and size of all processing elements $\Pi$.
+  \item The configuration of the thermal package, i.e., dimensions of the thermal interface material, heat spreader, and heat sink.
   \item The thermal parameters of the die and package (the thermal conductivity, thermal capacitance, etc.).
 \end{itemize}
 
@@ -47,4 +16,4 @@ Find:
 
 Reasonable requirements for a solution are speed and accuracy, since the temperature analysis is often a part of an intensive optimization procedure where the SSDTC is to be computed thousands of times. Such an intensive problem is described in \secref{sec:reliability}.
 
-Since thermal nodes in an equivalent RC thermal circuit do not necessary directly reflect the processing elements of the system, in the rest of the paper we assume that $\mathbb{P}$ and $\mathbb{T}$ are $N_s \times N_n$ matrices instead of $N_s \times N_p$.
+Since the mapping between processing elements and thermal nodes in an equivalent RC thermal circuit is not necessary a one-to-one mapping, in the rest of the paper we assume that $\mathbb{P}$ and $\mathbb{T}$ have $N_s \times N_n$ elements instead of $N_s \times N_p$.

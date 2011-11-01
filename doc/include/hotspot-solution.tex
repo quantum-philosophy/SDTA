@@ -1,42 +1,19 @@
 Before going to the proposed solution, we first discuss what can be achieved with existing techniques without additional efforts.
 
 \subsection{Iterative Simulation}
-A rough approximation of the SSDTP can be obtained by constructing a long power profile with one repeating part and running a thermal simulator with this profile as an input. The simulator produces a temperature profile of the same length, and the last part of it is assumed to be the SSDTP. Another way is to call the simulator a number of times each time starting with the temperature computed during the previous call. In both cases the simulator performs the transient temperature analysis where a common approach is to solve \equref{eq:fourier-model} numerically, e.g., using the fourth-order Runge-Kutta method.
+A rough approximation of the SSDTP can be obtained by constructing a long power profile with one repeating part and running a thermal simulator with this profile as an input. The simulator produces a temperature profile of the same length, and the last part of it is assumed to be the SSDTP. Another way is to call the simulator a number of times each time starting with the temperature computed during the previous call. In both cases the simulator performs the transient temperature analysis where the common approach is to solve \equref{eq:fourier-model} numerically, e.g., using the fourth-order Runge-Kutta method.
 
-\image{hotspot-simulation}{50 200 50 200}{An example of 15 simulations (separated by dashed lines) using HotSpot for one processing element running a 1-second application. The blue curve represents the repeating SSDTC that HotSpot is supposed to reach after a number of iterations. The power profile contains $10^4$ steps that corresponds to the sampling interval of $10^{-4}$ seconds.}
-The number of iterations required to reach the SSDTP depends on the accuracy that we are trying to achieve. It also depends a lot on the application itself and, consequently, on its power profile. This is an especially urgent issue for tasks that have short execution times relative to the thermal time constant of the die. In this case temperature does not have time to reach its steady-state value during executing of a task, but it is still gradually increasing on average. This leads to a large number iterations that the simulator is required to perform. An example is given in \figref{fig:hotspot-simulation}, where the blue curve corresponds to the repeating SSDTC, and the orange one shows 15 simulations of HotSpot. The sampling interval was chosen to be $10^{-4}$ seconds to capture all power fluctuations due to the task switching activities, resulting in a power profile with $10^4$ steps.
-
-\subsection{Steady-State Approximation}
-Another approach that can be applied is an approximation using the steady-state temperature \cite{huang2009}. In the paper we shall refer to it as the Steady-State approximation (SS). The idea is the following. Temperature of the system in the steady state is given by the following system of linear equations that can be directly obtained from \equref{eq:fourier-model} when the derivative is zero:
-\[
-  T = G^{-1} P
-\]
-Consequently, if we assume that thermal nodes during each time interval $\triangle t_i$ with the power dissipation $P_i$ have their steady-state temperature $T_i$, then the SSDTP can be found as the following:
-\begin{equation*}
-  \mathbb{T} = \left[
-    \begin{array}{c}
-      T_0^T \\
-      \vdots \\
-      T_{N_s - 1}^T
-    \end{array}
-  \right] = \left[
-    \begin{array}{c}
-      (G^{-1} P_0)^T \\
-      \vdots \\
-      (G^{-1} P_{N_s - 1})^T
-    \end{array}
-  \right]
-\end{equation*}
-
-The approximation can be taken to the application level where one can say that if each task has a constant level of the power consumption and during a certain period of time there is no switching activity, then we do not need to discretize this period into smaller ones, and can compute it as a whole.
-
-\image{steady-state-approximation}{50 200 50 200}{An example of the steady-state approximation (the dashed orange line) of the SSDTC (the solid blue line) for one processing element where temperature does not have time to reach its steady state. The period of the application is 0.73 seconds, the number of tasks is 30 with execution times in the range between around 0.01 and 0.04 seconds.}
-As it was mentioned earlier, the approximation holds when the assumption about the steady-state temperature can reasonably be applied. It should be mentioned that the approach completely neglects the history of the temperature variation, i.e., the temperature on one particular time interval does not depend on what was on the previous time interval. For instance, we can accept this approximation when the time to reach steady-state temperatures of all processing element after a power switch is much shorter than the following time interval without any switching activities \cite{huang2009}. Let us investigate what this time depends on.
-
-The time needed for the temperature to reach its steady state is determined by the thermal time constant $\tau$:
+\image{hotspot-error}{0 0 0 0}{Error for 30 successive simulations using HotSpot relative to the ground truth SSDTP given for different combinations of the die area and maximal power. The example is done for a single core architecture running a 1-second application.}
+The number of simulations required to reach the SSDTP, i.e., the time needed for the system to reach the thermal balance, depends on the thermal time constant of the system $\tau$ defined as the following:
 \[
   \tau = G^{-1} \; C = R \; C
 \]
-where $G$ is the thermal conductance, $R$ is the thermal resistance, and $C$ is the thermal capacitance. A physical interpretation of the constant could be the following. If we supply and fix power of all the processing elements on a particular level, the thermal system will take a certain amount of time determined by this constant to stabilize (i.e., to reach its state state)\footnote{To be precise, the thermal time constant is the time needed to reach 63.2\% of the final value.}. $\tau$ is different for distinct parts of the system, i.e., for the silicon die itself and its package. For the die the thermal time constant is found to be in order of milliseconds while for the package in order of one minute \cite{rao2007}. Consequently, even if the time constant for the die itself is small, its temperature will keep changing until \emph{all} the parts of the system reach the overall thermal balance. Therefore, the smaller execution time of the tasks (i.e., the time when the power dissipation is approximately constant) relative to $\tau$, the larger mismatch between the steady-state temperature and SSDTC. In our experiments we varied different parameters of the system that directly affect the thermal time constant (e.g., the width, height, and thickness of the heat sink, heat spreader, and die, etc.) and observed that the operational conditions are very likely to be against the SS approximation. An example of a mismatch between the SS and real SSDTC for a single-processor system with 30 tasks is given in \figref{fig:steady-state-approximation}. It can be show that if we scale the execution times of the tasks from this example so that they enter the diapason 20--90 seconds, the solid curve (SSDTC) will reach the dashed one (SS) and stay still.
+where $R$ is the thermal resistance. For the die $\tau$ is found to be in order of milliseconds while for the thermal package in order of one minute \cite{rao2007}. The temperature will keep changing until all parts of the system are stabilized. Consequently, the number of iterations depends on a particular application, since a few simulations of an application with a short period relative to $\tau$ are not enough for the temperature to reach the steady state. An example is given in \figref{fig:hotspot-error}, where 30 successive iterations using the HotSpot simulator \cite{huang2006} are compared with the ground truth SSDTP for different combinations of the die area and maximal power. In can be seen that the number of simulations varies dramatically depending on a particular setup and produces results with a residual error.
 
-All in all, we can conclude that the accuracy of the steady-state approximation is only satisfactory for a narrow range of periodic applications.
+\subsection{Steady-State Approximation}
+\image{steady-state-approximation}{80 230 80 230}{An example of the steady-state approximation (the dashed orange line) of the SSDTP (the solid blue line) for one processing element running a 1-second application.}
+Another approach is an approximation using the steady-state temperature mentioned in \cite{huang2009}. Instead of solving the system of differential equations given by \equref{eq:fourier-model}, we assume that during each time interval $\triangle t_i$ of constant power $P_i$ the whole system stays in its steady state. In this case the derivative \mbox{$dT/dt = 0$} and the temperature can be computed in the following way:
+\[
+  T_i = G^{-1} P_i
+\]
+The result is a stepwise temperature curve. An example of such an approximation along with the real SSDTP can be observed in \figref{fig:steady-state-approximation}. It can be seen that the approximation does not necessary provide a good estimation and holds only when the assumption about the thermal balance on each time interval can reasonably be applied. For instance, it is the case when the execution time of the tasks is much larger than the time needed to reach the steady-state temperature \cite{huang2009}. The discussion about the thermal time constant from the previous subsection holds here as well with a conclusion that the accuracy of the SS approximation is satisfactory only for a narrow range of configurations.

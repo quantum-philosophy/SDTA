@@ -54,15 +54,15 @@ where $MTTF_i$ is the mean time to failure of the $i$th time interval as if we h
   MTTF = \frac{\mathcal{T}}{\sum_{i=0}^{N_m - 1} \frac{1}{\mathcal{N}_i}}
 \end{equation}
 
-\equref{eq:one-mttf} describes the MTTF of one component, which is a processing element in our case. We assume that \emph{each} processing element is essential for the proper work of the system, therefore, a failure of \emph{any} core leads to the total failure of the whole system. Consequently, the MTTF of the system can be estimated as the minimal MTTF among its components:
+\equref{eq:one-mttf} describes the MTTF of one component, which is a processing element in our case. We assume that each processing element is essential for the proper work of the system, therefore, a failure of any core leads to the total failure of the whole system. Consequently, the MTTF of the system can be estimated as the minimal MTTF among its components:
 \begin{align*}
-  & MTTF_{sys} = \min_{k=0}^{N_p - 1} \; MTTF_k \\
-  & MTTF_k = \frac{\mathcal{T}}{\sum_{i=0}^{N_{mk} - 1} \frac{1}{\mathcal{N}_{ik}}}
+  & MTTF_{sys} = \min_{i=0}^{N_p - 1} \; MTTF_i \\
+  & MTTF_i = \frac{\mathcal{T}}{\sum_{j=0}^{N_{m \: i} - 1} \frac{1}{\mathcal{N}_{ij}}}
 \end{align*}
-where $N_{mk}$ is the number of thermal cycles of the $k$th processing element within the application period $\mathcal{T}$ and $\mathcal{N}_{ik}$ is the number of thermal cycles to failure if the $i$th cycle was repeated all the time.
+where $N_{m \: i}$ is the number of thermal cycles of the $i$th processing element within the application period $\mathcal{T}$ and $\mathcal{N}_{ij}$ is the number of thermal cycles to failure as if the $j$th cycle was being repeated all the time.
 
 \subsection{Motivational Example} \label{sec:motivation}
 \input{include/motivation.tex}
 
 \subsection{Genetic Algorithm}
-TO BE DONE.
+\todo{Describe the genetic algorithm that we use.}
