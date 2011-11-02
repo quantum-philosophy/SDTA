@@ -239,13 +239,13 @@ size_t IterativeCondensedEquation::solve(const double *dynamic_power,
 TransientAnalyticalSolution::TransientAnalyticalSolution(
 	size_t _processor_count, size_t _node_count,
 	double _sampling_interval, double _ambient_temperature,
-	const double **conductivity, const double *capacitance) :
+	const double **conductivity, const double *capacitance,
+	size_t _max_iterations) :
 
 	AnalyticalSolution(_processor_count, _node_count, _sampling_interval,
-		_ambient_temperature, conductivity, capacitance)
+		_ambient_temperature, conductivity, capacitance),
+	max_iterations(_max_iterations)
 {
-	Q.resize(node_count);
-	Q.nullify();
 }
 
 void TransientAnalyticalSolution::solve(
@@ -254,25 +254,42 @@ void TransientAnalyticalSolution::solve(
 	size_t i, j, k;
 
 	Y.resize(step_count, node_count);
+	Q.resize(step_count, node_count);
+
+	for (i = 0; i < step_count; i++) {
+		/* Q(i) = G * B(i) */
+		multiply_matrix_incomplete_vector(G, power + i * processor_count,
+			processor_count, Q[i]);
+	}
+
+	/* NOTE: The indexes are shifted by 1 here, because we store
+	 * Y(i) in the place of Y(i-1), since we are not interested in
+	 * the initial temperature (we know it, it is ambient).
+	 */
 
 	/* We start from zero temperature, therefore, the first
 	 * multiplication by K is zero, hence:
 	 *
 	 * Y(1) = K * Y(0) + Q(0) = Q(0)
-	 *
-	 * NOTE: The indexes are shifted by 1 here, because we store
-	 * Y(i) in the place of Y(i-1), since we are not interested in
-	 * the initial temperature (we know it, it is ambient).
 	 */
-	multiply_matrix_incomplete_vector(G, power, processor_count, Y[0]);
+	__MEMCPY(Y[0], Q[0], node_count);
 
 	for (i = 1; i < step_count; i++) {
-		/* Q(i) = G * B(i) */
-		multiply_matrix_incomplete_vector(G, power + i * processor_count,
-			processor_count, Q);
-
 		/* Y(i) = K * Y(i-1) + Q(i) */
-		multiply_matrix_vector_plus_vector(K, Y[i - 1], Q, Y[i]);
+		multiply_matrix_vector_plus_vector(K, Y[i - 1], Q[i], Y[i]);
+	}
+
+	for (k = 1; k < max_iterations; k++) {
+		/* Wrap around:
+		 *
+		 * Y(1) = K * Y(N_s - 1) + Q(0)
+		 */
+		multiply_matrix_vector_plus_vector(K, Y[step_count - 1], Q[0], Y[0]);
+
+		for (i = 1; i < step_count; i++) {
+			/* Y(i) = K * Y(i-1) + Q(i) */
+			multiply_matrix_vector_plus_vector(K, Y[i - 1], Q[i], Y[i]);
+		}
 	}
 
 	/* Return back to T from Y:

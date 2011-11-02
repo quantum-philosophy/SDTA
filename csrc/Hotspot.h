@@ -155,7 +155,7 @@ class TransientAnalyticalHotspot: public Hotspot
 	TransientAnalyticalHotspot(
 		const Architecture &architecture, const Graph &graph,
 		const std::string &floorplan, const std::string &config,
-		const std::string &config_line);
+		const std::string &config_line, size_t max_iterations);
 
 	void solve(const matrix_t &power, matrix_t &temperature);
 	void solve(const Schedule &schedule, matrix_t &temperature, matrix_t &power);
@@ -314,14 +314,12 @@ class IterativeHotspot: public Hotspot
 	const DynamicPower dynamic_power;
 
 	const size_t max_iterations;
-	const double tolerance;
 
 	public:
 
 	IterativeHotspot(const Architecture &architecture, const Graph &graph,
 		const std::string &floorplan, const std::string &config,
-		const std::string &config_line,  size_t _max_iterations,
-		double _tolerance);
+		const std::string &config_line,  size_t _max_iterations);
 
 	void solve(const matrix_t &power, matrix_t &temperature);
 	void solve(const Schedule &schedule, matrix_t &temperature, matrix_t &power);
@@ -335,7 +333,6 @@ class LeakageIterativeHotspot: public Hotspot
 {
 	const DynamicPower dynamic_power;
 	const size_t max_iterations;
-	const double tolerance;
 	const Leakage &leakage;
 
 	public:
@@ -343,7 +340,7 @@ class LeakageIterativeHotspot: public Hotspot
 	LeakageIterativeHotspot(const Architecture &architecture, const Graph &graph,
 		const std::string &floorplan, const std::string &config,
 		const std::string &config_line,  size_t _max_iterations,
-		double _tolerance, const Leakage &_leakage);
+		const Leakage &_leakage);
 
 	void solve(const matrix_t &power, matrix_t &temperature);
 	void solve(const matrix_t &power, matrix_t &temperature, matrix_t &total_power);

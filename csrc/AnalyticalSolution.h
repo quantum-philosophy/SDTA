@@ -74,14 +74,17 @@ class IterativeCondensedEquation: public CondensedEquation
 
 class TransientAnalyticalSolution: public AnalyticalSolution
 {
-	vector_t Q;
+	const size_t max_iterations;
+
+	matrix_t Q;
 	matrix_t Y;
 
 	public:
 
 	TransientAnalyticalSolution(size_t _processor_count, size_t _node_count,
 		double _sampling_interval, double _ambient_temperature,
-		const double **conductivity, const double *capacitance);
+		const double **conductivity, const double *capacitance,
+		size_t _max_iterations);
 
 	void solve(const double *power, double *temperature, size_t step_count);
 };

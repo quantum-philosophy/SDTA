@@ -222,11 +222,11 @@ void CoarseCondensedEquationHotspot::solve(const Schedule &schedule,
 TransientAnalyticalHotspot::TransientAnalyticalHotspot(
 	const Architecture &architecture, const Graph &graph,
 	const std::string &floorplan, const std::string &config,
-	const std::string &config_line) :
+	const std::string &config_line, size_t max_iterations) :
 
 	Hotspot(floorplan, config, config_line),
 	equation(processor_count, node_count, sampling_interval, ambient_temperature,
-		(const double **)model->block->b, model->block->a),
+		(const double **)model->block->b, model->block->a, max_iterations),
 	dynamic_power(architecture.get_processors(), graph.get_tasks(),
 		graph.get_deadline(), sampling_interval)
 {
@@ -479,13 +479,12 @@ void PreciseSteadyStateHotspot::solve(const matrix_t &_power, matrix_t &_tempera
 IterativeHotspot::IterativeHotspot(
 	const Architecture &architecture, const Graph &graph,
 	const std::string &floorplan, const std::string &config,
-	const std::string &config_line,  size_t _max_iterations,
-	double _tolerance) :
+	const std::string &config_line,  size_t _max_iterations) :
 
 	Hotspot(floorplan, config, config_line),
 	dynamic_power(architecture.get_processors(), graph.get_tasks(),
 		graph.get_deadline(), sampling_interval),
-	max_iterations(_max_iterations), tolerance(_tolerance)
+	max_iterations(_max_iterations)
 {
 }
 
@@ -554,12 +553,12 @@ LeakageIterativeHotspot::LeakageIterativeHotspot(
 	const Architecture &architecture, const Graph &graph,
 	const std::string &floorplan, const std::string &config,
 	const std::string &config_line, size_t _max_iterations,
-	double _tolerance, const Leakage &_leakage) :
+	const Leakage &_leakage) :
 
 	Hotspot(floorplan, config, config_line),
 	dynamic_power(architecture.get_processors(), graph.get_tasks(),
 		graph.get_deadline(), sampling_interval),
-	max_iterations(_max_iterations), tolerance(_tolerance), leakage(_leakage)
+	max_iterations(_max_iterations), leakage(_leakage)
 {
 }
 
