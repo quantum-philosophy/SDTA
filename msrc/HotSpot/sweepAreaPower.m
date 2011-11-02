@@ -1,13 +1,15 @@
 setup;
 
-chunks = 1:2:30;
+chunks = 1:10:201;
 totalTime = 1;
-spreaderSide = 37.5e-3;
+spreaderSide = 20e-3;
+sinkSide = 30e-3;
+sinkThickness = 10e-3;
 
 config = Optima('001_030');
 
 dieArea = [ 1, 4, 9, 16, 25 ] * 1e-6;
-variants = [ dieArea', 200e4 * dieArea' ];
+variants = [ dieArea', 2 * ones(5, 1) ];
 
 chunkCount = length(chunks);
 variantCount = size(variants, 1);
@@ -30,7 +32,8 @@ for k = 1:variantCount
   maxPower = variants(k, 2);
 
   config.changeArea(processorArea);
-  [ sinkSide, spreaderSide, dieSide ] = config.changePackage(spreaderSide);
+  [ sinkSide, spreaderSide, dieSide ] = ...
+    config.changePackage(spreaderSide, sinkSide, sinkThickness);
 
   powerScale = maxPower / max(max(power));
 
@@ -41,7 +44,6 @@ for k = 1:variantCount
       'time_scale', timeScale, ...
       'solution', solution, ...
       'max_iterations', max_iterations, ...
-      'hotspot', 'r_convec 0.1', ...
       'verbose', 0, ...
       'leakage', '');
 
@@ -52,7 +54,7 @@ for k = 1:variantCount
 
   for i = 1:chunkCount
     chunkThs = Optima.solve(config.system, config.floorplan, config.hotspot, ...
-      config.params, param_line('hotspot', i)) - Constants.degreeKelvin;
+      config.params, param_line('transient_analytical', i)) - Constants.degreeKelvin;
 
     Error(i, k) = Utils.NRMSE(chunkTce, chunkThs, 1) * 100;
   end
