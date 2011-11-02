@@ -4,7 +4,10 @@ classdef Area < Sweep.Basic
 
     convectionResistance = 0.1;
     powerDensity = 40e4;
-    spreaderRatio = 20;
+
+    spreaderSide = 20e-3;
+    sinkSide = 30e-3;
+    sinkThickness = 10e-3;
 
     processorArea
     maximalPower
@@ -14,14 +17,11 @@ classdef Area < Sweep.Basic
   end
 
   methods
-    function sweep = Area(test, processorArea, ...
-      convectionResistance, powerDensity, spreaderRatio);
+    function sweep = Area(test, processorArea, convectionResistance)
 
       sweep = sweep@Sweep.Basic(test);
 
       if nargin >= 3, sweep.convectionResistance = convectionResistance; end
-      if nargin >= 4, sweep.powerDensity = powerDensity; end
-      if nargin >= 5, sweep.spreaderRatio = spreaderRatio; end
 
       if sweep.config.processorCount == 1
         sweep.variable = 'Area of the die, mm^2';
@@ -58,7 +58,8 @@ classdef Area < Sweep.Basic
       power = sweep.maximalPower(i);
 
       sweep.config.changeArea(area);
-      sweep.config.scalePackage(sweep.spreaderRatio);
+      sweep.config.changePackage(sweep.spreaderSide, ...
+        sweep.sinkSide, sweep.sinkThickness);
 
       timeScale = sweep.totalTime / sweep.nominalTime;
       powerScale = power / sweep.nominalPower;

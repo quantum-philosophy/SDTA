@@ -19,11 +19,8 @@ classdef Basic < handle
     end
 
     function perform(sweep)
-      fprintf('%15s%15s%15s%15s%15s%15s%15s%15s%15s\n', ...
-        'Parameter', 'P max, W', ...
-        'Tce max, C', 'dT CE, C', ...
-        'Tss max, C', 'dT SS, C', ...
-        'Ratio', 'RMSE', 'NRMSE');
+      fprintf('%15s%15s%15s%15s%15s%15s\n', ...
+        'Parameter', 'P max, W', 'Tmin, C', 'Tmax, C', 'RMSE', 'NRMSE');
 
       sweep.values = zeros(0, 0);
       sweep.error = zeros(0);
@@ -41,24 +38,14 @@ classdef Basic < handle
 
         Pmax = max(sum(power, 2));
 
-        TminCE = min(min(Tce)) - Constants.degreeKelvin;
-        TavgCE = mean(mean(Tce)) - Constants.degreeKelvin;
-        TmaxCE = max(max(Tce)) - Constants.degreeKelvin;
-        dTCE = TmaxCE - TminCE;
+        Tmin = min(min(Tce)) - Constants.degreeKelvin;
+        Tmax = max(max(Tce)) - Constants.degreeKelvin;
 
-        TminSS = min(min(Tss)) - Constants.degreeKelvin;
-        TavgSS = mean(mean(Tss)) - Constants.degreeKelvin;
-        TmaxSS = max(max(Tss)) - Constants.degreeKelvin;
-        dTSS = TmaxSS - TminSS;
-
-        ratio = dTSS / dTCE;
-
-        stepCount = size(power, 1);
         rmse = Utils.RMSE(Tce, Tss);
         nrmse = Utils.NRMSE(Tce, Tss);
 
-        fprintf('%15s%15.2f%15.2f%15.2f%15.2f%15.2f%15.2f%15.2f%15.2f\n', ...
-          num2str(value), Pmax, TmaxCE, dTCE, TmaxSS, dTSS, ratio, rmse, nrmse);
+        fprintf('%15s%15.2f%15.2f%15.2f%15.2f%15.2f\n', ...
+          num2str(value), Pmax, Tmin, Tmax, rmse, nrmse);
 
         sweep.error(end + 1) = nrmse * 100;
 
