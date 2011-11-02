@@ -17,10 +17,12 @@ Ptot = E ./ t;
 Density = Ptot ./ (A * 1e4);
 Pdyn = Ceff .* f .* V.^2;
 
-fprintf('%15s%15s%15s%15s\n', 't, ms', 'P tot, W', 'D, W/cm^2', 'P dyn, W');
+fprintf('%15s%15s%15s%15s%15s%15s%15s\n', ...
+  'V, V', 'f, Mhz', 't, ms', 'E, J', 'P tot, W', 'D, W/cm^2', 'P dyn, W');
 
 for i = 1:3
-  fprintf('%15.2f%15.2f%15.2f%15.2f\n', t(i) * 1e3, Ptot(i), Density(i), Pdyn(i));
+  fprintf('%15.1f%15.1f%15.2f%15.3f%15.3f%15.3f%15.3f\n', ...
+    V(i), f(i) * 1e-6, t(i) * 1e3, E(i), Ptot(i), Density(i), Pdyn(i));
 end
 
 fprintf('\n');
@@ -37,6 +39,8 @@ config.changeArea(A);
 [ sinkSide, spreaderSide, dieSide, sinkThickness ] = ...
   config.scalePackage(spreaderRatio);
 
+config.changeSamplingInterval(1e-4);
+
 fprintf('Die side: %.2f mm\n', dieSide * 1e3);
 fprintf('Spreader side: %.2f mm\n', spreaderSide * 1e3);
 fprintf('Sink side: %.2f mm\n', sinkSide * 1e3);
@@ -49,7 +53,7 @@ fprintf('P dynamic max: %.2f W\n', max(max(Pdynamic)));
 
 param_line = Utils.configStream(...
   'solution', 'condensed_equation', ...
-  'hotspot', 'r_convec 0.1 sampling_intvl 1e-4', ...
+  'hotspot', 'r_convec 0.1', ...
   'verbose', 0, ...
   'leakage', 'exponential');
 
@@ -58,4 +62,5 @@ param_line = Utils.configStream(...
 
 fprintf('P total max: %.2f W\n', max(max(Ptotal)));
 
-Utils.drawTemperature(T - Constants.degreeKelvin, 'Temperature', 1e-4);
+Utils.drawTemperature(T - Constants.degreeKelvin, ...
+  'Temperature', config.samplingInterval);
