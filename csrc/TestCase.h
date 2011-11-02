@@ -187,11 +187,14 @@ class TestCase
 		}
 		else if (tuning.solution == "hotspot") {
 			if (leakage)
-				throw std::runtime_error("Not implemented.");
-
-			hotspot = new IterativeHotspot(
-				_floorplan, _hotspot, tuning.hotspot,
-				tuning.max_iterations, tuning.tolerance);
+				hotspot = new LeakageIterativeHotspot(
+					*architecture, *graph, _floorplan, _hotspot,
+					tuning.hotspot, tuning.max_iterations, tuning.tolerance,
+					*leakage);
+			else
+				hotspot = new IterativeHotspot(
+					*architecture, *graph, _floorplan, _hotspot,
+					tuning.hotspot, tuning.max_iterations, tuning.tolerance);
 		}
 		else if (tuning.solution == "steady_state") {
 			if (leakage) {

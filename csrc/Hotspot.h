@@ -311,24 +311,49 @@ class PreciseSteadyStateHotspot: public Hotspot
 
 class IterativeHotspot: public Hotspot
 {
+	const DynamicPower dynamic_power;
+
 	const size_t max_iterations;
 	const double tolerance;
 
 	public:
 
-	IterativeHotspot(const std::string &floorplan,
-		const std::string &config, const std::string &config_line,
-		size_t _max_iterations, double _tolerance);
+	IterativeHotspot(const Architecture &architecture, const Graph &graph,
+		const std::string &floorplan, const std::string &config,
+		const std::string &config_line,  size_t _max_iterations,
+		double _tolerance);
 
 	void solve(const matrix_t &power, matrix_t &temperature);
-	size_t verify(const matrix_t &power, const matrix_t &reference_temperature,
-		matrix_t &temperature);
+	void solve(const Schedule &schedule, matrix_t &temperature, matrix_t &power);
 
 	private:
 
 	size_t solve(double *extended_power, double *temperature, size_t step_count);
-	size_t solve(double *extended_power, const double *reference_temperature,
-		double *temperature, size_t step_count);
+};
+
+class LeakageIterativeHotspot: public Hotspot
+{
+	const DynamicPower dynamic_power;
+	const size_t max_iterations;
+	const double tolerance;
+	const Leakage &leakage;
+
+	public:
+
+	LeakageIterativeHotspot(const Architecture &architecture, const Graph &graph,
+		const std::string &floorplan, const std::string &config,
+		const std::string &config_line,  size_t _max_iterations,
+		double _tolerance, const Leakage &_leakage);
+
+	void solve(const matrix_t &power, matrix_t &temperature);
+	void solve(const matrix_t &power, matrix_t &temperature, matrix_t &total_power);
+	void solve(const Schedule &schedule, matrix_t &temperature,
+		matrix_t &power);
+
+	private:
+
+	size_t solve(const double *dynamic_power, double *temperature,
+		double *extended_total_power, size_t step_count);
 };
 
 struct Event

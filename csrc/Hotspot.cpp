@@ -424,8 +424,6 @@ double *LeakageSteadyStateHotspot::compute(const SlotTrace &trace) const
 		leakage.inject(temperature, dynamic_power, total_power);
 	}
 
-	leakage.finalize(temperature, dynamic_power, total_power);
-
 	__FREE(dynamic_power);
 	__FREE(total_power);
 	__FREE(last_temperature);
@@ -478,11 +476,15 @@ void PreciseSteadyStateHotspot::solve(const matrix_t &_power, matrix_t &_tempera
 
 /******************************************************************************/
 
-IterativeHotspot::IterativeHotspot(const std::string &floorplan,
-	const std::string &config, const std::string &config_line,
-	size_t _max_iterations, double _tolerance) :
+IterativeHotspot::IterativeHotspot(
+	const Architecture &architecture, const Graph &graph,
+	const std::string &floorplan, const std::string &config,
+	const std::string &config_line,  size_t _max_iterations,
+	double _tolerance) :
 
 	Hotspot(floorplan, config, config_line),
+	dynamic_power(architecture.get_processors(), graph.get_tasks(),
+		graph.get_deadline(), sampling_interval),
 	max_iterations(_max_iterations), tolerance(_tolerance)
 {
 }
@@ -515,40 +517,11 @@ void IterativeHotspot::solve(const matrix_t &power, matrix_t &temperature)
 	}
 }
 
-size_t IterativeHotspot::verify(const matrix_t &power,
-	const matrix_t &reference_temperature, matrix_t &temperature)
+void IterativeHotspot::solve(const Schedule &schedule,
+	matrix_t &temperature, matrix_t &power)
 {
-	size_t step_count = power.rows();
-
-	if (processor_count != reference_temperature.cols() ||
-		step_count != reference_temperature.rows())
-		throw std::runtime_error("The reference temperature is wrong.");
-
-	temperature.resize(step_count, processor_count);
-
-	const double *_power = power;
-	double *_temperature = temperature;
-	const double *_reference_temperature = reference_temperature;
-
-	if (power.cols() == node_count) {
-		return solve(const_cast<double *>(_power),
-			_reference_temperature, _temperature, step_count);
-	}
-	else {
-		/* Since Hotspot works with power for all thermal nodes,
-		 * and our power is only for the processors, we need to extend it
-		 * with zeros for the rest of the thermal nodes.
-		 */
-		matrix_t extended_power(step_count, node_count);
-		double *_extended_power = extended_power;
-
-		for (size_t i = 0; i < step_count; i++)
-			__MEMCPY(_extended_power + i * node_count,
-				_power + i * processor_count, processor_count);
-
-		return solve(_extended_power, _reference_temperature,
-			_temperature, step_count);
-	}
+	dynamic_power.compute(schedule, power);
+	solve(power, temperature);
 }
 
 size_t IterativeHotspot::solve(double *extended_power,
@@ -575,43 +548,83 @@ size_t IterativeHotspot::solve(double *extended_power,
 	return iterations;
 }
 
-size_t IterativeHotspot::solve(double *extended_power,
-	const double *reference_temperature, double *temperature, size_t step_count)
+/******************************************************************************/
+
+LeakageIterativeHotspot::LeakageIterativeHotspot(
+	const Architecture &architecture, const Graph &graph,
+	const std::string &floorplan, const std::string &config,
+	const std::string &config_line, size_t _max_iterations,
+	double _tolerance, const Leakage &_leakage) :
+
+	Hotspot(floorplan, config, config_line),
+	dynamic_power(architecture.get_processors(), graph.get_tasks(),
+		graph.get_deadline(), sampling_interval),
+	max_iterations(_max_iterations), tolerance(_tolerance), leakage(_leakage)
+{
+}
+
+void LeakageIterativeHotspot::solve(const matrix_t &dynamic_power,
+	matrix_t &temperature, matrix_t &total_power)
+{
+	size_t step_count = dynamic_power.rows();
+
+	temperature.resize(dynamic_power);
+	total_power.resize(dynamic_power);
+
+	const double *_dynamic_power = dynamic_power;
+	double *_temperature = temperature;
+	double *_total_power = total_power;
+
+	/* Since Hotspot works with power for all thermal nodes,
+	 * we need to pass it an extended version of the total power
+	 * and then fit it to the short one.
+	 */
+	matrix_t extended_total_power(step_count, node_count);
+	double *_extended_total_power = extended_total_power;
+
+	(void)solve(_dynamic_power, _temperature, _extended_total_power, step_count);
+
+	for (size_t i = 0; i < step_count; i++)
+		__MEMCPY(_total_power + i * processor_count,
+			_extended_total_power + i * node_count, processor_count);
+}
+
+void LeakageIterativeHotspot::solve(const matrix_t &dynamic_power,
+	matrix_t &temperature)
+{
+	matrix_t total_power;
+	solve(dynamic_power, temperature, total_power);
+}
+
+void LeakageIterativeHotspot::solve(const Schedule &schedule,
+	matrix_t &temperature, matrix_t &total_power)
+{
+	matrix_t power;
+	dynamic_power.compute(schedule, power);
+	solve(power, temperature, total_power);
+}
+
+size_t LeakageIterativeHotspot::solve(const double *dynamic_power,
+	double *temperature, double *extended_total_power, size_t step_count)
 {
 	double *extended_temperature = __ALLOC(node_count);
 
-	set_temp(model, extended_temperature, config.init_temp);
+	set_temp(model, extended_temperature, ambient_temperature);
 
-	size_t iterations, total;
-	double delta, square_sum;
-	const double *reference;
+	size_t iterations;
 
-	total = processor_count * step_count;
-
-	for (iterations = 0; iterations < max_iterations; iterations++) {
-		square_sum = 0;
-
+	for (iterations = 0; iterations < max_iterations; iterations++)
 		for (size_t i = 0; i < step_count; i++) {
-			compute_temp(model, extended_power + node_count * i,
-				extended_temperature, sampling_interval);
+			leakage.inject(extended_temperature, dynamic_power + processor_count * i,
+				extended_total_power + node_count * i);
 
-			/* Compare with the reference */
-			reference = reference_temperature + i * processor_count;
-			for (size_t j = 0; j < processor_count; j++) {
-				delta = extended_temperature[j] - reference[j];
-				square_sum += delta * delta;
-			}
+			compute_temp(model, extended_total_power + node_count * i,
+				extended_temperature, sampling_interval);
 
 			/* Copy the new values */
 			__MEMCPY(temperature + i * processor_count,
 				extended_temperature, processor_count);
 		}
-
-		if (std::sqrt(square_sum / double(total)) < tolerance) {
-			iterations++;
-			break;
-		}
-	}
 
 	__FREE(extended_temperature);
 
