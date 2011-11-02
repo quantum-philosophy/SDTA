@@ -21,7 +21,7 @@ classdef Optima < handle
   end
 
   methods
-    function o = Optima(name)
+    function o = Optima(name, processorCount)
       o.name = name;
       o.tgffopt = Utils.path([ name, '.tgffopt' ]);
       o.tgff = Utils.path([ name, '.tgff' ]);
@@ -30,25 +30,29 @@ classdef Optima < handle
       o.floorplan = Utils.path([ name, '_floorplan.config' ]);
       o.params = Utils.path([ name, '_params.config' ]);
 
-      o.processorCount = Utils.readParameter(o.tgffopt, 'table_cnt');
+      if nargin > 1
+        o.processorCount = processorCount;
+      else
+        o.processorCount = Utils.readParameter(o.tgffopt, 'table_cnt');
+      end
+
       o.samplingInterval = Utils.readParameter(o.hotspot, '-sampling_intvl');
       o.ambientTemperature = Utils.readParameter(o.hotspot, '-ambient');
     end
 
     function changeArea(o, area)
       o.processorArea = area;
-      o.floorplan = Utils.path([ o.name, '_temp.flp' ]);
+      o.floorplan = Utils.temp([ o.name, '_floorplan.config' ]);
       Utils.generateFloorplan(o.floorplan, o.processorCount, area);
     end
 
     function changeProcessorCountAndArea(o, count, area)
       o.processorCount = count;
 
-      original = Utils.path([ o.name, '.tgffopt' ]);
-
-      o.tgffopt = Utils.path([ o.name, '_temp.tgffopt' ]);
-      o.tgff = Utils.path([ o.name, '_temp.tgff' ]);
-      o.system = Utils.path([ o.name, '_temp.sys' ]);
+      original = o.tgffopt;
+      o.tgffopt = Utils.temp([ o.name, '.tgffopt' ]);
+      o.tgff = Utils.temp([ o.name, '.tgff' ]);
+      o.system = Utils.temp([ o.name, '_system.config' ]);
 
       Utils.writeParameter(original, o.tgffopt, 'table_cnt', count);
       Utils.tgffopt(o.tgffopt, o.tgff, o.system);
@@ -66,7 +70,7 @@ classdef Optima < handle
       if nargin < 4, sinkThicknessRatio = o.sinkThicknessRatio; end
 
       original = o.hotspot;
-      o.hotspot = Utils.path([ o.name, '_hotspot_temp.config' ]);
+      o.hotspot = Utils.temp([ o.name, '_hotspot.config' ]);
 
       % Die
       dieArea = o.processorArea * o.processorCount;
@@ -87,7 +91,7 @@ classdef Optima < handle
       o.samplingInterval = samplingInterval;
 
       original = o.hotspot;
-      o.hotspot = Utils.path([ o.name, '_hotspot_temp.config' ]);
+      o.hotspot = Utils.temp([ o.name, '_hotspot.config' ]);
 
       Utils.writeParameter(original, o.hotspot, '-sampling_intvl', samplingInterval);
     end
@@ -105,10 +109,5 @@ classdef Optima < handle
       solve_power(system, floorplan, hotspot, params, param_line, power);
     [ intervals, temperature, power, time ] = ...
       solve_coarse(system, floorplan, hotspot, params, param_line);
-
-    [ reference_temperature, refeference_time, power, iterations, temperature, time ] = ...
-      verify(system, floorplan, hotspot, params, param_line, max_iterations, tolerance);
-    [ reference_temperature, refeference_time, iterations, temperature, time ] = ...
-      verify_power(system, floorplan, hotspot, params, param_line, power, max_iterations, tolerance);
   end
 end
