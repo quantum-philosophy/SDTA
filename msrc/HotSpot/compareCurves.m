@@ -2,18 +2,16 @@ setup;
 
 chunks = 30;
 
-spreaderRatio = 37.5 / 9;
-
-processorArea = 49e-6;
-maxPower = 35;
-
 totalTime = 1;
+maxPower = 20;
+processorArea = 4e-6;
+spreaderSide = 37.5e-3;
 
 config = Optima('001_030');
 
 config.changeArea(processorArea);
 [ sinkSide, spreaderSide, dieSide, sinkThickness ] = ...
-  config.scalePackage(spreaderRatio);
+  config.changePackage(spreaderSide);
 
 fprintf('Die side: %.2f mm\n', dieSide * 1e3);
 fprintf('Spreader side: %.2f mm\n', spreaderSide * 1e3);
@@ -35,7 +33,7 @@ param_line = @(solution, max_iterations) ...
     'solution', solution, ...
     'hotspot', 'r_convec 0.1', ...
     'verbose', 0, ...
-    'leakage', 'exponential');
+    'leakage', '');
 
 Tce = zeros(0, 0);
 Ths = zeros(0, 0);

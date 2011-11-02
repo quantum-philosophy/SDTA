@@ -27,7 +27,7 @@ table_attrib \
   ngate 2e5 0
 # Attributes of tasks for particular PE
 type_attrib \
-  effective_switched_capacitance 6e-9 5.5e-9, \
+  effective_switched_capacitance 6e-9 4e-9, \
   number_of_clock_cycles 30e6 20e6
 # Write
 pe_write
