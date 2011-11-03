@@ -59,8 +59,7 @@ for k = 1:variantCount
     Error(i, k) = Utils.NRMSE(chunkTce, chunkThs, 1) * 100;
   end
 
-  side = sqrt(processorArea * 1e6);
-  legend{end + 1} = sprintf('%.0f x %.0f mm^2', side, side);
+  legend{end + 1} = sprintf('Area = %.0f mm^2', processorArea * 1e6);
 
   fprintf('%20.2f%20.2f%20.2f%20.2f%20.f%20.2f%20.2f%20.2f\n', ...
     processorArea * 1e6, dieSide * 1e3, spreaderSide * 1e3, sinkSide * 1e3, ...

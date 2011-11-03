@@ -17,16 +17,17 @@ classdef Area < Sweep.Basic
   end
 
   methods
-    function sweep = Area(test, processorArea, convectionResistance)
+    function sweep = Area(test, processorArea, convectionResistance, totalTime)
 
       sweep = sweep@Sweep.Basic(test);
 
       if nargin >= 3, sweep.convectionResistance = convectionResistance; end
+      if nargin >= 4, sweep.totalTime = totalTime; end
 
       if sweep.config.processorCount == 1
-        sweep.variable = 'Area of the die, mm^2';
+        sweep.variable = 'Die area, mm^2';
       else
-        sweep.variable = 'Area of one processing element, mm^2';
+        sweep.variable = 'Processor area, mm^2';
       end
 
       sweep.processorArea = processorArea;

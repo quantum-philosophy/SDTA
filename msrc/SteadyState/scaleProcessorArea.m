@@ -1,7 +1,8 @@
 setup;
 
 dieArea = (1:25) * 1e-6;
-convectionResistance = [ 0.1, 0.2, 0.3, 0.4, 0.5 ];
+convectionResistance = [ 0.1, 0.1, 0.1, 0.1, 0.1 ] * 5;
+totalTime = [ 0.01, 0.05, 0.1, 1, 10 ];
 
 areaCount = length(dieArea);
 variantCount = length(convectionResistance);
@@ -12,12 +13,15 @@ Error = zeros(areaCount, variantCount);
 legend = {};
 
 for i = 1:variantCount
-  sweep = Sweep.Area('001_030', dieArea, convectionResistance(i));
-  value = convectionResistance(i);
+  sweep = Sweep.Area('001_030', dieArea, ...
+    convectionResistance(i), totalTime(i));
+
+  value = totalTime(i);
 
   sweep.perform();
   Error(1:end, i) = sweep.error;
-  legend{end + 1} = [ 'R_{conv} = ', num2str(value), ' K/W' ];
+
+  legend{end + 1} = [ 'Period = ', num2str(value * 1e3), ' ms' ];
 end
 
 options = struct( ...
@@ -29,3 +33,5 @@ options = struct( ...
 options.legend = legend;
 
 Utils.draw(dieArea * 1e6, Error, options);
+
+set(gca, 'YLim', [ 0, 1.1 * max(max(Error)) ]);
