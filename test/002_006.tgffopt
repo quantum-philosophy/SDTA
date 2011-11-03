@@ -29,7 +29,7 @@ table_cnt 2
 table_attrib \
   frequency 1e9 0, \
   voltage 1 0, \
-  ngate 2e5 0
+  ngate 6e5 0
 # Attributes of tasks for particular PE
 type_attrib \
   effective_switched_capacitance 10e-9 2e-9, \

@@ -48,7 +48,7 @@ function draw(graph, createFigure, proportionalPower)
       x(end + 1) = task.start + task.duration;
       y(end + 1) = y0;
 
-      text(task.start + 0.2 * task.duration, y0 + 0.1 * maxHeight, ...
+      text(task.start + 0.2 * task.duration, y0 + 0.3 * maxHeight, ...
         [ 'T', num2str(id) ]);
     end
 
@@ -65,6 +65,6 @@ function draw(graph, createFigure, proportionalPower)
     'Line', '--', 'Color', 'k');
 
   set(gca, 'YTickLabel', processorNames);
-  set(gca, 'YTick', 1:processorCount);
+  set(gca, 'YTick', (1:processorCount) + maxHeight/2);
   set(gca, 'XLim', [ 0 last ]);
 end
