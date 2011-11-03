@@ -2,7 +2,7 @@ setup;
 
 dieArea = (1:25) * 1e-6;
 convectionResistance = [ 0.1, 0.1, 0.1, 0.1, 0.1 ] * 5;
-totalTime = [ 0.01, 0.05, 0.1, 1, 10 ];
+totalTime = [ 0.01, 0.02, 0.1, 0.5, 10 ];
 
 areaCount = length(dieArea);
 variantCount = length(convectionResistance);
