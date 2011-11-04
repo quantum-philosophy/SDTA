@@ -20,14 +20,14 @@ classdef Lifetime < handle
     % Ntc = Atc * (dT - dT0)^(-q) * exp(Eatc / (k * Tmax))
 
     % Activation energy [4], [5]
-    Eatc = 0.7; % eV, depends on particular failure mechanism and
+    Eatc = 0.3; % eV, depends on particular failure mechanism and
     % material involved, typically ranges from 0.3 up to 1.5
 
     % Boltzmann constant [6]
     k = 8.61733248e-5; % eV/K
 
     % Empirically determined constant
-    Atc = 1; % Lifetime.calculateAtc;
+    Atc = Lifetime.calculateAtc;
 
     % Shape parameter for the Weibull distribution
     beta = 2;
@@ -195,14 +195,14 @@ classdef Lifetime < handle
     end
 
     function Atc = calculateAtc
-      % Let us assume to have the mean time to failure equal to 20 years
+      % Let us assume to have the mean time to failure equal to 10 years
       % with the average temperature of 60 C, the total application period
-      % of 200ms, and 100 equal cycles of 10 C.
+      % of 1 second, and 10 equal cycles of 10 C.
 
-      mttf = 100 * 365 * 24 * 60 * 30; % s, 20 years
+      mttf = 10 * 365 * 24 * 60 * 30; % s, 20 years
       Tavg = 60 + Constants.degreeKelvin; % K, 60 C
       totalTime = 1; % s
-      m = 50; % Number of cycles
+      m = 10; % Number of cycles
       dT = 10; % K
       Tmax = Tavg + dT / 2;
 
@@ -214,6 +214,20 @@ classdef Lifetime < handle
   end
 
   methods (Static, Access = private)
+    function wtf(rainflow, N)
+      fprintf('%15s%15s%15s%15s%15s%15s\n', 'dT', 'Tmax', 'Cycles', ...
+        'N', 'Full damage', 'Damage');
+
+      for i = 1:size(rainflow, 2)
+        fprintf('%15.2f%15.2f%15.1f%15.0f%15.2e%15.2e\n', 2 * rainflow(1, i), ...
+          rainflow(1, i) + rainflow(2, i) - Constants.degreeKelvin, ...
+          rainflow(3, i), N(i), 1/N(i), rainflow(3, i)/N(i));
+      end
+
+      fprintf('%15s%15s%15s%15s%15s%15.2e\n', '', '', '', ...
+        '', '', sum(rainflow(3, :) ./ N));
+    end
+
     function [ damage, maxp, minp, cycles ] = calculateDamage(T)
       % Get extremum
       [ maxp, minp ] = Utils.peakdet(T, Lifetime.peakThreshold);
@@ -227,11 +241,20 @@ classdef Lifetime < handle
       % Rainflow it!
       rainflow = Rainflow.rainflow(T);
 
-      % Amplitudes
-      dT = rainflow(1, :);
+      if mod(length(I), 2) == 0
+        % Missing one half
+        rainflow(:, end + 1) = [ ...
+          abs(T(1) - T(end)) / 2; ... % amplitude
+          min(T(1), T(end)) + abs(T(1) - T(end)) / 2; ... % mean
+          0.5 ... % cycles
+        ];
+      end
+
+      % Deltas
+      dT = 2 * rainflow(1, :);
 
       % Maximal temperatures during each cycle
-      Tmax = rainflow(2, :) + dT ./ 2;
+      Tmax = rainflow(2, :) + rainflow(1, :);
 
       % Contains full cycles (1.0) and half cycles (0.5)
       cycles = rainflow(3, :);
@@ -243,12 +266,9 @@ classdef Lifetime < handle
       N = Lifetime.Atc .* dT.^(-Lifetime.q) .* ...
         exp(Lifetime.Eatc ./ (Lifetime.k * Tmax));
 
-      N = N(find(N));
+      I = find(N);
 
-      % Count all detected cycles (even 0.5) as completed,
-      % since we have cycling temperature fluctuations
-      % (1 instead of cycles here)
-      damage = sum(1 ./ N);
+      damage = sum(cycles(I) ./ N(I));
     end
   end
 end
