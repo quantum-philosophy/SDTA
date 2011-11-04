@@ -45,17 +45,17 @@ A similar equation can be obtained for the matrix inverse. It should be noted th
 The next step is to update the SSDTP system given in \equref{eq:recurrent-system}:
 \begin{align}
   & \tilde{T}_{i+1} = \tilde{K}_i \: \tilde{T}_i + \tilde{B}_i \: P_i \label{eq:recurrent-equation} \\
-  & \tilde{K}_i = e^{\tilde{A} \: \triangle t_i} \nonumber \\
-  & \tilde{B}_i = \tilde{A}^{-1} \left( e^{\tilde{A} \triangle t_i} - I \right) C^{-\frac{1}{2}} \nonumber
+  & \tilde{K}_i = e^{\tilde{A} \: \Delta t_i} \nonumber \\
+  & \tilde{B}_i = \tilde{A}^{-1} \left( e^{\tilde{A} \Delta t_i} - I \right) C^{-\frac{1}{2}} \nonumber
 \end{align}
 Using the eigenvalue decomposition, the last equation can be computed in the following way:
 \begin{align*}
-  \tilde{B}_i & = U \: \Lambda^{-1} \: U^T \left(U \: e^{\Lambda \triangle t_i} \: U^T - U \: U^T \right) C^{-\frac{1}{2}} = \\
+  \tilde{B}_i & = U \: \Lambda^{-1} \: U^T \left(U \: e^{\Lambda \Delta t_i} \: U^T - U \: U^T \right) C^{-\frac{1}{2}} = \\
       & = U \left[
         \begin{array}{ccc}
-          \frac{e^{\triangle t_i \: \lambda_0} - 1}{\lambda_0} & \cdots & 0 \\
+          \frac{e^{\Delta t_i \: \lambda_0} - 1}{\lambda_0} & \cdots & 0 \\
           \vdots & \ddots & \vdots \\
-          0 & \cdots & \frac{e^{\triangle t_i \: \lambda_{N_n - 1}} - 1}{\lambda_{N_n - 1}}
+          0 & \cdots & \frac{e^{\Delta t_i \: \lambda_{N_n - 1}} - 1}{\lambda_{N_n - 1}}
         \end{array}
       \right] U^T \: C^{-\frac{1}{2}}
 \end{align*}
@@ -87,8 +87,8 @@ Taking into account the boundary condition given by \equref{eq:boundary-conditio
 \end{equation}
 We recall that $\tilde{K}_i$ is the matrix exponential, therefore, the following simplification holds:
 \begin{align*}
-  \prod_{j = i}^l \tilde{K}_j = \prod_{j = i}^l e^{\tilde{A} \triangle t_j} & = e^{\tilde{A} \sum_{j = i}^l \triangle t_j} \\
-  & = U e^{\left( \sum_{j = i}^l \triangle t_j \: \Lambda \right)} U^T
+  \prod_{j = i}^l \tilde{K}_j = \prod_{j = i}^l e^{\tilde{A} \Delta t_j} & = e^{\tilde{A} \sum_{j = i}^l \Delta t_j} \\
+  & = U e^{\left( \sum_{j = i}^l \Delta t_j \: \Lambda \right)} U^T
 \end{align*}
 Consequently:
 \begin{align*}
@@ -118,16 +118,16 @@ Finally, the identity matrix $I$ can be splitted into $U U^T$, hence:
 \end{align*}
 Here $W_{N_s - 1}$ can be calculated using \equref{eq:p-recurrent}. As we see, there is no need to inverse any matrix, the solution of the system is obtained by scalar divisions and a similarity transformation with $U$. All other vectors $\tilde{T}_i$ for $i = 1 \dots N_s - 1$ are successively found from \equref{eq:ce-recurrent}.
 
-Let us now consider one specific case where all the computation can be performed in a much more effecient manner. Assume that the power profile $\mathbb{P}$ is evenly sampled with the \emph{sampling interval} equal to $\triangle t$, i.e., $\triangle t_i = \triangle t$ for $i = 0 \dots N_s - 1$. Having this assumption, the recurrent process (\equref{eq:recurrent-equation}) turns into:
+Let us now consider one specific case where all the computation can be performed in a much more effecient manner. Assume that the power profile $\mathbb{P}$ is evenly sampled with the \emph{sampling interval} equal to $\Delta t$, i.e., $\Delta t_i = \Delta t$ for $i = 0 \dots N_s - 1$. Having this assumption, the recurrent process (\equref{eq:recurrent-equation}) turns into:
 \[
   \tilde{T}_{i+1} = \tilde{K} \: \tilde{T}_i + \tilde{B} \: P_i
 \]
 where:
 \begin{align*}
-  & \tilde{K} = e^{\tilde{A} \: \triangle t} \\
-  & \tilde{B} = \tilde{A}^{-1} \left( e^{\tilde{A} \: \triangle t} - I \right) C^{-\frac{1}{2}}
+  & \tilde{K} = e^{\tilde{A} \: \Delta t} \\
+  & \tilde{B} = \tilde{A}^{-1} \left( e^{\tilde{A} \: \Delta t} - I \right) C^{-\frac{1}{2}}
 \end{align*}
-Here $\tilde{K}$ and $\tilde{B}$ are constants, since they depend only on the matrices $\tilde{A}$, $C$, and sampling interval $\triangle t$, which is fixed. In this case, the block diagonal of the matrix $\tilde{\mathbb{K}}$, similar to \equref{eq:system}, is composed of the same repeating block $\tilde{K}$ and the recurrent expressions take the following form:
+Here $\tilde{K}$ and $\tilde{B}$ are constants, since they depend only on the matrices $\tilde{A}$, $C$, and sampling interval $\Delta t$, which is fixed. In this case, the block diagonal of the matrix $\tilde{\mathbb{K}}$, similar to \equref{eq:system}, is composed of the same repeating block $\tilde{K}$ and the recurrent expressions take the following form:
 \begin{align}
   & \tilde{T}_{i + 1} = \tilde{K} \: \tilde{T}_i + Q_i, \; i = 0 \dots N_s - 1 \nonumber \\
   & W_i = \tilde{K} \: W_{i - 1} + Q_i, \; i = 1 \dots N_s - 1 \nonumber

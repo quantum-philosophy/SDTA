@@ -18,30 +18,30 @@ where $\eta$ is the scaling parameter, $\beta$ is the shape (slope) parameter. T
 \begin{equation} \label{eq:general-mttf}
   MTTF = \eta \; \Gamma(1 + \frac{1}{\beta})
 \end{equation}
-where $\Gamma$ is the gamma function. The shape parameter is found to be independent on the temperature variation \cite{chang2006}, which is not the case with the scaling parameter $\eta$. Therefore, the distribution can vary from one set of conditions to another. We can use the same approach as it was shown previously and split the overall period of the application $\mathcal{T}$ into $N_m$ time intervals $\triangle t_i$, so that during each time interval $\triangle t_i$ all those conditions can be treated as constants, consequently, the corresponding $\eta_i$ is also constant. In this case, the cumulative distribution function by the end of the first execution of the application is the following \cite{huang2009}, \cite{xiang2010}:
+where $\Gamma$ is the gamma function. The shape parameter is found to be independent on the temperature variation \cite{chang2006}, which is not the case with the scaling parameter $\eta$. Therefore, the distribution can vary from one set of conditions to another. We can use the same approach as it was shown previously and split the overall period of the application $\mathcal{T}$ into $N_m$ time intervals $\Delta t_i$, so that during each time interval $\Delta t_i$ all those conditions can be treated as constants, consequently, the corresponding $\eta_i$ is also constant. In this case, the cumulative distribution function by the end of the first execution of the application is the following \cite{huang2009}, \cite{xiang2010}:
 \[
-  R = e^{-(\sum_{i=0}^{N_m - 1} \frac{\triangle t_i}{\eta_i})^\beta}
+  R = e^{-(\sum_{i=0}^{N_m - 1} \frac{\Delta t_i}{\eta_i})^\beta}
 \]
 
 It can be shown that if $\eta_i$ are large enough\footnote{This is the case, since usually the MTTF is in order of tens of years (see \equref{eq:general-mttf}).}, the following continuous approximation can be applied \cite{xiang2010}:
 \[
-  R(t) = e^{-(\frac{t}{\mathcal{T}} \sum_{i=0}^{N_m - 1} \frac{\triangle t_i}{\eta_i})^\beta}
+  R(t) = e^{-(\frac{t}{\mathcal{T}} \sum_{i=0}^{N_m - 1} \frac{\Delta t_i}{\eta_i})^\beta}
 \]
 The formula still keeps the form of the Weibull distribution with the following scaling parameter:
 \[
-  \eta = \frac{\mathcal{T}}{\sum_{i=0}^{N_m - 1} \frac{\triangle t_i}{\eta_i}}
+  \eta = \frac{\mathcal{T}}{\sum_{i=0}^{N_m - 1} \frac{\Delta t_i}{\eta_i}}
 \]
 
 As it was mentioned earlier, the reliability model can be used to model different failure mechanisms. Let us now focus on one particular failure cause, the thermal cycling (TC) fatigue, that is a common packaging and interfacial failure mechanism \cite{jedec2010}. The number of cycles to failure can be estimated using a modified version of the well-known Coffin-Manson equation with the Arrhenius term \cite{jedec2010}, \cite{xiang2010}, \cite{ciappa2003}:
 \begin{equation} \label{eq:cycles-to-failure}
-  \mathcal{N} = A (\triangle T - \triangle T_0)^{-b} e^{\frac{E_a}{k T_{max}}}
+  \mathcal{N} = A (\Delta T - \Delta T_0)^{-b} e^{\frac{E_a}{k T_{max}}}
 \end{equation}
-where $A$ is an empirically determined constant, $\triangle T$ is the thermal cycle amplitude, $\triangle T_0$ is the portion of the temperature range in the elastic region which does not cause damage, $b$ is the Coffin-Manson exponent which also empirically determined\footnote{This constant is found to be 6--9 for brittle fracture such as Si and its dielectrics \cite{jedec2010}.}, $E_{a}$ is the activation energy\footnote{For the thermal cycling failure mechanism the activation energy lies between 0.5 and 0.7~eV \cite{vigrass}.}, $k$ is the Boltzmann constant, and $T_{max}$ is the maximal temperature during the thermal cycle. Having the number of cycles to failure and the duration of one cycle $\triangle t$, we can compute the MTTF:
+where $A$ is an empirically determined constant, $\Delta T$ is the thermal cycle amplitude, $\Delta T_0$ is the portion of the temperature range in the elastic region which does not cause damage, $b$ is the Coffin-Manson exponent which also empirically determined\footnote{This constant is found to be 6--9 for brittle fracture such as Si and its dielectrics \cite{jedec2010}.}, $E_{a}$ is the activation energy\footnote{For the thermal cycling failure mechanism the activation energy lies between 0.5 and 0.7~eV \cite{vigrass}.}, $k$ is the Boltzmann constant, and $T_{max}$ is the maximal temperature during the thermal cycle. Having the number of cycles to failure and the duration of one cycle $\Delta t$, we can compute the MTTF:
 \[
-  MTTF = \mathcal{N} \; \triangle t
+  MTTF = \mathcal{N} \; \Delta t
 \]
 
-Since we consider the TC failure mechanism, the time intervals $\triangle t_i$ correspond to intervals of constant parameters of this particular mechanism that can be observed on \equref{eq:cycles-to-failure}. Each interval $\triangle t_i$ belongs to one thermal cycle with the scaling parameter $\eta_i$ derived using \equref{eq:general-mttf}:
+Since we consider the TC failure mechanism, the time intervals $\Delta t_i$ correspond to intervals of constant parameters of this particular mechanism that can be observed on \equref{eq:cycles-to-failure}. Each interval $\Delta t_i$ belongs to one thermal cycle with the scaling parameter $\eta_i$ derived using \equref{eq:general-mttf}:
 \[
   \eta_i = \frac{MTTF_i}{\Gamma(1 + \frac{1}{\beta})}
 \]
