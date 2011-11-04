@@ -112,12 +112,26 @@ mx = max([ max(max(T1)), max(max(T2)), max(max(T3)) ]);
 
 YLim = [ -2 + mn, 2 + mx ];
 
+subplot(3, 2, 1);
+xlabel('Time, s');
 subplot(3, 2, 2);
 set(gca, 'YLim', YLim);
+xlabel('Time, s');
+ylabel('Temperature, C');
+
+subplot(3, 2, 3);
+xlabel('Time, s');
 subplot(3, 2, 4);
 set(gca, 'YLim', YLim);
+xlabel('Time, s');
+ylabel('Temperature, C');
+
+subplot(3, 2, 5);
+xlabel('Time, s');
 subplot(3, 2, 6);
 set(gca, 'YLim', YLim);
+xlabel('Time, s');
+ylabel('Temperature, C');
 
 Lifetime.predictMultiple(T1 + Constants.degreeKelvin)
 Lifetime.predictMultiple(T2 + Constants.degreeKelvin)
