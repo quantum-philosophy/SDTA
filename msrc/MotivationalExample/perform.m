@@ -22,18 +22,22 @@ graph.addLink([], 'task1', 'task3', 0);
 graph.addLink([], 'task2', 'task4', 0);
 
 cores = {};
-for i = 1:2
-  core = TestCase.Processor(i, [ 'core', num2str(i) ], i, 1e9, 1, 2e5);
 
-  core.addType(1, 1.5e-8, 4.0e+6);
-  core.addType(2, 1.5e-8, 7.0e+6);
-  core.addType(3, 1.5e-8, 3.0e+6);
-  core.addType(4, 1.5e-8, 4.0e+6);
+core = TestCase.Processor(1, 'core1', 1, 1e9, 1, 2e5);
+core.addType(1, 1.5e-8, 12.0e+6);
+core.addType(2, 1.5e-8, 18.0e+6);
+core.addType(3, 1.5e-8, 10.0e+6);
+core.addType(4, 1.5e-8, 12.0e+6);
+cores{end + 1} = core;
 
-  cores{end + 1} = core;
-end
+core = TestCase.Processor(2, 'core2', 2, 1e9, 1, 2e5);
+core.addType(1, 1.5e-8, 14.0e+6);
+core.addType(2, 1.5e-8, 20.0e+6);
+core.addType(3, 1.5e-8, 12.0e+6);
+core.addType(4, 1.5e-8, 14.0e+6);
+cores{end + 1} = core;
 
-graph.assignDeadline(0.016);
+graph.assignDeadline(0.050);
 
 figure;
 

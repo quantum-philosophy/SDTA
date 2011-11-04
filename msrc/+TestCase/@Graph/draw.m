@@ -58,7 +58,7 @@ function draw(graph, createFigure, proportionalPower)
     color = colors{mod(i - 1, length(colors)) + 1};
     line(x, y, 'Color', color);
 
-    processorNames{end + 1} = [ 'Core', num2str(i) ];
+    processorNames{end + 1} = [ 'PE', num2str(i) ];
   end
 
   line([ graph.deadline, graph.deadline ], [ 1 (processorCount + 1) ], ...
