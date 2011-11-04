@@ -35,12 +35,12 @@ core.addType(6, 1.5e-8, 10.0e+6);
 cores{end + 1} = core;
 
 core = TestCase.Processor(2, 'core2', 2, 1e9, 1, 2e5);
-core.addType(1, 1.4e-8, 10.0e+6);
-core.addType(2, 0.2e-8, 10.0e+6);
-core.addType(3, 1.0e-8, 15.0e+6);
-core.addType(4, 1.5e-8, 10.0e+6);
-core.addType(5, 1.5e-8, 15.0e+6);
-core.addType(6, 1.5e-8, 10.0e+6);
+core.addType(1, 1.4e-8, 12.0e+6);
+core.addType(2, 0.2e-8, 12.0e+6);
+core.addType(3, 1.0e-8, 17.0e+6);
+core.addType(4, 1.5e-8, 12.0e+6);
+core.addType(5, 1.5e-8, 17.0e+6);
+core.addType(6, 1.5e-8, 12.0e+6);
 cores{end + 1} = core;
 
 graph.assignDeadline(0.06);
