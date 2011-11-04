@@ -1,18 +1,3 @@
-\iimage{task-graph}{0 0 0 0}{A task graph of an application with 6 tasks.}
-\image{motivation}{50 200 50 200}{Two examples of mapping and scheduling (the left side) of the application shown on \figref{fig:task-graph} onto a dual-core architecture and the corresponding steady-state dynamic temperature curves (the right side) of the cores.}
-\begin{itable}{motivational-setup}{|r|r|r|r|r|}
-  {Setup of the task graph shown in \figref{fig:task-graph}}
-  {$\tau$ --- the execution time of the task, ASAP --- as soon as possible, ALAP --- as late as possible, Mobility --- difference between the ALAP and ASAP.}
-  \hline
-  Task & $\tau$, s & ASAP, s & ALAP, s & Mobility \\
-  \hline
-  \hline
-   0 &  0.04 & 0.00 & 0.08 & 0.08 \\
-   1 &  0.03 & 0.04 & 0.12 & 0.08 \\
-   2 &  0.07 & 0.04 & 0.17 & 0.13 \\
-   3 &  0.04 & 0.07 & 0.15 & 0.08 \\
-   4 &  0.04 & 0.11 & 0.08 & 0.08 \\
-   5 &  0.05 & 0.11 & 0.20 & 0.09 \\
-  \hline
-\end{itable}
-Consider a toy application with 6 tasks mapped onto a homogenious dual-core architecture. The task graph of the application is given in \figref{fig:task-graph}. Let us map and schedule the application using a variant of the list scheduler with priorities based on the mobility of the tasks, i.e., the difference between the As Soon As Possible (ASAP) and As Late As Possible (ALAP) start times \cite{schmitz2004}. The mapping is done along with the scheduling where we assing the earliest available core for the task being processed. All the parameters are shown in \tabref{tab:motivational-setup}. The resulting and alternative mapping, schedule, and SSDTP for each core are depicted in the top and bottom of \figref{fig:motivation}, respectively. It can be seen that in the first case, the core labeled ``Core1'' is experiencing two thermal cycles and only one cycle with the second configuration.
+\iimage{task-graph}{0 0 0 0}{Motivational example with 4 tasks, labeled from ``T0'' to ``T3'', running on a heterogeneous dual-core architecture. The execution times of the tasks vary between cores and are given on the figure. The period of the application is 50 milliseconds.}
+\image{motivation}{80 230 80 230}{Two alternative combinations of mapping and scheduling (the left side) of the application shown in \figref{fig:task-graph} onto a dual-core architecture and corresponding steady-state dynamic temperature curves (the right side) for each of the cores.}
+Consider a toy application with four tasks, denoted ``T0''--``T3'', and a heterogeneous architecture with two cores, labeled ``PE0'' and ``PE1''. The task graph of the application is given in \figref{fig:task-graph} and two possible combinations of mapping and scheduling are depicted in \figref{fig:motivation}. It can be seen that in the first case the core ``PE0'' is experiencing two thermal cycles and only one cycle with the second configuration. Using the reliability model from \secref{sec:reliability}, we observe a $24$-percent improvement in the lifetime of the system. The difference is in the placement of the task ``T3'', which will be assigned to ``PE0'' if we are guided only by its execution time, since on ``PE0'' the task can be completed faster than on ``PE1''.

@@ -4,14 +4,10 @@ The proposed solution of the steady-state dynamic temperature estimation can be 
 The system executes a periodic application with a set of data-dependent tasks. The overall structure of the application is defined by a task graph:
 \begin{align*}
   & G = (\mathcal{V}, \: E, \: \mathcal{T}) \\
-  & \mathcal{V} = \{ v_i \} \\
+  & \mathcal{V} = \{ v_i: \: i = 0 \dots N_t - 1 \} \\
   & E = \{ e_{ij} \}
 \end{align*}
-where $\mathcal{V}$ is a set of $N_t$ vertices of the graph (tasks), $E$ is a set of edges (data dependencies between tasks), and $\mathcal{T}$ is the period of the application. Each pair of a task $v_i$ and a processing element $\pi_k$ is characterized by two parameters:
-\begin{equation*}
-  (v_i, \pi_k) \rightarrow (C_{eff \; ik}, N_{cycles \; ik})
-\end{equation*}
-where $C_{eff \; ik}$ is the effective switched capacitance and $N_{cycles \: ik}$ is the number of clock cycles. These parameters determine the processor load and execution time of the task, correspondingly.
+where $\mathcal{V}$ is a set of $N_t$ vertices of the graph (tasks), $E$ is a set of edges (data dependencies between tasks), and $\mathcal{T}$ is the period of the application. Each pair of a task $v_i$ and processing element $\pi_j$ is characterized by a tuple $(C_{eff \; ij}, N_{cycles \; ij})$, where $C_{eff \; ij}$ is the effective switched capacitance and $N_{cycles \: ij}$ is the number of clock cycles. These parameters determine the processor load and execution time of the task, correspondingly.
 
 \subsection{Temperature-Aware Reliability Model}
 In the paper we address temperature-driven failure mechanisms with the reliability model presented in \cite{huang2009}, \cite{xiang2010}. The model is based on the assumption that the failure rate has a Weibull distribution (e.g., the thermal cycling, electromigration, etc. \cite{jedec2010}):
@@ -63,6 +59,3 @@ where $N_{m \: i}$ is the number of thermal cycles of the $i$th processing eleme
 
 \subsection{Motivational Example} \label{sec:motivation}
 \input{include/motivation.tex}
-
-\subsection{Genetic Algorithm}
-\todo{Describe the genetic algorithm that we use.}

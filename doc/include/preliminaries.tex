@@ -1,10 +1,9 @@
 \subsection{Architecture Model}
 We consider a heterogeneous multicore architecture with a set of processing elements $\Pi$ defined as the following \cite{liao2005}:
-\begin{align*}
-  & \Pi = \{ \pi_k: \; k = 0 \dots N_p - 1 \} \\
-  & \pi_k \rightarrow (V_k, \: f_k, \: N_{gate \: k})
-\end{align*}
-where $V_k$, $f_k$, and $N_{gate \: k}$ are the supply voltage, frequency, and number of gates of the $k$th core, correspondingly. The first two parameters are used for the dynamic power estimation while the last one for the power leakage as described in the following subsection.
+\[
+  \Pi = \{ \pi_i = (V_i, \: f_i, \: N_{gate \: i}): \; i = 0 \dots N_p - 1 \}
+\]
+where $V_i$, $f_i$, and $N_{gate \: i}$ are the supply voltage, frequency, and number of gates of the $i$th core, correspondingly. The first two parameters are used for the dynamic power estimation while the last one for the power leakage as described in the following subsection.
 
 \subsection{Power Model}
 The total power dissipation of a processing element is defined as a sum of the dynamic power and power leakage:
@@ -12,7 +11,7 @@ The total power dissipation of a processing element is defined as a sum of the d
   & P = P_{dyn} + P_{leak} \\
   & P_{dyn} = C_{eff} \; f \; V^2
 \end{align*}
-where $C_{eff}$ is the effective switched capacitance, $V$ and $f$ are the supplied voltage and frequency, correspondingly. The model for the leakage part of the power dissipation is presented in \cite{liao2005} and defined as:
+where $C_{eff}$ is the effective switched capacitance, $V$ and $f$ are the supplied voltage and frequency, respectively. The model for the leakage part of the power dissipation is presented in \cite{liao2005} and defined as:
 \begin{align*}
   & P_{leak}(T) = N_{gate} \: I_{avg}(T) \: V \\
   & I_{avg}(T) = I_0 \: f_{avg}(T) \\
