@@ -55,6 +55,9 @@ function draw(graph, createFigure, proportionalPower)
     x(end + 1) = last;
     y(end + 1) = y0;
 
+    x(end + 1) = 0;
+    y(end + 1) = y0;
+
     color = colors{mod(i - 1, length(colors)) + 1};
     line(x, y, 'Color', color);
 

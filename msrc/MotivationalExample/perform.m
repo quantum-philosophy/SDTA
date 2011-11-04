@@ -13,86 +13,112 @@ param_line = Utils.configStream( ...
 
 graph = TestCase.Graph(1, 'Application', 0);
 
-for i = 1:4
+for i = 1:6
   graph.addTask([ 'task', num2str(i) ], i);
 end
 
 graph.addLink([], 'task1', 'task2', 0);
 graph.addLink([], 'task1', 'task3', 0);
-graph.addLink([], 'task2', 'task4', 0);
+graph.addLink([], 'task1', 'task4', 0);
+graph.addLink([], 'task3', 'task5', 0);
+graph.addLink([], 'task5', 'task6', 0);
 
 cores = {};
 
 core = TestCase.Processor(1, 'core1', 1, 1e9, 1, 2e5);
-core.addType(1, 1.5e-8, 12.0e+6);
-core.addType(2, 1.5e-8, 18.0e+6);
-core.addType(3, 1.5e-8, 10.0e+6);
-core.addType(4, 1.5e-8, 12.0e+6);
+core.addType(1, 1.4e-8, 10.0e+6);
+core.addType(2, 0.2e-8, 10.0e+6);
+core.addType(3, 1.0e-8, 15.0e+6);
+core.addType(4, 1.5e-8, 10.0e+6);
+core.addType(5, 1.5e-8, 15.0e+6);
+core.addType(6, 1.5e-8, 10.0e+6);
 cores{end + 1} = core;
 
 core = TestCase.Processor(2, 'core2', 2, 1e9, 1, 2e5);
-core.addType(1, 1.5e-8, 14.0e+6);
-core.addType(2, 1.5e-8, 20.0e+6);
-core.addType(3, 1.5e-8, 12.0e+6);
-core.addType(4, 1.5e-8, 14.0e+6);
+core.addType(1, 1.4e-8, 10.0e+6);
+core.addType(2, 0.2e-8, 10.0e+6);
+core.addType(3, 1.0e-8, 15.0e+6);
+core.addType(4, 1.5e-8, 10.0e+6);
+core.addType(5, 1.5e-8, 15.0e+6);
+core.addType(6, 1.5e-8, 10.0e+6);
 cores{end + 1} = core;
 
-graph.assignDeadline(0.050);
+graph.assignDeadline(0.06);
 
 figure;
 
 % Before optimization
-priority = [ 1, 2, 3, 4 ];
-mapping = [ 1, 2, 1, 1 ];
+priority = [ 1, 2, 3, 4, 5, 6 ];
+mapping = [ 1, 1, 2, 1, 2, 1 ];
 
 graph.assignMapping(cores, mapping);
 LS.schedule(graph, priority);
 
 graph.inspect();
 
-subplot(2, 2, 1);
-graph.draw(false, false);
+subplot(3, 2, 1);
+graph.draw(false);
 title('');
 
 power = Power.calculateDynamicProfile(graph) * powerScale;
 T1 = Optima.solve_power(config.system, config.floorplan, ...
   config.hotspot, config.params, param_line, power) - Constants.degreeKelvin;
 
-subplot(2, 2, 2);
+subplot(3, 2, 2);
 Utils.drawTemperature(T1, []);
 
-mn1 = min(min(T1));
-mx1 = max(max(T1));
-
 % After optimization
-priority = [ 1, 2, 3, 4 ];
-mapping = [ 1, 2, 1, 2 ];
+priority = [ 1, 2, 3, 4, 5, 6 ];
+mapping = [ 1, 1, 2, 1, 2, 2 ];
 
 graph.assignMapping(cores, mapping);
 LS.schedule(graph, priority);
 
 graph.inspect();
 
-subplot(2, 2, 3);
-graph.draw(false, false);
+subplot(3, 2, 3);
+graph.draw(false);
 title('');
 
 power = Power.calculateDynamicProfile(graph) * powerScale;
 T2 = Optima.solve_power(config.system, config.floorplan, ...
   config.hotspot, config.params, param_line, power) - Constants.degreeKelvin;
 
-mn2 = min(min(T2));
-mx2 = max(max(T2));
-
-YLim = [ -2 + min(mn1, mn2), 2 + max(mx1, mx2) ];
-
-subplot(2, 2, 2);
-set(gca, 'YLim', YLim);
-
-subplot(2, 2, 4);
+subplot(3, 2, 4);
 Utils.drawTemperature(T2, []);
+
+% After more optimization
+priority = [ 1, 4, 3, 2, 5, 6 ];
+mapping = [ 1, 1, 2, 1, 2, 2 ];
+
+graph.assignMapping(cores, mapping);
+LS.schedule(graph, priority);
+
+graph.inspect();
+
+subplot(3, 2, 5);
+graph.draw(false);
+title('');
+
+power = Power.calculateDynamicProfile(graph) * powerScale;
+T3 = Optima.solve_power(config.system, config.floorplan, ...
+  config.hotspot, config.params, param_line, power) - Constants.degreeKelvin;
+
+subplot(3, 2, 6);
+Utils.drawTemperature(T3, []);
+
+mn = min([ min(min(T1)), min(min(T2)), min(min(T3)) ]);
+mx = max([ max(max(T1)), max(max(T2)), max(max(T3)) ]);
+
+YLim = [ -2 + mn, 2 + mx ];
+
+subplot(3, 2, 2);
+set(gca, 'YLim', YLim);
+subplot(3, 2, 4);
+set(gca, 'YLim', YLim);
+subplot(3, 2, 6);
 set(gca, 'YLim', YLim);
 
-Lifetime.predictMultipleAndDraw(T1 + Constants.degreeKelvin)
-
-Lifetime.predictMultipleAndDraw(T2 + Constants.degreeKelvin)
+Lifetime.predictMultiple(T1 + Constants.degreeKelvin)
+Lifetime.predictMultiple(T2 + Constants.degreeKelvin)
+Lifetime.predictMultiple(T3 + Constants.degreeKelvin)
