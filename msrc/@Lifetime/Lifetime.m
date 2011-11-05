@@ -27,7 +27,7 @@ classdef Lifetime < handle
     k = 8.61733248e-5; % eV/K
 
     % Empirically determined constant
-    Atc = Lifetime.calculateAtc;
+    Atc = 5e10; % Lifetime.calculateAtc;
 
     % Shape parameter for the Weibull distribution
     beta = 2;

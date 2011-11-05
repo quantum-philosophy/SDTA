@@ -14,6 +14,8 @@ class Lifetime
 		double sampling_interval) = 0;
 };
 
+#define MAX_EXTREMA 1000
+
 class ThermalCyclingLifetime: public Lifetime
 {
 	protected:
@@ -36,17 +38,13 @@ class ThermalCyclingLifetime: public Lifetime
 	 */
 
 	/* Activation energy [4], [5] */
-#ifndef FAKE_EVALUATION
-	static const double Eatc = 0.7; /* eV, typically ranges from 0.3 up to 1.5 */
-#else
-	static const double Eatc = 0.08;
-#endif
+	static const double Eatc = 0.3; /* eV, typically ranges from 0.3 up to 1.5 */
 
 	/* Boltzmann constant [6] */
 	static const double k = 8.61733248e-5; /* eV/K */
 
 	/* Empirically determined constant */
-	static const double Atc = 1;
+	static const double Atc = 5e10;
 
 	/* Shape parameter for the Weibull distribution */
 	static const double beta = 2;
@@ -57,10 +55,14 @@ class ThermalCyclingLifetime: public Lifetime
 
 	protected:
 
+	double a[MAX_EXTREMA];
+	double amplitudes[MAX_EXTREMA];
+	double means[MAX_EXTREMA];
+	double cycles[MAX_EXTREMA];
+
 	void detect_peaks(const matrix_t &temperature,
 		std::vector<extrema_t> &peaks) const;
-	void rainflow(const extrema_t &extrema, std::vector<double> &amplitudes,
-		std::vector<double> &means) const;
+	size_t rainflow(const extrema_t &extrema);
 };
 
 class CombinedThermalCyclingLifetime: public ThermalCyclingLifetime

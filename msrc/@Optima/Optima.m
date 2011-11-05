@@ -130,5 +130,7 @@ classdef Optima < handle
       solve_power(system, floorplan, hotspot, params, param_line, power);
     [ intervals, temperature, power, time ] = ...
       solve_coarse(system, floorplan, hotspot, params, param_line);
+
+    lifetime = predict(temperature, sampling_interval);
   end
 end

@@ -62,10 +62,10 @@ title('');
 
 power = Power.calculateDynamicProfile(graph) * powerScale;
 T1 = Optima.solve_power(config.system, config.floorplan, ...
-  config.hotspot, config.params, param_line, power) - Constants.degreeKelvin;
+  config.hotspot, config.params, param_line, power);
 
 subplot(3, 2, 2);
-Utils.drawTemperature(T1, []);
+Utils.drawTemperature(T1 - Constants.degreeKelvin, []);
 
 % After optimization
 priority = [ 1, 2, 3, 4, 5, 6 ];
@@ -82,10 +82,10 @@ title('');
 
 power = Power.calculateDynamicProfile(graph) * powerScale;
 T2 = Optima.solve_power(config.system, config.floorplan, ...
-  config.hotspot, config.params, param_line, power) - Constants.degreeKelvin;
+  config.hotspot, config.params, param_line, power);
 
 subplot(3, 2, 4);
-Utils.drawTemperature(T2, []);
+Utils.drawTemperature(T2 - Constants.degreeKelvin, []);
 
 % After more optimization
 priority = [ 1, 4, 3, 2, 5, 6 ];
@@ -102,13 +102,13 @@ title('');
 
 power = Power.calculateDynamicProfile(graph) * powerScale;
 T3 = Optima.solve_power(config.system, config.floorplan, ...
-  config.hotspot, config.params, param_line, power) - Constants.degreeKelvin;
+  config.hotspot, config.params, param_line, power);
 
 subplot(3, 2, 6);
-Utils.drawTemperature(T3, []);
+Utils.drawTemperature(T3 - Constans.degreeKelvin, []);
 
-mn = min([ min(min(T1)), min(min(T2)), min(min(T3)) ]);
-mx = max([ max(max(T1)), max(max(T2)), max(max(T3)) ]);
+mn = min([ min(min(T1)), min(min(T2)), min(min(T3)) ]) - Constants.degreeKelvin;
+mx = max([ max(max(T1)), max(max(T2)), max(max(T3)) ]) - Constants.degreeKelvin;
 
 YLim = [ -2 + mn, 2 + mx ];
 
@@ -133,6 +133,13 @@ set(gca, 'YLim', YLim);
 xlabel('Time, s');
 ylabel('Temperature, C');
 
-Lifetime.predictMultiple(T1 + Constants.degreeKelvin)
-Lifetime.predictMultiple(T2 + Constants.degreeKelvin)
-Lifetime.predictMultiple(T3 + Constants.degreeKelvin)
+m1 = min(Lifetime.predictMultiple(T1));
+m2 = min(Lifetime.predictMultiple(T2));
+m3 = min(Lifetime.predictMultiple(T3));
+
+fprintf('MTTF 1: %.2f\n', m1);
+fprintf('MTTF 2: %.2f\n', m2);
+fprintf('MTTF 3: %.2f\n', m3);
+
+fprintf('Improvement 1: %.2f%%\n', (m2 / m1 - 1) * 100);
+fprintf('Improvement 2: %.2f%%\n', (m3 / m1 - 1) * 100);
