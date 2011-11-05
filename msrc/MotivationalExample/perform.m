@@ -3,8 +3,10 @@ setup;
 powerScale = 3;
 config = Optima('002_006');
 
+samplingInterval = 1e-4;
+
 config.changeArea(16e-6);
-config.changeSamplingInterval(1e-4);
+config.changeSamplingInterval(samplingInterval);
 
 param_line = Utils.configStream( ...
   'verbose', 0, ...
@@ -60,12 +62,12 @@ subplot(3, 2, 1);
 graph.draw(false);
 title('');
 
-power = Power.calculateDynamicProfile(graph) * powerScale;
+power = Power.calculateDynamicProfile(graph, samplingInterval) * powerScale;
 T1 = Optima.solve_power(config.system, config.floorplan, ...
   config.hotspot, config.params, param_line, power);
 
 subplot(3, 2, 2);
-Utils.drawTemperature(T1 - Constants.degreeKelvin, []);
+Utils.drawTemperature(T1 - Constants.degreeKelvin, [], samplingInterval);
 
 % After optimization
 priority = [ 1, 2, 3, 4, 5, 6 ];
@@ -80,12 +82,12 @@ subplot(3, 2, 3);
 graph.draw(false);
 title('');
 
-power = Power.calculateDynamicProfile(graph) * powerScale;
+power = Power.calculateDynamicProfile(graph, samplingInterval) * powerScale;
 T2 = Optima.solve_power(config.system, config.floorplan, ...
   config.hotspot, config.params, param_line, power);
 
 subplot(3, 2, 4);
-Utils.drawTemperature(T2 - Constants.degreeKelvin, []);
+Utils.drawTemperature(T2 - Constants.degreeKelvin, [], samplingInterval);
 
 % After more optimization
 priority = [ 1, 4, 3, 2, 5, 6 ];
@@ -100,12 +102,12 @@ subplot(3, 2, 5);
 graph.draw(false);
 title('');
 
-power = Power.calculateDynamicProfile(graph) * powerScale;
+power = Power.calculateDynamicProfile(graph, samplingInterval) * powerScale;
 T3 = Optima.solve_power(config.system, config.floorplan, ...
   config.hotspot, config.params, param_line, power);
 
 subplot(3, 2, 6);
-Utils.drawTemperature(T3 - Constans.degreeKelvin, []);
+Utils.drawTemperature(T3 - Constants.degreeKelvin, [], samplingInterval);
 
 mn = min([ min(min(T1)), min(min(T2)), min(min(T3)) ]) - Constants.degreeKelvin;
 mx = max([ max(max(T1)), max(max(T2)), max(max(T3)) ]) - Constants.degreeKelvin;
@@ -133,9 +135,9 @@ set(gca, 'YLim', YLim);
 xlabel('Time, s');
 ylabel('Temperature, C');
 
-m1 = min(Lifetime.predictMultiple(T1));
-m2 = min(Lifetime.predictMultiple(T2));
-m3 = min(Lifetime.predictMultiple(T3));
+m1 = Optima.predict(T1, samplingInterval);
+m2 = Optima.predict(T2, samplingInterval);
+m3 = Optima.predict(T3, samplingInterval);
 
 fprintf('MTTF 1: %.2f\n', m1);
 fprintf('MTTF 2: %.2f\n', m2);

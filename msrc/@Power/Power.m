@@ -39,9 +39,9 @@ classdef Power < handle
       end
     end
 
-    function profile = calculateDynamicProfile(graph)
+    function profile = calculateDynamicProfile(graph, varargin)
       taskPower = Power.calculateTask(graph);
-      profile = Power.distributePower(graph, taskPower);
+      profile = Power.distributePower(graph, taskPower, varargin{:});
     end
 
     function taskPower = calculateTask(graph)
@@ -69,8 +69,12 @@ classdef Power < handle
       end
     end
 
-    function profile = distributePower(graph, taskPower)
-      ts = Constants.samplingInterval;
+    function profile = distributePower(graph, taskPower, samplingInterval)
+      if nargin < 3
+        ts = Constants.samplingInterval;
+      else
+        ts = samplingInterval;
+      end
 
       % Here we build a profile for the whole time period of the graph
       % including its actual duration (only tasks) plus the gap to
