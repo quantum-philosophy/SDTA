@@ -44,7 +44,7 @@ class Generator
   end
 
   def self.params options
-    tournament_size = POPULATION_FACTOR * options[:task_count] / 100 + 1
+    tournament_size = [ 2, POPULATION_FACTOR * options[:task_count] / 100 + 1 ].max
     population_size = tournament_size * 100
 
     gaps = {

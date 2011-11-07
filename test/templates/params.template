@@ -1,21 +1,42 @@
-# Prepare
-repeat [REPEAT]
+# System
 deadline_ratio 1.1
+power_scale 1
+time_scale 1
 reorder_tasks 0
-include_mapping 0
-cache localhost
+# hotspot sampling_intvl 1e-3
+verbose 1
 
-# Target
-multiobjective 0
+# Leakage
+# * <none> (default)
+# * linear
+# * piecewise_linear
+# * exponential
+leakage linear
 
-# Randomize
+# Solution
+# * condensed_equation (default)
+# * coarse_condensed_equation
+# * steady_state
+# * precise_steady_state
+# * hotspot
+# * transient_analytical
+solution condensed_equation
+max_iterations 1
+tolerance 0
+
+# Optimization
 seed -1
+repeat [REPEAT]
+mapping 0
+multiobjective 0
+# cache localhost
+# dump evolution.txt
 
-# Create
-uniform_ratio 0.1
+# Creation
+uniform_ratio 0.2
 population_size [POPULATION_SIZE]
 
-# Continue
+# Continuation
 min_generations 0
 max_generations 10000
 stall_generations [STALL_GENERATIONS]
@@ -35,11 +56,11 @@ ranking_factor -0.1
 # * uniform
 # * peer
 # * list_schedule
-crossover uniform
+crossover npoint
 crossover_min_rate 0.8
 crossover_scale 0
 crossover_exponent 0
-crossover_points 1
+crossover_points 2
 
 # Mutate
 # * uniform
@@ -65,7 +86,3 @@ training_scale 0
 training_exponent 0
 max_lessons 10
 stall_lessons 10
-
-# Output
-verbose 1
-# dump_evolution evolution.txt

@@ -44,7 +44,7 @@ class ThermalCyclingLifetime: public Lifetime
 	static const double k = 8.61733248e-5; /* eV/K */
 
 	/* Empirically determined constant */
-	static const double Atc = 5e10;
+	static const double Atc = 1e10;
 
 	/* Shape parameter for the Weibull distribution */
 	static const double beta = 2;
