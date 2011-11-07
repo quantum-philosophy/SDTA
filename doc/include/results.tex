@@ -50,27 +50,36 @@ First, we vary the application period keeping the sampling interval constant and
 The second part of the comparison is the scalability with the number of processing elements shown in \figref{fig:scaling-cores} and \tabref{tab:scaling-cores}. It can be seen that the difference between computation times of the CE method and one TTS becomes smaller when the number of cores is increasing. At the same time the mismatch between the SSDTP and temperature profile produced by one TTA dramatically increases, which means that larger number of the TTA iterations is required to reach the same level of accuracy.
 
 \subsection{Reliability Optimization}
-The experimental setup for the reliability optimization is the following. We consider 10 distinct levels of difficulty of the problem characterized by pairs $(N_p, N_t)$ where $N_p$ is the number of processing elements and $N_t$ is the number of tasks. For each level we generate 20 random task graphs of a similar structure \cite{dick1998}, apply the optimization procedure, and state the average improvement of the lifetime. The parameters of the architecture, i.e., the frequency $f$, voltage $V$, and number of gates $N_{gates}$, are also generated randomly. For counting thermal cycles the rainflow counting method described in \cite{xiang2010} is employed.
+The optimization procedure is held by a genetic algorithm (GA) \cite{schmitz2004} that varies mapping and scheduling of the application in order to find the longest lifetime of the system. Each chromosome within the GA is a vector of $2 \times N_t$ elements, where $N_t$ is the number of tasks in the application. The first half of such a vector encodes priorities of the tasks, while the second encodes their mapping. To calculate schedules of all processing elements and, hence, the dynamic power profile of the whole system, a form of the list scheduler (LS) is used. Given a power profile, the corresponding SSDTP is computed by the CE method, which is further evaluated in terms of the reliability model given in \secref{sec:reliability}. The initial population is initialized partially randomly and partially based on the mobility of the tasks \cite{schmitz2004}. The size of the population is equal to $4 \times N_t$. The stopping condition is a stall during a certain number of successive generations. In order to count thermal cycles in temperature profiles, the rainflow counting method is employed \cite{xiang2010}. For the leakage modeling the linear approximation given in \secref{sec:leakage} is used.
 
-The optimization procedure is held by a genetic algorithm \cite{schmitz2004}. One half of the initial population is generated based on the mobility of the tasks, the second is generated randomly.
+In each of the experiments, we compare the optimized solution with the initial one that is obtained in the following way. First, we calculate the average execution time of each of the tasks, since it can vary from one core to another. Then we compute the mobility of the tasks and schedule the application according to it \cite{schmitz2004}. The mapping part is done along with the scheduling where each task is assigned to the earliest available core in the system.
 
-\begin{itable}{difficulty-levels}{|r|r|r|r|r|}
-  {Reliability optimization}
-  {$N_p$ --- the number of cores, $N_t$ --- the number of tasks in the periodic application, Time --- the computational time, MTTF --- the improvement of the MTTF relative to the initial solution.}
+\begin{itable}{mttf-cores}{|r|r|r|r|}
+  {Reliability optimization for different architectures}
+  {$N_p$ --- the number of cores, $N_t$ --- the number of tasks, Time --- the computational time, MTTF --- the average improvement of the MTTF.}
   \hline
-  Level & $N_p$ & $N_t$ & Time, m & MTTF, \% \\
+  $N_p$ & $N_t$ & Time, m & MTTF, \% \\
   \hline
-   1 &  1 &  30 & 0 & 0 \\
-   2 &  1 &  60 & 0 & 0 \\
-   3 &  2 &  60 & 0 & 0 \\
-   4 &  2 &  90 & 0 & 0 \\
-   5 &  4 &  90 & 0 & 0 \\
-   6 &  4 & 150 & 0 & 0 \\
-   7 &  8 & 150 & 0 & 0 \\
-   8 &  8 & 200 & 0 & 0 \\
-   9 & 16 & 200 & 0 & 0 \\
-  10 & 16 & 250 & 0 & 0 \\
+    2 &   20 & 0 & 0 \\
+    4 &   40 & 0 & 0 \\
+    8 &   80 & 0 & 0 \\
+   16 &  160 & 0 & 0 \\
+   32 &  320 & 0 & 0 \\
   \hline
 \end{itable}
+In the first set of experiments, we change the number of cores while keeping the number of tasks per core constant and equal to 10. For each problem we generate 20 random task graphs \cite{dick1998}, apply the optimization procedure, and state the average improvement relative to the initial solution. The results are given in \tabref{tab:mttf-cores}.
 
-\todo{Go on.}
+\begin{itable}{mttf-tasks}{|r|r|r|r|}
+  {Reliability optimization for different applications}
+  {$N_p$ --- the number of cores, $N_t$ --- the number of tasks, Time --- the computational time, MTTF --- the average improvement of the MTTF.}
+  \hline
+  $N_p$ & $N_t$ & Time, m & MTTF, \% \\
+  \hline
+  4 &  20 & 0 & 0 \\
+  4 &  40 & 0 & 0 \\
+  4 &  80 & 0 & 0 \\
+  4 & 160 & 0 & 0 \\
+  4 & 320 & 0 & 0 \\
+  \hline
+\end{itable}
+For the second set of experiments, we keep a quad-core architecture and vary the number of tasks within the application. For each problem 20 task graphs are generated and the average improvement of the MTTF is given in \tabref{tab:mttf-tasks}.
