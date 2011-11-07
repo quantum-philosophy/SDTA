@@ -22,6 +22,8 @@ unless File.exist? output
   exit
 end
 
+combinations = []
+
 Dir[File.join(input, '*')].each do |entry|
   unless File.directory? entry
     puts "Skipping a regular file '#{ entry }'..."
@@ -36,6 +38,14 @@ Dir[File.join(input, '*')].each do |entry|
   processor_count = $1.to_i
   task_count = $2.to_i
 
+  combinations.push [ processor_count, task_count, entry ]
+end
+
+combinations.sort! do |a, b|
+  a[0] <=> b[0]
+end
+
+combinations.each do |processor_count, task_count, entry|
   variants = []
 
   Dir[File.join(entry, '*_system.config')].each do |subentry|
@@ -52,6 +62,14 @@ Dir[File.join(input, '*')].each do |entry|
 
   puts "Test case: %d cores, %d tasks, and %d variants" %
     [ processor_count, task_count, variant_count ]
+
+  variants.sort! do |a, b|
+    a.match /\/(\d+)_system\.config$/
+    a = $1.to_i
+    b.match /\/(\d+)_system\.config$/
+    b = $1.to_i
+    a <=> b
+  end
 
   variants.each do |variant|
     system_config = variant

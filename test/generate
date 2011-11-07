@@ -4,13 +4,13 @@ require File.join File.dirname(__FILE__), 'generator'
 require File.join File.dirname(__FILE__), 'template'
 
 # The area of the die in square miters
-DIE_AREA = 16e-6
+DIE_AREA = 4e-6
 
 # Multiplied by the number of tasks
 POPULATION_FACTOR = 4
 
 # Repetitions of the GA
-GA_REALIZATIONS_PER_GRAPH = 10
+GA_REALIZATIONS_PER_GRAPH = 1
 
 STALL_GENERATIONS = 200
 
