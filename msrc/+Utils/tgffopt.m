@@ -1,7 +1,7 @@
 function tgffopt(opt, tgff, sys)
   root = Constants.thisDirectory;
 
-  name = regexprep(opt, '.tgffopt', '');
+  name = regexprep(opt, '.tgffopt.*', '');
 
   command = [ root, '/../build/vendor/tgff', ' ', name ];
   [ status, result ] = system(command);

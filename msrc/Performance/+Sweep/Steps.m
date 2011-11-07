@@ -18,19 +18,9 @@ classdef Steps < Sweep.PowerBasic
       end
     end
 
-    function config = setupStep(sweep, i)
-      param_line = Utils.configStream('verbose', 0);
-
-      o = sweep.config;
-
-      sweep.power = ones(sweep.stepCount(i), o.processorCount);
-
-      config = {};
-    end
-
-    function [ value, retake ] = valueStep(sweep, i, T, t)
+    function [ value, config ] = setupStep(sweep, i)
       value = sweep.stepCount(i) * sweep.hotspot.samplingInterval;
-      retake = false;
+      config = { 'time_scale', sweep.stepCount(i) / sweep.nominalStepCount };
     end
   end
 end

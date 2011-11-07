@@ -23,6 +23,7 @@ classdef Basic < handle
 
     values
     times
+    errors
   end
 
   methods
@@ -75,11 +76,7 @@ classdef Basic < handle
       i = 1;
 
       while sweep.continueStep(i)
-        while true
-          [ T, t ] = sweep.makeStep(i);
-          [ value, retake ] = sweep.valueStep(i, T, t);
-          if ~retake, break; end
-        end
+        [ T, t, value ] = sweep.makeStep(i);
 
         fprintf('%15s', num2str(value));
 
@@ -89,8 +86,8 @@ classdef Basic < handle
         fprintf('%15.2f', t(1) * 1e3);
 
         for j = 2:size(T, 1)
-          E = sweep.error(T(1, :, :), T(j, :, :));
-          fprintf('%15.2f%15.2f%15.2e', t(j) * 1e3, t(j) / t(1), mean(E));
+          sweep.errors(end + 1) = sweep.error(T(1, :, :), T(j, :, :));
+          fprintf('%15.2f%15.2f%15.2e', t(j) * 1e3, t(j) / t(1), sweep.errors(end));
         end
 
         fprintf('\n');
@@ -117,8 +114,7 @@ classdef Basic < handle
 
   methods (Abstract, Access = protected)
     result = continueStep(i)
-    config = setupStep(i)
-    [ value, retake ] = valueStep(i, T, t)
+    [ value, config ] = setupStep(i)
   end
 
   methods (Access = protected)
@@ -150,7 +146,7 @@ classdef Basic < handle
       param_line = Utils.configStream(...
           'verbose', 0, ...
           'solution', 'condensed_equation', ...
-          'leakage', 0, config{:});
+          'leakage', '', config{:});
 
       [ T, t ] = sweep.optimaSolveOnAverage(param_line);
     end
@@ -161,7 +157,7 @@ classdef Basic < handle
           'solution', 'hotspot', ...
           'max_iterations', 1, ...
           'tolerance', 0, ...
-          'leakage', 0, config{:});
+          'leakage', '', config{:});
 
       [ T, t ] = sweep.optimaSolveOnAverage(param_line);
     end
@@ -170,7 +166,7 @@ classdef Basic < handle
       param_line = Utils.configStream(...
           'verbose', 0, ...
           'solution', 'precise_steady_state', ...
-          'leakage', 0, config{:});
+          'leakage', '', config{:});
 
       [ T, t ] = sweep.optimaSolveOnAverage(param_line);
     end
@@ -179,7 +175,7 @@ classdef Basic < handle
       param_line = Utils.configStream(...
           'verbose', 0, ...
           'solution', 'condensed_equation', ...
-          'leakage', 0, config{:});
+          'leakage', '', config{:});
 
       [ T, t ] = sweep.matlabOnAverage(param_line, 'band');
     end
@@ -188,7 +184,7 @@ classdef Basic < handle
       param_line = Utils.configStream(...
           'verbose', 0, ...
           'solution', 'condensed_equation', ...
-          'leakage', 0, config{:});
+          'leakage', '', config{:});
 
       [ T, t ] = sweep.matlabOnAverage(param_line, 'bc');
     end
@@ -197,13 +193,13 @@ classdef Basic < handle
       param_line = Utils.configStream(...
           'verbose', 0, ...
           'solution', 'transient_analytical', ...
-          'leakage', 0, config{:});
+          'leakage', '', config{:});
 
       [ T, t ] = sweep.optimaSolveOnAverage(param_line);
     end
 
-    function [ T, time ] = makeStep(sweep, i)
-      config = sweep.setupStep(i);
+    function [ T, time, value ] = makeStep(sweep, i)
+      [ value, config ] = sweep.setupStep(i);
 
       T = zeros(sweep.solutionCount, 0, 0);
       time = zeros(1, sweep.solutionCount);
@@ -254,7 +250,7 @@ classdef Basic < handle
     end
 
     function e = error(sweep, T1, T2)
-      e = Utils.RMSE(T1, T2);
+      e = Utils.NRMSE(T1, T2) * 100;
     end
   end
 end

@@ -50,9 +50,9 @@ classdef Optima < handle
       o.processorCount = count;
 
       original = o.tgffopt;
-      o.tgffopt = Utils.temp([ o.name, '.tgffopt' ]);
-      o.tgff = Utils.temp([ o.name, '.tgff' ]);
-      o.system = Utils.temp([ o.name, '_system.config' ]);
+      o.tgffopt = Utils.path([ o.name, '_temp.tgffopt' ]);
+      o.tgff = Utils.path([ o.name, '_temp.tgff' ]);
+      o.system = Utils.path([ o.name, '_system.config_temp' ]);
 
       Utils.writeParameter(original, o.tgffopt, 'table_cnt', count);
       Utils.tgffopt(o.tgffopt, o.tgff, o.system);
