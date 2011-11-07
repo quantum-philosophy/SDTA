@@ -1,7 +1,7 @@
 classdef Cores < Sweep.PowerBasic
   properties (Constant)
     processorArea = 4e-6;
-    stepCount = 100;
+    stepCount = 1000;
   end
 
   properties (SetAccess = private)
