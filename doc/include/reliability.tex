@@ -4,8 +4,7 @@ The proposed solution of the steady-state dynamic temperature estimation can be 
 The system executes a periodic application with a set of data-dependent tasks. The overall structure of the application is defined by a task graph:
 \begin{align*}
   & G = (\mathcal{V}, \: E, \: \mathcal{T}) \\
-  & \mathcal{V} = \{ v_i: \: i = 0 \dots N_t - 1 \} \\
-  & E = \{ e_{ij} \}
+  & \mathcal{V} = \{ v_i: \: i = 0 \dots N_t - 1 \}
 \end{align*}
 where $\mathcal{V}$ is a set of $N_t$ vertices of the graph (tasks), $E$ is a set of edges (data dependencies between tasks), and $\mathcal{T}$ is the period of the application. Each pair of a task $v_i$ and processing element $\pi_j$ is characterized by a tuple $(C_{eff \; ij}, N_{cycles \; ij})$, where $C_{eff \; ij}$ is the effective switched capacitance and $N_{cycles \: ij}$ is the number of clock cycles. These parameters determine the processor load and execution time of the task, correspondingly.
 
