@@ -50,7 +50,16 @@ void SOEvolution::process(population_t &population)
 	ga(population);
 
 	stats.best_chromosome = population.best_element();
-	stats.final_energy = stats.best_chromosome.get_energy();
+
+	/* Calculate the energy consumption */
+	evaluation.set_shallow(false);
+	price_t price = assess(stats.best_chromosome);
+	stats.final_energy = price.energy;
+
+#ifndef SHALLOW_CHECK
+	if (price.lifetime != stats.best_lifetime)
+		throw std::runtime_error("The optimization process went bad.");
+#endif
 }
 
 /******************************************************************************/
