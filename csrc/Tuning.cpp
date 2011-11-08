@@ -167,7 +167,7 @@ void ContinuationTuning::setup(const parameters_t &params)
 			min_generations = it->to_int();
 		else if (it->name == "max_generations")
 			max_generations = it->to_int();
-		else if (it->name == "max_generations")
+		else if (it->name == "stall_generations")
 			stall_generations = it->to_int();
 	}
 }

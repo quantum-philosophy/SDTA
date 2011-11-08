@@ -38,7 +38,7 @@ class ThermalCyclingLifetime: public Lifetime
 	 */
 
 	/* Activation energy [4], [5] */
-	static const double Eatc = 0.3; /* eV, typically ranges from 0.3 up to 1.5 */
+	static const double Eatc = 0.5; /* eV, typically ranges from 0.5 up to 0.7 */
 
 	/* Boltzmann constant [6] */
 	static const double k = 8.61733248e-5; /* eV/K */
