@@ -151,12 +151,9 @@ void optimize(const string &system, const string &floorplan,
 		cout
 			<< "Initial lifetime: "
 			<< setiosflags(ios::fixed) << setprecision(2)
-			<< price.lifetime << endl;
-
-		if (optimization_tuning.multiobjective)
-			cout
-				<< "Initial energy: "
-				<< price.energy << endl;
+			<< price.lifetime << endl
+			<< "Initial energy: "
+			<< price.energy << endl;
 
 		for (size_t i = 0; i < repeat; i++) {
 			Random::reseed();
@@ -188,7 +185,10 @@ void optimize(const string &system, const string &floorplan,
 
 				cout
 					<< (sstats->best_lifetime / price.lifetime - 1.0) * 100
-					<< "% lifetime" << endl;
+					<< "% lifetime with "
+					<< (sstats->final_energy / price.energy - 1.0) * 100
+					<< "% energy"
+					<< endl;
 			}
 			else {
 				MOEvolutionStats *sstats = (MOEvolutionStats *)&stats;

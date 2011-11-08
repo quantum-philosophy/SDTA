@@ -50,6 +50,7 @@ void SOEvolution::process(population_t &population)
 	ga(population);
 
 	stats.best_chromosome = population.best_element();
+	stats.final_energy = stats.best_chromosome.get_energy();
 }
 
 /******************************************************************************/
@@ -83,6 +84,7 @@ void SOEvolutionStats::display(std::ostream &o) const
 		<< std::setprecision(2)
 		<< "Best lifetime: " << best_lifetime << std::endl
 		<< "Worst lifetime: " << worst_lifetime << std::endl
+		<< "Final energy: " << final_energy << std::endl
 #ifdef REAL_RANK
 #else
 		<< std::setprecision(0)
