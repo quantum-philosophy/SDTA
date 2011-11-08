@@ -1,6 +1,6 @@
 setup;
 
-config = Optima('004_060');
+config = Optima('032');
 
 param_line = @(leakage) ...
   Utils.configStream(...

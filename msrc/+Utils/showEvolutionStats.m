@@ -1,7 +1,12 @@
 function showEvolutionStats(file, full)
   if nargin < 2, full = false;
 
-  fid = fopen(file);
+  files = dir(file);
+  count = length(files);
+
+  prefix = regexp(file, '(.*)/[^/]+$', 'tokens');
+  prefix = prefix{1};
+  prefix = prefix{1};
 
   generations = [];
   evaluations = [];
@@ -10,42 +15,47 @@ function showEvolutionStats(file, full)
   lifetime = [];
   time = [];
 
-  line = fgetl(fid);
-  while ischar(line)
-    tokens = regexp(line, '^\s*(\w[\w\s]+):\s*(.*)$', 'tokens');
-
-    if ~isempty(tokens)
-      name = tokens{1}{1};
-      value = tokens{1}{2};
-
-      switch (name)
-      case 'Generations'
-        generations(end + 1) = str2num(value);
-      case 'Evaluations'
-        evaluations(end + 1) = str2num(value);
-      case 'Deadline misses'
-        tokens = regexp(value, '([\d.]+)\s*(\(.*\))?', 'tokens');
-        deadline_misses(end + 1) = str2num(tokens{1}{1});
-      case 'Best lifetime'
-        tokens = regexp(value, '\(([^,]+), .*', 'tokens');
-        if isempty(tokens)
-          lifetime(end + 1) = str2num(value);
-        else
-          lifetime(end + 1) = str2num(tokens{1}{1});
-        end
-      case 'Improvement'
-        tokens = regexp(value, '([^%]+)%.*', 'tokens');
-        improvement(end + 1) = str2num(tokens{1}{1});
-      case 'Time elapsed'
-        tokens = regexp(value, '\s*([\d.]+\s*)', 'tokens');
-        time(end + 1) = str2num(tokens{1}{1});
-      end
-    end
+  for i = 1:count
+    file = sprintf('%s/%s', prefix, files(i).name);
+    fid = fopen(file);
 
     line = fgetl(fid);
-  end
+    while ischar(line)
+      tokens = regexp(line, '^\s*(\w[\w\s]+):\s*(.*)$', 'tokens');
 
-  fclose(fid);
+      if ~isempty(tokens)
+        name = tokens{1}{1};
+        value = tokens{1}{2};
+
+        switch (name)
+        case 'Generations'
+          generations(end + 1) = str2num(value);
+        case 'Evaluations'
+          evaluations(end + 1) = str2num(value);
+        case 'Deadline misses'
+          tokens = regexp(value, '([\d.]+)\s*(\(.*\))?', 'tokens');
+          deadline_misses(end + 1) = str2num(tokens{1}{1});
+        case 'Best lifetime'
+          tokens = regexp(value, '\(([^,]+), .*', 'tokens');
+          if isempty(tokens)
+            lifetime(end + 1) = str2num(value);
+          else
+            lifetime(end + 1) = str2num(tokens{1}{1});
+          end
+        case 'Improvement'
+          tokens = regexp(value, '([^%]+)%.*', 'tokens');
+          improvement(end + 1) = str2num(tokens{1}{1});
+        case 'Time elapsed'
+          tokens = regexp(value, '\s*([\d.]+\s*)', 'tokens');
+          time(end + 1) = str2num(tokens{1}{1});
+        end
+      end
+
+      line = fgetl(fid);
+    end
+
+    fclose(fid);
+  end
 
   count = length(generations);
 
@@ -72,37 +82,8 @@ function showEvolutionStats(file, full)
     round(mean(deadline_misses)), mean(lifetime), ...
     mean(improvement), mean(time));
 
-  if full
-    rows = 2;
-    cols = 3;
-  else
-    rows = 2;
-    cols = 1;
-  end
-
-  n = 1;
-
-  figure;
-
-  if full
-    subplot(rows, cols, n); n = n + 1;
-    Utils.drawProgress('Generations', generations);
-
-    subplot(rows, cols, n); n = n + 1;
-    Utils.drawProgress('Evaluations', evaluations);
-
-    subplot(rows, cols, n); n = n + 1;
-    Utils.drawProgress('Deadline misses', deadline_misses);
-  end
-
-  subplot(rows, cols, n); n = n + 1;
-  Utils.drawProgress('Lifetime, time units', lifetime);
-
-  subplot(rows, cols, n); n = n + 1;
-  Utils.drawProgress('Improvement, %', improvement);
-
-  if full
-    subplot(rows, cols, n); n = n + 1;
-    Utils.drawProgress('Time, m', time);
+  if count > 1
+    figure;
+    Utils.drawProgress('Improvement, %', improvement);
   end
 end

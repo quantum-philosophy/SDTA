@@ -78,7 +78,7 @@ bool ListScheduleMutation<CT>::operator()(CT &chromosome)
 		layout_t layout;
 		priority_t priority;
 
-		GeneEncoder::split(chromosome, layout, priority);
+		GeneEncoder::split(chromosome, priority, layout);
 
 		schedule = ListScheduler<MutationPool>::process(
 			layout, priority, data);

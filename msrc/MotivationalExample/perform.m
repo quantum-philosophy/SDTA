@@ -1,7 +1,7 @@
 setup;
 
 powerScale = 3;
-config = Optima('002_006');
+config = Optima('002');
 
 samplingInterval = 1e-4;
 
