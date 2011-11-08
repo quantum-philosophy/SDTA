@@ -1,5 +1,5 @@
 # System
-deadline_ratio 1.1
+deadline_ratio 1.05
 power_scale 1
 time_scale 1
 reorder_tasks 0
@@ -27,7 +27,7 @@ tolerance 0
 # Optimization
 seed -1
 repeat [REPEAT]
-mapping 0
+mapping 1
 multiobjective 0
 # cache localhost
 # dump evolution.txt
