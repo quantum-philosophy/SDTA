@@ -106,13 +106,13 @@ void optimize(const string &system, const string &floorplan,
 		 */
 		if (optimization_tuning.cache.empty()) {
 			evaluation = new Evaluation(*test.architecture, *test.graph,
-				*test.hotspot, !optimization_tuning.mapping);
+				*test.hotspot, !optimization_tuning.multiobjective);
 		}
 		else {
 #ifndef WITHOUT_MEMCACHED
 			evaluation = new MemcachedEvaluation(optimization_tuning.cache,
 				optimization_tuning.multiobjective, *test.architecture,
-				*test.graph, *test.hotspot, !optimization_tuning.mapping);
+				*test.graph, *test.hotspot, !optimization_tuning.multiobjective);
 #else
 			throw runtime_error("The code is compiled without caching support.");
 #endif
