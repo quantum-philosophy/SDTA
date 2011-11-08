@@ -13,6 +13,8 @@ task_type_cnt [TYPE_COUNT]
 task_unique false
 # Have exactly the same task count each time
 period_mul 1
+# Number of in and out edges
+task_degree 1 2
 # Write
 tg_write
 eps_write

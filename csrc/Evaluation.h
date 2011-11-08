@@ -19,7 +19,7 @@ class Evaluation
 	const Graph &graph;
 	Hotspot &hotspot;
 
-	const bool shallow;
+	bool shallow;
 
 	public:
 
@@ -28,12 +28,17 @@ class Evaluation
 	size_t cache_hits;
 
 	Evaluation(const Architecture &_architecture, const Graph &_graph,
-		Hotspot &_hotspot, bool _shallow) :
+		Hotspot &_hotspot, bool _shallow = false) :
 
 		architecture(_architecture), graph(_graph), hotspot(_hotspot),
 		shallow(_shallow), evaluations(0), deadline_misses(0), cache_hits(0) {}
 
 	price_t process(const Schedule &schedule);
+
+	inline void set_shallow(bool shallow)
+	{
+		this->shallow = shallow;
+	}
 
 	inline void reset()
 	{
@@ -60,7 +65,7 @@ class MemcachedEvaluation: public Evaluation
 
 	MemcachedEvaluation(const std::string &config, bool _extended,
 		const Architecture &_architecture, const Graph &_graph,
-		Hotspot &_hotspot, bool _shallow) :
+		Hotspot &_hotspot, bool _shallow = false) :
 
 		Evaluation(_architecture, _graph, _hotspot, _shallow), extended(_extended)
 	{

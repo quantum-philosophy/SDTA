@@ -106,19 +106,21 @@ void optimize(const string &system, const string &floorplan,
 		 */
 		if (optimization_tuning.cache.empty()) {
 			evaluation = new Evaluation(*test.architecture, *test.graph,
-				*test.hotspot, !optimization_tuning.mapping);
+				*test.hotspot);
 		}
 		else {
 #ifndef WITHOUT_MEMCACHED
 			evaluation = new MemcachedEvaluation(optimization_tuning.cache,
 				optimization_tuning.multiobjective, *test.architecture,
-				*test.graph, *test.hotspot, !optimization_tuning.mapping);
+				*test.graph, *test.hotspot);
 #else
 			throw runtime_error("The code is compiled without caching support.");
 #endif
 		}
 
 		price_t price = evaluation->process(test.schedule);
+
+		evaluation->set_shallow(!optimization_tuning.multiobjective);
 
 		constrains_t constrains;
 

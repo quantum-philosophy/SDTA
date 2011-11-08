@@ -15,8 +15,6 @@ class eslabSOChromosome: public eslabChromosome<double>,
 	public eoInt<double>
 #endif
 {
-	double energy;
-
 	public:
 
 	typedef double fitness_t;
@@ -39,16 +37,10 @@ class eslabSOChromosome: public eslabChromosome<double>,
 			(*this)[order[i]] = (rank_t)i;
 	}
 
-	inline double get_energy() const
-	{
-		return energy;
-	}
-
 	protected:
 
 	inline void set_fitness(const price_t &price)
 	{
-		energy = price.energy;
 		this->fitness(price.lifetime);
 	}
 };

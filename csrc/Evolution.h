@@ -107,6 +107,21 @@ class Evolution: public BasicEvolution
 		chromosome.set_price(price);
 	}
 
+	inline price_t assess(chromosome_t &chromosome) const
+	{
+		if (constrains.fixed_layout()) {
+			Schedule schedule = scheduler.process(constrains.layout, chromosome);
+			return evaluation.process(schedule);
+		}
+		else {
+			layout_t layout;
+			priority_t priority;
+			GeneEncoder::split(chromosome, priority, layout);
+			Schedule schedule = scheduler.process(layout, priority);
+			return evaluation.process(schedule);
+		}
+	}
+
 	virtual void process(population_t &population) = 0;
 
 	stats_t stats;
