@@ -52,7 +52,7 @@ void DynamicPower::compute(const Schedule &schedule, matrix_t &_dynamic_power) c
 			power = processor->calc_power(types[item.id]);
 
 #ifndef SHALLOW_CHECK
-			if (end >= step_count)
+			if ((int)end - (int)step_count > 0)
 				throw std::runtime_error("The duration of the task is too long.");
 #endif
 			for (j = start; j <= end && j < step_count; j++)

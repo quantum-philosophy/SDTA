@@ -143,7 +143,7 @@ bool ListScheduleCrossover<CT>::operator()(CT &one, CT &another)
 			layout_t layout;
 			priority_t priority;
 
-			GeneEncoder::split(one, layout, priority);
+			GeneEncoder::split(one, priority, layout);
 
 			schedule = ListScheduler<CrossoverPool>::process(
 				layout, priority, &data);
@@ -164,7 +164,7 @@ bool ListScheduleCrossover<CT>::operator()(CT &one, CT &another)
 			layout_t layout;
 			priority_t priority;
 
-			GeneEncoder::split(another, layout, priority);
+			GeneEncoder::split(another, priority, layout);
 
 			schedule = ListScheduler<CrossoverPool>::process(
 				layout, priority, &data);
