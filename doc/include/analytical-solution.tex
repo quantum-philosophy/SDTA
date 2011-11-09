@@ -1,55 +1,59 @@
-In the onwards explanation without loss of generality we assume $T(t) \equiv T(t) - T_{amb}$. Let the power consumption vector $P(t)$ be constant and equal to $P$, then the system given by \equref{eq:fourier-model} is a system of ordinary differential equations (ODE) with the following solution:
+In the onwards explanation, without loss of generality, we assume $\v{T}(t) \equiv \v{T}(t) - \v{T}_{amb}$. Let the power consumption vector $\v{P}(t)$ be constant and equal to $\v{P}$, then the system given by \equref{eq:fourier-model} is a system of ordinary differential equations (ODE) with the following solution:
 \begin{equation} \label{eq:solution}
-  T(t) = e^{A t} \; T_0 + A^{-1}(e^{A t} - I)C^{-1} P
+  \v{T}(t) = e^{\m{A} t} \; \v{T}_0 + \m{A}^{-1}(e^{\m{A} t} - \m{I})\m{C}^{-1} \v{P}
 \end{equation}
-where $A = -C^{-1} \: G$ and $T_0$ is the initial temperature. Therefore, given a discrete power profile $\mathbb{P}$, the corresponding temperature profile $\mathbb{T}$ can be found using the following recurrence:
+where $\m{A} = -\m{C}^{-1} \: \m{G}$ and $\v{T}_0$ is the initial temperature. Therefore, given a discrete power profile, the corresponding temperature profile can be found using the following recurrence:
 \begin{equation} \label{eq:recurrent-system}
-  T_{i+1} = K_i \: T_i + B_i \: P_i
+  \v{T}_{i+1} = \m{K}_i \: \v{T}_i + \m{B}_i \: \v{P}_i
 \end{equation}
 where:
 \begin{align*}
-  & K_i = e^{A \Delta t_i} \\
-  & B_i = A^{-1}(e^{A \Delta t_i} - I)C^{-1}
+  & \m{K}_i = e^{\m{A} \Delta t_i} \\
+  & \m{B}_i = \m{A}^{-1}(e^{\m{A} \Delta t_i} - \m{I})\m{C}^{-1}
 \end{align*}
 
-The above-mentioned recurrence can be applied for the transient temperature analysis, and our experiments shown that in case of equal time intervals, where $K_i$ and $B_i$ are constants, this approach demonstrates a significant performance improvement relative to iterative solutions of ODEs. The same observation is made in \cite{thiele2011}.
+\subsection{Transient Temperature Analysis}
+The recurrence given by \equref{eq:recurrent-system} can be applied to perform the transient temperature analysis. Our experiments have shown that in case of equal time intervals, where $\m{K}_i$ and $\m{B}_i$ are constants, this approach demonstrates a significant performance improvement relative to iterative solutions of ODEs. The same observation is made in \cite{thiele2011}.
 
-For the steady-state case with a periodic power profile $\mathbb{P}$ the following system of linear equations can be derived:
+\todo{This can be used for the SSDTA.}
+
+\subsection{Steady-State Dynamic Temperature Analysis}
+For the steady-state case the following system of linear equations can be derived:
 \[
   \begin{cases}
-    K_0 \: T_0 - T_1 & = -B_0 \: P_0 \\
+    \m{K}_0 \: \v{T}_0 - \v{T}_1 & = -\m{B}_0 \: \v{P}_0 \\
     ... \\
-    -T_0 + K_{N_s - 1} \: T_{N_s - 1} & = -B_{N_s - 1} \: P_{N_s - 1}
+    -\v{T}_0 + \m{K}_{N_s - 1} \: \v{T}_{N_s - 1} & = -\m{B}_{N_s - 1} \: \v{P}_{N_s - 1}
   \end{cases}
 \]
 where the last equation respects the boundary condition and ensures the equality of temperature values on both ends of the overall period:
 \begin{equation} \label{eq:boundary-condition}
-  T_0 = T_{N_s}
+  \v{T}_0 = \v{T}_{N_s}
 \end{equation}
 To get the whole picture, the system can be written as:
 \begin{align}
   & \mathbb{K} \: \mathbb{X} = \mathbb{B} \label{eq:system} \\
   & \mathbb{K} = \left[
     \begin{array}{ccccc}
-      K_0 & -I & 0 & \cdots & 0 \\
-      0 & K_1 & -I &  & \vdots \\
-      \vdots &  & \ddots & -I & 0 \\
-      0 &  &  & K_{N_s - 2} & -I \\
-      -I & 0 & \cdots & 0 & K_{N_s - 1}
+      \m{K}_0 & -\m{I} & 0 & \cdots & 0 \\
+      0 & \m{K}_1 & -\m{I} &  & \vdots \\
+      \vdots &  & \ddots & -\m{I} & 0 \\
+      0 &  &  & \m{K}_{N_s - 2} & -\m{I} \\
+      -\m{I} & 0 & \cdots & 0 & \m{K}_{N_s - 1}
     \end{array}
   \right] \nonumber \\
   & \mathbb{X} = \left[
     \begin{array}{c}
-      T_0 \\
+      \v{T}_0 \\
       \vdots \\
-      T_{N_s - 1}
+      \v{T}_{N_s - 1}
     \end{array}
   \right] \nonumber \\
   & \mathbb{B} = \left[
     \begin{array}{c}
-      -B_0 \: P_0 \\
+      -\m{B}_0 \: \v{P}_0 \\
       \vdots \\
-      -B_{N_s - 1} \: P_{N_s - 1}
+      -\m{B}_{N_s - 1} \: \v{P}_{N_s - 1}
     \end{array}
   \right] \nonumber
 \end{align}
