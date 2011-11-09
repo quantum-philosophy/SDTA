@@ -57,8 +57,6 @@ unless File.exist? hotspot_template
   exit
 end
 
-srand Time.now.to_i
-
 tgff_template = Template.new tgff_template
 params_template = Template.new params_template
 hotspot_template = Template.new hotspot_template
@@ -71,6 +69,8 @@ pairs.each do |processor_count, task_count|
 
   Dir::mkdir directory unless File.directory? directory
 
+  seed = 0
+
   (1..repeat).each do |i|
     puts "  #{ i }:"
 
@@ -79,11 +79,13 @@ pairs.each do |processor_count, task_count|
       puts "    - TGFF options: #{ tgffopt }"
       Generator.tgffopt :template => tgff_template,
         :processor_count => processor_count, :task_count => task_count,
-        :output => tgffopt
+        :output => tgffopt, :seed => seed
 
       tgff = File.join directory, ("%03d.tgff" % i)
       puts "    - TGFF: #{ tgff }"
       Generator.tgff :input => tgffopt, :output => tgff
+
+      seed += 1
     end until Generator.validate_tgff(:input => tgff, :task_count => task_count)
 
     system = File.join directory, ("%03d_system.config" % i)
