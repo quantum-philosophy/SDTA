@@ -1,29 +1,31 @@
 \subsection{Architecture Model}
-We consider a heterogeneous multicore architecture with a set of processing elements $\Pi$ defined as the following \cite{liao2005}:
+We consider a heterogeneous multicore architecture with a set of processing elements $\Pi$ defined as the following:
 \[
   \Pi = \{ \pi_i = (V_i, \: f_i, \: N_{gate \: i}): \; i = 0 \dots N_p - 1 \}
 \]
-where $V_i$, $f_i$, and $N_{gate \: i}$ are the supply voltage, frequency, and number of gates of the $i$th core, correspondingly. The first two parameters are used for the dynamic power estimation while the last one for the power leakage as described in the following subsection.
+where $V_i$, $f_i$, and $N_{gate \: i}$ are the supply voltage, frequency, and number of gates \cite{liao2005} of the $i$th core, respectively. The first two parameters are used for the dynamic power estimation while the last one for the leakage power as described in the following subsection.
 
 \subsection{Power Model}
-The total power dissipation of a processing element is defined as a sum of the dynamic power and power leakage:
+The total power dissipation of a processing element is defined as a sum of the dynamic and leakage power:
 \begin{align*}
   & P = P_{dyn} + P_{leak} \\
   & P_{dyn} = C_{eff} \cdot f \cdot V^2
 \end{align*}
-where $C_{eff}$ is the effective switched capacitance, $V$ and $f$ are the supplied voltage and frequency, respectively. The model for the leakage part of the power dissipation is presented in \cite{liao2005} and defined as:
+where $C_{eff}$ is the effective switched capacitance, $V$ and $f$ are the supply voltage and frequency, respectively. The leakage part of the power dissipation is defined as \cite{liao2005}:
 \begin{align*}
   & P_{leak}(T) = N_{gate} \: V \: I_{avg}(T) \\
   & I_{avg}(T) = I_s(T_0, V_0) \: f_{avg}(T) \\
   & f_{avg}(T) = A \: T^2 e^{((\alpha \: V + \beta)/T)} + B e^{(\gamma \: V + \delta)}
 \end{align*}
-where $N_{gate}$ is the number of gates in the circuit\footnote{The number of gates in a circuit can be estimated using the technique described in \cite{li2004}.}, $I_s$ is the average leakage current at the reference temperature $T_0$ and supply voltage $V_0$, $f_{avg}$ is the scaling function. $I_{avg}$ is the average leakage current at the current temperature $T$ and voltage $V$. $A$, $B$, $\alpha$, $\beta$, $\gamma$, and $\delta$ are the technology dependent constants found in \cite{liao2005}.
+where $N_{gate}$ is the number of gates in the circuit, $I_s$ is the average leakage current at the reference temperature $T_0$ and supply voltage $V_0$, $f_{avg}$ is the scaling function. $I_{avg}$ is the average leakage current at the current temperature $T$ and voltage $V$. $A$, $B$, $\alpha$, $\beta$, $\gamma$, and $\delta$ are the technology dependent constants found in \cite{liao2005}.
 
 \subsection{RC Thermal Model}
-The proposed SSDTA technique is based on the well-known RC thermal model that employs the analogy between electrical and thermal circuits \cite{kreith2000}. Heat transfer is modeled with the following system of differential equations:
+The proposed SSDTA technique is based on the RC thermal model that employs the analogy between electrical and thermal circuits \cite{kreith2000}. Heat transfer is modeled with the following system of differential equations:
 \begin{equation} \label{eq:fourier-model}
-  C \: \frac{dT(t)}{dt} + G \: (T(t) - T_{amb})= P(t)
+  \m{C} \: \frac{d\v{T}(t)}{dt} + \m{G} \: (\v{T}(t) - \v{T}_{amb})= \v{P}(t)
 \end{equation}
-where $T$ is the temperature vector, $T_{amb}$ is the ambient temperature vector, $C$ is the thermal capacitance matrix, $G$ is the thermal conductance matrix, and $P$ is the power dissipation vector (the source of heat). The dimensions of the system are $N_n \times N_n$, where $N_n$ is the number of thermal nodes.
+where $\v{T}$ is the temperature vector, $\v{T}_{amb}$ is the ambient temperature vector, $\m{C}$ is the thermal capacitance matrix, $\m{G}$ is the thermal conductance matrix, and $\v{P}$ is the power dissipation vector (the source of heat). The dimensions of the system are $N_n \times N_n$, where $N_n$ is the number of thermal nodes.
 
-An equivalent circuit of a multiprocessor system with a thermal package can be built in a wide range of different ways, therefore, the number of thermal nodes $N_n$ and structure of matrices $C$ and $G$ depend on a particular implementation of the model.
+An equivalent circuit of a multiprocessor system with a thermal package can be built in a wide range of different ways, where one portion of thermal nodes, known as active, corresponds to the processing elements and another, known as inactive, to the package. The power dissipation of inactive nodes is assumed to be zero. The mapping between components of the system and thermal nodes is not necessary a one-to-one mapping. Consequently, the number of thermal nodes $N_n$ and structure of matrices $\m{C}$ and $\v{G}$ depend on a particular implementation of the model.
+
+\todo{Include a picture for an equivalent RC circuit for a dual-core system.}

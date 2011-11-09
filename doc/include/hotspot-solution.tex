@@ -1,14 +1,10 @@
-Before going to the proposed solution, we first discuss what can be achieved with existing techniques without additional efforts.
+Before going to the proposed solution, we first discuss the available state of the art techniques.
 
 \subsection{Iterative Simulation}
-The transient temperature analysis can be employed to obtain a rough approximation of the SSDTP. In this case, a thermal simulator (e.g., HotSpot \cite{huang2006}) is called several times, each time starting with the same power profile and different temperature profile computed during the previous call. A common approach to perform this analysis is to solve \equref{eq:fourier-model} numerically, e.g., using the fourth-order Runge-Kutta method.
+A rough approximation of the SSDTP can be obtained by running a temperature simulator over successive periods of the application until it can be assumed that the system has reached the thermal steady state. The simulator performs the transient temperature analysis where the common approach is to solve \equref{eq:fourier-model} numerically, e.g., using the fourth-order Runge-Kutta method.
 
 \image{hotspot-error}{80 230 80 230}{Normalized error of the transient temperature analysis through 200 successive iterations of a 1-second application relative to the SSDTP given for different dimensions of the die.}
-The number of simulations required to reach the SSDTP is characterized by the thermal time constant of the system $\tau$ defined as the following:
-\[
-  \tau = G^{-1} \; C = R \; C
-\]
-where $R$ is the thermal resistance. For the die $\tau$ is found to be in order of milliseconds while for the thermal package in order of minutes \cite{rao2007}. Consequently, the number of iterations depends on a particular configuration of the die as well as on the application period. An example is given in \figref{fig:hotspot-error}, where 200 successive iterations of the transient temperature analysis are compared with the ground truth SSDTP for five different chips with the same application of 1 second.
+The number of simulations required to reach the SSDTP depends on the thermal characteristics of the system. In order to illustrate this aspect, we have considered an application with the period of 1 second running on five hypothetical platforms with core areas between 1 and 25 $mm^2$. We have run the temperature simulation with HotSpot \cite{huang2006} for 200 successive periods of the application. The temperature profile in each period has been compared with the SSDTP and the Normalized Root Mean Square Error (NRMSE) has been calculated. The result is shown in \figref{fig:hotspot-error}. In can be observed that the number of simulations to achieve, for instance, the accuracy of 5\% is small only for a narrow range of configurations making it difficult to apply this technique inside an intensive optimization loop.
 
 \subsection{Steady-State Approximation}
 \image{steady-state-approximation}{80 230 80 230}{Steady-state dynamic temperature profiles (SSDTP) and corresponding approximations using the steady-state temperature (SS) given for the same application proportionally scaled to fit into 100 milliseconds (the top graph) and 1 minute (the bottom graph).}

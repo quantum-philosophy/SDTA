@@ -6,14 +6,14 @@ The system executes a periodic application with a set of data-dependent tasks. T
   & G = (\mathcal{V}, \: E, \: \mathcal{T}) \\
   & \mathcal{V} = \{ v_i: \: i = 0 \dots N_t - 1 \}
 \end{align*}
-where $\mathcal{V}$ is a set of $N_t$ vertices of the graph (tasks), $E$ is a set of edges (data dependencies between tasks), and $\mathcal{T}$ is the period of the application. Each pair of a task $v_i$ and processing element $\pi_j$ is characterized by a tuple $(C_{eff \; ij}, N_{cycles \; ij})$, where $C_{eff \; ij}$ is the effective switched capacitance and $N_{cycles \: ij}$ is the number of clock cycles. These parameters determine the processor load and execution time of the task, correspondingly.
+where $\mathcal{V}$ is a set of $N_t$ vertices of the graph (tasks), $E$ is a set of edges (data dependencies between tasks), and $\mathcal{T}$ is the period of the application. Each pair of a task $v_i$ and processing element $\pi_j$ is characterized by a tuple $(C_{eff \; ij}, N_{cycles \; ij})$, where $C_{eff \; ij}$ is the effective switched capacitance and $N_{cycles \: ij}$ is the number of clock cycles. These parameters determine the processor load and execution time of the task, respectively.
 
-\subsection{Temperature-Aware Reliability Model}
+\subsection{Temperature-Aware Reliability Model} \label{sec:reliability-model}
 In the paper we address temperature-driven failure mechanisms with the reliability model presented in \cite{huang2009}, \cite{xiang2010}. The model is based on the assumption that the failure rate has a Weibull distribution (e.g., the thermal cycling, electromigration, etc. \cite{jedec2010}):
 \[
   R(t) = e^{-(\frac{t}{\eta})^\beta}
 \]
-where $\eta$ is the scaling parameter, $\beta$ is the shape (slope) parameter. The mean time to failure (MTTF) for the Weibull distribution is given by the following equation:
+where $\eta$ and $\beta$ are the scaling and shape (slope) parameters, respectively. The mean time to failure (MTTF) for the Weibull distribution is given by the following equation:
 \begin{equation} \label{eq:general-mttf}
   MTTF = \eta \; \Gamma(1 + \frac{1}{\beta})
 \end{equation}
@@ -35,7 +35,7 @@ As it was mentioned earlier, the reliability model can be used to model differen
 \begin{equation} \label{eq:cycles-to-failure}
   \mathcal{N} = A (\Delta T - \Delta T_0)^{-b} e^{\frac{E_a}{k T_{max}}}
 \end{equation}
-where $A$ is an empirically determined constant, $\Delta T$ is the thermal cycle amplitude, $\Delta T_0$ is the portion of the temperature range in the elastic region which does not cause damage, $b$ is the Coffin-Manson exponent which also empirically determined\footnote{This constant is found to be 6--9 for brittle fracture such as Si and its dielectrics \cite{jedec2010}.}, $E_{a}$ is the activation energy\footnote{For the thermal cycling failure mechanism the activation energy lies between 0.5 and 0.7~eV \cite{vigrass}.}, $k$ is the Boltzmann constant, and $T_{max}$ is the maximal temperature during the thermal cycle. Having the number of cycles to failure and the duration of one cycle $\Delta t$, we can compute the MTTF:
+where $A$ is an empirically determined constant, $\Delta T$ is the thermal cycle amplitude, $\Delta T_0$ is the portion of the temperature range in the elastic region which does not cause damage, $b$ is the Coffin-Manson exponent, $E_{a}$ is the activation energy, $k$ is the Boltzmann constant, and $T_{max}$ is the maximal temperature during the thermal cycle. Having the number of cycles to failure and the duration of one cycle $\Delta t$, we can compute the MTTF:
 \[
   MTTF = \mathcal{N} \; \Delta t
 \]
@@ -50,11 +50,16 @@ where $MTTF_i$ is the mean time to failure of the $i$th time interval as if we h
 \end{equation}
 
 \equref{eq:one-mttf} describes the MTTF of one component, which is a processing element in our case. We assume that each processing element is essential for the proper work of the system, therefore, a failure of any core leads to the total failure of the whole system. Consequently, the MTTF of the system can be estimated as the minimal MTTF among its components:
-\begin{align*}
-  & MTTF_{sys} = \min_{i=0}^{N_p - 1} \; MTTF_i \\
-  & MTTF_i = \frac{\mathcal{T}}{\sum_{j=0}^{N_{m \: i} - 1} \frac{1}{\mathcal{N}_{ij}}}
-\end{align*}
+\begin{align}
+  & MTTF_{sys} = \min_{i=0}^{N_p - 1} \; MTTF_i \label{eq:mttf-system} \\
+  & MTTF_i = \frac{\mathcal{T}}{\sum_{j=0}^{N_{m \: i} - 1} \frac{1}{\mathcal{N}_{ij}}} \nonumber
+\end{align}
 where $N_{m \: i}$ is the number of thermal cycles of the $i$th processing element within the application period $\mathcal{T}$ and $\mathcal{N}_{ij}$ is the number of thermal cycles to failure as if the $j$th cycle was being repeated all the time.
 
 \subsection{Motivational Example} \label{sec:motivation}
 \input{include/motivation.tex}
+
+\subsection{Genetic Algorithm}
+The optimization procedure is held by a genetic algorithm (GA) \cite{schmitz2004} that varies mapping and scheduling of the application in order to maximize the MTTF of the system. Each chromosome is a vector of $2 \times N_t$ elements, where the first half encodes priorities of the tasks and the second represents a mapping. The population contains $4 \times N_t$ individuals that are initialized partially randomly and partially based on the mobility of the tasks \cite{schmitz2004}. Each generation, a number of individuals, called parents, are chosen for breeding by the tournament selection with the number of competitors proportional to the population size. The parents undergo the 2-point crossover with $0.8$ probability and uniform mutation with $0.05$ probability. The evolution mechanism follows the elitism model where the best individual always survives. The stopping condition is an absence of improvement within $200$ successive generations.
+
+A chromosome is evaluated in a number of steps. First, the decoded priorities and mapping are given to a list scheduler that produces schedules for each of the cores. If the schedules do not respect the deadline of the application, the solution is penalized proportionally to the delay and is not further evaluated; otherwise, based on the parameters of the architecture and tasks, a dynamic power profile is obtained. Having the dynamic power profile and taking into consideration the leakage power with the linear approximation from \secref{sec:leakage}, the corresponding SSDTP is computed by the CE method. Finally, the SSDTP is assessed in terms of the reliability model given in \equref{eq:mttf-system}, where the rainflow counting method is employed to count thermal cycles \cite{xiang2010}.
