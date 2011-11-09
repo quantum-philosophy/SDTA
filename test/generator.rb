@@ -6,12 +6,11 @@ class Generator
     gaps = {
       :task_count => options[:task_count],
       :type_count => options[:task_count] / 2,
-      :processor_count => options[:processor_count]
+      :processor_count => options[:processor_count],
+      :seed => options[:seed]
     }
 
     File.open(options[:output], 'w') do |file|
-      gaps[:seed] = rand 1e5
-
       options[:template].complete(gaps) do |line|
         file << line
       end
