@@ -1,25 +1,21 @@
-Nowadays, the power leakage is an important issue that should be carefully taken into account. Two techniques can be applied to enhance the analytical solution with the leakage modeling:
-  \begin{itemize}
-    \item An alternate computation of the temperature and power profiles.
-    \item A linear approximation of the power leakage.
-  \end{itemize}
+Nowadays, the leakage power is an important issue that should be carefully taken into account. Two techniques can be applied to enhance the analytical solution with the leakage modeling.
 
 \subsection{Alternate Computation}
-In this case, we have an iterative process where the temperature and power profiles are calculated in turns. With each new temperature profile we update the power profile by computing the power leakage and adding it to the dynamic power:
+In this case, we have an iterative process where the temperature and power profiles are calculated in turns. With each new temperature profile we update the power profile by computing the leakage power and adding it to the dynamic power:
 \[
-  P_i = P_{dyn} + P_{leak}(T_i)
+  \v{P}_i = \v{P}_{dyn} + \v{P}_{leak}(\v{T}_i)
 \]
 The process continues until the temperature converges, i.e., the different between two successive temperature profile is below a predefined bound. A piecewise linear approximation given in \cite{liu2007} can be used to speed up the process.
 
 \subsection{Linear Approximation}
 As it is shown in \cite{liu2007}, the leakage current can be approximated accurately enough using only one linear segment. The approximation has the following matrix form:
 \[
-  P_{leak}(T) = A \: T(t) + B
+  \v{P}_{leak}(\v{T}) = \m{A} \: \v{T}(t) + \v{B}
 \]
-where $A$ is a diagonal matrix and $B$ is a vector. It can be seen that the approximation keeps \equref{eq:fourier-model} untouched:
+where $\m{A}$ is a diagonal matrix and $\v{B}$ is a vector. It can be seen that the approximation keeps \equref{eq:fourier-model} untouched:
 \begin{align*}
-  & C \: \frac{dT(t)}{dt} + \bar{G} \: (T(t) - T_{amb}) = \bar{P} \\
-  & \bar{G} = G - A \\
-  & \bar{P} = P_{dyn} + A \: T_{amb} + B
+  & \m{C} \: \frac{d\v{T}(t)}{dt} + \bar{\m{G}} \: (\v{T}(t) - \v{T}_{amb}) = \bar{\v{P}} \\
+  & \bar{\m{G}} = \m{G} - \m{A} \\
+  & \bar{\v{P}} = \v{P}_{dyn} + \m{A} \: \v{T}_{amb} + \v{B}
 \end{align*}
 Therefore, all solutions based on this equation can include the linearized leakage model with no additional costs.

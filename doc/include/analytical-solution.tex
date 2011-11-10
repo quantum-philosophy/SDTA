@@ -1,3 +1,5 @@
+As it was shown in \secref{sec:hotspot-solution}, the state of the art solutions either produce inaccurate and, in extreme cases, completely useless results, or they are unacceplably slow. In this section we eliminate the first problem by obtaining an analytical expression of the SSDTP and tackle the second one in \secref{sec:condensed-equation} where a fast technique to perform the computations is proposed.
+
 In the onwards explanation, without loss of generality, we assume $\v{T}(t) \equiv \v{T}(t) - \v{T}_{amb}$. Let the power consumption vector $\v{P}(t)$ be constant and equal to $\v{P}$, then the system given by \equref{eq:fourier-model} is a system of ordinary differential equations (ODE) with the following solution:
 \begin{equation} \label{eq:solution}
   \v{T}(t) = e^{\m{A} t} \; \v{T}_0 + \m{A}^{-1}(e^{\m{A} t} - \m{I})\m{C}^{-1} \v{P}
@@ -13,12 +15,12 @@ where:
 \end{align*}
 
 \subsection{Transient Temperature Analysis}
-The recurrence given by \equref{eq:recurrent-system} can be applied to perform the transient temperature analysis. Our experiments have shown that in case of equal time intervals, where $\m{K}_i$ and $\m{B}_i$ are constants, this approach demonstrates a significant performance improvement relative to iterative solutions of ODEs. The same observation is made in \cite{thiele2011}.
+Given the initial temperature $\v{T}_0$, the recurrence in \equref{eq:recurrent-system} can be applied to perform the TTA. Our experiments show that in the case of equal time intervals, where $\m{K}_i$ and $\m{B}_i$ are constants, this approach demonstrates a significant performance improvement relative to iterative solutions of ODEs, e.g., the fourth-order Runge-Kutta method implemented in HotSpot. The same observation is made in \cite{thiele2011}.
 
-\todo{This can be used for the SSDTA.}
+The TTA using the analytical technique given in \equref{eq:recurrent-system} can be employed to approximate the SSDTP as it is described in \secref{sec:hotspot-iterative-solution} dramatically speeding up the computational process. However, the number of required simulations is unchanged since it is basically an alternative way to perform the same type of analysis. The technique that we shall propose later on equals to only two simulations using the above-mentioned analytical approach while the produced solutions are exact.
 
 \subsection{Steady-State Dynamic Temperature Analysis}
-For the steady-state case the following system of linear equations can be derived:
+For the steady-state case the following system of linear equations can be derived from \equref{eq:recurrent-system}:
 \[
   \begin{cases}
     \m{K}_0 \: \v{T}_0 - \v{T}_1 & = -\m{B}_0 \: \v{P}_0 \\
@@ -59,26 +61,16 @@ To get the whole picture, the system can be written as:
 \end{align}
 where $\mathbb{K}$ is a $N_n N_s \times N_n N_s$ matrix, $\mathbb{X}$ and $\mathbb{B}$ are vectors with $N_n N_s$ elements.
 
-All in all, we have obtained a regular system of liner equations with a specific structure. Now we shall discuss the following alternatives to solve it:
-\begin{itemize}
-  \item Direct dense solutions.
-  \item Direct sparse solutions.
-  \item Solutions for Toeplitz and block-circulat matrices.
-  \item Iterative methods for systems of linear equatins.
-  \item Proposed solution based on the condensed equation method.
-\end{itemize}
+It can be seen that we have obtained a regular system of liner equations with a specific structure. Now we shall briefly discuss possible alternatives to solve it.
 
-\subsection{Direct Dense Solutions}
+\subsubsection{Direct Dense Solutions}
 \input{include/direct-dense-solution}
 
-\subsection{Direct Sparse Solutions}
+\subsubsection{Direct Sparse Solutions}
 \input{include/direct-sparse-solution}
 
-\subsection{Solutions for Toeplitz and Block-Circulant Systems}
+\subsubsection{Solutions for Toeplitz and Block-Circulant Systems}
 \input{include/fast-fourier-transform}
 
-\subsection{Iterative Methods for Systems of Linear Equations}
+\subsubsection{Iterative Methods for Systems of Linear Equations}
 \input{include/iterative-solutions}
-
-\subsection{Condensed Equation}
-\input{include/condensed-equation}
