@@ -250,16 +250,13 @@ classdef Lifetime < handle
         ];
       end
 
-      % Deltas
-      dT = 2 * rainflow(1, :);
-
       % Maximal temperatures during each cycle
       Tmax = rainflow(2, :) + rainflow(1, :);
 
       % Contains full cycles (1.0) and half cycles (0.5)
       cycles = rainflow(3, :);
 
-      dT = dT - Lifetime.dT0;
+      dT = rainflow(1, :) - Lifetime.dT0;
       dT(find(dT < 0)) = 0;
 
       % Number of cycles to failure for each stress level [3]
