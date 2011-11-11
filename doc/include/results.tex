@@ -77,9 +77,9 @@ In the first set of experiments, we change the number of cores while keeping the
   \hline
   4 &  20 & 0.93 & 13029.86 & -26.62 \\
   4 &  40 & 1.81 &  4311.02 & -22.15 \\
-  4 &  80 & 0 & 0 & 0 \\
-  4 & 160 & 0 & 0 & 0 \\
-  4 & 320 & 0 & 0 & 0 \\
+  4 &  80 & 4.98 &  2358.82 & -15.34 \\
+  4 & 160 & \todo{0} & \todo{0} & \todo{0} \\
+  4 & 320 & \todo{0} & \todo{0} & \todo{0} \\
   \hline
 \end{itable}
 For the second set of experiments, we keep the quad-core architecture and vary the number of tasks within the application. The number of randomly generated task graphs per problem is 20. The average improvement of the MTTF along with the change in the energy consumption are given in \tabref{tab:mttf-tasks}. The observations to be made here are similar to the previous ones: taking into consideration the SSDTP of the system during the design stage can significantly prolong the MTTF without sacrificing the energy efficiency of the system.
@@ -90,11 +90,11 @@ For the second set of experiments, we keep the quad-core architecture and vary t
   \hline
   $N_p$ & $N_t$ & $MTTF^{CE}_{avg}$, \% & $MTTF^{TTA}_{avg}$, \% & $MTTF^{SS}_{avg}$, \% \\
   \hline
-  4 &  20 & 0 & 0 & 0 \\
-  4 &  40 & 0 & 0 & 0 \\
-  4 &  80 & 0 & 0 & 0 \\
-  4 & 160 & 0 & 0 & 0 \\
-  4 & 320 & 0 & 0 & 0 \\
+  4 &  20 & \todo{0} & \todo{0} & \todo{0} \\
+  4 &  40 & \todo{0} & \todo{0} & \todo{0} \\
+  4 &  80 & \todo{0} & \todo{0} & \todo{0} \\
+  4 & 160 & \todo{0} & \todo{0} & \todo{0} \\
+  4 & 320 & \todo{0} & \todo{0} & \todo{0} \\
   \hline
 \end{itable}
 Finally, we compare the results of the optimization delivered by the CE method, TTA with HotSpot, and steady-state approximation (SS) discussed in \secref{sec:steady-state-approximation} for the same setup as in the previous set of experiments with the fixed architecture. The final solution found by the later two methods, TTA and SS, are reevaluated using the CE method and compared with the solutions found only by the CE approach. The results are summarized in \tabref{tab:mttf-comparison}. \todo{Obtain results and discuss.}

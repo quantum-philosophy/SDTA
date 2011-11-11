@@ -28,4 +28,4 @@ where $\v{T}$ is the temperature vector, $\v{T}_{amb}$ is the ambient temperatur
 
 An equivalent circuit of a multiprocessor system with a thermal package can be built in a wide range of different ways where each thermal node corresponds to a block at the desired level of granularity. Consequently, the number of nodes $N_n$ and structure of matrices $\m{C}$ and $\v{G}$ depend on a particular implementation of the model. Thermal nodes that belong to the package are called inactive in the sense that their power dissipation is assumed to be zero.
 
-\todo{Draw an example of an equivalent RC circuit for a dual-core system and mention the dependency between cores.}
+A example of a simplistic equivalent RC thermal circuit for a dual-core system is depicted in Figure [\todo{Draw the circuit}]. It can be seen that the inter-core dependency is taken into account by modeling heat flux between the cores with corresponding thermal resistances.
