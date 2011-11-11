@@ -1,7 +1,7 @@
 In this section we propose a fast approach to solve the system given by \equref{eq:system}. The approach consists of one preparatorary step aimed to be more efficient in the future calculations and the solution itself.
 
 \subsection{Auxiliary Transformation}
-It can be noticed that the analytical solution in \equref{eq:solution} includes the matrix exponential and inverse of the product $\m{\m{C}}^{-1} \: \m{\m{G}}$, which is an arbitrary square matrix. It is preferable to have a symmetric matrix to do such computations, since for a real symmetric matrix $\m{M}$ the following eigenvalue decomposition holds:
+It can be noticed that the analytical solution in \equref{eq:solution} includes the matrix exponential and inverse of the product $\m{\m{C}}^{-1} \: \m{\m{G}}$, which is an arbitrary square matrix. It is preferable to have a symmetric matrix to perform these computations, since for a real symmetric matrix $\m{M}$ the following eigenvalue decomposition holds:
 \begin{equation} \label{eq:eigenvalue-decomposition}
   \m{M} = \m{\m{U}} \m{\Lambda} \m{\m{U}}^\v{T}
 \end{equation}
@@ -63,7 +63,7 @@ Using the eigenvalue decomposition, the last equation can be computed in the fol
 \end{align*}
 
 \subsection{Solution with Condensed Equation}
-Now we shall describe the proposed solution. Let us return back to the recurrent system and denote $\m{Q}_i = \tilde{\m{B}}_i \: \v{P}_i$:
+Let us return back to the recurrent system and denote \mbox{$\m{Q}_i = \tilde{\m{B}}_i \: \v{P}_i$}:
 \begin{align}
   & \tilde{\v{T}}_{i + 1} = \tilde{\m{K}}_i \: \tilde{\v{T}}_i + \m{Q}_i, \; i = 0 \dots N_s - 1 \label{eq:ce-recurrent} \\
   & \tilde{\v{T}}_0 = \tilde{\v{T}}_{N_s + 1} \nonumber
@@ -119,16 +119,16 @@ Finally, the identity matrix $\m{I}$ can be splitted into $\m{U} \m{U}^T$, hence
       \end{array}
     \right] \: \m{U}^T \: \m{W}_{N_s - 1}
 \end{align*}
-Here $\m{W}_{N_s - 1}$ can be calculated using \equref{eq:p-recurrent}. As we see, there is no need to inverse any matrix, the solution of the system is obtained by scalar divisions and a similarity transformation with $\m{U}$. All other vectors $\tilde{\v{T}}_i$ for $i = 1 \dots N_s - 1$ are successively found from \equref{eq:ce-recurrent}.
+Here $\m{W}_{N_s - 1}$ can be calculated using \equref{eq:p-recurrent}. As we see, there is no need to inverse any matrix, the solution of the system is obtained by scalar divisions and a similarity transformation with $\m{U}$. All other vectors $\tilde{\v{T}}_i$ for \mbox{$i = 1 \dots N_s - 1$} are successively found from \equref{eq:ce-recurrent}.
 
-Let us now consider one specific case where all the computation can be performed in a much more effecient manner. Assume that the power profile $\mathbb{\v{P}}$ is evenly sampled with the \emph{sampling interval} equal to $\Delta t$, i.e., $\Delta t_i = \Delta t$ for $i = 0 \dots N_s - 1$. Having this assumption, the recurrent process (\equref{eq:recurrent-equation}) turns into:
+Now we assume that the power profile $\mathbb{\v{P}}$ is evenly sampled with the \emph{sampling interval} equal to $\Delta t$, i.e., $\Delta t_i = \Delta t$ for $i = 0 \dots N_s - 1$. Having this assumption, the recurrent process in \equref{eq:recurrent-equation} turns into:
 \[
   \tilde{\v{T}}_{i+1} = \tilde{\m{K}} \: \tilde{\v{T}}_i + \tilde{\m{B}} \: \v{P}_i
 \]
 where:
 \begin{align*}
   & \tilde{\m{K}} = e^{\tilde{\m{A}} \: \Delta t} \\
-  & \tilde{\m{B}} = \tilde{\m{A}}^{-1} \left( e^{\tilde{\m{A}} \: \Delta t} - \m{I} \right) \m{C}^{-\frac{1}{2}}
+  & \tilde{\m{B}} = \tilde{\m{A}}^{-1} ( e^{\tilde{\m{A}} \: \Delta t} - \m{I} ) \m{C}^{-\frac{1}{2}}
 \end{align*}
 Here $\tilde{\m{K}}$ and $\tilde{\m{B}}$ are constants, since they depend only on the matrices $\tilde{\m{A}}$, $\m{C}$, and sampling interval $\Delta t$, which is fixed. In this case, the block diagonal of the matrix $\tilde{\mathbb{\m{K}}}$, similar to \equref{eq:system}, is composed of the same repeating block $\tilde{\m{K}}$ and the recurrent expressions take the following form:
 \begin{align}

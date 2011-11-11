@@ -1,12 +1,12 @@
 Before going to the proposed solution, we first discuss the available state of the art techniques.
 
 \subsection{Iterative Simulation} \label{sec:hotspot-iterative-solution}
-A rough approximation of the SSDTP can be obtained by running a temperature simulator over successive periods of the application until it can be assumed that the system has reached the thermal steady state. The simulator performs the transient temperature analysis where the common approach is to solve \equref{eq:fourier-model} numerically, e.g., using the fourth-order Runge-Kutta method.
+A rough approximation of the SSDTP can be obtained by running a temperature simulator over successive periods of the application until it can be assumed that the system has reached the thermal steady state. The simulator performs the transient temperature analysis where the common approach is to solve \equref{eq:fourier-model} numerically, e.g., using the fourth-order Runge-Kutta method \cite{press2007}.
 
 \image{hotspot-error}{80 230 80 230}{Normalized RMSE of the transient temperature analysis over 200 successive iterations of a 1-second application given for different dimensions of the die.}
 The number of simulations required to reach the SSDTP depends on the thermal characteristics of the system. In order to illustrate this aspect, we have considered an application with the period of 1 second running on five hypothetical platforms with core areas between 1 and 25 $mm^2$. We have run the temperature simulation with HotSpot \cite{huang2006} for 200 successive periods of the application. The temperature profile in each period has been compared with the SSDTP and the normalized Root Mean Square Error (RMSE) has been calculated. The result is shown in \figref{fig:hotspot-error}. In can be observed that the number of simulations to achieve a satisfactory level of accuracy is small only for a narrow range of configurations making it difficult to apply the technique inside an intensive optimization loop.
 
-\subsection{Steady-State Approximation}
+\subsection{Steady-State Approximation} \label{sec:steady-state-approximation}
 \image{steady-state-approximation}{80 230 80 230}{Steady-state dynamic temperature profiles (SSDTP) and corresponding approximations using the steady-state temperature (SS) given for the same application proportionally scaled to fit into 100 milliseconds (the top graph) and 1 minute (the bottom graph).}
 Another approach is an approximation of the SSDTP proposed in \cite{huang2009}. Instead of solving the system of differential equations given by \equref{eq:fourier-model}, it is assumed that during each time interval $\Delta t_i$ in which the power is constant the whole system stays in its steady state. In this case the derivative \mbox{$d\v{T}/dt = 0$} and the temperature can be calculated in the following way:
 \[
