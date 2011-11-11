@@ -23,14 +23,16 @@ double ThermalCyclingLifetime::predict(
 		double damage = 0;
 
 		for (size_t j = 0; j < cycle_count; j++) {
+			double dT = 2 * amplitudes[j];
+
 			/* Skip cycles that do not cause any damage */
-			if (amplitudes[j] <= dT0) continue;
+			if (dT <= dT0) continue;
 
 			/* Maximal temperatures during each cycle */
 			double Tmax = means[j] + amplitudes[j];
 
 			/* Number of cycles to failure for each stress level [3] */
-			double N = Atc * pow(amplitudes[j] - dT0, -Q) * exp(Eatc / (k * Tmax));
+			double N = Atc * pow(dT - dT0, -Q) * exp(Eatc / (k * Tmax));
 
 			damage += cycles[j] / N;
 		}
@@ -237,14 +239,16 @@ double CombinedThermalCyclingLifetime::predict(
 		damage = 0;
 
 		for (size_t j = 0; j < cycle_count; j++) {
+			double dT = 2 * amplitudes[j];
+
 			/* Skip cycles that do not cause any damage */
-			if (amplitudes[j] <= dT0) continue;
+			if (dT <= dT0) continue;
 
 			/* Maximal temperatures during each cycle */
 			double Tmax = means[j] + amplitudes[j];
 
 			/* Number of cycles to failure for each stress level [3] */
-			double N = Atc * pow(amplitudes[j] - dT0, -Q) * exp(Eatc / (k * Tmax));
+			double N = Atc * pow(dT - dT0, -Q) * exp(Eatc / (k * Tmax));
 
 			damage += cycles[j] / N;
 		}
