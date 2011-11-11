@@ -42,7 +42,7 @@ Dir[File.join(input, '*')].each do |entry|
 end
 
 combinations.sort! do |a, b|
-  a[0] <=> b[0]
+  (a[0] == b[0]) ? (a[1] <=> b[1]) : (a[0] <=> b[0])
 end
 
 combinations.each do |processor_count, task_count, entry|
