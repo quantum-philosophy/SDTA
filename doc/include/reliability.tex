@@ -18,31 +18,31 @@ where $\eta$ and $\beta$ are the scaling and shape (slope) parameters, respectiv
   MTTF = \eta \; \Gamma(1 + \frac{1}{\beta})
 \end{equation}
 where $\Gamma$ is the gamma function. The shape parameter is found to be independent on the temperature variation \cite{chang2006}, which is not the case with the scaling parameter $\eta$. Therefore, the distribution can vary from one temperature to another. We can use the same approach as it was shown previously and split the overall period of the application $\mathcal{T}$ into $N_m$ time intervals $\Delta t_i$, so that during each time interval $\Delta t_i$ the corresponding $\eta_i$ is constant and equal to:
-\[
+\begin{equation} \label{eq:eta-one}
   \eta_i = \frac{MTTF_i}{\Gamma(1 + \frac{1}{\beta})}
-\]
-where $MTTF_i$ is the mean time to failure of the $i$th time interval as if we had the failure distribution of this interval all the time. In this case, the cumulative distribution function can be approximated as the following \cite{xiang2010}:
+\end{equation}
+where $MTTF_i$ is the mean time to failure of the $i$th time interval as if we had the failure distribution of this interval all the time. As it was shown in \cite{xiang2010}, the cumulative distribution function can be approximated as the following:
 \[
   R(t) = e^{-(\frac{t}{\mathcal{T}} \sum_{i=0}^{N_m - 1} \frac{\Delta t_i}{\eta_i})^\beta}
 \]
-The formula still keeps the form of the Weibull distribution with the following scaling parameter:
-\[
+The formula keeps the form of the Weibull distribution with the scaling parameter equal to:
+\begin{equation} \label{eq:eta-many}
   \eta = \frac{\mathcal{T}}{\sum_{i=0}^{N_m - 1} \frac{\Delta t_i}{\eta_i}}
-\]
+\end{equation}
+Consequently, $\eta$ can be substituted into \equref{eq:general-mttf} and the MTTF can be obtained. The only thing that is left is to determine $MTTF_i$ for each of the time intervals. In order to achieve this, we need to focus on the particular failure cause. As it was mentioned previously, the model can handle different failure mechanism; we have chosen the thermal cycling (TC) fatigue where the knowledge of the steady-state temperature in not sufficient and temperature curves should be investigated in details.
 
-As it was mentioned earlier, the reliability model can be used to model different failure mechanisms. Let us now focus on one particular failure cause, the thermal cycling (TC) fatigue, that is a common packaging and interfacial failure mechanism \cite{jedec2010}. The number of cycles to failure can be estimated using a modified version of the well-known Coffin-Manson equation with the Arrhenius term \cite{jedec2010}, \cite{xiang2010}, \cite{ciappa2003}:
+The number of thermal cycles to failure can be estimated using a modified version of the well-known Coffin-Manson equation with the Arrhenius term \cite{jedec2010}, \cite{xiang2010}, \cite{ciappa2003}:
 \begin{equation} \label{eq:cycles-to-failure}
   \mathcal{N} = A (\Delta T - \Delta T_0)^{-b} e^{\frac{E_a}{k T_{max}}}
 \end{equation}
-where $A$ is an empirically determined constant, $\Delta T$ is the thermal cycle excursion \cite{ciappa2003}, $\Delta T_0$ is the portion of the temperature range in the elastic region which does not cause damage, $b$ is the Coffin-Manson exponent with is also empirically determined, $E_{a}$ is the activation energy, $k$ is the Boltzmann constant, and $T_{max}$ is the maximal temperature during the thermal cycle. Having the number of cycles to failure and the duration of one cycle $\Delta t$, we can compute the MTTF:
-\[
+where $A$ is an empirically determined constant, $\Delta T$ is the thermal cycle excursion, $\Delta T_0$ is the portion of the temperature range in the elastic region which does not cause damage, $b$ is the Coffin-Manson exponent with is also empirically determined, $E_{a}$ is the activation energy, $k$ is the Boltzmann constant, and $T_{max}$ is the maximal temperature during the thermal cycle. Having the number of cycles to failure and the duration of one cycle $\Delta t$, we can compute the MTTF that is missing in \equref{eq:eta-one}:
+\begin{equation} \label{eq:mttf-cycle}
   MTTF = \mathcal{N} \; \Delta t
-\]
-
-Since we consider the TC failure mechanism, each interval $\Delta t_i$ corresponds to a thermal cycle. Taking everything together, we get the following equation:
-\begin{equation} \label{eq:one-mttf}
-  MTTF = \frac{\mathcal{T}}{\sum_{i=0}^{N_m - 1} \frac{1}{\mathcal{N}_i}}
 \end{equation}
+Hence, taking equations \eqref{eq:general-mttf}, \eqref{eq:eta-one}, \eqref{eq:eta-many}, and \eqref{eq:mttf-cycle} together, we obtain the following expression to estimate the MTTF for the whole period of the application:
+\begin{align} \label{eq:one-mttf}
+  MTTF = \frac{\mathcal{T}}{\sum_{i=0}^{N_m - 1} \frac{1}{\mathcal{N}_i}}
+\end{align}
 
 \equref{eq:one-mttf} describes the MTTF of one component, which is a processing element in our case. We assume that each processing element is essential for the proper work of the system, therefore, a failure of any core leads to the total failure of the whole system. Consequently, the MTTF of the system can be estimated as the minimal MTTF among its components:
 \begin{align}
