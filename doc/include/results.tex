@@ -1,4 +1,4 @@
-\subsection{SSDTP Computation Performance} \label{sec:results-ssdtp}
+\subsection{Computation Performance} \label{sec:results-ssdtp}
 In this subsection we investigate the scalability properties of the proposed solution based on the CE method and compare it with one transient temperature simulation (TTS) of the application period, which is not sufficient to reach the SSDTP as it was shown in \secref{sec:hotspot-solution}. To perform the TTA, the HotSpot thermal simulator is used.
 
 \image{scaling-time}{80 230 80 230}{Scalability with the application period for a quad-core architecture. The sampling interval is fixed to 1 millisecond where 1 second on the horizontal axis corresponds to 1000 steps in the power profile. The comparison is given on the semilogarithmic scale.}
@@ -9,19 +9,19 @@ In this subsection we investigate the scalability properties of the proposed sol
   $\mathcal{T}$, s & CE, ms & TTS, ms & Speedup, $\times$ & NRMSE, \% \\
   \hline
   \hline
-  0.05 &  0.18 &   10.24 & 56.93 & 25.8 \\
-   0.1 &  0.35 &   20.26 & 58.30 & 19.0 \\
-   0.5 &  1.63 &   97.36 & 59.73 & 9.65 \\
-     1 &  3.23 &  193.31 & 59.80 & 7.80 \\
-     2 &  6.48 &  382.59 & 59.08 & 6.46 \\
-     3 &  9.58 &  573.15 & 59.83 & 5.79 \\
-     4 & 12.78 &  770.09 & 60.25 & 5.34 \\
-     5 & 16.10 &  964.75 & 59.92 & 5.00 \\
-     6 & 19.32 & 1146.87 & 59.36 & 4.72 \\
-     7 & 22.51 & 1335.26 & 59.31 & 4.49 \\
-     8 & 25.69 & 1536.91 & 59.82 & 4.28 \\
-     9 & 28.94 & 1729.39 & 59.76 & 4.09 \\
-    10 & 32.65 & 1921.14 & 58.83 & 3.93 \\
+  0.05 &  0.18 &   10.24 & 56.93 & 25.81 \\
+   0.1 &  0.35 &   20.26 & 58.30 & 19.02 \\
+   0.5 &  1.63 &   97.36 & 59.73 &  9.65 \\
+     1 &  3.23 &  193.31 & 59.80 &  7.80 \\
+     2 &  6.48 &  382.59 & 59.08 &  6.46 \\
+     3 &  9.58 &  573.15 & 59.83 &  5.79 \\
+     4 & 12.78 &  770.09 & 60.25 &  5.34 \\
+     5 & 16.10 &  964.75 & 59.92 &  5.00 \\
+     6 & 19.32 & 1146.87 & 59.36 &  4.72 \\
+     7 & 22.51 & 1335.26 & 59.31 &  4.49 \\
+     8 & 25.69 & 1536.91 & 59.82 &  4.28 \\
+     9 & 28.94 & 1729.39 & 59.76 &  4.09 \\
+    10 & 32.65 & 1921.14 & 58.83 &  3.93 \\
   \hline
 \end{itable}
 First, we vary the application period keeping the sampling interval constant and equal to 1 millisecond. The comparison for a quad-core architecture is given in \figref{fig:scaling-time} and \tabref{tab:scaling-time}. It can be seen that the CE method is roughly 60 times faster than one iteration of the TTA\footnote{All the experiments are done on a Linux machine with Intel\textregistered\ Core\texttrademark\ i7-2600 (3.4GHz, 4 cores, 8 threads) and 8Gb of RAM.}. The application period proportionally corresponds to the number of steps in the power profile (one second is equal to 1000 steps in the power profile in the above-mentioned example). Hence, we would see the same curves, if we were investigating the dependency on the power profile discretization.
@@ -34,17 +34,17 @@ First, we vary the application period keeping the sampling interval constant and
   $N_p$ & CE, ms & TTS, ms & Speedup, $\times$ & NRMSE, \% \\
   \hline
   \hline
-    1 &    0.99 &    97.00 & 97.93 &  25 \\
-   10 &   16.46 &   632.50 & 38.44 &  41 \\
-   20 &   46.00 &  1761.75 & 38.30 &  69 \\
-   30 &   98.49 &  3472.21 & 35.25 & 102 \\
-   40 &  172.69 &  5827.77 & 33.75 & 130 \\
-   50 &  266.08 &  8771.93 & 32.97 & 142 \\
-   60 &  380.95 & 12235.91 & 32.12 & 185 \\
-   70 &  517.04 & 16363.54 & 31.65 & 220 \\
-   80 &  675.21 & 21104.98 & 31.26 & 245 \\
-   90 &  856.20 & 26415.77 & 30.85 & 277 \\
-  100 & 1058.35 & 32329.09 & 30.55 & 308 \\
+    1 &    0.99 &    97.00 & 97.93 &  25.30 \\
+   10 &   16.46 &   632.50 & 38.44 &  40.61 \\
+   20 &   46.00 &  1761.75 & 38.30 &  69.51 \\
+   30 &   98.49 &  3472.21 & 35.25 & 102.00 \\
+   40 &  172.69 &  5827.77 & 33.75 & 130.02 \\
+   50 &  266.08 &  8771.93 & 32.97 & 142.30 \\
+   60 &  380.95 & 12235.91 & 32.12 & 185.32 \\
+   70 &  517.04 & 16363.54 & 31.65 & 220.10 \\
+   80 &  675.21 & 21104.98 & 31.26 & 245.43 \\
+   90 &  856.20 & 26415.77 & 30.85 & 277.00 \\
+  100 & 1058.35 & 32329.09 & 30.55 & 308.01 \\
   \hline
 \end{itable}
 The second part of the comparison is the scalability with the number of processing elements shown in \figref{fig:scaling-cores} and \tabref{tab:scaling-cores}. It can be seen that the difference between computation times of the CE method and one TTS becomes smaller when the number of cores is increasing. At the same time the mismatch between the SSDTP and temperature profile produced by one TTA dramatically increases, which means that larger number of the TTA iterations is required to reach the same level of accuracy.
@@ -56,30 +56,45 @@ In each of the experiments, we compare the optimized solution with the initial o
 
 \begin{itable}{mttf-cores}{|r|r|r|r|r|}
   {Reliability optimization for different architectures}
-  {$N_p$ --- the number of cores, $N_t$ --- the number of tasks, $t_{avg}$ --- the average computational time, $MTTF_{avg}$ --- the average MTTF improvement, $MTTF_{max}$ --- the maximal MTTF improvement.}
+  {$N_p$ --- the number of cores, $N_t$ --- the number of tasks, $t_{avg}$ --- the average computational time, $MTTF_{avg}$ --- the average MTTF improvement, $E_{avg}$ --- the average change in the energy consumption.}
   \hline
-  $N_p$ & $N_t$ & $t_{avg}, m$ & $MTTF_{avg}$, \% & $MTTF_{max}$, \% \\
+  $N_p$ & $N_t$ & $t_{avg}, m$ & $MTTF_{avg}$, \% & $E_{avg}$, \% \\
   \hline
-   2 &   20 &   0.16 & 129 & 324 \\
-   4 &   40 &   1.10 & 185 & 369 \\
-   8 &   80 &   7.76 & 159 & 250 \\
-  16 &  160 &  34.59 & 191 & 269 \\
-  32 &  320 & 101.62 & 191 & 452 \\
+   2 &   20 &   0.66 & 8123.29 & -13.50 \\
+   4 &   40 &   2.04 & 7424.04 & -22.92 \\
+   8 &   80 &  10.67 & 2819.45 & -21.88 \\
+  16 &  160 &  25.38 &  915.11 & -13.78 \\
+  32 &  320 &  89.59 &  442.49 &  -8.90 \\
   \hline
 \end{itable}
-In the first set of experiments, we change the number of cores while keeping the number of tasks per core constant and equal to 10. For each problem we generate 20 random task graphs and find the average improvement. The results are given in \tabref{tab:mttf-cores}.
+In the first set of experiments, we change the number of cores while keeping the number of tasks per core constant and equal to 10. For each problem we have generated 20 random task graphs of a similar structure and found the average improvement of the MTTF. We also have measured the change in the consumed energy. The results are given in \tabref{tab:mttf-cores}. It can be observed that the temperature-unaware task allocation and scheduling dramatically decrease the lifetime of the device and the optimization based on the SSDTP is a must for an embedded system design framework. Although, the average improvement is decreasing with the growth of the complexity of the problem, it is still considerably high. Note that the energy efficiency of the system is not suffering from the optimization, on the contrary, we observed that the found solutions are generally better with comparison to the initial ones from this perspective.
 
 \begin{itable}{mttf-tasks}{|r|r|r|r|r|}
   {Reliability optimization for different applications}
-  {$N_p$ --- the number of cores, $N_t$ --- the number of tasks, $t_{avg}$ --- the average computational time, $MTTF_{avg}$ --- the average MTTF improvement, $MTTF_{max}$ --- the maximal MTTF improvement.}
+  {$N_p$ --- the number of cores, $N_t$ --- the number of tasks, $t_{avg}$ --- the average computational time, $MTTF_{avg}$ --- the average MTTF improvement, $E_{avg}$ --- the average change in the energy consumption.}
   \hline
-  $N_p$ & $N_t$ & $t_{avg}, m$ & $MTTF_{avg}$, \% & $MTTF_{max}$, \% \\
+  $N_p$ & $N_t$ & $t_{avg}, m$ & $MTTF_{avg}$, \% & $E_{avg}$, \% \\
   \hline
-  4 &  20 & 0 & 0 & 0 \\
-  4 &  40 & 0 & 0 & 0 \\
-  4 &  80 & 0 & 0 & 0 \\
-  4 & 160 & 0 & 0 & 0 \\
-  4 & 320 & 0 & 0 & 0 \\
+  4 &  20 &  0.93 & 13029.86 & -26.62 \\
+  4 &  40 &  1.81 &  4311.02 & -22.15 \\
+  4 &  80 &  4.98 &  2358.82 & -15.34 \\
+  4 & 160 & 10.40 &   912.70 & -10.47 \\
+  4 & 320 & 29.77 &   481.67 &  -5.40 \\
   \hline
 \end{itable}
-For the second set of experiments, we keep the quad-core architecture and vary the number of tasks within the application. The number of random task graphs per problem is 20. The average improvement of the MTTF is given in \tabref{tab:mttf-tasks}.
+For the second set of experiments, we keep the quad-core architecture and vary the number of tasks within the application. The number of randomly generated task graphs per problem is 20. The average improvement of the MTTF along with the change in the energy consumption are given in \tabref{tab:mttf-tasks}. The observations to be made here are similar to the previous ones: taking into consideration the SSDTP of the system during the design stage can significantly prolong the MTTF without sacrificing the energy efficiency of the system.
+
+\begin{itable}{mttf-comparison}{|r|r|r|r|r|}
+  {Reliability optimization for different solution techniques}
+  {$N_p$ --- the number of cores, $N_t$ --- the number of tasks, $MTTF^{CE}_{avg}$, $MTTF^{TTA}_{avg}$, and $MTTF^{SS}_{avg}$ --- the average improvements of the MTTF obtained by the CE method, TTA with HotSpot, and SS approximation, respectively.}
+  \hline
+  $N_p$ & $N_t$ & $MTTF^{CE}_{avg}$, \% & $MTTF^{TTA}_{avg}$, \% & $MTTF^{SS}_{avg}$, \% \\
+  \hline
+  4 &  20 & \todo{0} & \todo{0} & \todo{0} \\
+  4 &  40 & \todo{0} & \todo{0} & \todo{0} \\
+  4 &  80 & \todo{0} & \todo{0} & \todo{0} \\
+  4 & 160 & \todo{0} & \todo{0} & \todo{0} \\
+  4 & 320 & \todo{0} & \todo{0} & \todo{0} \\
+  \hline
+\end{itable}
+Finally, we compare the results of the optimization delivered by the CE method, TTA with HotSpot, and steady-state approximation (SS) discussed in \secref{sec:steady-state-approximation} for the same setup as in the previous set of experiments with the fixed architecture. The final solution found by the later two methods, TTA and SS, are reevaluated using the CE method and compared with the solutions found only by the CE approach. The results are summarized in \tabref{tab:mttf-comparison}. \todo{Obtain results and discuss.}
