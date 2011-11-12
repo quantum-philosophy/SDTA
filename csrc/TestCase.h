@@ -176,7 +176,8 @@ class TestCase
 
 			hotspot = new TransientAnalyticalHotspot(
 				*architecture, *graph, _floorplan, _hotspot,
-				solution_tuning.hotspot, solution_tuning.max_iterations);
+				solution_tuning.hotspot, solution_tuning.max_iterations,
+				solution_tuning.tolerance, solution_tuning.warmup);
 		}
 		else if (solution_tuning.method == "coarse_condensed_equation") {
 			if (leakage)
@@ -191,11 +192,13 @@ class TestCase
 				hotspot = new LeakageIterativeHotspot(
 					*architecture, *graph, _floorplan, _hotspot,
 					solution_tuning.hotspot, solution_tuning.max_iterations,
+					solution_tuning.tolerance, solution_tuning.warmup,
 					*leakage);
 			else
 				hotspot = new IterativeHotspot(
 					*architecture, *graph, _floorplan, _hotspot,
-					solution_tuning.hotspot, solution_tuning.max_iterations);
+					solution_tuning.hotspot, solution_tuning.max_iterations,
+					solution_tuning.tolerance, solution_tuning.warmup);
 		}
 		else if (solution_tuning.method == "steady_state") {
 			if (leakage) {

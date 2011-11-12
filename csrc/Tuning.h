@@ -81,13 +81,15 @@ struct SolutionTuning: public Tuning
 	std::string method;
 	size_t max_iterations;
 	double tolerance;
-	std::string leakage;
+	bool warmup;
 	std::string hotspot;
+	std::string leakage;
 
 	SolutionTuning() :
 		method("condensed_equation"),
 		max_iterations(100),
-		tolerance(0.1) {}
+		tolerance(0.1),
+		warmup(false) {}
 
 	void setup(const parameters_t &params);
 	void display(std::ostream &o) const;

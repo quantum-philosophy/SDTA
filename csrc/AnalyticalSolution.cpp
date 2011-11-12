@@ -206,7 +206,7 @@ size_t IterativeCondensedEquation::solve(const double *dynamic_power,
 				for (j = 0; j < processor_count; j++, k++) {
 					tmp = Y[i][j] * sinvC[j] + ambient_temperature;
 
-					error = abs(temperature[k] - tmp);
+					error = std::abs(temperature[k] - tmp);
 					if (max_error < error) max_error = error;
 
 					temperature[k] = tmp;
@@ -240,18 +240,18 @@ TransientAnalyticalSolution::TransientAnalyticalSolution(
 	size_t _processor_count, size_t _node_count,
 	double _sampling_interval, double _ambient_temperature,
 	const double **conductivity, const double *capacitance,
-	size_t _max_iterations) :
+	size_t _max_iterations, double _tolerance, bool _warmup) :
 
 	AnalyticalSolution(_processor_count, _node_count, _sampling_interval,
 		_ambient_temperature, conductivity, capacitance),
-	max_iterations(_max_iterations)
+	max_iterations(_max_iterations), tolerance(_tolerance), warmup(_warmup)
 {
 }
 
-void TransientAnalyticalSolution::solve(
+void TransientAnalyticalSolution::solve_fixed_iterations(
 	const double *power, double *temperature, size_t step_count)
 {
-	size_t i, j, k;
+	size_t iterations, i, j, k;
 
 	Y.resize(step_count, node_count);
 	Q.resize(step_count, node_count);
@@ -279,7 +279,7 @@ void TransientAnalyticalSolution::solve(
 		multiply_matrix_vector_plus_vector(K, Y[i - 1], Q[i], Y[i]);
 	}
 
-	for (k = 1; k < max_iterations; k++) {
+	for (iterations = 1; iterations < max_iterations; iterations++) {
 		/* Wrap around:
 		 *
 		 * Y(1) = K * Y(N_s - 1) + Q(0)
@@ -300,6 +300,52 @@ void TransientAnalyticalSolution::solve(
 	for (i = 0, k = 0; i < step_count; i++)
 		for (j = 0; j < processor_count; j++, k++)
 			temperature[k] = Y[i][j] * sinvC[j] + ambient_temperature;
+}
+
+void TransientAnalyticalSolution::solve_error_control(
+	const double *power, double *temperature, size_t step_count)
+{
+	size_t iterations, i, j, k;
+	double tmp, error, max_error;
+
+	Y.resize(step_count, node_count);
+	Q.resize(step_count, node_count);
+
+	for (i = 0; i < step_count; i++) {
+		multiply_matrix_incomplete_vector(G, power + i * processor_count,
+			processor_count, Q[i]);
+	}
+
+	__MEMCPY(Y[0], Q[0], node_count);
+
+	for (i = 1; i < step_count; i++) {
+		multiply_matrix_vector_plus_vector(K, Y[i - 1], Q[i], Y[i]);
+	}
+
+	for (i = 0, k = 0; i < step_count; i++)
+		for (j = 0; j < processor_count; j++, k++)
+			temperature[k] = Y[i][j] * sinvC[j] + ambient_temperature;
+
+	for (iterations = 1; iterations < max_iterations; iterations++) {
+		multiply_matrix_vector_plus_vector(K, Y[step_count - 1], Q[0], Y[0]);
+
+		for (i = 1; i < step_count; i++) {
+			multiply_matrix_vector_plus_vector(K, Y[i - 1], Q[i], Y[i]);
+		}
+
+		max_error = 0;
+		for (i = 0, k = 0; i < step_count; i++)
+			for (j = 0; j < processor_count; j++, k++) {
+				tmp = Y[i][j] * sinvC[j] + ambient_temperature;
+
+				error = std::abs(temperature[k] - tmp);
+				if (max_error < error) max_error = error;
+
+				temperature[k] = tmp;
+			}
+
+		if (max_error < tolerance) break;
+	}
 }
 
 CoarseCondensedEquation::CoarseCondensedEquation(

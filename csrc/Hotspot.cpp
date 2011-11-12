@@ -222,11 +222,13 @@ void CoarseCondensedEquationHotspot::solve(const Schedule &schedule,
 TransientAnalyticalHotspot::TransientAnalyticalHotspot(
 	const Architecture &architecture, const Graph &graph,
 	const std::string &floorplan, const std::string &config,
-	const std::string &config_line, size_t max_iterations) :
+	const std::string &config_line, size_t max_iterations,
+	double tolerance, bool warmup) :
 
 	Hotspot(floorplan, config, config_line),
 	equation(processor_count, node_count, sampling_interval, ambient_temperature,
-		(const double **)model->block->b, model->block->a, max_iterations),
+		(const double **)model->block->b, model->block->a,
+		max_iterations, tolerance, warmup),
 	dynamic_power(architecture.get_processors(), graph.get_tasks(),
 		graph.get_deadline(), sampling_interval)
 {
@@ -404,7 +406,7 @@ double *LeakageSteadyStateHotspot::compute(const SlotTrace &trace) const
 			 */
 			max_error = 0;
 			for (i = 0; i < processor_count; i++) {
-				error = abs(temperature[i] - last_temperature[i]);
+				error = std::abs(temperature[i] - last_temperature[i]);
 				if (max_error < error) max_error = error;
 				last_temperature[i] = temperature[i];
 			}
@@ -479,12 +481,13 @@ void PreciseSteadyStateHotspot::solve(const matrix_t &_power, matrix_t &_tempera
 IterativeHotspot::IterativeHotspot(
 	const Architecture &architecture, const Graph &graph,
 	const std::string &floorplan, const std::string &config,
-	const std::string &config_line,  size_t _max_iterations) :
+	const std::string &config_line, size_t _max_iterations,
+	double _tolerance, bool _warmup) :
 
 	Hotspot(floorplan, config, config_line),
 	dynamic_power(architecture.get_processors(), graph.get_tasks(),
 		graph.get_deadline(), sampling_interval),
-	max_iterations(_max_iterations)
+	max_iterations(_max_iterations), tolerance(_tolerance), warmup(_warmup)
 {
 }
 
@@ -523,8 +526,8 @@ void IterativeHotspot::solve(const Schedule &schedule,
 	solve(power, temperature);
 }
 
-size_t IterativeHotspot::solve(double *extended_power,
-	double *temperature, size_t step_count)
+size_t IterativeHotspot::solve_fixed_iterations(
+	double *extended_power, double *temperature, size_t step_count)
 {
 	double *extended_temperature = __ALLOC(node_count);
 
@@ -547,18 +550,50 @@ size_t IterativeHotspot::solve(double *extended_power,
 	return iterations;
 }
 
+size_t IterativeHotspot::solve_error_control(
+	double *extended_power, double *temperature, size_t step_count)
+{
+	double *extended_temperature = __ALLOC(node_count);
+
+	set_temp(model, extended_temperature, config.init_temp);
+
+	size_t i, j, k, iterations;
+	double error, max_error;
+
+	for (iterations = 0; iterations < max_iterations; iterations++) {
+		max_error = 0;
+		for (i = 0, k = 0; i < step_count; i++) {
+			compute_temp(model, extended_power + node_count * i,
+				extended_temperature, sampling_interval);
+
+			for (j = 0; j < processor_count; j++, k++) {
+				error = std::abs(temperature[k] - extended_temperature[j]);
+				if (max_error < error) max_error = error;
+				temperature[k] = extended_temperature[j];
+			}
+		}
+
+		if (max_error < tolerance) break;
+	}
+
+	__FREE(extended_temperature);
+
+	return iterations;
+}
+
 /******************************************************************************/
 
 LeakageIterativeHotspot::LeakageIterativeHotspot(
 	const Architecture &architecture, const Graph &graph,
 	const std::string &floorplan, const std::string &config,
 	const std::string &config_line, size_t _max_iterations,
-	const Leakage &_leakage) :
+	double _tolerance, bool _warmup, const Leakage &_leakage) :
 
 	Hotspot(floorplan, config, config_line),
 	dynamic_power(architecture.get_processors(), graph.get_tasks(),
 		graph.get_deadline(), sampling_interval),
-	max_iterations(_max_iterations), leakage(_leakage)
+	max_iterations(_max_iterations), tolerance(_tolerance), warmup(_warmup),
+	leakage(_leakage)
 {
 }
 
@@ -588,22 +623,7 @@ void LeakageIterativeHotspot::solve(const matrix_t &dynamic_power,
 			_extended_total_power + i * node_count, processor_count);
 }
 
-void LeakageIterativeHotspot::solve(const matrix_t &dynamic_power,
-	matrix_t &temperature)
-{
-	matrix_t total_power;
-	solve(dynamic_power, temperature, total_power);
-}
-
-void LeakageIterativeHotspot::solve(const Schedule &schedule,
-	matrix_t &temperature, matrix_t &total_power)
-{
-	matrix_t power;
-	dynamic_power.compute(schedule, power);
-	solve(power, temperature, total_power);
-}
-
-size_t LeakageIterativeHotspot::solve(const double *dynamic_power,
+size_t LeakageIterativeHotspot::solve_fixed_iterations(const double *dynamic_power,
 	double *temperature, double *extended_total_power, size_t step_count)
 {
 	double *extended_temperature = __ALLOC(node_count);
@@ -624,6 +644,40 @@ size_t LeakageIterativeHotspot::solve(const double *dynamic_power,
 			__MEMCPY(temperature + i * processor_count,
 				extended_temperature, processor_count);
 		}
+
+	__FREE(extended_temperature);
+
+	return iterations;
+}
+
+size_t LeakageIterativeHotspot::solve_error_control(const double *dynamic_power,
+	double *temperature, double *extended_total_power, size_t step_count)
+{
+	double *extended_temperature = __ALLOC(node_count);
+
+	set_temp(model, extended_temperature, ambient_temperature);
+
+	size_t i, j, k, iterations;
+	double error, max_error;
+
+	for (iterations = 0; iterations < max_iterations; iterations++) {
+		max_error = 0;
+		for (i = 0, k = 0; i < step_count; i++) {
+			leakage.inject(extended_temperature, dynamic_power + processor_count * i,
+				extended_total_power + node_count * i);
+
+			compute_temp(model, extended_total_power + node_count * i,
+				extended_temperature, sampling_interval);
+
+			for (j = 0; j < processor_count; j++, k++) {
+				error = std::abs(temperature[k] - extended_temperature[j]);
+				if (max_error < error) max_error = error;
+				temperature[k] = extended_temperature[j];
+			}
+		}
+
+		if (max_error < tolerance) break;
+	}
 
 	__FREE(extended_temperature);
 

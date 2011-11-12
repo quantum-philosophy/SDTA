@@ -98,10 +98,12 @@ void SolutionTuning::setup(const parameters_t &params)
 			max_iterations = it->to_int();
 		else if (it->name == "tolerance")
 			tolerance = it->to_double();
-		else if (it->name == "leakage")
-			leakage = it->value;
+		else if (it->name == "warmup")
+			warmup = it->to_bool();
 		else if (it->name == "hotspot")
 			hotspot = it->value;
+		else if (it->name == "leakage")
+			leakage = it->value;
 	}
 }
 
@@ -112,8 +114,9 @@ void SolutionTuning::display(std::ostream &o) const
 		<< "  Max iterations:       " << max_iterations << std::endl
 		<< std::setprecision(4)
 		<< "  Tolerance:            " << tolerance << std::endl
-		<< "  Leakage:              " << leakage << std::endl
-		<< "  Hotspot:              " << hotspot << std::endl;
+		<< "  Warm up:              " << warmup << std::endl
+		<< "  Hotspot:              " << hotspot << std::endl
+		<< "  Leakage:              " << leakage << std::endl;
 }
 
 void OptimizationTuning::setup(const parameters_t &params)

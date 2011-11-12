@@ -75,6 +75,8 @@ class IterativeCondensedEquation: public CondensedEquation
 class TransientAnalyticalSolution: public AnalyticalSolution
 {
 	const size_t max_iterations;
+	const double tolerance;
+	const bool warmup;
 
 	matrix_t Q;
 	matrix_t Y;
@@ -84,9 +86,22 @@ class TransientAnalyticalSolution: public AnalyticalSolution
 	TransientAnalyticalSolution(size_t _processor_count, size_t _node_count,
 		double _sampling_interval, double _ambient_temperature,
 		const double **conductivity, const double *capacitance,
-		size_t _max_iterations);
+		size_t _max_iterations, double _tolerance, bool _warmup);
 
-	void solve(const double *power, double *temperature, size_t step_count);
+	inline void solve(const double *power, double *temperature, size_t step_count)
+	{
+		if (tolerance == 0)
+			solve_fixed_iterations(power, temperature, step_count);
+		else
+			solve_error_control(power, temperature, step_count);
+	}
+
+	private:
+
+	void solve_fixed_iterations(
+		const double *power, double *temperature, size_t step_count);
+	void solve_error_control(
+		const double *power, double *temperature, size_t step_count);
 };
 
 class CoarseCondensedEquation

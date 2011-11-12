@@ -155,7 +155,8 @@ class TransientAnalyticalHotspot: public Hotspot
 	TransientAnalyticalHotspot(
 		const Architecture &architecture, const Graph &graph,
 		const std::string &floorplan, const std::string &config,
-		const std::string &config_line, size_t max_iterations);
+		const std::string &config_line, size_t max_iterations,
+		double tolerance, bool warmup);
 
 	void solve(const matrix_t &power, matrix_t &temperature);
 	void solve(const Schedule &schedule, matrix_t &temperature, matrix_t &power);
@@ -314,25 +315,44 @@ class IterativeHotspot: public Hotspot
 	const DynamicPower dynamic_power;
 
 	const size_t max_iterations;
+	const double tolerance;
+	const double warmup;
 
 	public:
 
 	IterativeHotspot(const Architecture &architecture, const Graph &graph,
 		const std::string &floorplan, const std::string &config,
-		const std::string &config_line,  size_t _max_iterations);
+		const std::string &config_line,  size_t _max_iterations,
+		double _tolerance, bool _warmup);
 
 	void solve(const matrix_t &power, matrix_t &temperature);
 	void solve(const Schedule &schedule, matrix_t &temperature, matrix_t &power);
 
 	private:
 
-	size_t solve(double *extended_power, double *temperature, size_t step_count);
+	inline size_t solve(double *extended_power,
+		double *temperature, size_t step_count)
+	{
+		if (tolerance == 0)
+			return solve_fixed_iterations(extended_power, temperature, step_count);
+		else
+			return solve_error_control(extended_power, temperature, step_count);
+	}
+
+	size_t solve_fixed_iterations(
+		double *extended_power, double *temperature, size_t step_count);
+	size_t solve_error_control(
+		double *extended_power, double *temperature, size_t step_count);
 };
 
 class LeakageIterativeHotspot: public Hotspot
 {
 	const DynamicPower dynamic_power;
+
 	const size_t max_iterations;
+	const double tolerance;
+	const double warmup;
+
 	const Leakage &leakage;
 
 	public:
@@ -340,16 +360,43 @@ class LeakageIterativeHotspot: public Hotspot
 	LeakageIterativeHotspot(const Architecture &architecture, const Graph &graph,
 		const std::string &floorplan, const std::string &config,
 		const std::string &config_line,  size_t _max_iterations,
-		const Leakage &_leakage);
+		double _tolerance, bool _warmup, const Leakage &_leakage);
 
-	void solve(const matrix_t &power, matrix_t &temperature);
 	void solve(const matrix_t &power, matrix_t &temperature, matrix_t &total_power);
-	void solve(const Schedule &schedule, matrix_t &temperature,
-		matrix_t &power);
+
+	inline void solve(const matrix_t &dynamic_power,
+		matrix_t &temperature)
+	{
+		matrix_t total_power;
+		solve(dynamic_power, temperature, total_power);
+	}
+
+	inline void solve(const Schedule &schedule,
+		matrix_t &temperature, matrix_t &total_power)
+	{
+		matrix_t power;
+		dynamic_power.compute(schedule, power);
+		solve(power, temperature, total_power);
+	}
 
 	private:
 
-	size_t solve(const double *dynamic_power, double *temperature,
+	inline size_t solve(const double *dynamic_power,
+		double *temperature, double *extended_total_power, size_t step_count)
+	{
+		if (tolerance == 0)
+			return solve_fixed_iterations(dynamic_power, temperature,
+				extended_total_power, step_count);
+		else
+			return solve_error_control(dynamic_power, temperature,
+				extended_total_power, step_count);
+	}
+
+	size_t solve_fixed_iterations(
+		const double *dynamic_power, double *temperature,
+		double *extended_total_power, size_t step_count);
+	size_t solve_error_control(
+		const double *dynamic_power, double *temperature,
 		double *extended_total_power, size_t step_count);
 };
 
