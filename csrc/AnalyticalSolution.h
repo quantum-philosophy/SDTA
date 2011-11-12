@@ -102,6 +102,7 @@ class TransientAnalyticalSolution: public AnalyticalSolution
 		const double *power, double *temperature, size_t step_count);
 	void solve_error_control(
 		const double *power, double *temperature, size_t step_count);
+	void initialize(const double *power, size_t step_count);
 };
 
 class CoarseCondensedEquation

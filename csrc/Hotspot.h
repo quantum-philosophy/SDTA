@@ -326,7 +326,13 @@ class IterativeHotspot: public Hotspot
 		double _tolerance, bool _warmup);
 
 	void solve(const matrix_t &power, matrix_t &temperature);
-	void solve(const Schedule &schedule, matrix_t &temperature, matrix_t &power);
+
+	inline void solve(const Schedule &schedule,
+		matrix_t &temperature, matrix_t &power)
+	{
+		dynamic_power.compute(schedule, power);
+		solve(power, temperature);
+	}
 
 	private:
 
@@ -343,6 +349,9 @@ class IterativeHotspot: public Hotspot
 		double *extended_power, double *temperature, size_t step_count);
 	size_t solve_error_control(
 		double *extended_power, double *temperature, size_t step_count);
+
+	void initialize(const double *extended_power,
+		double *extended_temperature, size_t step_count);
 };
 
 class LeakageIterativeHotspot: public Hotspot

@@ -253,42 +253,27 @@ void TransientAnalyticalSolution::solve_fixed_iterations(
 {
 	size_t iterations, i, j, k;
 
-	Y.resize(step_count, node_count);
-	Q.resize(step_count, node_count);
-
-	for (i = 0; i < step_count; i++) {
-		/* Q(i) = G * B(i) */
-		multiply_matrix_incomplete_vector(G, power + i * processor_count,
-			processor_count, Q[i]);
-	}
-
-	/* NOTE: The indexes are shifted by 1 here, because we store
-	 * Y(i) in the place of Y(i-1), since we are not interested in
-	 * the initial temperature (we know it, it is ambient).
-	 */
-
-	/* We start from zero temperature, therefore, the first
-	 * multiplication by K is zero, hence:
-	 *
-	 * Y(1) = K * Y(0) + Q(0) = Q(0)
-	 */
-	__MEMCPY(Y[0], Q[0], node_count);
+	initialize(power, step_count);
 
 	for (i = 1; i < step_count; i++) {
-		/* Y(i) = K * Y(i-1) + Q(i) */
-		multiply_matrix_vector_plus_vector(K, Y[i - 1], Q[i], Y[i]);
+		/* Y(i) = K * Y(i-1) + Q(i)
+		 *
+		 * Note: Indexes are shifted here for Q.
+		 */
+		multiply_matrix_vector_plus_vector(K, Y[i - 1], Q[i - 1], Y[i]);
 	}
 
 	for (iterations = 1; iterations < max_iterations; iterations++) {
 		/* Wrap around:
 		 *
-		 * Y(1) = K * Y(N_s - 1) + Q(0)
+		 * Y(1) = K * Y(N_s - 1) + Q(N_s - 1)
 		 */
-		multiply_matrix_vector_plus_vector(K, Y[step_count - 1], Q[0], Y[0]);
+		multiply_matrix_vector_plus_vector(
+			K, Y[step_count - 1], Q[step_count - 1], Y[0]);
 
 		for (i = 1; i < step_count; i++) {
 			/* Y(i) = K * Y(i-1) + Q(i) */
-			multiply_matrix_vector_plus_vector(K, Y[i - 1], Q[i], Y[i]);
+			multiply_matrix_vector_plus_vector(K, Y[i - 1], Q[i - 1], Y[i]);
 		}
 	}
 
@@ -308,15 +293,7 @@ void TransientAnalyticalSolution::solve_error_control(
 	size_t iterations, i, j, k;
 	double tmp, error, max_error;
 
-	Y.resize(step_count, node_count);
-	Q.resize(step_count, node_count);
-
-	for (i = 0; i < step_count; i++) {
-		multiply_matrix_incomplete_vector(G, power + i * processor_count,
-			processor_count, Q[i]);
-	}
-
-	__MEMCPY(Y[0], Q[0], node_count);
+	initialize(power, step_count);
 
 	for (i = 1; i < step_count; i++) {
 		multiply_matrix_vector_plus_vector(K, Y[i - 1], Q[i], Y[i]);
@@ -345,6 +322,56 @@ void TransientAnalyticalSolution::solve_error_control(
 			}
 
 		if (max_error < tolerance) break;
+	}
+}
+
+void TransientAnalyticalSolution::initialize(const double *power, size_t step_count)
+{
+	size_t i, j;
+
+	Y.resize(step_count, node_count);
+	Q.resize(step_count, node_count);
+
+	for (i = 0; i < step_count; i++) {
+		/* Q(i) = G * B(i) */
+		multiply_matrix_incomplete_vector(G, power + i * processor_count,
+			processor_count, Q[i]);
+	}
+
+	if (warmup) {
+		/* Solve:
+		 * G * T = P
+		 * C^(-1/2) * G * C^(-1/2) * C^(1/2) * T = C^(-1/2) * P
+		 * Y = - U * L^(-1) * U^T * C^(-1/2) * P
+		 *
+		 * NOTE: Minus here because the eigenvalue decomposition is
+		 * for the negative matrix.
+		 */
+
+		/* C^(-1/2) * P (average power) */
+		v_temp.nullify();
+		for (i = 0; i < processor_count; i++) {
+			for (j = 0; j < step_count; j++)
+				v_temp[i] = v_temp[i] + power[j * processor_count + i];
+			v_temp[i] = sinvC[i] * v_temp[i] / double(step_count);
+		}
+
+		/* U^T * C^(-1/2) * P */
+		multiply_matrix_incomplete_vector(UT, v_temp, processor_count, Y[0]);
+
+		/* L^(-1) * U^T * C^(-1/2) * P */
+		for (i = 0; i < node_count; i++) v_temp[i] = - Y[0][i] / L[i];
+
+		/* U * L^(-1) * U^T * C^(-1/2) * P */
+		multiply_matrix_vector(U, v_temp, Y[0]);
+	}
+	else {
+		/* We start from zero temperature, therefore, the first
+		 * multiplication by K is zero, hence:
+		 *
+		 * Y(1) = K * Y(0) + Q(0) = Q(0)
+		 */
+		__MEMCPY(Y[0], Q[0], node_count);
 	}
 }
 
