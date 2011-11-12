@@ -29,34 +29,35 @@ class TestCase
 	Schedule schedule;
 
 	TestCase(const std::string &_system, const std::string &_floorplan,
-		const std::string &_hotspot, const SystemTuning &tuning) :
+		const std::string &_hotspot, const SystemTuning &system_tuning,
+		const SolutionTuning &solution_tuning) :
 
 		graph(NULL), architecture(NULL), scheduler(NULL),
 		leakage(NULL), hotspot(NULL)
 	{
 		system_t system(_system);
 
-		if (tuning.power_scale != 1) {
-			if (tuning.verbose)
+		if (system_tuning.power_scale != 1) {
+			if (system_tuning.verbose)
 				std::cout << "Scaling the power consumption." << std::endl;
 
 			size_t processor_count = system.ceff.size();
 			for (size_t i = 0; i < processor_count; i++) {
 				size_t type_count = system.ceff[i].size();
 				for (size_t j = 0; j < type_count; j++)
-					system.ceff[i][j] = tuning.power_scale * system.ceff[i][j];
+					system.ceff[i][j] = system_tuning.power_scale * system.ceff[i][j];
 			}
 		}
 
-		if (tuning.time_scale != 1) {
-			if (tuning.verbose)
+		if (system_tuning.time_scale != 1) {
+			if (system_tuning.verbose)
 				std::cout << "Scaling the execution time." << std::endl;
 
 			size_t processor_count = system.nc.size();
 			for (size_t i = 0; i < processor_count; i++) {
 				size_t type_count = system.nc[i].size();
 				for (size_t j = 0; j < type_count; j++)
-					system.nc[i][j] = tuning.time_scale * system.nc[i][j];
+					system.nc[i][j] = system_tuning.time_scale * system.nc[i][j];
 			}
 		}
 
@@ -84,7 +85,7 @@ class TestCase
 		 */
 		if (priority.empty())
 			priority = Priority::mobile(*architecture, *graph, mapping);
-		else if (tuning.verbose)
+		else if (system_tuning.verbose)
 			std::cout << "Using external priority." << std::endl;
 
 		/* 2. Create and assign an even mapping.
@@ -92,7 +93,7 @@ class TestCase
 		 */
 		if (mapping.empty())
 			mapping = Layout::earliest(*architecture, *graph, priority);
-		else if (tuning.verbose)
+		else if (system_tuning.verbose)
 			std::cout << "Using external mapping." << std::endl;
 
 		/* 3. Compute a schedule.
@@ -105,14 +106,14 @@ class TestCase
 		 *
 		 */
 		if (deadline == 0)
-			deadline = tuning.deadline_ratio * schedule.get_duration();
-		else if (tuning.verbose)
+			deadline = system_tuning.deadline_ratio * schedule.get_duration();
+		else if (system_tuning.verbose)
 			std::cout << "Using external deadline." << std::endl;
 
 		graph->set_deadline(deadline);
 
-		if (tuning.reorder_tasks) {
-			if (tuning.verbose)
+		if (system_tuning.reorder_tasks) {
+			if (system_tuning.verbose)
 				std::cout << "Reordering tasks." << std::endl;
 
 			/* Reorder the tasks if requested.
@@ -146,77 +147,77 @@ class TestCase
 		}
 
 		/* Leakage model */
-		if (tuning.leakage == "linear") {
+		if (solution_tuning.leakage == "linear") {
 			leakage = new LinearLeakage(architecture->get_processors());
 		}
-		else if (tuning.leakage == "piecewise_linear") {
+		else if (solution_tuning.leakage == "piecewise_linear") {
 			leakage = new PiecewiseLinearLeakage(architecture->get_processors());
 		}
-		else if (tuning.leakage == "exponential") {
+		else if (solution_tuning.leakage == "exponential") {
 			leakage = new ExponentialLeakage(architecture->get_processors());
 		}
-		else if (!tuning.leakage.empty())
+		else if (solution_tuning.leak())
 			throw std::runtime_error("The leakage model is unknown.");
 
 		/* Thermal model */
-		if (tuning.solution == "condensed_equation") {
+		if (solution_tuning.method == "condensed_equation") {
 			if (leakage)
 				hotspot = new LeakageCondensedEquationHotspot(
 					*architecture, *graph, _floorplan, _hotspot,
-					tuning.hotspot, *leakage);
+					solution_tuning.hotspot, *leakage);
 			else
 				hotspot = new CondensedEquationHotspot(
 					*architecture, *graph, _floorplan, _hotspot,
-					tuning.hotspot);
+					solution_tuning.hotspot);
 		}
-		else if (tuning.solution == "transient_analytical") {
+		else if (solution_tuning.method == "transient_analytical") {
 			if (leakage)
 				throw std::runtime_error("Not implemented.");
 
 			hotspot = new TransientAnalyticalHotspot(
 				*architecture, *graph, _floorplan, _hotspot,
-				tuning.hotspot, tuning.max_iterations);
+				solution_tuning.hotspot, solution_tuning.max_iterations);
 		}
-		else if (tuning.solution == "coarse_condensed_equation") {
+		else if (solution_tuning.method == "coarse_condensed_equation") {
 			if (leakage)
 				throw std::runtime_error("Not implemented.");
 
 			hotspot = new CoarseCondensedEquationHotspot(
 				*architecture, *graph, _floorplan, _hotspot,
-				tuning.hotspot);
+				solution_tuning.hotspot);
 		}
-		else if (tuning.solution == "hotspot") {
+		else if (solution_tuning.method == "hotspot") {
 			if (leakage)
 				hotspot = new LeakageIterativeHotspot(
 					*architecture, *graph, _floorplan, _hotspot,
-					tuning.hotspot, tuning.max_iterations,
+					solution_tuning.hotspot, solution_tuning.max_iterations,
 					*leakage);
 			else
 				hotspot = new IterativeHotspot(
 					*architecture, *graph, _floorplan, _hotspot,
-					tuning.hotspot, tuning.max_iterations);
+					solution_tuning.hotspot, solution_tuning.max_iterations);
 		}
-		else if (tuning.solution == "steady_state") {
+		else if (solution_tuning.method == "steady_state") {
 			if (leakage) {
-				if (tuning.leakage == "linear")
+				if (solution_tuning.leakage == "linear")
 					throw std::runtime_error("Not implemented.");
 
 				hotspot = new LeakageSteadyStateHotspot(
 					*architecture, *graph, _floorplan, _hotspot,
-					tuning.hotspot, *leakage);
+					solution_tuning.hotspot, *leakage);
 			}
 			else
 				hotspot = new SteadyStateHotspot(
 					*architecture, *graph, _floorplan, _hotspot,
-					tuning.hotspot);
+					solution_tuning.hotspot);
 		}
-		else if (tuning.solution == "precise_steady_state") {
+		else if (solution_tuning.method == "precise_steady_state") {
 			if (leakage)
 				throw std::runtime_error("Not implemented.");
 
 			hotspot = new PreciseSteadyStateHotspot(
 				*architecture, *graph, _floorplan, _hotspot,
-				tuning.hotspot);
+				solution_tuning.hotspot);
 		}
 		else throw std::runtime_error("The solution method is unknown.");
 	}

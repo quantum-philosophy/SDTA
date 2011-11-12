@@ -21,12 +21,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		params.update(param_stream);
 	}
 
-	SystemTuning tuning;
-	tuning.setup(params);
+	SystemTuning system_tuning;
+	system_tuning.setup(params);
 
-	TestCase test(system, floorplan, _hotspot, tuning);
+	SolutionTuning solution_tuning;
+	solution_tuning.setup(params);
 
-	if (tuning.solution != "coarse_condensed_equation")
+	TestCase test(system, floorplan, _hotspot, system_tuning, solution_tuning);
+
+	if (solution_tuning.method != "coarse_condensed_equation")
 		throw std::runtime_error("Should be coarse.");
 
 	CoarseCondensedEquationHotspot *hotspot =

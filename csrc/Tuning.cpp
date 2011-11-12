@@ -71,16 +71,6 @@ void SystemTuning::setup(const parameters_t &params)
 			time_scale = it->to_double();
 		else if (it->name == "reorder_tasks")
 			reorder_tasks = it->to_bool();
-		else if (it->name == "solution")
-			solution = it->value;
-		else if (it->name == "max_iterations")
-			max_iterations = it->to_int();
-		else if (it->name == "tolerance")
-			tolerance = it->to_double();
-		else if (it->name == "hotspot")
-			hotspot = it->value;
-		else if (it->name == "leakage")
-			leakage = it->value;
 		else if (it->name == "verbose")
 			verbose = it->to_bool();
 	}
@@ -94,13 +84,36 @@ void SystemTuning::display(std::ostream &o) const
 		<< "  Task power scale:     " << power_scale << std::endl
 		<< "  Task time scale:      " << time_scale << std::endl
 		<< "  Reorder tasks:        " << reorder_tasks << std::endl
-		<< "  Solution method:      " << solution << std::endl
+		<< "  Verbose:              " << verbose << std::endl;
+}
+
+void SolutionTuning::setup(const parameters_t &params)
+{
+	for (parameters_t::const_iterator it = params.begin();
+		it != params.end(); it++) {
+
+		if (it->name == "solution")
+			method = it->value;
+		else if (it->name == "max_iterations")
+			max_iterations = it->to_int();
+		else if (it->name == "tolerance")
+			tolerance = it->to_double();
+		else if (it->name == "leakage")
+			leakage = it->value;
+		else if (it->name == "hotspot")
+			hotspot = it->value;
+	}
+}
+
+void SolutionTuning::display(std::ostream &o) const
+{
+	o
+		<< "Solution:               " << method << std::endl
 		<< "  Max iterations:       " << max_iterations << std::endl
 		<< std::setprecision(4)
 		<< "  Tolerance:            " << tolerance << std::endl
-		<< "  Hotspot tuning:       " << hotspot << std::endl
 		<< "  Leakage:              " << leakage << std::endl
-		<< "  Verbose:              " << verbose << std::endl;
+		<< "  Hotspot:              " << hotspot << std::endl;
 }
 
 void OptimizationTuning::setup(const parameters_t &params)
@@ -321,6 +334,7 @@ void ReplacementTuning::display(std::ostream &o) const
 void EvolutionTuning::setup(const parameters_t &params)
 {
 	system.setup(params);
+	solution.setup(params);
 	optimization.setup(params);
 	creation.setup(params);
 	continuation.setup(params);
@@ -334,6 +348,9 @@ void EvolutionTuning::setup(const parameters_t &params)
 void EvolutionTuning::display(std::ostream &o) const
 {
 	system.display(o);
+	o << std::endl;
+
+	solution.display(o);
 	o << std::endl;
 
 	optimization.display(o);

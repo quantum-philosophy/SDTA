@@ -21,10 +21,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		params.update(param_stream);
 	}
 
-	SystemTuning tuning;
-	tuning.setup(params);
+	SystemTuning system_tuning;
+	system_tuning.setup(params);
 
-	TestCase test(system, floorplan, hotspot, tuning);
+	SolutionTuning solution_tuning;
+	solution_tuning.setup(params);
+
+	TestCase test(system, floorplan, hotspot, system_tuning, solution_tuning);
 
 	matrix_t power;
 

@@ -24,10 +24,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	matrix_t power;
 	from_matlab(prhs[5], power);
 
-	SystemTuning tuning;
-	tuning.setup(params);
+	SystemTuning system_tuning;
+	system_tuning.setup(params);
 
-	TestCase test(system, floorplan, hotspot, tuning);
+	SolutionTuning solution_tuning;
+	solution_tuning.setup(params);
+
+	TestCase test(system, floorplan, hotspot, system_tuning, solution_tuning);
 
 	struct timespec begin, end;
 
@@ -35,7 +38,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	matrix_t *used_power = &power;
 
-	if (tuning.solution == "hotspot") {
+	if (solution_tuning.method == "hotspot") {
 		size_t step_count = power.rows();
 		size_t processor_count = test.architecture->size();
 		size_t node_count = 4 * processor_count + 12;
@@ -53,7 +56,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		used_power = &extended_power;
 	}
 
-	if (!tuning.leakage.empty()) {
+	if (solution_tuning.leak()) {
 		Time::measure(&begin);
 		test.hotspot->solve(*used_power, temperature, total_power);
 		Time::measure(&end);

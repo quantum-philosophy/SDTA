@@ -86,6 +86,7 @@ void optimize(const string &system, const string &floorplan,
 	evolution_tuning.setup(params);
 
 	SystemTuning &system_tuning = evolution_tuning.system;
+	SolutionTuning &solution_tuning = evolution_tuning.solution;
 	OptimizationTuning &optimization_tuning = evolution_tuning.optimization;
 
 	if (system_tuning.verbose)
@@ -99,7 +100,7 @@ void optimize(const string &system, const string &floorplan,
 	Evaluation *evaluation = NULL;
 
 	try {
-		TestCase test(system, floorplan, hotspot, system_tuning);
+		TestCase test(system, floorplan, hotspot, system_tuning, solution_tuning);
 
 		/* Obtain the initial measurements to compare with.
 		 *

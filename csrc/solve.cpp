@@ -85,10 +85,13 @@ void solve(const string &system, const string &floorplan,
 	parameters_t params(_params);
 	params.update(param_stream);
 
-	SystemTuning tuning;
-	tuning.setup(params);
+	SystemTuning system_tuning;
+	system_tuning.setup(params);
 
-	TestCase test(system, floorplan, hotspot, tuning);
+	SolutionTuning solution_tuning;
+	solution_tuning.setup(params);
+
+	TestCase test(system, floorplan, hotspot, system_tuning, solution_tuning);
 
 	matrix_t power, temperature;
 	size_t processor_count = test.architecture->size();
@@ -116,7 +119,7 @@ void solve(const string &system, const string &floorplan,
 	OutputStream temperature_stream(_temperature, processor_count);
 	temperature_stream.write(temperature);
 
-	if (tuning.verbose)
+	if (system_tuning.verbose)
 		cout << "Solved in " << Time::substract(&end, &begin) << " s" << endl;
 }
 

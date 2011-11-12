@@ -63,11 +63,6 @@ struct SystemTuning: public Tuning
 	double power_scale;
 	double time_scale;
 	bool reorder_tasks;
-	std::string solution;
-	size_t max_iterations;
-	double tolerance;
-	std::string hotspot;
-	std::string leakage;
 	bool verbose;
 
 	SystemTuning() :
@@ -75,15 +70,32 @@ struct SystemTuning: public Tuning
 		power_scale(1.0),
 		time_scale(1.0),
 		reorder_tasks(false),
-		solution("condensed_equation"),
-		max_iterations(100),
-		tolerance(0.1),
-		hotspot(""),
-		leakage(""),
 		verbose(false) {}
 
 	void setup(const parameters_t &params);
 	void display(std::ostream &o) const;
+};
+
+struct SolutionTuning: public Tuning
+{
+	std::string method;
+	size_t max_iterations;
+	double tolerance;
+	std::string leakage;
+	std::string hotspot;
+
+	SolutionTuning() :
+		method("condensed_equation"),
+		max_iterations(100),
+		tolerance(0.1) {}
+
+	void setup(const parameters_t &params);
+	void display(std::ostream &o) const;
+
+	inline bool leak() const
+	{
+		return !leakage.empty();
+	}
 };
 
 struct OptimizationTuning: public Tuning
@@ -226,6 +238,7 @@ class EvolutionTuning: public Tuning
 	public:
 
 	SystemTuning system;
+	SolutionTuning solution;
 	OptimizationTuning optimization;
 	CreationTuning creation;
 	ContinuationTuning continuation;
