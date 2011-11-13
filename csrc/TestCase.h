@@ -201,14 +201,10 @@ class TestCase
 					solution_tuning.tolerance, solution_tuning.warmup);
 		}
 		else if (solution_tuning.method == "steady_state") {
-			if (leakage) {
-				if (solution_tuning.leakage == "linear")
-					throw std::runtime_error("Not implemented.");
-
+			if (leakage)
 				hotspot = new LeakageSteadyStateHotspot(
 					*architecture, *graph, _floorplan, _hotspot,
 					solution_tuning.hotspot, *leakage);
-			}
 			else
 				hotspot = new SteadyStateHotspot(
 					*architecture, *graph, _floorplan, _hotspot,
@@ -216,11 +212,13 @@ class TestCase
 		}
 		else if (solution_tuning.method == "precise_steady_state") {
 			if (leakage)
-				throw std::runtime_error("Not implemented.");
-
-			hotspot = new PreciseSteadyStateHotspot(
-				*architecture, *graph, _floorplan, _hotspot,
-				solution_tuning.hotspot);
+				hotspot = new LeakagePreciseSteadyStateHotspot(
+					*architecture, *graph, _floorplan, _hotspot,
+					solution_tuning.hotspot, *leakage);
+			else
+				hotspot = new PreciseSteadyStateHotspot(
+					*architecture, *graph, _floorplan, _hotspot,
+					solution_tuning.hotspot);
 		}
 		else throw std::runtime_error("The solution method is unknown.");
 	}

@@ -76,6 +76,8 @@ AnalyticalSolution::AnalyticalSolution(
 	multiply_matrix_matrix_diagonal_matrix(m_temp, UT, sinvC, G);
 }
 
+/******************************************************************************/
+
 CondensedEquation::CondensedEquation(size_t _processor_count, size_t _node_count,
 	double _sampling_interval, double _ambient_temperature,
 	const double **conductivity, const double *capacitance) :
@@ -133,7 +135,9 @@ void CondensedEquation::solve(const double *power, double *temperature,
 			temperature[k] = Y[i][j] * sinvC[j] + ambient_temperature;
 }
 
-IterativeCondensedEquation::IterativeCondensedEquation(
+/******************************************************************************/
+
+LeakageCondensedEquation::LeakageCondensedEquation(
 	size_t _processor_count, size_t _node_count,
 	double _sampling_interval, double _ambient_temperature,
 	double **conductivity, const double *capacitance,
@@ -146,7 +150,7 @@ IterativeCondensedEquation::IterativeCondensedEquation(
 {
 }
 
-size_t IterativeCondensedEquation::solve(const double *dynamic_power,
+size_t LeakageCondensedEquation::solve(const double *dynamic_power,
 	double *temperature, double *total_power, size_t step_count)
 {
 	size_t i, j, k, it;
@@ -235,6 +239,124 @@ size_t IterativeCondensedEquation::solve(const double *dynamic_power,
 
 	return it;
 }
+
+/******************************************************************************/
+
+SteadyStateAnalyticalSolution::SteadyStateAnalyticalSolution(
+	size_t _processor_count, size_t _node_count,
+	double _sampling_interval, double _ambient_temperature,
+	const double **conductivity, const double *capacitance) :
+
+	AnalyticalSolution(_processor_count, _node_count, _sampling_interval,
+		_ambient_temperature, conductivity, capacitance)
+{
+}
+
+void SteadyStateAnalyticalSolution::solve(
+	const double *power, double *temperature, size_t step_count)
+{
+	/* Solve:
+	 * G * T = P
+	 * C^(-1/2) * G * C^(-1/2) * C^(1/2) * T = C^(-1/2) * P
+	 * Y = - U * L^(-1) * U^T * C^(-1/2) * P
+	 *
+	 * NOTE: Minus here because the eigenvalue decomposition is
+	 * for the negative matrix.
+	 */
+
+	size_t i, j, k;
+
+	double *v_temp2 = m_temp;
+
+	for (i = 0, k = 0; i < step_count; i++) {
+		/* C^(-1/2) * P (average power) */
+		v_temp.nullify();
+		for (j = 0; j < processor_count; j++)
+			v_temp[j] = sinvC[j] * power[i * processor_count + j];
+
+		/* U^T * C^(-1/2) * P */
+		multiply_matrix_incomplete_vector(UT, v_temp, processor_count, v_temp2);
+
+		/* L^(-1) * U^T * C^(-1/2) * P */
+		for (j = 0; j < node_count; j++) v_temp[j] = - v_temp2[j] / L[j];
+
+		/* U * L^(-1) * U^T * C^(-1/2) * P */
+		multiply_matrix_vector(U, v_temp, v_temp2);
+
+		for (j = 0; j < processor_count; j++, k++)
+			temperature[k] = v_temp2[j] * sinvC[j] + ambient_temperature;
+	}
+}
+
+/******************************************************************************/
+
+LeakageSteadyStateAnalyticalSolution::LeakageSteadyStateAnalyticalSolution(
+	size_t _processor_count, size_t _node_count,
+	double _sampling_interval, double _ambient_temperature,
+	double **conductivity, const double *capacitance,
+	const Leakage &_leakage) :
+
+	AnalyticalSolution(_processor_count, _node_count,
+		_sampling_interval, _ambient_temperature,
+		(const double **)_leakage.setup(conductivity, _ambient_temperature),
+		capacitance), leakage(_leakage)
+{
+}
+
+size_t LeakageSteadyStateAnalyticalSolution::solve(const double *dynamic_power,
+	double *temperature, double *total_power, size_t step_count)
+{
+	size_t iterations, i, j, k;
+	double tmp, error, max_error;
+
+	double *v_temp2 = m_temp;
+
+	const size_t max_iterations = leakage.get_max_iterations();
+	const double tolerance = leakage.get_tolerance();
+
+	leakage.inject(ambient_temperature, dynamic_power, total_power, step_count);
+
+	for (iterations = 0; iterations < max_iterations; iterations++) {
+		max_error = 0;
+		for (i = 0, k = 0; i < step_count; i++) {
+			/* C^(-1/2) * P (average power) */
+			v_temp.nullify();
+			for (j = 0; j < processor_count; j++)
+				v_temp[j] = sinvC[j] * total_power[i * processor_count + j];
+
+			/* U^T * C^(-1/2) * P */
+			multiply_matrix_incomplete_vector(UT, v_temp, processor_count, v_temp2);
+
+			/* L^(-1) * U^T * C^(-1/2) * P */
+			for (j = 0; j < node_count; j++) v_temp[j] = - v_temp2[j] / L[j];
+
+			/* U * L^(-1) * U^T * C^(-1/2) * P */
+			multiply_matrix_vector(U, v_temp, v_temp2);
+
+			for (j = 0; j < processor_count; j++, k++) {
+				tmp = v_temp2[j] * sinvC[j] + ambient_temperature;
+
+				error = std::abs(temperature[k] - tmp);
+				if (max_error < error) max_error = error;
+
+				temperature[k] = tmp;
+			}
+		}
+
+		if (max_error < tolerance) {
+			iterations++;
+			break;
+		}
+
+		leakage.inject(temperature, dynamic_power, total_power, step_count);
+	}
+
+	leakage.finalize(temperature, dynamic_power, total_power, step_count);
+
+	return iterations;
+}
+
+/******************************************************************************/
 
 TransientAnalyticalSolution::TransientAnalyticalSolution(
 	size_t _processor_count, size_t _node_count,
@@ -374,6 +496,8 @@ void TransientAnalyticalSolution::initialize(const double *power, size_t step_co
 		__MEMCPY(Y[0], Q[0], node_count);
 	}
 }
+
+/******************************************************************************/
 
 CoarseCondensedEquation::CoarseCondensedEquation(
 	size_t _processor_count, size_t _node_count,

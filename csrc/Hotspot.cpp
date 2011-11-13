@@ -344,7 +344,18 @@ const double *BasicSteadyStateHotspot::get(const SlotTrace &trace)
 	return power;
 }
 
-double *SteadyStateHotspot::compute(const SlotTrace &trace) const
+SteadyStateHotspot::SteadyStateHotspot(
+	const Architecture &architecture, const Graph &graph,
+	const std::string &floorplan, const std::string &config,
+	const std::string &config_line) :
+
+	BasicSteadyStateHotspot(architecture, graph, floorplan, config, config_line),
+	equation(processor_count, node_count, sampling_interval,
+		ambient_temperature, (const double **)model->block->b, model->block->a)
+{
+}
+
+double *SteadyStateHotspot::compute(const SlotTrace &trace)
 {
 	double *power = __ALLOC(node_count);
 	double *temperature = __ALLOC(node_count);
@@ -356,7 +367,7 @@ double *SteadyStateHotspot::compute(const SlotTrace &trace) const
 		power[i] = processors[i]->calc_power((unsigned int)trace[i]);
 	}
 
-	steady_state_temp(model, power, temperature);
+	equation.solve(power, temperature);
 
 	__FREE(power);
 
@@ -368,58 +379,24 @@ LeakageSteadyStateHotspot::LeakageSteadyStateHotspot(
 	const std::string &floorplan, const std::string &config,
 	const std::string &config_line, const Leakage &_leakage) :
 
-	BasicSteadyStateHotspot(architecture, graph, floorplan,
-		config, config_line), leakage(_leakage)
+	BasicSteadyStateHotspot(architecture, graph, floorplan, config, config_line),
+	equation(processor_count, node_count, sampling_interval, ambient_temperature,
+		model->block->b, model->block->a, _leakage)
 {
+	dynamic_power.resize(node_count);
+	total_power.resize(node_count);
 }
 
-double *LeakageSteadyStateHotspot::compute(const SlotTrace &trace) const
+double *LeakageSteadyStateHotspot::compute(const SlotTrace &trace)
 {
-	size_t i, it;
-
-	double error, max_error;
-
-	double *dynamic_power = __ALLOC(node_count);
-	double *total_power = __ALLOC(node_count);
-
-	double *last_temperature = __ALLOC(node_count);
 	double *temperature = __ALLOC(node_count);
 
-	__NULLIFY(dynamic_power, node_count);
-	__NULLIFY(last_temperature, node_count);
-
 	for (size_t i = 0; i < processor_count; i++) {
-		if (trace[i] < 0) continue;
-		dynamic_power[i] = processors[i]->calc_power((unsigned int)trace[i]);
+		if (trace[i] < 0) dynamic_power[i] = 0;
+		else dynamic_power[i] = processors[i]->calc_power((unsigned int)trace[i]);
 	}
 
-	const size_t max_iterations = leakage.get_max_iterations();
-	const double tolerance = leakage.get_tolerance();
-
-	leakage.inject(ambient_temperature, dynamic_power, total_power);
-
-	for (it = 1;; it++) {
-		steady_state_temp(model, total_power, temperature);
-
-		if (it >= max_iterations) break;
-
-		/* There is a reason to check the error */
-		max_error = 0;
-		for (i = 0; i < processor_count; i++) {
-			error = std::abs(temperature[i] - last_temperature[i]);
-			if (max_error < error) max_error = error;
-			last_temperature[i] = temperature[i];
-		}
-
-		/* Still have some iterations left, the only question is the error */
-		if (max_error < tolerance) break;
-
-		leakage.inject(temperature, dynamic_power, total_power);
-	}
-
-	__FREE(dynamic_power);
-	__FREE(total_power);
-	__FREE(last_temperature);
+	(void)equation.solve(dynamic_power, temperature, total_power);
 
 	return temperature;
 }
@@ -432,39 +409,26 @@ PreciseSteadyStateHotspot::PreciseSteadyStateHotspot(
 	const std::string &config_line) :
 
 	Hotspot(floorplan, config, config_line),
+	equation(processor_count, node_count, sampling_interval,
+		ambient_temperature, (const double **)model->block->b, model->block->a),
 	dynamic_power(architecture.get_processors(), graph.get_tasks(),
 		graph.get_deadline(), sampling_interval)
 {
 }
 
-void PreciseSteadyStateHotspot::solve(const Schedule &schedule,
-	matrix_t &temperature, matrix_t &power)
+/******************************************************************************/
+
+LeakagePreciseSteadyStateHotspot::LeakagePreciseSteadyStateHotspot(
+	const Architecture &architecture, const Graph &graph,
+	const std::string &floorplan, const std::string &config,
+	const std::string &config_line, const Leakage &_leakage) :
+
+	Hotspot(floorplan, config, config_line),
+	equation(processor_count, node_count, sampling_interval, ambient_temperature,
+		model->block->b, model->block->a, _leakage),
+	dynamic_power(architecture.get_processors(), graph.get_tasks(),
+		graph.get_deadline(), sampling_interval)
 {
-	dynamic_power.compute(schedule, power);
-	solve(power, temperature);
-}
-
-void PreciseSteadyStateHotspot::solve(const matrix_t &_power, matrix_t &_temperature)
-{
-	size_t step_count = _power.rows();
-	_temperature.resize(_power);
-
-	double *extended_power = __ALLOC(node_count);
-	double *extended_temperature = __ALLOC(node_count);
-
-	const double *power = _power;
-	double *temperature = _temperature;
-
-	__NULLIFY(extended_power, node_count);
-
-	for (size_t i = 0; i < step_count; i++) {
-		__MEMCPY(extended_power, power + i * processor_count, processor_count);
-		steady_state_temp(model, extended_power, extended_temperature);
-		__MEMCPY(temperature + i * processor_count, extended_temperature, processor_count);
-	}
-
-	__FREE(extended_power);
-	__FREE(extended_temperature);
 }
 
 /******************************************************************************/

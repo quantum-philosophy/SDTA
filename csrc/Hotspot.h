@@ -44,7 +44,7 @@ class Hotspot
 	virtual void solve(const matrix_t &power, matrix_t &temperature,
 		matrix_t &total_power)
 	{
-		throw std::runtime_error("Not implemented.");
+		throw std::runtime_error("Solve with leakage is not implemented.");
 	}
 
 	/* With and without leakage from a schedule */
@@ -58,7 +58,7 @@ class Hotspot
 	virtual void solve(const Schedule &schedule, matrix_t &temperature,
 		matrix_t &power)
 	{
-		throw std::runtime_error("Not implemented.");
+		throw std::runtime_error("Solve by schedule is not implemented.");
 	}
 
 	inline double get_sampling_interval() const
@@ -101,7 +101,7 @@ class CondensedEquationHotspot: public BasicCondensedEquationHotspot
 
 class BasicLeakageCondensedEquationHotspot: public Hotspot
 {
-	IterativeCondensedEquation equation;
+	LeakageCondensedEquation equation;
 
 	public:
 
@@ -258,30 +258,38 @@ class BasicSteadyStateHotspot: public Hotspot
 
 	protected:
 
-	virtual double *compute(const SlotTrace &trace) const = 0;
+	virtual double *compute(const SlotTrace &trace) = 0;
 	const double *get(const SlotTrace &trace);
 };
 
 class SteadyStateHotspot: public BasicSteadyStateHotspot
 {
+	SteadyStateAnalyticalSolution equation;
+
 	public:
 
 	SteadyStateHotspot(
 		const Architecture &architecture, const Graph &graph,
 		const std::string &floorplan, const std::string &config,
-		const std::string &config_line) :
+		const std::string &config_line);
 
-		BasicSteadyStateHotspot(architecture, graph, floorplan,
-			config, config_line) {}
+	inline void solve(const matrix_t &power, matrix_t &temperature)
+	{
+		temperature.resize(power);
+		equation.solve(power, temperature, power.rows());
+	}
 
 	protected:
 
-	double *compute(const SlotTrace &trace) const;
+	double *compute(const SlotTrace &trace);
 };
 
 class LeakageSteadyStateHotspot: public BasicSteadyStateHotspot
 {
-	const Leakage &leakage;
+	LeakageSteadyStateAnalyticalSolution equation;
+
+	vector_t dynamic_power;
+	vector_t total_power;
 
 	public:
 
@@ -290,13 +298,22 @@ class LeakageSteadyStateHotspot: public BasicSteadyStateHotspot
 		const std::string &floorplan, const std::string &config,
 		const std::string &config_line, const Leakage &leakage);
 
+	inline void solve(const matrix_t &power,
+		matrix_t &temperature, matrix_t &total_power)
+	{
+		temperature.resize(power);
+		total_power.resize(power);
+		equation.solve(power, temperature, total_power, power.rows());
+	}
+
 	protected:
 
-	double *compute(const SlotTrace &trace) const;
+	double *compute(const SlotTrace &trace);
 };
 
 class PreciseSteadyStateHotspot: public Hotspot
 {
+	SteadyStateAnalyticalSolution equation;
 	const DynamicPower dynamic_power;
 
 	public:
@@ -306,8 +323,58 @@ class PreciseSteadyStateHotspot: public Hotspot
 		const std::string &floorplan, const std::string &config,
 		const std::string &config_line);
 
-	void solve(const Schedule &schedule, matrix_t &temperature, matrix_t &power);
-	void solve(const matrix_t &power, matrix_t &temperature);
+	inline void solve(const matrix_t &power, matrix_t &temperature)
+	{
+		temperature.resize(power);
+		equation.solve(power, temperature, power.rows());
+	}
+
+	inline void solve(const Schedule &schedule,
+		matrix_t &temperature, matrix_t &power)
+	{
+		dynamic_power.compute(schedule, power);
+		temperature.resize(power);
+		equation.solve(power, temperature, power.rows());
+	}
+};
+
+class LeakagePreciseSteadyStateHotspot: public Hotspot
+{
+	LeakageSteadyStateAnalyticalSolution equation;
+	const DynamicPower dynamic_power;
+
+	public:
+
+	LeakagePreciseSteadyStateHotspot(
+		const Architecture &architecture, const Graph &graph,
+		const std::string &floorplan, const std::string &config,
+		const std::string &config_line, const Leakage &leakage);
+
+	inline void solve(const matrix_t &power, matrix_t &temperature)
+	{
+		matrix_t total_power;
+		temperature.resize(power);
+		total_power.resize(power);
+		equation.solve(power, temperature, total_power, power.rows());
+	}
+
+	inline void solve(const Schedule &schedule,
+		matrix_t &temperature, matrix_t &total_power)
+	{
+		matrix_t power;
+		dynamic_power.compute(schedule, power);
+		temperature.resize(power);
+		total_power.resize(power);
+		equation.solve(power, temperature, total_power, power.rows());
+	}
+
+	inline void solve(const matrix_t &power,
+		matrix_t &temperature, matrix_t &total_power)
+	{
+		temperature.resize(power);
+		total_power.resize(power);
+		equation.solve(power, temperature, total_power, power.rows());
+	}
 };
 
 class IterativeHotspot: public Hotspot

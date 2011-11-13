@@ -56,13 +56,13 @@ class CondensedEquation: public AnalyticalSolution
 	void solve(const double *power, double *temperature, size_t step_count);
 };
 
-class IterativeCondensedEquation: public CondensedEquation
+class LeakageCondensedEquation: public CondensedEquation
 {
 	const Leakage &leakage;
 
 	public:
 
-	IterativeCondensedEquation(size_t _processor_count, size_t _node_count,
+	LeakageCondensedEquation(size_t _processor_count, size_t _node_count,
 		double _sampling_interval, double _ambient_temperature,
 		double **conductivity, const double *capacitance,
 		const Leakage &_leakage);
@@ -70,6 +70,33 @@ class IterativeCondensedEquation: public CondensedEquation
 	/* NOTE: dynamic_power should be of size (step_count x processor_count) */
 	size_t solve(const double *dynamic_power,
 		double *temperature, double *total_power, size_t step_count);
+};
+
+class SteadyStateAnalyticalSolution: public AnalyticalSolution
+{
+	public:
+
+	SteadyStateAnalyticalSolution(size_t _processor_count, size_t _node_count,
+		double _sampling_interval, double _ambient_temperature,
+		const double **conductivity, const double *capacitance);
+
+	void solve(const double *power, double *temperature, size_t step_count = 1);
+};
+
+class LeakageSteadyStateAnalyticalSolution: public AnalyticalSolution
+{
+	const Leakage &leakage;
+
+	public:
+
+	LeakageSteadyStateAnalyticalSolution(
+		size_t _processor_count, size_t _node_count,
+		double _sampling_interval, double _ambient_temperature,
+		double **conductivity, const double *capacitance,
+		const Leakage &_leakage);
+
+	size_t solve(const double *dynamic_power,
+		double *temperature, double *total_power, size_t step_count = 1);
 };
 
 class TransientAnalyticalSolution: public AnalyticalSolution
