@@ -5,10 +5,14 @@ classdef Hotspot < handle
     DL
     DV
     DVT
+    K
+    G
     nodes
 
     samplingInterval
     ambientTemperature
+
+    preparationTime
   end
 
   methods
@@ -19,7 +23,10 @@ classdef Hotspot < handle
       hs.sinvC = diag(sqrt(1 ./ capacitance));
       hs.D = Utils.symmetrize(hs.sinvC * (-conductance) * hs.sinvC);
 
+      tic;
       [ V, L ] = eig(hs.D);
+      hs.preparationTime = toc;
+
       hs.DL = diag(L);
       hs.DV = V;
       hs.DVT = V';
@@ -27,6 +34,8 @@ classdef Hotspot < handle
 
       hs.samplingInterval = Utils.readParameter(config, '-sampling_intvl');
       hs.ambientTemperature = Utils.readParameter(config, '-ambient');
+
+      [ hs.K, hs.G ] = hs.calculateCoefficients(hs.samplingInterval);
     end
 
     function [ T, time ] = solve(hs, power, method)
@@ -63,7 +72,8 @@ classdef Hotspot < handle
       A = zeros(nm, nm);
       B = zeros(nm, 1);
 
-      [ expDt, G ] = hs.calculateCoefficients(t);
+      expDt = hs.K;
+      G = hs.G;
 
       for i = 1:m
         j = (i - 1) * n + 1;
@@ -94,7 +104,8 @@ classdef Hotspot < handle
       d = [ -(nm - n), -(n - 1):(n - 1), n ];
       A = zeros(nm, p);
 
-      [ expDt, G ] = hs.calculateCoefficients(t);
+      expDt = hs.K;
+      G = hs.G;
 
       for s = 1:m
         o = 0;
@@ -140,9 +151,8 @@ classdef Hotspot < handle
 
       B = [ B, zeros(m, n - cores) ];
 
-      t = hs.samplingInterval;
-
-      [ K, G ] = hs.calculateCoefficients(t);
+      K = hs.K;
+      G = hs.G;
 
       P = zeros(n, m);
       Q = zeros(n, m);
@@ -154,12 +164,31 @@ classdef Hotspot < handle
       end
 
       Y = zeros(nm, 1);
-      Y(1:n) = hs.DV * diag(1 ./ (1 - exp(t * m * hs.DL))) * hs.DVT * P(:, m);
+      Y(1:n) = hs.DV * diag(1 ./ (1 - exp(hs.samplingInterval * m * hs.DL))) * hs.DVT * P(:, m);
 
       for i = 2:m
         op = (i - 2) * n + 1;
         on = op + n;
         Y(on:(on + n - 1)) = K * Y(op:(op + n - 1)) + Q(:, i - 1);
+      end
+    end
+
+    function Y = ta(hs, B)
+      [ m, cores ] = size(B);
+      n = hs.nodes;
+
+      B = [ B, zeros(m, n - cores) ];
+
+      K = hs.K;
+      G = hs.G;
+
+      Y = zeros(n * m, 1);
+      Y(1:n) = G * transpose(B(1, :));
+
+      for i = 2:m
+        op = (i - 2) * n + 1;
+        on = op + n;
+        Y(on:(on + n - 1)) = K * Y(op:(op + n - 1)) + G * transpose(B(i - 1, :));
       end
     end
 

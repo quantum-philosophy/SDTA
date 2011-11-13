@@ -67,7 +67,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		Time::measure(&end);
 	}
 
+	vector_t time(4);
+	time[0] = Time::substract(&end, &begin);
+	time[1] = test.hotspot->model_time;
+	time[2] = test.hotspot->decomposition_time;
+	time[3] = test.preparation_time;
+
 	plhs[0] = to_matlab(temperature);
-	plhs[1] = to_matlab(Time::substract(&end, &begin));
+	plhs[1] = to_matlab(time);
 	plhs[2] = to_matlab(total_power);
 }

@@ -46,13 +46,17 @@ classdef Cores < Sweep.PowerBasic
 
     function [ T, time ] = optimaSolveOnAverage(sweep, param_line)
       config = sweep.config;
-      total = 0;
 
       for i = 1:sweep.tryCount
         [ T, t ] = Optima.solve_power( ...
           config.system, config.floorplan, config.hotspot, ...
           config.params, param_line, sweep.power);
-        total = total + t;
+
+        if i == 1
+          total = t;
+        else
+          total = total + t;
+        end
       end
 
       time = total / sweep.tryCount;
@@ -75,6 +79,8 @@ classdef Cores < Sweep.PowerBasic
       end
 
       time = total / n;
+
+      time = [ time, 0, sweep.hotspot.preparationTime ];
     end
   end
 end

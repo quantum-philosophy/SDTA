@@ -78,19 +78,33 @@ classdef Basic < handle
       while sweep.continueStep(i)
         [ T, t, value ] = sweep.makeStep(i);
 
+        solutionCount = size(T, 1);
+
         fprintf('%15s', num2str(value));
 
         sweep.values(end + 1) = value;
-        sweep.times(end + 1, 1:length(t)) = t;
+        sweep.times(end + 1, 1:solutionCount) = t(:, 1);
 
-        fprintf('%15.2f', t(1) * 1e3);
+        fprintf('%15.2f', t(1, 1) * 1e3);
 
-        for j = 2:size(T, 1)
+        for j = 2:solutionCount
           sweep.errors(end + 1) = sweep.error(T(1, :, :), T(j, :, :));
-          fprintf('%15.2f%15.2f%15.2e', t(j) * 1e3, t(j) / t(1), sweep.errors(end));
+          fprintf('%15.2f%15.2f%15.2e', t(j, 1) * 1e3, t(j, 1) / t(1, 1), sweep.errors(end));
         end
 
         fprintf('\n');
+
+        for k = 2:size(t, 2)
+          fprintf('%15s', '');
+
+          fprintf('%15.2f', t(1, k) * 1e3);
+
+          for j = 2:solutionCount
+            fprintf('%15.2f%15s%15s', t(j, k) * 1e3, '', '');
+          end
+
+          fprintf('\n');
+        end
 
         i = i + 1;
       end
@@ -138,8 +152,16 @@ classdef Basic < handle
       name = struct('short', 'FFT', 'long', 'FFT Method (Block-Circulant)');
     end
 
+    function name = cemName(sweep)
+      name = struct('short', 'CEm', 'long', 'Condensed Equation in Matlab');
+    end
+
     function name = taName(sweep)
       name = struct('short', 'TA', 'long', 'One Analytical Simulation');
+    end
+
+    function name = tamName(sweep)
+      name = struct('short', 'TAm', 'long', 'One Analytical Simulation in Matlab');
     end
 
     function [ T, t ] = ceSolve(sweep, i, config)
@@ -189,6 +211,15 @@ classdef Basic < handle
       [ T, t ] = sweep.matlabOnAverage(param_line, 'bc');
     end
 
+    function [ T, t ] = cemSolve(sweep, i, config)
+      param_line = Utils.configStream(...
+          'verbose', 0, ...
+          'solution', 'condensed_equation', ...
+          'leakage', '', config{:});
+
+      [ T, t ] = sweep.matlabOnAverage(param_line, 'ce');
+    end
+
     function [ T, t ] = taSolve(sweep, i, config)
       param_line = Utils.configStream(...
           'verbose', 0, ...
@@ -198,28 +229,42 @@ classdef Basic < handle
       [ T, t ] = sweep.optimaSolveOnAverage(param_line);
     end
 
-    function [ T, time, value ] = makeStep(sweep, i)
+    function [ T, t ] = tamSolve(sweep, i, config)
+      param_line = Utils.configStream(...
+          'verbose', 0, ...
+          'solution', 'condensed_equation', ...
+          'leakage', '', config{:});
+
+      [ T, t ] = sweep.matlabOnAverage(param_line, 'ta');
+    end
+
+    function [ T, t, value ] = makeStep(sweep, i)
       [ value, config ] = sweep.setupStep(i);
 
       T = zeros(sweep.solutionCount, 0, 0);
-      time = zeros(1, sweep.solutionCount);
+      t = zeros(sweep.solutionCount, 0);
 
       for j = 1:sweep.solutionCount
         name = sweep.solutions{j};
-        [ temp, time(j) ] = sweep.([ name, 'Solve' ])(i, config);
+        [ temp, time ] = sweep.([ name, 'Solve' ])(i, config);
+        t(j, 1:length(time)) = time;
         T(j, 1:size(temp, 1), 1:size(temp, 2)) = temp;
       end
     end
 
     function [ T, time ] = optimaSolveOnAverage(sweep, param_line)
       config = sweep.config;
-      total = 0;
 
       for i = 1:sweep.tryCount
         [ T, dummy, t ] = Optima.solve( ...
           config.system, config.floorplan, config.hotspot, ...
           config.params, param_line);
-        total = total + t;
+
+        if i == 1
+          total = t;
+        else
+          total = total + t;
+        end
       end
 
       time = total / sweep.tryCount;
@@ -247,6 +292,8 @@ classdef Basic < handle
       end
 
       time = total / n;
+
+      time = [ time, 0, sweep.hotspot.preparationTime ];
     end
 
     function e = error(sweep, T1, T2)

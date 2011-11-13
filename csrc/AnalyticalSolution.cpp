@@ -50,6 +50,11 @@ AnalyticalSolution::AnalyticalSolution(
 	multiply_diagonal_matrix_matrix(sinvC, A, m_temp);
 	multiply_matrix_diagonal_matrix(m_temp, sinvC, D);
 
+#ifdef MEASURE_TIME
+	struct timespec begin, end;
+	Time::measure(&begin);
+#endif
+
 	/* Eigenvalue decomposition:
 	 * D = U * L * UT
 	 *
@@ -57,6 +62,11 @@ AnalyticalSolution::AnalyticalSolution(
 	 * L = diag(l0, ..., l(n-1))
 	 */
 	EigenvalueDecomposition S(D, U, L);
+
+#ifdef MEASURE_TIME
+	Time::measure(&end);
+	decomposition_time = Time::substract(&end, &begin);
+#endif
 
 	transpose_matrix(U, UT);
 
@@ -548,6 +558,11 @@ CoarseCondensedEquation::CoarseCondensedEquation(
 	multiply_diagonal_matrix_matrix(sinvC, A, m_temp);
 	multiply_matrix_diagonal_matrix(m_temp, sinvC, D);
 
+#ifdef MEASURE_TIME
+	struct timespec begin, end;
+	Time::measure(&begin);
+#endif
+
 	/* Eigenvalue decomposition:
 	 * D = U * L * UT
 	 *
@@ -555,6 +570,11 @@ CoarseCondensedEquation::CoarseCondensedEquation(
 	 * L = diag(l0, ..., l(n-1))
 	 */
 	EigenvalueDecomposition S(D, U, L);
+
+#ifdef MEASURE_TIME
+	Time::measure(&end);
+	decomposition_time = Time::substract(&end, &begin);
+#endif
 
 	transpose_matrix(U, UT);
 

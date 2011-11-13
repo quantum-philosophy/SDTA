@@ -8,6 +8,10 @@
 #include "Graph.h"
 #include "Task.h"
 
+#ifdef MEASURE_TIME
+#include "Helper.h"
+#endif
+
 size_t read_config_line(str_pair *table, size_t max, const std::string &line)
 {
 	size_t count = 0;
@@ -57,10 +61,20 @@ Hotspot::Hotspot(const std::string &floorplan_filename,
 
 	floorplan = read_flp(const_cast<char *>(floorplan_filename.c_str()), FALSE);
 
+#ifdef MEASURE_TIME
+	struct timespec begin, end;
+	Time::measure(&begin);
+#endif
+
 	model = alloc_RC_model(&config, floorplan);
 
 	populate_R_model(model, floorplan);
 	populate_C_model(model, floorplan);
+
+#ifdef MEASURE_TIME
+	Time::measure(&end);
+	model_time = Time::substract(&end, &begin);
+#endif
 
 	node_count = model->block->n_nodes;
 	processor_count = floorplan->n_units;
@@ -116,6 +130,9 @@ BasicCondensedEquationHotspot::BasicCondensedEquationHotspot(
 	equation(processor_count, node_count, sampling_interval, ambient_temperature,
 		(const double **)model->block->b, model->block->a)
 {
+#ifdef MEASURE_TIME
+	decomposition_time = equation.decomposition_time;
+#endif
 }
 
 void BasicCondensedEquationHotspot::solve(
@@ -156,6 +173,9 @@ BasicLeakageCondensedEquationHotspot::BasicLeakageCondensedEquationHotspot(
 	equation(processor_count, node_count, sampling_interval,
 		ambient_temperature, model->block->b, model->block->a, leakage)
 {
+#ifdef MEASURE_TIME
+	decomposition_time = equation.decomposition_time;
+#endif
 }
 
 void BasicLeakageCondensedEquationHotspot::solve(const matrix_t &dynamic_power,
@@ -201,6 +221,9 @@ CoarseCondensedEquationHotspot::CoarseCondensedEquationHotspot(
 		model->block->a, ambient_temperature),
 	dynamic_power(architecture.get_processors(), graph.get_tasks(), deadline)
 {
+#ifdef MEASURE_TIME
+	decomposition_time = equation.decomposition_time;
+#endif
 }
 
 void CoarseCondensedEquationHotspot::solve(const Schedule &schedule,
@@ -232,6 +255,9 @@ TransientAnalyticalHotspot::TransientAnalyticalHotspot(
 	dynamic_power(architecture.get_processors(), graph.get_tasks(),
 		graph.get_deadline(), sampling_interval)
 {
+#ifdef MEASURE_TIME
+	decomposition_time = equation.decomposition_time;
+#endif
 }
 
 void TransientAnalyticalHotspot::solve(
@@ -353,6 +379,9 @@ SteadyStateHotspot::SteadyStateHotspot(
 	equation(processor_count, node_count, sampling_interval,
 		ambient_temperature, (const double **)model->block->b, model->block->a)
 {
+#ifdef MEASURE_TIME
+	decomposition_time = equation.decomposition_time;
+#endif
 }
 
 double *SteadyStateHotspot::compute(const SlotTrace &trace)
@@ -385,6 +414,9 @@ LeakageSteadyStateHotspot::LeakageSteadyStateHotspot(
 {
 	dynamic_power.resize(node_count);
 	total_power.resize(node_count);
+#ifdef MEASURE_TIME
+	decomposition_time = equation.decomposition_time;
+#endif
 }
 
 double *LeakageSteadyStateHotspot::compute(const SlotTrace &trace)
@@ -414,6 +446,9 @@ PreciseSteadyStateHotspot::PreciseSteadyStateHotspot(
 	dynamic_power(architecture.get_processors(), graph.get_tasks(),
 		graph.get_deadline(), sampling_interval)
 {
+#ifdef MEASURE_TIME
+	decomposition_time = equation.decomposition_time;
+#endif
 }
 
 /******************************************************************************/
@@ -429,6 +464,9 @@ LeakagePreciseSteadyStateHotspot::LeakagePreciseSteadyStateHotspot(
 	dynamic_power(architecture.get_processors(), graph.get_tasks(),
 		graph.get_deadline(), sampling_interval)
 {
+#ifdef MEASURE_TIME
+	decomposition_time = equation.decomposition_time;
+#endif
 }
 
 /******************************************************************************/

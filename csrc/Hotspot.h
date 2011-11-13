@@ -14,6 +14,13 @@ extern "C" {
 
 class Hotspot
 {
+#ifdef MEASURE_TIME
+	public:
+
+	double model_time;
+	double decomposition_time;
+#endif
+
 	protected:
 
 	size_t node_count;

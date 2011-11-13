@@ -28,6 +28,10 @@ class TestCase
 	priority_t priority;
 	Schedule schedule;
 
+#ifdef MEASURE_TIME
+	double preparation_time;
+#endif
+
 	TestCase(const std::string &_system, const std::string &_floorplan,
 		const std::string &_hotspot, const SystemTuning &system_tuning,
 		const SolutionTuning &solution_tuning) :
@@ -159,6 +163,11 @@ class TestCase
 		else if (solution_tuning.leak())
 			throw std::runtime_error("The leakage model is unknown.");
 
+#ifdef MEASURE_TIME
+		struct timespec begin, end;
+		Time::measure(&begin);
+#endif
+
 		/* Thermal model */
 		if (solution_tuning.method == "condensed_equation") {
 			if (leakage)
@@ -221,6 +230,11 @@ class TestCase
 					solution_tuning.hotspot);
 		}
 		else throw std::runtime_error("The solution method is unknown.");
+
+#ifdef MEASURE_TIME
+		Time::measure(&end);
+		preparation_time = Time::substract(&end, &begin);
+#endif
 	}
 
 	~TestCase()

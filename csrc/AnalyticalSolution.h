@@ -4,8 +4,18 @@
 #include "common.h"
 #include "Leakage.h"
 
+#ifdef MEASURE_TIME
+#include "Helper.h"
+#endif
+
 class AnalyticalSolution
 {
+#ifdef MEASURE_TIME
+	public:
+
+	double decomposition_time;
+#endif
+
 	protected:
 
 	const size_t processor_count;
@@ -134,6 +144,12 @@ class TransientAnalyticalSolution: public AnalyticalSolution
 
 class CoarseCondensedEquation
 {
+#ifdef MEASURE_TIME
+	public:
+
+	double decomposition_time;
+#endif
+
 	protected:
 
 	const size_t processor_count;
