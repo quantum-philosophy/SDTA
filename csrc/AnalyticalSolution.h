@@ -82,7 +82,22 @@ class LeakageCondensedEquation: public CondensedEquation
 		double *temperature, double *total_power, size_t step_count);
 };
 
-class SteadyStateAnalyticalSolution: public AnalyticalSolution
+class BasicSteadyStateAnalyticalSolution: public AnalyticalSolution
+{
+	protected:
+
+	matrix_t R;
+
+	public:
+
+	BasicSteadyStateAnalyticalSolution(size_t _processor_count, size_t _node_count,
+		double _sampling_interval, double _ambient_temperature,
+		const double **conductivity, const double *capacitance);
+
+	void solve(const double *power, double *temperature, size_t step_count = 1);
+};
+
+class SteadyStateAnalyticalSolution: public BasicSteadyStateAnalyticalSolution
 {
 	public:
 
@@ -93,7 +108,7 @@ class SteadyStateAnalyticalSolution: public AnalyticalSolution
 	void solve(const double *power, double *temperature, size_t step_count = 1);
 };
 
-class LeakageSteadyStateAnalyticalSolution: public AnalyticalSolution
+class LeakageSteadyStateAnalyticalSolution: public BasicSteadyStateAnalyticalSolution
 {
 	const Leakage &leakage;
 

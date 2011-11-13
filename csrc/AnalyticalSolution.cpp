@@ -252,7 +252,7 @@ size_t LeakageCondensedEquation::solve(const double *dynamic_power,
 
 /******************************************************************************/
 
-SteadyStateAnalyticalSolution::SteadyStateAnalyticalSolution(
+BasicSteadyStateAnalyticalSolution::BasicSteadyStateAnalyticalSolution(
 	size_t _processor_count, size_t _node_count,
 	double _sampling_interval, double _ambient_temperature,
 	const double **conductivity, const double *capacitance) :
@@ -260,41 +260,49 @@ SteadyStateAnalyticalSolution::SteadyStateAnalyticalSolution(
 	AnalyticalSolution(_processor_count, _node_count, _sampling_interval,
 		_ambient_temperature, conductivity, capacitance)
 {
-}
+	R.resize(node_count, node_count);
 
-void SteadyStateAnalyticalSolution::solve(
-	const double *power, double *temperature, size_t step_count)
-{
 	/* Solve:
 	 * G * T = P
 	 * C^(-1/2) * G * C^(-1/2) * C^(1/2) * T = C^(-1/2) * P
-	 * Y = - U * L^(-1) * U^T * C^(-1/2) * P
+	 * Y = - U * L^(-1) * U^T * C^(-1/2) * P = R * P
 	 *
 	 * NOTE: Minus here because the eigenvalue decomposition is
 	 * for the negative matrix.
 	 */
 
+	matrix_t m_temp2(node_count, node_count);
+
+	for (size_t j = 0; j < node_count; j++) v_temp[j] = - 1.0 / L[j];
+	multiply_matrix_diagonal_matrix(U, v_temp, m_temp);
+	multiply_matrix_matrix(m_temp, UT, m_temp2);
+	multiply_matrix_diagonal_matrix(m_temp2, sinvC, R);
+}
+
+/******************************************************************************/
+
+SteadyStateAnalyticalSolution::SteadyStateAnalyticalSolution(
+	size_t _processor_count, size_t _node_count,
+	double _sampling_interval, double _ambient_temperature,
+	const double **conductivity, const double *capacitance) :
+
+	BasicSteadyStateAnalyticalSolution(
+		_processor_count, _node_count, _sampling_interval,
+		_ambient_temperature, conductivity, capacitance)
+{
+}
+
+void SteadyStateAnalyticalSolution::solve(
+	const double *power, double *temperature, size_t step_count)
+{
 	size_t i, j, k;
 
-	double *v_temp2 = m_temp;
-
 	for (i = 0, k = 0; i < step_count; i++) {
-		/* C^(-1/2) * P (average power) */
-		v_temp.nullify();
-		for (j = 0; j < processor_count; j++)
-			v_temp[j] = sinvC[j] * power[i * processor_count + j];
-
-		/* U^T * C^(-1/2) * P */
-		multiply_matrix_incomplete_vector(UT, v_temp, processor_count, v_temp2);
-
-		/* L^(-1) * U^T * C^(-1/2) * P */
-		for (j = 0; j < node_count; j++) v_temp[j] = - v_temp2[j] / L[j];
-
-		/* U * L^(-1) * U^T * C^(-1/2) * P */
-		multiply_matrix_vector(U, v_temp, v_temp2);
+		multiply_matrix_incomplete_vector(
+			R, power + i * processor_count, processor_count, v_temp);
 
 		for (j = 0; j < processor_count; j++, k++)
-			temperature[k] = v_temp2[j] * sinvC[j] + ambient_temperature;
+			temperature[k] = v_temp[j] * sinvC[j] + ambient_temperature;
 	}
 }
 
@@ -306,7 +314,7 @@ LeakageSteadyStateAnalyticalSolution::LeakageSteadyStateAnalyticalSolution(
 	double **conductivity, const double *capacitance,
 	const Leakage &_leakage) :
 
-	AnalyticalSolution(_processor_count, _node_count,
+	BasicSteadyStateAnalyticalSolution(_processor_count, _node_count,
 		_sampling_interval, _ambient_temperature,
 		(const double **)_leakage.setup(conductivity, _ambient_temperature),
 		capacitance), leakage(_leakage)
@@ -319,8 +327,6 @@ size_t LeakageSteadyStateAnalyticalSolution::solve(const double *dynamic_power,
 	size_t iterations, i, j, k;
 	double tmp, error, max_error;
 
-	double *v_temp2 = m_temp;
-
 	const size_t max_iterations = leakage.get_max_iterations();
 	const double tolerance = leakage.get_tolerance();
 
@@ -329,22 +335,11 @@ size_t LeakageSteadyStateAnalyticalSolution::solve(const double *dynamic_power,
 	for (iterations = 0; iterations < max_iterations; iterations++) {
 		max_error = 0;
 		for (i = 0, k = 0; i < step_count; i++) {
-			/* C^(-1/2) * P (average power) */
-			v_temp.nullify();
-			for (j = 0; j < processor_count; j++)
-				v_temp[j] = sinvC[j] * total_power[i * processor_count + j];
-
-			/* U^T * C^(-1/2) * P */
-			multiply_matrix_incomplete_vector(UT, v_temp, processor_count, v_temp2);
-
-			/* L^(-1) * U^T * C^(-1/2) * P */
-			for (j = 0; j < node_count; j++) v_temp[j] = - v_temp2[j] / L[j];
-
-			/* U * L^(-1) * U^T * C^(-1/2) * P */
-			multiply_matrix_vector(U, v_temp, v_temp2);
+			multiply_matrix_incomplete_vector(
+				R, total_power + i * processor_count, processor_count, v_temp);
 
 			for (j = 0; j < processor_count; j++, k++) {
-				tmp = v_temp2[j] * sinvC[j] + ambient_temperature;
+				tmp = v_temp[j] * sinvC[j] + ambient_temperature;
 
 				error = std::abs(temperature[k] - tmp);
 				if (max_error < error) max_error = error;
