@@ -32,7 +32,10 @@ function [ maxtab, mintab ] = peakdet(v, delta)
     end
   end
 
-  if ~lookformax, return; end
+  if ~lookformax
+    if mintab(1, 2) > mn, mintab(1, 2) = mn; end
+    return;
+  end
 
   firstpos = maxtab(1, 1);
   found = false;

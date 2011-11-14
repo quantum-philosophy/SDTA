@@ -22,7 +22,7 @@ function drawLines(labelTitle, labelX, labelY, x, y, index, varargin)
     else
       I = find(index(:, i));
       I = index(I, i);
-      line(x(I), y(I, i), 'Color', color, varargin{:});
+      line(x(I), y(1:length(I), i), 'Color', color, varargin{:});
     end
   end
 end
