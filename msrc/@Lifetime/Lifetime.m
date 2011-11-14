@@ -20,14 +20,14 @@ classdef Lifetime < handle
     % Ntc = Atc * (dT - dT0)^(-q) * exp(Eatc / (k * Tmax))
 
     % Activation energy [4], [5]
-    Eatc = 0.3; % eV, depends on particular failure mechanism and
-    % material involved, typically ranges from 0.3 up to 1.5
+    Eatc = 0.5; % eV, depends on particular failure mechanism and
+    % material involved, typically ranges from 0.5 up to 0.7
 
     % Boltzmann constant [6]
     k = 8.61733248e-5; % eV/K
 
     % Empirically determined constant
-    Atc = 5e10; % Lifetime.calculateAtc;
+    Atc = 1e5; % Lifetime.calculateAtc;
 
     % Shape parameter for the Weibull distribution
     beta = 2;
@@ -38,16 +38,20 @@ classdef Lifetime < handle
       mttf = Lifetime.predictCombined(T);
     end
 
-    function [ mttf, maxp, minp, cycles ] = predictSingle(T)
-      time = size(T, 1) * Constants.samplingInterval;
+    function [ mttf, maxp, minp, cycles ] = predictSingle(T, samplingInterval)
+      if nargin < 2, samplingInterval = Constants.samplingInterval; end
+
+      time = size(T, 1) * samplingInterval;
 
       [ damage, maxp, minp, cycles ] = Lifetime.calculateDamage(T);
 
       mttf = time * Lifetime.C / damage;
     end
 
-    function mttf = predictCombined(T)
-      time = size(T, 1) * Constants.samplingInterval;
+    function mttf = predictCombined(T, samplingInterval)
+      if nargin < 2, samplingInterval = Constants.samplingInterval; end
+
+      time = size(T, 1) * samplingInterval;
 
       factor = 0;
       for i = 1:size(T, 2)
@@ -59,8 +63,10 @@ classdef Lifetime < handle
       mttf = time / damage;
     end
 
-    function mttf = predictCombinedAndDraw(T)
-      time = size(T, 1) * Constants.samplingInterval;
+    function mttf = predictCombinedAndDraw(T, samplingInterval)
+      if nargin < 2, samplingInterval = Constants.samplingInterval; end
+
+      time = size(T, 1) * samplingInterval;
 
       G = gamma(1 + 1 / Lifetime.beta);
 
@@ -99,17 +105,19 @@ classdef Lifetime < handle
       legend(title{:});
     end
 
-    function [ mttf, cycles ] = predictMultiple(T)
+    function [ mttf, cycles ] = predictMultiple(T, varargin)
       mttf = zeros(0);
       cycles = zeros(0);
       for i = 1:size(T, 2)
         [ mttf(end + 1), dummy, dummy, discreteCycle ] = ...
-          Lifetime.predictSingle(T(:, i));
+          Lifetime.predictSingle(T(:, i), varargin{:});
         cycles(end + 1) = sum(discreteCycle);
       end
     end
 
-    function [ mttf, cycles ] = predictMultipleAndDraw(T)
+    function [ mttf, cycles ] = predictMultipleAndDraw(T, samplingInterval)
+      if nargin < 2, samplingInterval = Constants.samplingInterval; end
+
       mttf = zeros(0);
       cycles = zeros(0);
 
@@ -117,23 +125,30 @@ classdef Lifetime < handle
 
       [ steps, cores ] = size(T);
 
-      index = zeros(steps, cores);
+      I = zeros(steps, cores);
+      P = zeros(steps, cores);
 
       cycleLegend = {};
 
       for i = 1:size(T, 2)
         [ mttf(end + 1), maxp, minp, discreteCycle ] = ...
-          Lifetime.predictSingle(T(:, i));
+          Lifetime.predictSingle(T(:, i), samplingInterval);
         cycles(end + 1) = sum(discreteCycle);
 
         cycleLegend{end + 1} = sprintf('%.2f cycles', cycles(end));
 
-        I = sort([ maxp(:, 1); minp(:, 1) ]);
-        index(1:length(I), i) = I;
+        j = [ maxp(:, 1); minp(:, 1) ];
+        p = [ maxp(:, 2); minp(:, 2) ];
+        [ j, order ] = sort(j);
+        p = p(order);
+
+        I(1:length(j), i) = j;
+        P(1:length(j), i) = p;
       end
 
-      x = ((1:steps) - 1) * Constants.samplingInterval;
+      x = ((1:steps) - 1) * samplingInterval;
       T = T - Constants.degreeKelvin;
+      P = P - Constants.degreeKelvin;
 
       % Draw full curves
       subplot(2, 1, 1);
@@ -143,11 +158,11 @@ classdef Lifetime < handle
       YLim = get(gca, 'YLim');
 
       % Outline minima and maxima
-      Utils.drawLines([], [], [], x, T, index, 'LineStyle', 'none', 'Marker', 'x');
+      Utils.drawLines([], [], [], x, P, I, 'LineStyle', 'none', 'Marker', 'x');
 
       % Draw curves only by minima and maxima
       subplot(2, 1, 2);
-      Utils.drawLines('SSDTC (only peaks)', 'Time, s', 'Temperature, C', x, T, index);
+      Utils.drawLines('SSDTC (only peaks)', 'Time, s', 'Temperature, C', x, P, I);
 
       legend(cycleLegend{:});
 
@@ -155,7 +170,9 @@ classdef Lifetime < handle
       set(gca, 'YLim', YLim);
     end
 
-    function drawCycles(T)
+    function drawCycles(T, samplingInterval)
+      if nargin < 2, samplingInterval = Constants.samplingInterval; end
+
       mttf = zeros(0);
       cycles = zeros(0);
 
@@ -176,7 +193,7 @@ classdef Lifetime < handle
         index(1:length(I), i) = I;
       end
 
-      x = ((1:steps) - 1) * Constants.samplingInterval;
+      x = ((1:steps) - 1) * samplingInterval;
       T = T - Constants.degreeKelvin;
 
       maxT = max(max(T));
@@ -232,11 +249,11 @@ classdef Lifetime < handle
       % Get extremum
       [ maxp, minp ] = Utils.peakdet(T, Lifetime.peakThreshold);
 
-      % Combine maxima and minima indexes
-      I = sort([ maxp(:, 1); minp(:, 1) ]);
-
-      % Get the actual temperature values
-      T = T(I);
+      % Combine maxima and minima
+      I = [ maxp(:, 1); minp(:, 1) ];
+      T = [ maxp(:, 2); minp(:, 2) ];
+      [ I, order ] = sort(I);
+      T = T(order);
 
       % Rainflow it!
       rainflow = Rainflow.rainflow(T);

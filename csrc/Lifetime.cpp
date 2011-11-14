@@ -99,7 +99,13 @@ void ThermalCyclingLifetime::detect_peaks(
 		/* The first one is always a minimum, so if the last one is
 		 * a maximum, we are fine.
 		 */
-		if (!look_for_max) continue;
+		if (!look_for_max) {
+			if (peaks[col].size() > 0) {
+				peak_t &peak = *peaks[col].begin();
+				peak.second = std::min(peak.second, mn);
+			}
+			continue;
+		}
 
 		/* The last one was a minimum which means that either we have
 		 * missed a maximum in the beginning, or the first minimum is
