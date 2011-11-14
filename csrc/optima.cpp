@@ -126,6 +126,15 @@ void optimize(const string &system, const string &floorplan,
 
 		evaluation->set_shallow(!optimization_tuning.multiobjective);
 
+		price_t assessed_price, best_assessed_price;
+
+		if (solution_tuning.assess()) {
+			assessment_hotspot = test.create_hotspot(solution_tuning.assessment);
+			assessment_evaluation = new Evaluation(
+				*test.architecture, *test.graph, *assessment_hotspot);
+			assessed_price = assessment_evaluation->process(test.schedule);
+		}
+
 		constrains_t constrains;
 
 		if (optimization_tuning.mapping)
@@ -161,6 +170,13 @@ void optimize(const string &system, const string &floorplan,
 			<< "Initial energy: "
 			<< price.energy << endl;
 
+		if (solution_tuning.assess())
+			cout
+				<< "Assessed initial lifetime: "
+				<< assessed_price.lifetime << endl
+				<< "Assessed initial energy: "
+				<< assessed_price.energy << endl;
+
 		for (size_t i = 0; i < repeat; i++) {
 			Random::reseed();
 			evaluation->reset();
@@ -186,15 +202,6 @@ void optimize(const string &system, const string &floorplan,
 
 			cout << "Improvement: " << setiosflags(ios::fixed) << setprecision(2);
 
-			price_t assessed_price;
-
-			if (solution_tuning.assess()) {
-				assessment_hotspot = test.create_hotspot(solution_tuning.assessment);
-				assessment_evaluation = new Evaluation(
-					*test.architecture, *test.graph, *assessment_hotspot);
-				assessment_evaluation->set_shallow(false);
-			}
-
 			if (!optimization_tuning.multiobjective) {
 				SOEvolutionStats *sstats = (SOEvolutionStats *)&stats;
 
@@ -205,22 +212,10 @@ void optimize(const string &system, const string &floorplan,
 					<< "% energy"
 					<< endl;
 
-				if (solution_tuning.assess()) {
-					assessed_price = dynamic_cast<SOEvolution *>(evolution)->assess(
-						sstats->best_chromosome, *assessment_evaluation);
-
-					cout
-						<< endl
-						<< "Assessment:" << endl
-						<< "  Lifetime: " << assessed_price.lifetime << endl
-						<< "  Energy: " << assessed_price.energy << endl
-						<< "  Improvement: "
-						<< (assessed_price.lifetime / price.lifetime - 1.0) * 100
-						<< "% lifetime with "
-						<< (assessed_price.energy / price.energy - 1.0) * 100
-						<< "% energy"
-						<< endl << endl;
-				}
+				if (solution_tuning.assess())
+					best_assessed_price =
+						dynamic_cast<SOEvolution *>(evolution)->assess(
+							sstats->best_chromosome, *assessment_evaluation);
 			}
 			else {
 				MOEvolutionStats *sstats = (MOEvolutionStats *)&stats;
@@ -232,6 +227,18 @@ void optimize(const string &system, const string &floorplan,
 					<< "% energy"
 					<< endl;
 			}
+
+			if (solution_tuning.assess())
+				cout
+					<< endl
+					<< "Assessed lifetime: " << best_assessed_price.lifetime << endl
+					<< "Assessed energy: " << best_assessed_price.energy << endl
+					<< "Assessed improvement: "
+					<< (best_assessed_price.lifetime / assessed_price.lifetime - 1.0) * 100
+					<< "% lifetime with "
+					<< (best_assessed_price.energy / assessed_price.energy - 1.0) * 100
+					<< "% energy"
+					<< endl << endl;
 
 			if (system_tuning.verbose)
 				cout << "Time elapsed: " << setprecision(2)
