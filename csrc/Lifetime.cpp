@@ -49,7 +49,7 @@ double ThermalCyclingLifetime::predict(
 size_t ThermalCyclingLifetime::update_peaks(const double *data,
 	size_t rows, size_t cols, size_t col)
 {
-	size_t count, mxpos, mnpos, row, first_pos;
+	size_t count, mxpos, mnpos, row, first_pos = 0;
 	double current, mx, mn;
 
 	char look_for, first_is;
