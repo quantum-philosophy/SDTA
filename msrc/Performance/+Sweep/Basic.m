@@ -136,6 +136,10 @@ classdef Basic < handle
       name = struct('short', 'CE', 'long', 'Condensed Equation Method');
     end
 
+    function name = cemName(sweep)
+      name = struct('short', 'CEm', 'long', 'Condensed Equation in Matlab');
+    end
+
     function name = hsName(sweep)
       name = struct('short', 'HS', 'long', 'One HotSpot Simulation');
     end
@@ -144,16 +148,16 @@ classdef Basic < handle
       name = struct('short', 'SS', 'long', 'Steady-State Approximation');
     end
 
+    function name = ssmName(sweep)
+      name = struct('short', 'SSm', 'long', 'Steady-State Approximation in Matlab');
+    end
+
     function name = umfName(sweep)
       name = struct('short', 'UMF', 'long', 'Unsymmetric MultiFrontal Method');
     end
 
     function name = fftName(sweep)
       name = struct('short', 'FFT', 'long', 'FFT Method (Block-Circulant)');
-    end
-
-    function name = cemName(sweep)
-      name = struct('short', 'CEm', 'long', 'Condensed Equation in Matlab');
     end
 
     function name = taName(sweep)
@@ -171,6 +175,15 @@ classdef Basic < handle
           'leakage', '', config{:});
 
       [ T, t ] = sweep.optimaSolveOnAverage(param_line);
+    end
+
+    function [ T, t ] = cemSolve(sweep, i, config)
+      param_line = Utils.configStream(...
+          'verbose', 0, ...
+          'solution', 'condensed_equation', ...
+          'leakage', '', config{:});
+
+      [ T, t ] = sweep.matlabOnAverage(param_line, 'ce');
     end
 
     function [ T, t ] = hsSolve(sweep, i, config)
@@ -193,6 +206,15 @@ classdef Basic < handle
       [ T, t ] = sweep.optimaSolveOnAverage(param_line);
     end
 
+    function [ T, t ] = ssmSolve(sweep, i, config)
+      param_line = Utils.configStream(...
+          'verbose', 0, ...
+          'solution', 'condensed_equation', ...
+          'leakage', '', config{:});
+
+      [ T, t ] = sweep.matlabOnAverage(param_line, 'ss');
+    end
+
     function [ T, t ] = umfSolve(sweep, i, config)
       param_line = Utils.configStream(...
           'verbose', 0, ...
@@ -209,15 +231,6 @@ classdef Basic < handle
           'leakage', '', config{:});
 
       [ T, t ] = sweep.matlabOnAverage(param_line, 'bc');
-    end
-
-    function [ T, t ] = cemSolve(sweep, i, config)
-      param_line = Utils.configStream(...
-          'verbose', 0, ...
-          'solution', 'condensed_equation', ...
-          'leakage', '', config{:});
-
-      [ T, t ] = sweep.matlabOnAverage(param_line, 'ce');
     end
 
     function [ T, t ] = taSolve(sweep, i, config)
@@ -293,7 +306,7 @@ classdef Basic < handle
 
       time = total / n;
 
-      time = [ time, 0, sweep.hotspot.preparationTime ];
+      time = [ time, 0, sweep.hotspot.decompositionTime, sweep.hotspot.preparationTime ];
     end
 
     function e = error(sweep, T1, T2)

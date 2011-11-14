@@ -5,27 +5,32 @@ classdef Hotspot < handle
     DL
     DV
     DVT
-    K
-    G
     nodes
 
     samplingInterval
     ambientTemperature
 
+    K
+    G
+    R
+
+    decompositionTime
     preparationTime
   end
 
   methods
     function hs = Hotspot(floorplan, config, config_line)
+      preparation = tic;
+
       [ conductance, capacitance, inversed_capacitance ] = Optima.get_coefficients( ...
         floorplan, config, config_line);
 
       hs.sinvC = diag(sqrt(1 ./ capacitance));
       hs.D = Utils.symmetrize(hs.sinvC * (-conductance) * hs.sinvC);
 
-      tic;
+      decomposition = tic;
       [ V, L ] = eig(hs.D);
-      hs.preparationTime = toc;
+      hs.decompositionTime = toc(decomposition);
 
       hs.DL = diag(L);
       hs.DV = V;
@@ -36,6 +41,10 @@ classdef Hotspot < handle
       hs.ambientTemperature = Utils.readParameter(config, '-ambient');
 
       [ hs.K, hs.G ] = hs.calculateCoefficients(hs.samplingInterval);
+
+      hs.R = hs.DV * diag(-1 ./ hs.DL) * hs.DVT * hs.sinvC;
+
+      hs.preparationTime = toc(preparation);
     end
 
     function [ T, time ] = solve(hs, power, method)
@@ -189,6 +198,21 @@ classdef Hotspot < handle
         op = (i - 2) * n + 1;
         on = op + n;
         Y(on:(on + n - 1)) = K * Y(op:(op + n - 1)) + G * transpose(B(i - 1, :));
+      end
+    end
+
+    function Y = ss(hs, B)
+      [ m, cores ] = size(B);
+      n = hs.nodes;
+
+      B = [ B, zeros(m, n - cores) ];
+
+      Y = zeros(n * m, 1);
+      R = hs.R;
+
+      for i = 1:m
+        op = (i - 1) * n + 1;
+        Y(op:(op + n - 1)) = R * transpose(B(i, :));
       end
     end
 

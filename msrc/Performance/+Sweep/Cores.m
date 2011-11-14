@@ -80,7 +80,7 @@ classdef Cores < Sweep.PowerBasic
 
       time = total / n;
 
-      time = [ time, 0, sweep.hotspot.preparationTime ];
+      time = [ time, 0, sweep.hotspot.decompositionTime, sweep.hotspot.preparationTime ];
     end
   end
 end
