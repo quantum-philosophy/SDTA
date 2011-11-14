@@ -48,12 +48,3 @@ subplot(3, 1, 3);
 Utils.drawLines('SSDTC with SS', 'Time, s', 'Temperature, C', ...
   time, Tss - Constants.degreeKelvin);
 set(gca, 'XLim', [ 0 time(end) ]);
-
-MTTFce = min(Lifetime.predictMultipleAndDraw(T, config.samplingInterval));
-MTTFss = min(Lifetime.predictMultipleAndDraw(Tss, config.samplingInterval));
-
-fprintf('MTTF CE: %.4f\n', MTTFce);
-fprintf('MTTF SS: %.4f\n', MTTFss);
-
-fprintf('Energy CE: %.4f\n', sum(sum(Pce)) * config.samplingInterval);
-fprintf('Energy SS: %.4f\n', sum(sum(Pss)) * config.samplingInterval);
