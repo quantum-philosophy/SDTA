@@ -84,6 +84,7 @@ struct SolutionTuning: public Tuning
 	bool warmup;
 	std::string hotspot;
 	std::string leakage;
+	std::string assessment;
 
 	SolutionTuning() :
 		method("condensed_equation"),
@@ -97,6 +98,11 @@ struct SolutionTuning: public Tuning
 	inline bool leak() const
 	{
 		return !leakage.empty();
+	}
+
+	inline bool assess() const
+	{
+		return !assessment.empty();
 	}
 };
 

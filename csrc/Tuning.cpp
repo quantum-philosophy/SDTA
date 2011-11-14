@@ -104,6 +104,8 @@ void SolutionTuning::setup(const parameters_t &params)
 			hotspot = it->value;
 		else if (it->name == "leakage")
 			leakage = it->value;
+		else if (it->name == "assessment")
+			assessment = it->value;
 	}
 }
 
@@ -116,7 +118,8 @@ void SolutionTuning::display(std::ostream &o) const
 		<< "  Tolerance:            " << tolerance << std::endl
 		<< "  Warm up:              " << warmup << std::endl
 		<< "  Hotspot:              " << hotspot << std::endl
-		<< "  Leakage:              " << leakage << std::endl;
+		<< "  Leakage:              " << leakage << std::endl
+		<< "  Assessment:           " << assessment << std::endl;
 }
 
 void OptimizationTuning::setup(const parameters_t &params)

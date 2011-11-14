@@ -18,6 +18,10 @@ class TestCase
 {
 	public:
 
+	const std::string floorplan_config;
+	const std::string hotspot_config;
+	const SolutionTuning solution_tuning;
+
 	Graph *graph;
 	Architecture *architecture;
 	BasicListScheduler *scheduler;
@@ -34,7 +38,10 @@ class TestCase
 
 	TestCase(const std::string &_system, const std::string &_floorplan,
 		const std::string &_hotspot, const SystemTuning &system_tuning,
-		const SolutionTuning &solution_tuning) :
+		const SolutionTuning &_solution_tuning) :
+
+		floorplan_config(_floorplan), hotspot_config(_hotspot),
+		solution_tuning(_solution_tuning),
 
 		graph(NULL), architecture(NULL), scheduler(NULL),
 		leakage(NULL), hotspot(NULL)
@@ -168,68 +175,7 @@ class TestCase
 		Time::measure(&begin);
 #endif
 
-		/* Thermal model */
-		if (solution_tuning.method == "condensed_equation") {
-			if (leakage)
-				hotspot = new LeakageCondensedEquationHotspot(
-					*architecture, *graph, _floorplan, _hotspot,
-					solution_tuning.hotspot, *leakage);
-			else
-				hotspot = new CondensedEquationHotspot(
-					*architecture, *graph, _floorplan, _hotspot,
-					solution_tuning.hotspot);
-		}
-		else if (solution_tuning.method == "transient_analytical") {
-			if (leakage)
-				throw std::runtime_error("Not implemented.");
-
-			hotspot = new TransientAnalyticalHotspot(
-				*architecture, *graph, _floorplan, _hotspot,
-				solution_tuning.hotspot, solution_tuning.max_iterations,
-				solution_tuning.tolerance, solution_tuning.warmup);
-		}
-		else if (solution_tuning.method == "coarse_condensed_equation") {
-			if (leakage)
-				throw std::runtime_error("Not implemented.");
-
-			hotspot = new CoarseCondensedEquationHotspot(
-				*architecture, *graph, _floorplan, _hotspot,
-				solution_tuning.hotspot);
-		}
-		else if (solution_tuning.method == "hotspot") {
-			if (leakage)
-				hotspot = new LeakageIterativeHotspot(
-					*architecture, *graph, _floorplan, _hotspot,
-					solution_tuning.hotspot, solution_tuning.max_iterations,
-					solution_tuning.tolerance, solution_tuning.warmup,
-					*leakage);
-			else
-				hotspot = new IterativeHotspot(
-					*architecture, *graph, _floorplan, _hotspot,
-					solution_tuning.hotspot, solution_tuning.max_iterations,
-					solution_tuning.tolerance, solution_tuning.warmup);
-		}
-		else if (solution_tuning.method == "steady_state") {
-			if (leakage)
-				hotspot = new LeakageSteadyStateHotspot(
-					*architecture, *graph, _floorplan, _hotspot,
-					solution_tuning.hotspot, *leakage);
-			else
-				hotspot = new SteadyStateHotspot(
-					*architecture, *graph, _floorplan, _hotspot,
-					solution_tuning.hotspot);
-		}
-		else if (solution_tuning.method == "precise_steady_state") {
-			if (leakage)
-				hotspot = new LeakagePreciseSteadyStateHotspot(
-					*architecture, *graph, _floorplan, _hotspot,
-					solution_tuning.hotspot, *leakage);
-			else
-				hotspot = new PreciseSteadyStateHotspot(
-					*architecture, *graph, _floorplan, _hotspot,
-					solution_tuning.hotspot);
-		}
-		else throw std::runtime_error("The solution method is unknown.");
+		hotspot = create_hotspot(solution_tuning.method);
 
 #ifdef MEASURE_TIME
 		Time::measure(&end);
@@ -244,6 +190,72 @@ class TestCase
 		__DELETE(scheduler);
 		__DELETE(leakage);
 		__DELETE(hotspot);
+	}
+
+	Hotspot *create_hotspot(const std::string &method)
+	{
+		/* Thermal model */
+		if (method == "condensed_equation") {
+			if (leakage)
+				return new LeakageCondensedEquationHotspot(
+					*architecture, *graph, floorplan_config, hotspot_config,
+					solution_tuning.hotspot, *leakage);
+			else
+				return new CondensedEquationHotspot(
+					*architecture, *graph, floorplan_config, hotspot_config,
+					solution_tuning.hotspot);
+		}
+		else if (method == "transient_analytical") {
+			if (leakage)
+				throw std::runtime_error("Not implemented.");
+
+			return new TransientAnalyticalHotspot(
+				*architecture, *graph, floorplan_config, hotspot_config,
+				solution_tuning.hotspot, solution_tuning.max_iterations,
+				solution_tuning.tolerance, solution_tuning.warmup);
+		}
+		else if (method == "coarse_condensed_equation") {
+			if (leakage)
+				throw std::runtime_error("Not implemented.");
+
+			return new CoarseCondensedEquationHotspot(
+				*architecture, *graph, floorplan_config, hotspot_config,
+				solution_tuning.hotspot);
+		}
+		else if (method == "hotspot") {
+			if (leakage)
+				return new LeakageIterativeHotspot(
+					*architecture, *graph, floorplan_config, hotspot_config,
+					solution_tuning.hotspot, solution_tuning.max_iterations,
+					solution_tuning.tolerance, solution_tuning.warmup,
+					*leakage);
+			else
+				return new IterativeHotspot(
+					*architecture, *graph, floorplan_config, hotspot_config,
+					solution_tuning.hotspot, solution_tuning.max_iterations,
+					solution_tuning.tolerance, solution_tuning.warmup);
+		}
+		else if (method == "steady_state") {
+			if (leakage)
+				return new LeakageSteadyStateHotspot(
+					*architecture, *graph, floorplan_config, hotspot_config,
+					solution_tuning.hotspot, *leakage);
+			else
+				return new SteadyStateHotspot(
+					*architecture, *graph, floorplan_config, hotspot_config,
+					solution_tuning.hotspot);
+		}
+		else if (method == "precise_steady_state") {
+			if (leakage)
+				return new LeakagePreciseSteadyStateHotspot(
+					*architecture, *graph, floorplan_config, hotspot_config,
+					solution_tuning.hotspot, *leakage);
+			else
+				return new PreciseSteadyStateHotspot(
+					*architecture, *graph, floorplan_config, hotspot_config,
+					solution_tuning.hotspot);
+		}
+		else throw std::runtime_error("The solution method is unknown.");
 	}
 };
 

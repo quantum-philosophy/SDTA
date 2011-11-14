@@ -99,6 +99,9 @@ void optimize(const string &system, const string &floorplan,
 	BasicEvolution *evolution = NULL;
 	Evaluation *evaluation = NULL;
 
+	Hotspot *assessment_hotspot = NULL;
+	Evaluation *assessment_evaluation = NULL;
+
 	try {
 		TestCase test(system, floorplan, hotspot, system_tuning, solution_tuning);
 
@@ -183,6 +186,15 @@ void optimize(const string &system, const string &floorplan,
 
 			cout << "Improvement: " << setiosflags(ios::fixed) << setprecision(2);
 
+			price_t assessed_price;
+
+			if (solution_tuning.assess()) {
+				assessment_hotspot = test.create_hotspot(solution_tuning.assessment);
+				assessment_evaluation = new Evaluation(
+					*test.architecture, *test.graph, *assessment_hotspot);
+				assessment_evaluation->set_shallow(false);
+			}
+
 			if (!optimization_tuning.multiobjective) {
 				SOEvolutionStats *sstats = (SOEvolutionStats *)&stats;
 
@@ -192,6 +204,23 @@ void optimize(const string &system, const string &floorplan,
 					<< (sstats->final_energy / price.energy - 1.0) * 100
 					<< "% energy"
 					<< endl;
+
+				if (solution_tuning.assess()) {
+					assessed_price = dynamic_cast<SOEvolution *>(evolution)->assess(
+						sstats->best_chromosome, *assessment_evaluation);
+
+					cout
+						<< endl
+						<< "Assessment:" << endl
+						<< "  Lifetime: " << assessed_price.lifetime << endl
+						<< "  Energy: " << assessed_price.energy << endl
+						<< "  Improvement: "
+						<< (assessed_price.lifetime / price.lifetime - 1.0) * 100
+						<< "% lifetime with "
+						<< (assessed_price.energy / price.energy - 1.0) * 100
+						<< "% energy"
+						<< endl << endl;
+				}
 			}
 			else {
 				MOEvolutionStats *sstats = (MOEvolutionStats *)&stats;
@@ -218,11 +247,15 @@ void optimize(const string &system, const string &floorplan,
 	catch (exception &e) {
 		__DELETE(evaluation);
 		__DELETE(evolution);
+		__DELETE(assessment_hotspot);
+		__DELETE(assessment_evaluation);
 		throw;
 	}
 
 	__DELETE(evaluation);
 	__DELETE(evolution);
+	__DELETE(assessment_hotspot);
+	__DELETE(assessment_evaluation);
 }
 
 int main(int argc, char **argv)

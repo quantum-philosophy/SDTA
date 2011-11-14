@@ -73,6 +73,26 @@ class Evolution: public BasicEvolution
 
 	stats_t &solve(const layout_t &layout, const priority_t &priority);
 
+	inline price_t assess(chromosome_t &chromosome, Evaluation &evaluation) const
+	{
+		if (constrains.fixed_layout()) {
+			Schedule schedule = scheduler.process(constrains.layout, chromosome);
+			return evaluation.process(schedule);
+		}
+		else {
+			layout_t layout;
+			priority_t priority;
+			GeneEncoder::split(chromosome, priority, layout);
+			Schedule schedule = scheduler.process(layout, priority);
+			return evaluation.process(schedule);
+		}
+	}
+
+	inline price_t assess(chromosome_t &chromosome) const
+	{
+		return assess(chromosome, evaluation);
+	}
+
 	protected:
 
 	void populate(population_t &population, const layout_t &layout,
@@ -105,21 +125,6 @@ class Evolution: public BasicEvolution
 		}
 
 		chromosome.set_price(price);
-	}
-
-	inline price_t assess(chromosome_t &chromosome) const
-	{
-		if (constrains.fixed_layout()) {
-			Schedule schedule = scheduler.process(constrains.layout, chromosome);
-			return evaluation.process(schedule);
-		}
-		else {
-			layout_t layout;
-			priority_t priority;
-			GeneEncoder::split(chromosome, priority, layout);
-			Schedule schedule = scheduler.process(layout, priority);
-			return evaluation.process(schedule);
-		}
 	}
 
 	virtual void process(population_t &population) = 0;
