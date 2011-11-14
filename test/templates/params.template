@@ -3,15 +3,7 @@ deadline_ratio 1.05
 power_scale 1
 time_scale 1
 reorder_tasks 0
-# hotspot sampling_intvl 1e-3
 verbose 1
-
-# Leakage
-# * <none> (default)
-# * linear
-# * piecewise_linear
-# * exponential
-leakage linear
 
 # Solution
 # * condensed_equation (default)
@@ -23,6 +15,15 @@ leakage linear
 solution condensed_equation
 max_iterations 1
 tolerance 0
+# hotspot sampling_intvl 1e-3
+# assessment condensed_equation
+
+# Leakage
+# * <none> (default)
+# * linear
+# * piecewise_linear
+# * exponential
+leakage linear
 
 # Optimization
 seed -1
