@@ -55,14 +55,16 @@ class ThermalCyclingLifetime: public Lifetime
 
 	protected:
 
-	double a[MAX_EXTREMA];
+	double *peak_index;
+	double peaks[MAX_EXTREMA + 1];
+
+	double temp[MAX_EXTREMA];
 	double amplitudes[MAX_EXTREMA];
 	double means[MAX_EXTREMA];
 	double cycles[MAX_EXTREMA];
 
-	void detect_peaks(const matrix_t &temperature,
-		std::vector<extrema_t> &peaks) const;
-	size_t rainflow(const extrema_t &extrema);
+	size_t update_peaks(const double *data, size_t rows, size_t cols, size_t col);
+	size_t update_cycles(size_t extremum_count);
 };
 
 class CombinedThermalCyclingLifetime: public ThermalCyclingLifetime

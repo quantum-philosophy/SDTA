@@ -10,15 +10,14 @@ double ThermalCyclingLifetime::predict(
 	size_t processor_count = temperature.cols();
 	size_t step_count = temperature.rows();
 
-	/* Get extrema */
-	std::vector<extrema_t> peaks;
-	detect_peaks(temperature, peaks);
-
 	double maximal_damage = 0;
+
+	const double *data = temperature;
 
 	/* For each temperature curve */
 	for (size_t i = 0; i < processor_count; i++) {
-		size_t cycle_count = rainflow(peaks[i]);
+		size_t peak_count = update_peaks(data, step_count, processor_count, i);
+		size_t cycle_count = update_cycles(peak_count);
 
 		double damage = 0;
 
@@ -43,122 +42,106 @@ double ThermalCyclingLifetime::predict(
 	return (sampling_interval * step_count) / maximal_damage;
 }
 
-void ThermalCyclingLifetime::detect_peaks(
-	const matrix_t &data, std::vector<extrema_t> &peaks) const
-{
-	size_t rows = data.rows();
-	size_t cols = data.cols();
+#define LF_UNDEFINED 0
+#define LF_MIN 1
+#define LF_MAX 2
 
-	size_t mxpos, mnpos, col, row, firstpos;
+size_t ThermalCyclingLifetime::update_peaks(const double *data,
+	size_t rows, size_t cols, size_t col)
+{
+	size_t count, mxpos, mnpos, row, first_pos;
 	double current, mx, mn;
 
-	bool look_for_max, found;
+	char look_for, first_is;
 
-	peaks.resize(cols);
+	mx = mn = data[/* 0 * cols + */ col];
+	mxpos = mnpos = 0;
 
-	/* For each column */
-	for (col = 0; col < cols; col++) {
-		mx = mn = data[0][col];
-		mxpos = mnpos = 0;
+	look_for = first_is = LF_UNDEFINED;
 
-		look_for_max = false;
+	/* Leave one cell for a possible "push front" */
+	peak_index = peaks + 1;
+	count = 0;
 
-		peaks[col].clear();
+	/* For each row */
+	for (row = 1; row < rows; row++) {
+		current = data[row * cols + col];
 
-		/* For each row */
-		for (row = 1; row < rows; row++) {
-			current = data[row][col];
+		if (current >= mx) {
+			mx = current;
+			mxpos = row;
+		}
+		if (current <= mn) {
+			mn = current;
+			mnpos = row;
+		}
 
-			if (current > mx) {
-				mx = current;
-				mxpos = row;
-			}
-			if (current < mn) {
+		if (look_for == LF_MAX) {
+			if (current < (mx - delta)) {
+				peaks[++count] = mx;
 				mn = current;
 				mnpos = row;
-			}
-
-			if (look_for_max) {
-				if (current < (mx - delta)) {
-					peaks[col].push_back(peak_t(mxpos, mx));
-					mn = current;
-					mnpos = row;
-					look_for_max = false;
-				}
-			}
-			else {
-				if (current > (mn + delta)) {
-					peaks[col].push_back(peak_t(mnpos, mn));
-					mx = current;
-					mxpos = row;
-					look_for_max = true;
-				}
+				look_for = LF_MIN;
 			}
 		}
-
-		/* The first one is always a minimum, so if the last one is
-		 * a maximum, we are fine.
-		 */
-		if (!look_for_max) {
-			if (peaks[col].size() > 0) {
-				peak_t &peak = *peaks[col].begin();
-				peak.second = std::min(peak.second, mn);
-			}
-			continue;
-		}
-
-		/* The last one was a minimum which means that either we have
-		 * missed a maximum in the beginning, or the first minimum is
-		 * larger then the last one and should be eliminated.
-		 */
-
-		firstpos = peaks[col].begin()->first;
-		found = false;
-
-		for (row = 0; row < firstpos; row++) {
-			current = data[row][col];
-
-			if (current > mx) {
+		else if (look_for == LF_MIN) {
+			if (current > (mn + delta)) {
+				peaks[++count] = mn;
 				mx = current;
 				mxpos = row;
+				look_for = LF_MAX;
 			}
-
-			if (current >= (mx - delta)) continue;
-
-			/* Yeah, we have missed a maximum */
-			if (mxpos < row) peaks[col].push_front(peak_t(mxpos, mx));
-			else peaks[col].push_back(peak_t(mxpos, mx));
-
-			found = true;
-			break;
 		}
-
-		if (found) continue;
-
-		/* Nope, there are two minima, delete one! */
-		if (peaks[col].begin()->second < peaks[col].end()->second) {
-			peaks[col].pop_back();
-		}
-		else {
-			peaks[col].pop_front();
+		else { /* ... undefined so far */
+			if (current < (mx - delta)) {
+				peaks[++count] = mx;
+				mn = current;
+				mnpos = row;
+				look_for = LF_MIN;
+				first_is = LF_MAX;
+				first_pos = row;
+			}
+			else if (current > (mn + delta)) {
+				peaks[++count] = mn;
+				mx = current;
+				mxpos = row;
+				look_for = LF_MAX;
+				first_is = LF_MIN;
+				first_pos = row;
+			}
 		}
 	}
+
+	if (look_for == LF_MAX) {
+		peaks[++count] = mx;
+
+		if (first_is == LF_MIN && first_pos > 0) {
+			peak_index--;
+			count++;
+			peaks[0] = mx; /* Push front! */
+		}
+	}
+	else { /* ... looking for a minimum */
+		peaks[++count] = mn;
+
+		if (first_is == LF_MAX && first_pos > 0) {
+			peak_index--;
+			count++;
+			peaks[0] = mn; /* Push front! */
+		}
+	}
+
+	return count;
 }
 
-size_t ThermalCyclingLifetime::rainflow(const extrema_t &extrema)
+size_t ThermalCyclingLifetime::update_cycles(size_t extremum_count)
 {
-	size_t extremum_count = extrema.size();
-
-	if (extremum_count > MAX_EXTREMA)
-		throw std::runtime_error("There are too many extrema.");
-
 	int i, j;
 	size_t count = 0;
-	double amplitude, mean;
-	extrema_t::const_iterator it = extrema.begin(), itend = extrema.end();
+	double amplitude, mean, *a = temp;
 
-	for (j = -1; it != itend; it++) {
-		a[++j] = it->second;
+	for (i = 0, j = -1; i < extremum_count; i++, peak_index++) {
+		a[++j] = *peak_index;
 
 		while ((j >= 2) && (fabs(a[j-1] - a[j-2]) <= fabs(a[j] - a[j-1]))) {
 			amplitude = fabs((a[j-1] - a[j-2]) / 2);
@@ -208,19 +191,6 @@ size_t ThermalCyclingLifetime::rainflow(const extrema_t &extrema)
 		}
 	}
 
-	if ((extremum_count % 2) == 0) {
-		/* We are missing something... */
-
-		it = extrema.begin();
-		itend--;
-
-		amplitudes[count] = fabs(it->second - itend->second) / 2.0;
-		means[count] = (it->second + itend->second) / 2.0;
-		cycles[count] = 0.5;
-
-		count++;
-	}
-
 	return count;
 }
 
@@ -232,15 +202,14 @@ double CombinedThermalCyclingLifetime::predict(
 	size_t processor_count = temperature.cols();
 	size_t step_count = temperature.rows();
 
-	/* Get extrema */
-	std::vector<extrema_t> peaks;
-	detect_peaks(temperature, peaks);
-
 	double damage, factor = 0;
+
+	const double *data = temperature;
 
 	/* For each temperature curve */
 	for (size_t i = 0; i < processor_count; i++) {
-		size_t cycle_count = rainflow(peaks[i]);
+		size_t peak_count = update_peaks(data, step_count, processor_count, i);
+		size_t cycle_count = update_cycles(peak_count);
 
 		damage = 0;
 
