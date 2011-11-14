@@ -97,11 +97,8 @@ void solve(const string &system, const string &floorplan,
 	size_t processor_count = test.architecture->size();
 
 	if (!_power.empty()) {
-		size_t step_count = ceil(test.graph->get_deadline() /
-			test.hotspot->get_sampling_interval());
-
 		InputStream power_stream(_power);
-		power_stream.read(power, step_count);
+		power_stream.read(power);
 	}
 	else {
 		DynamicPower dynamic_power(test.architecture->get_processors(),

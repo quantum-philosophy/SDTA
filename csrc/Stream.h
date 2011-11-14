@@ -5,6 +5,7 @@ class InputStream
 {
 	static const size_t line_size = 65536;
 	static const size_t max_units = 8192;
+	static const size_t chunk_size = 1000;
 
 	FILE *file;
 	size_t unit_count;
@@ -61,25 +62,29 @@ class InputStream
 		return true;
 	}
 
-	void read(matrix_t &matrix, size_t max_rows)
+	void read(matrix_t &matrix)
 	{
-		read(matrix, max_rows, unit_count);
+		read(matrix, unit_count);
 	}
 
-	void read(matrix_t &matrix, size_t max_rows, size_t cols)
+	void read(matrix_t &matrix, size_t cols)
 	{
 		if (cols < unit_count)
 			throw std::runtime_error("The number of columns is invalid.");
 
-		matrix.resize(max_rows + 1, cols);
+		size_t chunks = 1;
+
+		matrix.resize(chunk_size, cols);
 
 		size_t i = 0;
 
 		while (read(matrix[i])) {
 			i++;
 
-			if (i > max_rows)
-				throw std::runtime_error("Too many lines.");
+			if (i >= chunks * chunk_size) {
+				chunks++;
+				matrix.extend(chunks * chunk_size);
+			}
 		}
 
 		matrix.shrink(i);
@@ -149,7 +154,7 @@ class OutputStream
 	void write(const matrix_t &matrix)
 	{
 		if (matrix.cols() != unit_count)
-			throw std::runtime_error("The streaming matrix is invalid.");
+			throw std::runtime_error("The stream matrix is invalid.");
 
 		size_t rows = matrix.rows();
 		for (size_t i = 0; i < rows; i++) write(matrix[i]);

@@ -77,6 +77,25 @@ struct vector_t
 		_data = __ALLOC(_size);
 	}
 
+	inline void extend(size_t __size)
+	{
+		if (_size == __size) {
+			return;
+		}
+		else if (__size < _size) {
+			shrink(__size);
+			return;
+		}
+
+		double *new_data = __ALLOC(__size);
+
+		__MEMCPY(new_data, _data, _size);
+
+		__FREE(_data);
+		_size = __size;
+		_data = new_data;
+	}
+
 	inline void shrink(size_t __size)
 	{
 #ifndef SHALLOW_CHECK
@@ -182,6 +201,12 @@ struct matrix_t: public vector_t
 	{
 		_rows = another._rows; _cols = another._cols;
 		vector_t::resize(_rows * _cols);
+	}
+
+	inline void extend(size_t __rows)
+	{
+		_rows = __rows;
+		vector_t::extend(_rows * _cols);
 	}
 
 	inline void shrink(size_t __rows)
