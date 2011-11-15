@@ -91,8 +91,8 @@ classdef Power < handle
           task = graph.tasks{id};
           s = 1 + floor(task.start / ts);
           e = 1 + floor((task.start + task.duration) / ts);
-          e = min([ e, stepCount ]);
-          profile(s:e, pe.id) = taskPower(id);
+          e = min([ e, stepCount + 1 ]);
+          profile(s:(e - 1), pe.id) = taskPower(id);
         end
       end
     end

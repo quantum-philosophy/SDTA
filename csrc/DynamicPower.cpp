@@ -49,13 +49,11 @@ void DynamicPower::compute(const Schedule &schedule, matrix_t &_dynamic_power) c
 
 			start = floor(item.start / sampling_interval);
 			end = floor((item.start + item.duration) / sampling_interval);
+			end = std::min(end, step_count);
+
 			power = processor->calc_power(types[item.id]);
 
-#ifndef SHALLOW_CHECK
-			if ((int)end - (int)step_count > 0)
-				throw std::runtime_error("The duration of the task is too long.");
-#endif
-			for (j = start; j <= end && j < step_count; j++)
+			for (j = start; j < end; j++)
 				dynamic_power[j * processor_count + pid] = power;
 		}
 	}
