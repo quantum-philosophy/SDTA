@@ -41,6 +41,7 @@ population_size [POPULATION_SIZE]
 min_generations 0
 max_generations 10000
 stall_generations [STALL_GENERATIONS]
+time_limit 0
 
 # [SINGLE-OBJECTIVE ONLY] Select
 # * dominance_roulette

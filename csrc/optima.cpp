@@ -190,13 +190,14 @@ void optimize(const string &system, const string &floorplan,
 					*test.graph, *test.scheduler, *evaluation,
 					evolution_tuning, constrains);
 
-			clock_t begin = clock();
+			struct timespec begin, end;
+
+			Time::measure(&begin);
 
 			BasicEvolutionStats &stats = evolution->solve(
 				test.mapping, test.priority);
 
-			clock_t end = clock();
-			double elapsed = (double)(end - begin) / CLOCKS_PER_SEC;
+			Time::measure(&end);
 
 			cout << endl << endl << stats << endl << *evaluation << endl;
 
@@ -241,8 +242,10 @@ void optimize(const string &system, const string &floorplan,
 					<< endl << endl;
 
 			if (system_tuning.verbose)
-				cout << "Time elapsed: " << setprecision(2)
-					<< (elapsed / 60.0) << " minutes" << endl << endl;
+				cout
+					<< "Time elapsed: " << setprecision(2)
+					<< (Time::substract(&end, &begin) / 60.0)
+					<< " minutes" << endl << endl;
 
 			/* Make a back copy of the dump file */
 			if (!optimization_tuning.dump.empty() && repeat > 1)

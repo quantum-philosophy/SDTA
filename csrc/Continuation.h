@@ -1,6 +1,8 @@
 #ifndef __CONTINUATION_H__
 #define __CONTINUATION_H__
 
+#include <time.h>
+
 template<class CT>
 class Continuation: public eoContinue<CT>
 {
@@ -11,9 +13,12 @@ class Continuation: public eoContinue<CT>
 	size_t generations;
 	size_t stall_generations;
 
+	time_t start;
+
 	public:
 
-	Continuation(const ContinuationTuning &_tuning) : tuning(_tuning)
+	Continuation(const ContinuationTuning &_tuning) :
+		tuning(_tuning), start(time(0))
 	{
 		reset();
 	}
@@ -24,6 +29,10 @@ class Continuation: public eoContinue<CT>
 
 		if (generations < tuning.min_generations) return true;
 		if (generations >= tuning.max_generations) return false;
+
+		if (tuning.time_limit > 0) {
+			if ((time(0) - start) >= tuning.time_limit) return false;
+		}
 
 		if (improved(population)) {
 			stall_generations = 0;
