@@ -130,10 +130,18 @@ size_t ThermalCyclingLifetime::update_peaks(const double *data,
 		/* Ensure that we start from the very beginning */
 		if (first_pos > 0) {
 			if (first_is == LF_MIN) {
-				/* Push front! */
-				peak_index--;
-				count++;
-				peaks[0] = mx;
+				if (peaks[1] > mx) {
+					/* if the first minimum is larger than the last maximum,
+					 * replace!
+					 */
+					peaks[1] = mx;
+				}
+				else {
+					/* Push front! */
+					peak_index--;
+					count++;
+					peaks[0] = mx;
+				}
 			}
 			else {
 				/* Replace! */
@@ -146,14 +154,22 @@ size_t ThermalCyclingLifetime::update_peaks(const double *data,
 			peak_index[count++] = mx;
 		}
 	}
-	else { /* ... looking for a minimum */
+	else if (look_for == LF_MIN) {
 		/* Ensure that we start from the very beginning */
 		if (first_pos > 0) {
 			if (first_is == LF_MAX) {
-				/* Push front! */
-				peak_index--;
-				count++;
-				peaks[0] = mn;
+				if (peaks[1] < mn) {
+					/* if the first maximum is smaller than the last minimum,
+					 * replace!
+					 */
+					peaks[1] = mn;
+				}
+				else {
+					/* Push front! */
+					peak_index--;
+					count++;
+					peaks[0] = mn;
+				}
 			}
 			else {
 				/* Replace! */
