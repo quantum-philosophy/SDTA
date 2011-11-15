@@ -123,6 +123,14 @@ classdef Optima < handle
       graph = tgff.graphs{1};
       pes = tgff.pes;
 
+      homogeneous = Utils.readParameter(o.params, 'homogeneous');
+
+      if homogeneous == 1
+        for i = 2:length(pes)
+          pes{i}.makeEqualTo(pes{1});
+        end
+      end
+
       LS.mapEarliestAndSchedule(graph, pes);
 
       deadlineRatio = Utils.readParameter(o.params, 'deadline_ratio');

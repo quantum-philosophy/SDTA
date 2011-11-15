@@ -2,32 +2,20 @@ setup;
 
 config = Optima('001');
 
-repeat = 1;
-
 param_line = @(solution) ...
   Utils.configStream(...
     'verbose', 0, ...
+    'leakage', '', ...
     'solution', solution);
 
-total = 0;
-for i = 1:repeat
-  [ T, Pce, tce ] = Optima.solve(config.system, config.floorplan, ...
-    config.hotspot, config.params, param_line('condensed_equation'));
-  total = total + tce;
-end
-tce = total / repeat;
+graph = config.taskGraph();
+graph.draw();
 
-total = 0;
-for i = 1:repeat
-  [ Tss, Pss, tss ] = Optima.solve(config.system, config.floorplan, ...
-    config.hotspot, config.params, param_line('precise_steady_state'));
-  total = total + tss;
-end
-tss = total / repeat;
+[ T, Pce, tce ] = Optima.solve(config.system, config.floorplan, ...
+  config.hotspot, config.params, param_line('condensed_equation'));
 
-fprintf('CE: %.6f s\n', tce);
-fprintf('SS: %.6f s\n', tss);
-fprintf('CE / SS: %.2f times\n', tce / tss);
+[ Tss, Pss, tss ] = Optima.solve(config.system, config.floorplan, ...
+  config.hotspot, config.params, param_line('precise_steady_state'));
 
 [ stepCount, processorCount ] = size(T);
 

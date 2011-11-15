@@ -46,6 +46,15 @@ classdef Processor < handle
       duration = pe.nc(type) / pe.frequency;
     end
 
+    function makeEqualTo(pe, another)
+      pe.frequency = another.frequency;
+      pe.voltage = another.voltage;
+      pe.ngate = another.ngate;
+      pe.ceff = another.ceff;
+      pe.nc = another.nc;
+      pe.typeCount = another.typeCount;
+    end
+
     function inspect(pe)
       fprintf('Processor: %s %d\n', pe.name, pe.id);
       fprintf('  Frequency: %.2f GHz\n', pe.frequency / 1e9);
