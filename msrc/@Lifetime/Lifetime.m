@@ -38,12 +38,12 @@ classdef Lifetime < handle
       mttf = Lifetime.predictCombined(T);
     end
 
-    function [ mttf, maxp, minp, cycles ] = predictSingle(T, samplingInterval)
+    function [ mttf, peaks, cycles ] = predictSingle(T, samplingInterval)
       if nargin < 2, samplingInterval = Constants.samplingInterval; end
 
       time = size(T, 1) * samplingInterval;
 
-      [ damage, maxp, minp, cycles ] = Lifetime.calculateDamage(T);
+      [ damage, peaks, cycles ] = Lifetime.calculateDamage(T);
 
       mttf = time * Lifetime.C / damage;
     end
@@ -131,16 +131,14 @@ classdef Lifetime < handle
       cycleLegend = {};
 
       for i = 1:size(T, 2)
-        [ mttf(end + 1), maxp, minp, discreteCycle ] = ...
+        [ mttf(end + 1), peaks, discreteCycle ] = ...
           Lifetime.predictSingle(T(:, i), samplingInterval);
         cycles(end + 1) = sum(discreteCycle);
 
         cycleLegend{end + 1} = sprintf('%.2f cycles', cycles(end));
 
-        j = [ maxp(:, 1); minp(:, 1) ];
-        p = [ maxp(:, 2); minp(:, 2) ];
-        [ j, order ] = sort(j);
-        p = p(order);
+        j = peaks(:, 1);
+        p = peaks(:, 2);
 
         I(1:length(j), i) = j;
         P(1:length(j), i) = p;
@@ -178,29 +176,33 @@ classdef Lifetime < handle
 
       [ steps, cores ] = size(T);
 
-      index = zeros(steps, cores);
+      I = zeros(steps, cores);
+      P = zeros(steps, cores);
 
       cycleLegend = {};
 
       for i = 1:size(T, 2)
-        [ mttf(end + 1), maxp, minp, discreteCycle ] = ...
+        [ mttf(end + 1), peaks, discreteCycle ] = ...
           Lifetime.predictSingle(T(:, i));
         cycles(end + 1) = sum(discreteCycle);
 
         cycleLegend{end + 1} = sprintf('%d cycles', ceil(cycles(end)));
 
-        I = sort([ maxp(:, 1); minp(:, 1) ]);
-        index(1:length(I), i) = I;
+        j = peaks(:, 1);
+        p = peaks(:, 2);
+
+        I(1:length(j), i) = j;
+        P(1:length(j), i) = p;
       end
 
       x = ((1:steps) - 1) * samplingInterval;
       T = T - Constants.degreeKelvin;
+      P = P - Constants.degreeKelvin;
 
       maxT = max(max(T));
       minT = min(min(T));
 
-      Utils.drawLines('Cycles', 'Time, s', 'Temperature, C', ...
-        x, T, index);
+      Utils.drawLines('Cycles', 'Time, s', 'Temperature, C', x, P, I);
 
       line([ x(1), x(end) ], [ minT, minT ], 'Line', '--', 'Color', 'k');
       cycleLegend{end + 1} = [ 'Tmin (', num2str(Utils.round2(minT, 0.01)), ' C)' ];
@@ -245,27 +247,14 @@ classdef Lifetime < handle
         '', '', sum(rainflow(3, :) ./ N));
     end
 
-    function [ damage, maxp, minp, cycles ] = calculateDamage(T)
+    function [ damage, peaks, cycles ] = calculateDamage(T)
       % Get extremum
-      [ maxp, minp ] = Utils.peakdet(T, Lifetime.peakThreshold);
+      peaks = Utils.peakdet(T, Lifetime.peakThreshold);
 
-      % Combine maxima and minima
-      I = [ maxp(:, 1); minp(:, 1) ];
-      T = [ maxp(:, 2); minp(:, 2) ];
-      [ I, order ] = sort(I);
-      T = T(order);
+      T = peaks(:, 2);
 
       % Rainflow it!
       rainflow = Rainflow.rainflow(T);
-
-      if mod(length(I), 2) == 0
-        % Missing one half
-        rainflow(:, end + 1) = [ ...
-          abs(T(1) - T(end)) / 2; ... % amplitude
-          min(T(1), T(end)) + abs(T(1) - T(end)) / 2; ... % mean
-          0.5 ... % cycles
-        ];
-      end
 
       % Deltas
       dT = 2 * rainflow(1, :);

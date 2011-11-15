@@ -1,67 +1,90 @@
-function [ maxtab, mintab ] = peakdet(v, delta)
-  maxtab = zeros(0, 2);
-  mintab = zeros(0, 2);
+function peaks = peakdet(v, delta)
+  peaks = zeros(0, 2);
 
   mn = Inf;
   mx = -Inf;
   mnpos = 0;
   mxpos = 0;
+  first_pos = 0;
 
   UNDEFINED = 0;
   MIN = 1;
   MAX = 2;
 
-  lookfor = UNDEFINED;
-  firstis = UNDEFINED;
+  look_for = UNDEFINED;
+  first_is = UNDEFINED;
 
-  for i = 1:length(v)
+  count = length(v);
+
+  for i = 1:count
     this = v(i);
 
     if this >= mx, mx = this; mxpos = i; end
     if this <= mn, mn = this; mnpos = i; end
 
-    if lookfor == MAX
+    if look_for == MAX
       if this < (mx - delta)
-        maxtab(end + 1, :) = [ mxpos mx ];
+        peaks(end + 1, :) = [ mxpos mx ];
         mn = this;
         mnpos = i;
-        lookfor = MIN;
+        look_for = MIN;
       end
-    elseif lookfor == MIN
+    elseif look_for == MIN
       if this > (mn + delta)
-        mintab(end + 1, :) = [ mnpos mn ];
+        peaks(end + 1, :) = [ mnpos mn ];
         mx = this;
         mxpos = i;
-        lookfor = MAX;
+        look_for = MAX;
       end
     else
       if this < (mx - delta)
-        maxtab(end + 1, :) = [ mxpos mx ];
+        peaks(end + 1, :) = [ mxpos mx ];
         mn = this;
         mnpos = i;
-        lookfor = MIN;
-        firstis = MAX;
+        look_for = MIN;
+        first_is = MAX;
+        first_pos = i;
       elseif this > (mn + delta)
-        mintab(end + 1, :) = [ mnpos mn ];
+        peaks(end + 1, :) = [ mnpos mn ];
         mx = this;
         mxpos = i;
-        lookfor = MAX;
-        firstis = MIN;
+        look_for = MAX;
+        first_is = MIN;
+        first_pos = i;
       end
     end
   end
 
-  if lookfor == MAX
-    maxtab(end + 1, :) = [ mxpos mx ];
+  if look_for == MAX
+    % Ensure that we start from the very beginning
+    if first_pos > 1
+      if first_is == MIN
+        % If not, add a point
+        peaks = [ 1 mx; peaks ];
+      else
+        % ... or replace the first one
+        mx = max([ mx, peaks(1, 2) ]);
+        peaks(1, :) = [ 1 mx ];
+      end
+    end
 
-    if firstis == MIN && mintab(1, 1) > 1
-      maxtab = [ maxtab; 1 mx ];
+    % Ensure that we end in the end
+    if peaks(end, 1) ~= count
+      % If not, add a point
+      peaks(end + 1, :) = [ count mx ];
     end
   else
-    mintab(end + 1, :) = [ mnpos mn ];
+    if first_pos > 1
+      if first_is == MAX
+        peaks = [ 1 mn; peaks ];
+      else
+        mn = min([ mn, peaks(1, 2) ]);
+        peaks(1, :) = [ 1 mn ];
+      end
+    end
 
-    if firstis == MAX && maxtab(1, 1) > 1
-      mintab = [ mintab; 1 mn ];
+    if peaks(end, 1) ~= count
+      peaks(end + 1, :) = [ count mn ];
     end
   end
 end

@@ -116,6 +116,19 @@ classdef Optima < handle
 
       Utils.writeParameter(original, o.hotspot, '-sampling_intvl', samplingInterval);
     end
+
+    function graph = taskGraph(o)
+      tgff = TestCase.TGFF(o.tgff);
+
+      graph = tgff.graphs{1};
+      pes = tgff.pes;
+
+      LS.mapEarliestAndSchedule(graph, pes);
+
+      deadlineRatio = Utils.readParameter(o.params, 'deadline_ratio');
+
+      graph.assignDeadline(deadlineRatio * graph.duration);
+    end
   end
 
   methods (Static)

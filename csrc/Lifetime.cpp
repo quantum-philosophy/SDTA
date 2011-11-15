@@ -49,7 +49,7 @@ double ThermalCyclingLifetime::predict(
 size_t ThermalCyclingLifetime::update_peaks(const double *data,
 	size_t rows, size_t cols, size_t col)
 {
-	size_t count, mxpos, mnpos, row, first_pos = 0;
+	size_t count, mxpos, mnpos, row, first_pos = 0, last_pos = 0;
 	double current, mx, mn;
 
 	char look_for, first_is;
@@ -79,33 +79,47 @@ size_t ThermalCyclingLifetime::update_peaks(const double *data,
 		if (look_for == LF_MAX) {
 			if (current < (mx - delta)) {
 				peaks[++count] = mx;
+				last_pos = mxpos;
+
 				mn = current;
 				mnpos = row;
+
 				look_for = LF_MIN;
 			}
 		}
 		else if (look_for == LF_MIN) {
 			if (current > (mn + delta)) {
 				peaks[++count] = mn;
+				last_pos = mnpos;
+
 				mx = current;
 				mxpos = row;
+
 				look_for = LF_MAX;
 			}
 		}
 		else { /* ... undefined so far */
 			if (current < (mx - delta)) {
 				peaks[++count] = mx;
+				last_pos = mxpos;
+
 				mn = current;
 				mnpos = row;
+
 				look_for = LF_MIN;
+
 				first_is = LF_MAX;
 				first_pos = row;
 			}
 			else if (current > (mn + delta)) {
 				peaks[++count] = mn;
+				last_pos = mnpos;
+
 				mx = current;
 				mxpos = row;
+
 				look_for = LF_MAX;
+
 				first_is = LF_MIN;
 				first_pos = row;
 			}
@@ -113,21 +127,43 @@ size_t ThermalCyclingLifetime::update_peaks(const double *data,
 	}
 
 	if (look_for == LF_MAX) {
-		peaks[++count] = mx;
+		/* Ensure that we start from the very beginning */
+		if (first_pos > 0) {
+			if (first_is == LF_MIN) {
+				/* Push front! */
+				peak_index--;
+				count++;
+				peaks[0] = mx;
+			}
+			else {
+				/* Replace! */
+				peaks[1] = mx = std::max(mx, peaks[1]);
+			}
+		}
 
-		if (first_is == LF_MIN && first_pos > 0) {
-			peak_index--;
-			count++;
-			peaks[0] = mx; /* Push front! */
+		/* Ensure that we end in the end */
+		if (last_pos < (rows - 1)) {
+			peak_index[count++] = mx;
 		}
 	}
 	else { /* ... looking for a minimum */
-		peaks[++count] = mn;
+		/* Ensure that we start from the very beginning */
+		if (first_pos > 0) {
+			if (first_is == LF_MAX) {
+				/* Push front! */
+				peak_index--;
+				count++;
+				peaks[0] = mn;
+			}
+			else {
+				/* Replace! */
+				peaks[1] = mn = std::min(mn, peaks[1]);
+			}
+		}
 
-		if (first_is == LF_MAX && first_pos > 0) {
-			peak_index--;
-			count++;
-			peaks[0] = mn; /* Push front! */
+		/* Ensure that we end in the end */
+		if (last_pos < (rows - 1)) {
+			peak_index[count++] = mn;
 		}
 	}
 
