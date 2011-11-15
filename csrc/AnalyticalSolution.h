@@ -82,6 +82,41 @@ class LeakageCondensedEquation: public CondensedEquation
 		double *temperature, double *total_power, size_t step_count);
 };
 
+class FixedCondensedEquation: public AnalyticalSolution
+{
+	protected:
+
+	const size_t step_count;
+
+	matrix_t P;
+	matrix_t Q;
+	matrix_t Y;
+	matrix_t R;
+
+	public:
+
+	FixedCondensedEquation(size_t _processor_count, size_t _node_count,
+		size_t _step_count, double _sampling_interval, double _ambient_temperature,
+		const double **conductivity, const double *capacitance);
+
+	void solve(const double *power, double *temperature, size_t step_count);
+};
+
+class LeakageFixedCondensedEquation: public FixedCondensedEquation
+{
+	const Leakage &leakage;
+
+	public:
+
+	LeakageFixedCondensedEquation(size_t _processor_count, size_t _node_count,
+		size_t _step_count, double _sampling_interval, double _ambient_temperature,
+		double **conductivity, const double *capacitance,
+		const Leakage &_leakage);
+
+	size_t solve(const double *dynamic_power,
+		double *temperature, double *total_power, size_t step_count);
+};
+
 class BasicSteadyStateAnalyticalSolution: public AnalyticalSolution
 {
 	protected:

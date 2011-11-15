@@ -205,14 +205,15 @@ class TestCase
 					*architecture, *graph, floorplan_config, hotspot_config,
 					solution_tuning.hotspot);
 		}
-		else if (method == "transient_analytical") {
+		else if (method == "fixed_condensed_equation") {
 			if (leakage)
-				throw std::runtime_error("Not implemented.");
-
-			return new TransientAnalyticalHotspot(
-				*architecture, *graph, floorplan_config, hotspot_config,
-				solution_tuning.hotspot, solution_tuning.max_iterations,
-				solution_tuning.tolerance, solution_tuning.warmup);
+				return new LeakageFixedCondensedEquationHotspot(
+					*architecture, *graph, floorplan_config, hotspot_config,
+					solution_tuning.hotspot, *leakage);
+			else
+				return new FixedCondensedEquationHotspot(
+					*architecture, *graph, floorplan_config, hotspot_config,
+					solution_tuning.hotspot);
 		}
 		else if (method == "coarse_condensed_equation") {
 			if (leakage)
@@ -221,6 +222,15 @@ class TestCase
 			return new CoarseCondensedEquationHotspot(
 				*architecture, *graph, floorplan_config, hotspot_config,
 				solution_tuning.hotspot);
+		}
+		else if (method == "transient_analytical") {
+			if (leakage)
+				throw std::runtime_error("Not implemented.");
+
+			return new TransientAnalyticalHotspot(
+				*architecture, *graph, floorplan_config, hotspot_config,
+				solution_tuning.hotspot, solution_tuning.max_iterations,
+				solution_tuning.tolerance, solution_tuning.warmup);
 		}
 		else if (method == "hotspot") {
 			if (leakage)
