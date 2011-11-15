@@ -21,7 +21,7 @@ void multiply_diagonal_matrix_matrix(
 }
 
 void multiply_matrix_diagonal_matrix(
-	const matrix_t &M, const vector_t &V, matrix_t &R)
+	const matrix_t &M, const double *V, matrix_t &R)
 {
 	int i, j;
 	int n = M.rows();
@@ -59,7 +59,7 @@ void multiply_matrix_matrix(
 }
 
 void multiply_matrix_matrix_diagonal_matrix(
-	const matrix_t &M, const matrix_t &N, const vector_t &V, matrix_t &R)
+	const matrix_t &M, const matrix_t &N, const double *V, matrix_t &R)
 {
 	int i, j, k;
 	int n = M.rows();
@@ -128,7 +128,7 @@ void multiply_matrix_matrix_vector(
 }
 
 void multiply_matrix_vector(
-	const matrix_t &M, const vector_t &V, double *R)
+	const matrix_t &M, const double *V, double *R)
 {
 	int i, j;
 	int n = M.rows();

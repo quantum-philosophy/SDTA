@@ -122,68 +122,34 @@ void Hotspot::get_inversed_capacitance(vector_t &inversed_capacitance) const
 
 /******************************************************************************/
 
-BasicCondensedEquationHotspot::BasicCondensedEquationHotspot(
-	const std::string &_floorplan, const std::string &config,
+CondensedEquationHotspot::CondensedEquationHotspot(
+	const Architecture &architecture, const Graph &graph,
+	const std::string &floorplan, const std::string &config,
 	const std::string &config_line) :
 
-	Hotspot(_floorplan, config, config_line),
+	Hotspot(floorplan, config, config_line),
 	equation(processor_count, node_count, sampling_interval, ambient_temperature,
-		(const double **)model->block->b, model->block->a)
+		(const double **)model->block->b, model->block->a),
+	dynamic_power(architecture.get_processors(), graph.get_tasks(),
+		graph.get_deadline(), sampling_interval)
 {
 #ifdef MEASURE_TIME
 	decomposition_time = equation.decomposition_time;
 #endif
 }
 
-void BasicCondensedEquationHotspot::solve(
+void CondensedEquationHotspot::solve(
 	const matrix_t &power, matrix_t &temperature)
 {
 	temperature.resize(power);
 	equation.solve(power, temperature, power.rows());
 }
 
-/******************************************************************************/
-
-CondensedEquationHotspot::CondensedEquationHotspot(
-	const Architecture &architecture, const Graph &graph,
-	const std::string &floorplan, const std::string &config,
-	const std::string &config_line) :
-
-	BasicCondensedEquationHotspot(floorplan, config, config_line),
-	dynamic_power(architecture.get_processors(), graph.get_tasks(),
-		graph.get_deadline(), sampling_interval)
-{
-}
-
 void CondensedEquationHotspot::solve(const Schedule &schedule,
 	matrix_t &temperature, matrix_t &power)
 {
 	dynamic_power.compute(schedule, power);
-	BasicCondensedEquationHotspot::solve(power, temperature);
-}
-
-/******************************************************************************/
-
-BasicLeakageCondensedEquationHotspot::BasicLeakageCondensedEquationHotspot(
-	const Architecture &architecture, const std::string &floorplan,
-	const std::string &config, const std::string &config_line,
-	const Leakage &leakage) :
-
-	Hotspot(floorplan, config, config_line),
-	equation(processor_count, node_count, sampling_interval,
-		ambient_temperature, model->block->b, model->block->a, leakage)
-{
-#ifdef MEASURE_TIME
-	decomposition_time = equation.decomposition_time;
-#endif
-}
-
-void BasicLeakageCondensedEquationHotspot::solve(const matrix_t &dynamic_power,
-	matrix_t &temperature, matrix_t &total_power)
-{
-	temperature.resize(dynamic_power);
-	total_power.resize(dynamic_power);
-	equation.solve(dynamic_power, temperature, total_power, dynamic_power.rows());
+	solve(power, temperature);
 }
 
 /******************************************************************************/
@@ -193,11 +159,23 @@ LeakageCondensedEquationHotspot::LeakageCondensedEquationHotspot(
 	const std::string &floorplan, const std::string &config,
 	const std::string &config_line, const Leakage &leakage) :
 
-	BasicLeakageCondensedEquationHotspot(
-		architecture, floorplan, config, config_line, leakage),
+	Hotspot(floorplan, config, config_line),
+	equation(processor_count, node_count, sampling_interval,
+		ambient_temperature, model->block->b, model->block->a, leakage),
 	dynamic_power(architecture.get_processors(), graph.get_tasks(),
 		graph.get_deadline(), sampling_interval)
 {
+#ifdef MEASURE_TIME
+	decomposition_time = equation.decomposition_time;
+#endif
+}
+
+void LeakageCondensedEquationHotspot::solve(const matrix_t &dynamic_power,
+	matrix_t &temperature, matrix_t &total_power)
+{
+	temperature.resize(dynamic_power);
+	total_power.resize(dynamic_power);
+	equation.solve(dynamic_power, temperature, total_power, dynamic_power.rows());
 }
 
 void LeakageCondensedEquationHotspot::solve(const Schedule &schedule,
@@ -205,7 +183,77 @@ void LeakageCondensedEquationHotspot::solve(const Schedule &schedule,
 {
 	matrix_t power;
 	dynamic_power.compute(schedule, power);
-	BasicLeakageCondensedEquationHotspot::solve(power, temperature, total_power);
+	solve(power, temperature, total_power);
+}
+
+/******************************************************************************/
+
+FixedCondensedEquationHotspot::FixedCondensedEquationHotspot(
+	const Architecture &architecture, const Graph &graph,
+	const std::string &floorplan, const std::string &config,
+	const std::string &config_line) :
+
+	Hotspot(floorplan, config, config_line),
+	equation(processor_count, node_count,
+		ceil(graph.get_deadline() / sampling_interval),
+		sampling_interval, ambient_temperature,
+		(const double **)model->block->b, model->block->a),
+	dynamic_power(architecture.get_processors(), graph.get_tasks(),
+		graph.get_deadline(), sampling_interval)
+{
+#ifdef MEASURE_TIME
+	decomposition_time = equation.decomposition_time;
+#endif
+}
+
+void FixedCondensedEquationHotspot::solve(
+	const matrix_t &power, matrix_t &temperature)
+{
+	temperature.resize(power);
+	equation.solve(power, temperature, power.rows());
+}
+
+void FixedCondensedEquationHotspot::solve(const Schedule &schedule,
+	matrix_t &temperature, matrix_t &power)
+{
+	dynamic_power.compute(schedule, power);
+	solve(power, temperature);
+}
+
+/******************************************************************************/
+
+LeakageFixedCondensedEquationHotspot::LeakageFixedCondensedEquationHotspot(
+	const Architecture &architecture, const Graph &graph,
+	const std::string &floorplan, const std::string &config,
+	const std::string &config_line, const Leakage &leakage) :
+
+	Hotspot(floorplan, config, config_line),
+	equation(processor_count, node_count,
+		ceil(graph.get_deadline() / sampling_interval),
+		sampling_interval, ambient_temperature,
+		model->block->b, model->block->a, leakage),
+	dynamic_power(architecture.get_processors(), graph.get_tasks(),
+		graph.get_deadline(), sampling_interval)
+{
+#ifdef MEASURE_TIME
+	decomposition_time = equation.decomposition_time;
+#endif
+}
+
+void LeakageFixedCondensedEquationHotspot::solve(const matrix_t &dynamic_power,
+	matrix_t &temperature, matrix_t &total_power)
+{
+	temperature.resize(dynamic_power);
+	total_power.resize(dynamic_power);
+	equation.solve(dynamic_power, temperature, total_power, dynamic_power.rows());
+}
+
+void LeakageFixedCondensedEquationHotspot::solve(const Schedule &schedule,
+	matrix_t &temperature, matrix_t &total_power)
+{
+	matrix_t power;
+	dynamic_power.compute(schedule, power);
+	solve(power, temperature, total_power);
 }
 
 /******************************************************************************/

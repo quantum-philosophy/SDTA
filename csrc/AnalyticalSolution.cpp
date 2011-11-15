@@ -252,6 +252,169 @@ size_t LeakageCondensedEquation::solve(const double *dynamic_power,
 
 /******************************************************************************/
 
+FixedCondensedEquation::FixedCondensedEquation(
+	size_t _processor_count, size_t _node_count, size_t _step_count,
+	double _sampling_interval, double _ambient_temperature,
+	const double **conductivity, const double *capacitance) :
+
+	AnalyticalSolution(_processor_count, _node_count, _sampling_interval,
+		_ambient_temperature, conductivity, capacitance), step_count(_step_count)
+{
+	P.resize(step_count, node_count);
+	Q.resize(step_count, node_count);
+	Y.resize(step_count, node_count);
+	R.resize(node_count, node_count);
+
+	double total_time = sampling_interval * step_count;
+
+	/* M = diag(1/(1 - exp(Tau * l0)), ...) */
+	for (size_t i = 0; i < node_count; i++)
+		v_temp[i] = 1.0 / (1.0 - exp(total_time * L[i]));
+
+	/* R = U * M * UT */
+	multiply_matrix_diagonal_matrix(U, v_temp, m_temp);
+	multiply_matrix_matrix(m_temp, UT, R);
+}
+
+void FixedCondensedEquation::solve(
+	const double *power, double *temperature, size_t step_count)
+{
+	if (step_count != this->step_count)
+		throw std::runtime_error("The number of steps is invalid.");
+
+	size_t i, j, k;
+
+	Q.nullify();
+
+	/* Q(0) = G * B(0) */
+	multiply_matrix_incomplete_vector(G, power, processor_count, Q[0]);
+	/* P(0) = Q(0) */
+	__MEMCPY(P[0], Q[0], node_count);
+
+	for (i = 1; i < step_count; i++) {
+		/* Q(i) = G * B(i) */
+		multiply_matrix_incomplete_vector(G, power + i * processor_count,
+			processor_count, Q[i]);
+		/* P(i) = K * P(i-1) + Q(i) */
+		multiply_matrix_vector_plus_vector(K, P[i - 1], Q[i], P[i]);
+	}
+
+	/* Y(0) = R * P(m-1), for R see above ^ */
+	multiply_matrix_vector(R, P[step_count - 1], Y[0]);
+
+	/* Y(i+1) = K * Y(i) + Q(i) */
+	for (i = 1; i < step_count; i++)
+		multiply_matrix_vector_plus_vector(K, Y[i - 1], Q[i - 1], Y[i]);
+
+	/* Return back to T from Y:
+	 * T = C^(-1/2) * Y
+	 *
+	 * And do not forget about the ambient temperature.
+	 */
+	for (i = 0, k = 0; i < step_count; i++)
+		for (j = 0; j < processor_count; j++, k++)
+			temperature[k] = Y[i][j] * sinvC[j] + ambient_temperature;
+}
+
+/******************************************************************************/
+
+LeakageFixedCondensedEquation::LeakageFixedCondensedEquation(
+	size_t _processor_count, size_t _node_count, size_t _step_count,
+	double _sampling_interval, double _ambient_temperature,
+	double **conductivity, const double *capacitance,
+	const Leakage &_leakage) :
+
+	FixedCondensedEquation(_processor_count, _node_count, _step_count,
+		_sampling_interval, _ambient_temperature,
+		(const double **)_leakage.setup(conductivity, _ambient_temperature),
+		capacitance), leakage(_leakage)
+{
+}
+
+size_t LeakageFixedCondensedEquation::solve(const double *dynamic_power,
+	double *temperature, double *total_power, size_t step_count)
+{
+	if (step_count != this->step_count)
+		throw std::runtime_error("The number of steps is invalid.");
+
+	size_t i, j, k, it;
+	double tmp, error, max_error;
+
+	Q.nullify();
+
+	const size_t max_iterations = leakage.get_max_iterations();
+	const double tolerance = leakage.get_tolerance();
+
+	leakage.inject(ambient_temperature, dynamic_power, total_power, step_count);
+
+	/* We come to the iterative part */
+	for (it = 1;; it++) {
+		/* Q(0) = G * B(0) */
+		multiply_matrix_incomplete_vector(G, total_power, processor_count, Q[0]);
+		/* P(0) = Q(0) */
+		__MEMCPY(P[0], Q[0], node_count);
+
+		for (i = 1; i < step_count; i++) {
+			/* Q(i) = G * B(i) */
+			multiply_matrix_incomplete_vector(G, total_power + i * processor_count,
+				processor_count, Q[i]);
+			/* P(i) = K * P(i-1) + Q(i) */
+			multiply_matrix_vector_plus_vector(K, P[i - 1], Q[i], P[i]);
+		}
+
+		/* Y(0) = R * P(m-1), for R see above ^ */
+		multiply_matrix_vector(R, P[step_count - 1], Y[0]);
+
+		/* Y(i+1) = K * Y(i) + Q(i) */
+		for (i = 1; i < step_count; i++)
+			multiply_matrix_vector_plus_vector(K, Y[i - 1], Q[i - 1], Y[i]);
+
+		/* Return back to T from Y:
+		 * T = C^(-1/2) * Y
+		 *
+		 * And do not forget about the ambient temperature. Also perform
+		 * the error control.
+		 */
+		if (it < max_iterations) {
+			/* There is a reason to check the error.
+			 */
+			max_error = 0;
+			for (i = 0, k = 0; i < step_count; i++)
+				for (j = 0; j < processor_count; j++, k++) {
+					tmp = Y[i][j] * sinvC[j] + ambient_temperature;
+
+					error = std::abs(temperature[k] - tmp);
+					if (max_error < error) max_error = error;
+
+					temperature[k] = tmp;
+				}
+
+			/* Still have some iterations left,
+			 * the only question is the error.
+			 */
+			if (max_error < tolerance) break;
+		}
+		else {
+			for (i = 0, k = 0; i < step_count; i++)
+				for (j = 0; j < processor_count; j++, k++)
+					temperature[k] = Y[i][j] * sinvC[j] + ambient_temperature;
+
+			/* Limit of iterations is reached,
+			 * quite right now.
+			 */
+			break;
+		}
+
+		leakage.inject(temperature, dynamic_power, total_power, step_count);
+	}
+
+	leakage.finalize(temperature, dynamic_power, total_power, step_count);
+
+	return it;
+}
+
+/******************************************************************************/
+
 BasicSteadyStateAnalyticalSolution::BasicSteadyStateAnalyticalSolution(
 	size_t _processor_count, size_t _node_count,
 	double _sampling_interval, double _ambient_temperature,

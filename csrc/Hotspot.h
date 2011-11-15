@@ -78,22 +78,9 @@ class Hotspot
 	void get_inversed_capacitance(vector_t &inversed_capacitance) const;
 };
 
-class BasicCondensedEquationHotspot: public Hotspot
+class CondensedEquationHotspot: public Hotspot
 {
 	CondensedEquation equation;
-
-	public:
-
-	BasicCondensedEquationHotspot(
-		const std::string &floorplan_filename,
-		const std::string &config_filename,
-		const std::string &config_line);
-
-	void solve(const matrix_t &power, matrix_t &temperature);
-};
-
-class CondensedEquationHotspot: public BasicCondensedEquationHotspot
-{
 	const DynamicPower dynamic_power;
 
 	public:
@@ -103,25 +90,13 @@ class CondensedEquationHotspot: public BasicCondensedEquationHotspot
 		const std::string &floorplan, const std::string &config,
 		const std::string &config_line);
 
+	void solve(const matrix_t &power, matrix_t &temperature);
 	void solve(const Schedule &schedule, matrix_t &temperature, matrix_t &power);
 };
 
-class BasicLeakageCondensedEquationHotspot: public Hotspot
+class LeakageCondensedEquationHotspot: public Hotspot
 {
 	LeakageCondensedEquation equation;
-
-	public:
-
-	BasicLeakageCondensedEquationHotspot(
-		const Architecture &architecture,
-		const std::string &floorplan, const std::string &config,
-		const std::string &config_line, const Leakage &leakage);
-
-	void solve(const matrix_t &power, matrix_t &temperature, matrix_t &total_power);
-};
-
-class LeakageCondensedEquationHotspot: public BasicLeakageCondensedEquationHotspot
-{
 	const DynamicPower dynamic_power;
 
 	public:
@@ -131,6 +106,39 @@ class LeakageCondensedEquationHotspot: public BasicLeakageCondensedEquationHotsp
 		const std::string &floorplan, const std::string &config,
 		const std::string &config_line, const Leakage &leakage);
 
+	void solve(const matrix_t &power, matrix_t &temperature, matrix_t &total_power);
+	void solve(const Schedule &schedule, matrix_t &temperature, matrix_t &power);
+};
+
+class FixedCondensedEquationHotspot: public Hotspot
+{
+	FixedCondensedEquation equation;
+	const DynamicPower dynamic_power;
+
+	public:
+
+	FixedCondensedEquationHotspot(
+		const Architecture &architecture, const Graph &graph,
+		const std::string &floorplan, const std::string &config,
+		const std::string &config_line);
+
+	void solve(const matrix_t &power, matrix_t &temperature);
+	void solve(const Schedule &schedule, matrix_t &temperature, matrix_t &power);
+};
+
+class LeakageFixedCondensedEquationHotspot: public Hotspot
+{
+	LeakageFixedCondensedEquation equation;
+	const DynamicPower dynamic_power;
+
+	public:
+
+	LeakageFixedCondensedEquationHotspot(
+		const Architecture &architecture, const Graph &graph,
+		const std::string &floorplan, const std::string &config,
+		const std::string &config_line, const Leakage &leakage);
+
+	void solve(const matrix_t &power, matrix_t &temperature, matrix_t &total_power);
 	void solve(const Schedule &schedule, matrix_t &temperature, matrix_t &power);
 };
 

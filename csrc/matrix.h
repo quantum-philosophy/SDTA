@@ -231,13 +231,13 @@ void transpose_matrix(
 void multiply_diagonal_matrix_matrix(
 	const vector_t &V, const matrix_t &M, matrix_t &R);
 void multiply_matrix_diagonal_matrix(
-	const matrix_t &M, const vector_t &V, matrix_t &R);
+	const matrix_t &M, const double *V, matrix_t &R);
 void multiply_matrix_matrix(
 	const matrix_t &M, const matrix_t &N, matrix_t &R);
 void multiply_matrix_matrix(
 	const matrix_t &M, const matrix_t &N, double *R);
 void multiply_matrix_matrix_diagonal_matrix(
-	const matrix_t &M, const matrix_t &N, const vector_t &V, matrix_t &R);
+	const matrix_t &M, const matrix_t &N, const double *V, matrix_t &R);
 void multiply_matrix_incomplete_vector(
 	const matrix_t &M, const double *V, int m, double *R);
 void multiply_matrix_vector_plus_vector(
@@ -247,7 +247,7 @@ void multiply_matrix_vector_plus_vector(
 void multiply_matrix_matrix_vector(
 	const matrix_t &M, const matrix_t &N, const double *V, double *R);
 void multiply_matrix_vector(
-	const matrix_t &M, const vector_t &V, double *R);
+	const matrix_t &M, const double *V, double *R);
 
 class EigenvalueDecomposition
 {
