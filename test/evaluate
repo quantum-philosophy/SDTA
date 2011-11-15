@@ -2,15 +2,17 @@
 
 require File.join File.dirname(__FILE__), 'common'
 
-if ARGV.length != 2
+if ARGV.length < 2
   puts 'Need some arguments...'
   puts '1. an input directory'
   puts '2. an output directory'
+  puts '3. overwrite'
   exit
 end
 
 input = ARGV[0]
 output = ARGV[1]
+overwrite = ARGV[2..-1].join ' '
 
 unless File.exist? input
   puts 'Need a real input directory...'
@@ -115,7 +117,7 @@ combinations.each do |processor_count, task_count, entry|
       run \
         :tool => [ 'tools', 'optima' ],
         :arguments => [ '-s', system_config, '-p', params_config,
-          '-f', floorplan_config, '-h', hotspot_config ],
+          '-f', floorplan_config, '-h', hotspot_config, overwrite ],
         :output => log
       success = true
     rescue

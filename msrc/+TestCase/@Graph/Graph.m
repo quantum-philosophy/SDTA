@@ -89,7 +89,7 @@ classdef Graph < handle
     end
 
     function assignMapping(graph, pes, mapping)
-      graph.pes = pes;
+      if ~isempty(pes), graph.pes = pes; end
       graph.mapping = mapping;
       graph.isMapped = true;
 
