@@ -109,7 +109,7 @@ classdef Lifetime < handle
       mttf = zeros(0);
       cycles = zeros(0);
       for i = 1:size(T, 2)
-        [ mttf(end + 1), dummy, dummy, discreteCycle ] = ...
+        [ mttf(end + 1), dummy, discreteCycle ] = ...
           Lifetime.predictSingle(T(:, i), varargin{:});
         cycles(end + 1) = sum(discreteCycle);
       end
@@ -137,8 +137,13 @@ classdef Lifetime < handle
 
         cycleLegend{end + 1} = sprintf('%.2f cycles', cycles(end));
 
-        j = peaks(:, 1);
-        p = peaks(:, 2);
+        if size(peaks, 1) == 0
+          j = [ 1; steps ];
+          p = T(j, i);
+        else
+          j = peaks(:, 1);
+          p = peaks(:, 2);
+        end
 
         I(1:length(j), i) = j;
         P(1:length(j), i) = p;
@@ -188,8 +193,13 @@ classdef Lifetime < handle
 
         cycleLegend{end + 1} = sprintf('%d cycles', ceil(cycles(end)));
 
-        j = peaks(:, 1);
-        p = peaks(:, 2);
+        if size(peaks, 1) == 0
+          j = [ 1; steps ];
+          p = T(j, i);
+        else
+          j = peaks(:, 1);
+          p = peaks(:, 2);
+        end
 
         I(1:length(j), i) = j;
         P(1:length(j), i) = p;
@@ -250,6 +260,13 @@ classdef Lifetime < handle
     function [ damage, peaks, cycles ] = calculateDamage(T)
       % Get extremum
       peaks = Utils.peakdet(T, Lifetime.peakThreshold);
+
+      if size(peaks, 1) == 0
+        damage = 0;
+        peaks = [];
+        cycles = [];
+        return;
+      end
 
       T = peaks(:, 2);
 

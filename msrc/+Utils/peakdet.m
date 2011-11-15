@@ -59,8 +59,13 @@ function peaks = peakdet(v, delta)
     % Ensure that we start from the very beginning
     if first_pos > 1
       if first_is == MIN
-        % If not, add a point
-        peaks = [ 1 mx; peaks ];
+        if peaks(1, 2) > mx
+          % ... if the first minima is larger than the last maxima, replace!
+          peaks(1, :) = [ 1 mx ];
+        else
+          % ... if not, add a point
+          peaks = [ 1 mx; peaks ];
+        end
       else
         % ... or replace the first one
         mx = max([ mx, peaks(1, 2) ]);
@@ -73,10 +78,14 @@ function peaks = peakdet(v, delta)
       % If not, add a point
       peaks(end + 1, :) = [ count mx ];
     end
-  else
+  elseif look_for == MIN
     if first_pos > 1
       if first_is == MAX
-        peaks = [ 1 mn; peaks ];
+        if peaks(1, 2) < mn
+          peaks(1, :) = [ 1 mn ];
+        else
+          peaks = [ 1 mn; peaks ];
+        end
       else
         mn = min([ mn, peaks(1, 2) ]);
         peaks(1, :) = [ 1 mn ];

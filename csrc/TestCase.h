@@ -72,6 +72,24 @@ class TestCase
 			}
 		}
 
+		if (system_tuning.homogeneous) {
+			if (system_tuning.verbose)
+				std::cout << "Making the platform homogeneous." << std::endl;
+
+			size_t processor_count = system.nc.size();
+			for (size_t i = 1; i < processor_count; i++) {
+				system.frequency[i] = system.frequency[0];
+				system.voltage[i] = system.voltage[0];
+				system.ngate[i] = system.ngate[i];
+
+				size_t type_count = system.nc[i].size();
+				for (size_t j = 0; j < type_count; j++) {
+					system.nc[i][j] = system.nc[0][j];
+					system.ceff[i][j] = system.ceff[0][j];
+				}
+			}
+		}
+
 		graph = new GraphBuilder(system.type, system.link);
 		architecture = new ArchitectureBuilder(system.frequency,
 			system.voltage, system.ngate, system.nc, system.ceff);

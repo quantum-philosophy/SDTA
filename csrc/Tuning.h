@@ -62,6 +62,7 @@ struct SystemTuning: public Tuning
 	double deadline_ratio;
 	double power_scale;
 	double time_scale;
+	bool homogeneous;
 	bool reorder_tasks;
 	bool verbose;
 
@@ -69,6 +70,7 @@ struct SystemTuning: public Tuning
 		deadline_ratio(1.1),
 		power_scale(1.0),
 		time_scale(1.0),
+		homogeneous(false),
 		reorder_tasks(false),
 		verbose(false) {}
 

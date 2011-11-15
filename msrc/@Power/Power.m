@@ -79,7 +79,8 @@ classdef Power < handle
       % Here we build a profile for the whole time period of the graph
       % including its actual duration (only tasks) plus the gap to
       % the deadline
-      profile = zeros(ceil(graph.deadline / ts), length(graph.pes));
+      stepCount = ceil(graph.deadline / ts);
+      profile = zeros(stepCount, length(graph.pes));
 
       for pe = graph.pes
         pe = pe{1};
@@ -88,11 +89,10 @@ classdef Power < handle
 
         for id = schedule
           task = graph.tasks{id};
-          s = floor(task.start / ts) + 1;
-          % NOTE: Here without +1 to eliminate successor and predecessor
-          % are being running at the same time
-          e = floor((task.start + task.duration) / ts);
-          profile(s:e, pe.id) = taskPower(id);
+          s = 1 + floor(task.start / ts);
+          e = 1 + floor((task.start + task.duration) / ts);
+          e = min([ e, stepCount + 1 ]);
+          profile(s:(e - 1), pe.id) = taskPower(id);
         end
       end
     end
