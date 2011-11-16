@@ -13,7 +13,7 @@ Error = zeros(areaCount, variantCount);
 legend = {};
 
 for i = 1:variantCount
-  sweep = Sweep.Area('001_030', dieArea, ...
+  sweep = Sweep.Area('001', dieArea, ...
     convectionResistance(i), totalTime(i));
 
   value = totalTime(i);

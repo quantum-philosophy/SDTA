@@ -5,9 +5,9 @@ classdef Area < Sweep.Basic
     convectionResistance = 0.1;
     powerDensity = 40e4;
 
-    spreaderSide = 20e-3;
-    sinkSide = 30e-3;
-    sinkThickness = 10e-3;
+    spreaderSide = 30e-3;
+    sinkSide = 40e-3;
+    sinkThickness = 20e-3;
 
     processorArea
     maximalPower
