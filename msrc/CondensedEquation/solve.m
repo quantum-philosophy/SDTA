@@ -2,32 +2,18 @@ setup;
 
 config = Optima('001');
 
-repeat = 1;
-
 param_line = @(solution) ...
   Utils.configStream(...
+    'deadline_ratio', 1, ...
     'verbose', 0, ...
+    'leakage', '', ...
     'solution', solution);
 
-total = 0;
-for i = 1:repeat
-  [ T, Pce, tce ] = Optima.solve(config.system, config.floorplan, ...
-    config.hotspot, config.params, param_line('condensed_equation'));
-  total = total + tce;
-end
-tce = total / repeat;
+[ T, Pce, tce ] = Optima.solve(config.system, config.floorplan, ...
+  config.hotspot, config.params, param_line('condensed_equation'));
 
-total = 0;
-for i = 1:repeat
-  [ Tss, Pss, tss ] = Optima.solve(config.system, config.floorplan, ...
-    config.hotspot, config.params, param_line('precise_steady_state'));
-  total = total + tss;
-end
-tss = total / repeat;
-
-fprintf('CE: %.6f s\n', tce);
-fprintf('SS: %.6f s\n', tss);
-fprintf('CE / SS: %.2f times\n', tce / tss);
+hotspot = Hotspot(config.floorplan, config.hotspot, '');
+T2 = hotspot.solve(Pce, 'bc');
 
 [ stepCount, processorCount ] = size(T);
 
@@ -40,11 +26,11 @@ Utils.drawLines('Power Profile', 'Time, s', 'Power, W', time, Pce);
 set(gca, 'XLim', [ 0 time(end) ]);
 
 subplot(3, 1, 2);
-Utils.drawLines('SSDTC with CE', 'Time, s', 'Temperature, C', ...
+Utils.drawLines('SSDTC', 'Time, s', 'Temperature, C', ...
   time, T - Constants.degreeKelvin);
 set(gca, 'XLim', [ 0 time(end) ]);
 
 subplot(3, 1, 3);
-Utils.drawLines('SSDTC with SS', 'Time, s', 'Temperature, C', ...
-  time, Tss - Constants.degreeKelvin);
+Utils.drawLines('Alternative SSDTC', 'Time, s', 'Temperature, C', ...
+  time, T2 - Constants.degreeKelvin);
 set(gca, 'XLim', [ 0 time(end) ]);
