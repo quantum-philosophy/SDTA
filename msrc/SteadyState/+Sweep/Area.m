@@ -5,10 +5,6 @@ classdef Area < Sweep.Basic
     convectionResistance = 0.1;
     powerDensity = 40e4;
 
-    spreaderSide = 30e-3;
-    sinkSide = 40e-3;
-    sinkThickness = 20e-3;
-
     processorArea
     maximalPower
 
@@ -59,8 +55,7 @@ classdef Area < Sweep.Basic
       power = sweep.maximalPower(i);
 
       sweep.config.changeArea(area);
-      sweep.config.changePackage(sweep.spreaderSide, ...
-        sweep.sinkSide, sweep.sinkThickness);
+      sweep.config.standardPackage();
 
       timeScale = sweep.totalTime / sweep.nominalTime;
       powerScale = power / sweep.nominalPower;

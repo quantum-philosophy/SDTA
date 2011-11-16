@@ -5,15 +5,11 @@ chunks = 50;
 totalTime = 1;
 maxPower = 20;
 processorArea = 4e-6;
-spreaderSide = 30e-3;
-sinkSide = 40e-3;
-sinkThickness = 20e-3;
 
 config = Optima('001');
 
 config.changeArea(processorArea);
-[ sinkSide, spreaderSide, dieSide, sinkThickness ] = ...
-  config.changePackage(spreaderSide, sinkSide, sinkThickness);
+[ sinkSide, spreaderSide, dieSide, sinkThickness ] = config.standardPackage();
 
 fprintf('%20s%20s%20s%20s%20s\n', ...
   'Area, mm^2', 'Die, mm', 'Spreader, mm', 'Sink, mm', 'Thickness, mm');

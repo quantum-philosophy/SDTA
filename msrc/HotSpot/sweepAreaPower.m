@@ -3,9 +3,6 @@ setup;
 chunks = [ 1 (5:5:50) ];
 
 totalTime = 1;
-spreaderSide = 30e-3;
-sinkSide = 40e-3;
-sinkThickness = 20e-3;
 
 config = Optima('001');
 
@@ -32,8 +29,7 @@ for k = 1:variantCount
   processorArea = dieArea(k);
 
   config.changeArea(processorArea);
-  [ sinkSide, spreaderSide, dieSide, sinkThickness ] = ...
-    config.changePackage(spreaderSide, sinkSide, sinkThickness);
+  [ sinkSide, spreaderSide, dieSide, sinkThickness ] = config.standardPackage();
 
   powerScale = maxPower(k) / max(max(power));
 

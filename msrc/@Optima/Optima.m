@@ -108,6 +108,15 @@ classdef Optima < handle
       Utils.writeParameter(o.hotspot, o.hotspot, '-s_spreader', spreaderSide);
     end
 
+    function standardChip(o)
+      o.changeArea(4e-6);
+    end
+
+    function [ sinkSide, spreaderSide, dieSide, sinkThickness ] = standardPackage(o)
+      [ sinkSide, spreaderSide, dieSide, sinkThickness ] = ...
+        o.changePackage(30e-3, 40e-3, 20e-3);
+    end
+
     function changeSamplingInterval(o, samplingInterval)
       o.samplingInterval = samplingInterval;
 

@@ -4,16 +4,12 @@ config = Optima('001_ss');
 
 maxPower = 80;
 processorArea = 25e-6;
-spreaderSide = 30e-3;
-sinkSide = 40e-3;
-sinkThickness = 20e-3;
 
 totalTime = [ 0.1 ];
 samplingInterval = [ 1e-5 ];
 
 config.changeArea(processorArea);
-[ sinkSide, spreaderSide, dieSide, sinkThickness ] = ...
-  config.changePackage(spreaderSide, sinkSide, sinkThickness);
+[ sinkSide, spreaderSide, dieSide, sinkThickness ] = config.standardPackage();
 
 figure;
 
