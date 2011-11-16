@@ -58,28 +58,28 @@ In each of the experiments, we compare the optimized solution with the initial o
   {Reliability optimization for different architectures}
   {$N_p$ --- the number of cores, $N_t$ --- the number of tasks, $t_{avg}$ --- the average computational time, $MTTF_{avg}$ --- the average MTTF improvement, $E_{avg}$ --- the average change in the energy consumption.}
   \hline
-  $N_p$ & $N_t$ & $t_{avg}, m$ & $MTTF_{avg}$, \% & $E_{avg}$, \% \\
+  $N_p$ & $N_t$ & $t_{avg}, m$ & $MTTF_{avg}$, $\times$ & $E_{avg}$, $\times$ \\
   \hline
-   2 &   20 &   0.66 & 8123.29 & -13.50 \\
-   4 &   40 &   2.04 & 7424.04 & -22.92 \\
-   8 &   80 &  10.67 & 2819.45 & -21.88 \\
-  16 &  160 &  25.38 &  915.11 & -13.78 \\
-  32 &  320 &  89.59 &  442.49 &  -8.90 \\
+   2 &   20 &  0.49 & 17.47 & 0.9996 \\
+   4 &   40 &  1.56 &  4.52 & 0.9998 \\
+   8 &   80 &  6.24 &  3.04 & 0.9999 \\
+  16 &  160 & 13.23 &  2.67 & 1.0000 \\
+  32 &  320 & \todo{0} & \todo{0} & \todo{0} \\
   \hline
 \end{itable}
-In the first set of experiments, we change the number of cores while keeping the number of tasks per core constant and equal to 10. For each problem we have generated 20 random task graphs of a similar structure and found the average improvement of the MTTF. We also have measured the change in the consumed energy. The results are given in \tabref{tab:mttf-cores}. It can be observed that the temperature-unaware task allocation and scheduling dramatically decrease the lifetime of the device and the optimization based on the SSDTP is a must for an embedded system design framework. Although, the average improvement is decreasing with the growth of the complexity of the problem, it is still considerably high. Note that the energy efficiency of the system is not suffering from the optimization, on the contrary, we observed that the found solutions are generally better with comparison to the initial ones from this perspective.
+In the first set of experiments, we change the number of cores while keeping the number of tasks per core constant and equal to 10. For each problem we have generated 20 random task graphs of a similar structure and found the average improvement of the MTTF. We also have measured the change in the consumed energy. The results are given in \tabref{tab:mttf-cores}. It can be observed that the temperature-unaware task allocation and scheduling dramatically decrease the lifetime of the device and the optimization based on the SSDTP is a must for an embedded system design framework. Although, the average improvement is decreasing with the growth of the complexity of the problem, it is still considerably high. Note that the energy efficiency of the system is not suffering from the optimization.
 
 \begin{itable}{mttf-tasks}{|r|r|r|r|r|}
   {Reliability optimization for different applications}
   {$N_p$ --- the number of cores, $N_t$ --- the number of tasks, $t_{avg}$ --- the average computational time, $MTTF_{avg}$ --- the average MTTF improvement, $E_{avg}$ --- the average change in the energy consumption.}
   \hline
-  $N_p$ & $N_t$ & $t_{avg}, m$ & $MTTF_{avg}$, \% & $E_{avg}$, \% \\
+  $N_p$ & $N_t$ & $t_{avg}, m$ & $MTTF_{avg}$, $\times$ & $E_{avg}$, $\times$ \\
   \hline
-  4 &  20 &  0.93 & 13029.86 & -26.62 \\
-  4 &  40 &  1.81 &  4311.02 & -22.15 \\
-  4 &  80 &  4.98 &  2358.82 & -15.34 \\
-  4 & 160 & 10.40 &   912.70 & -10.47 \\
-  4 & 320 & 29.77 &   481.67 &  -5.40 \\
+  4 &  20 & \todo{ 0.93} & \todo{13029.86} & \todo{0} \\
+  4 &  40 & \todo{ 1.81} & \todo{ 4311.02} & \todo{0} \\
+  4 &  80 & \todo{ 4.98} & \todo{ 2358.82} & \todo{0} \\
+  4 & 160 & \todo{10.40} & \todo{  912.70} & \todo{0} \\
+  4 & 320 & \todo{29.77} & \todo{  481.67} & \todo{0} \\
   \hline
 \end{itable}
 For the second set of experiments, we keep the quad-core architecture and vary the number of tasks within the application. The number of randomly generated task graphs per problem is 20. The average improvement of the MTTF along with the change in the energy consumption are given in \tabref{tab:mttf-tasks}. The observations to be made here are similar to the previous ones: taking into consideration the SSDTP of the system during the design stage can significantly prolong the MTTF without sacrificing the energy efficiency of the system.
@@ -88,7 +88,7 @@ For the second set of experiments, we keep the quad-core architecture and vary t
   {Reliability optimization for different solution techniques}
   {$N_p$ --- the number of cores, $N_t$ --- the number of tasks, $MTTF^{CE}_{avg}$, $MTTF^{TTA}_{avg}$, and $MTTF^{SS}_{avg}$ --- the average improvements of the MTTF obtained by the CE method, TTA with HotSpot, and SS approximation, respectively.}
   \hline
-  $N_p$ & $N_t$ & $MTTF^{CE}_{avg}$, \% & $MTTF^{TTA}_{avg}$, \% & $MTTF^{SS}_{avg}$, \% \\
+  $N_p$ & $N_t$ & $MTTF^{CE}_{avg}$, $\times$ & $MTTF^{TTA}_{avg}$, $\times$ & $MTTF^{SS}_{avg}$, $\times$ \\
   \hline
   4 &  20 & \todo{0} & \todo{0} & \todo{0} \\
   4 &  40 & \todo{0} & \todo{0} & \todo{0} \\
