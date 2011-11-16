@@ -49,7 +49,7 @@ set_property(SOURCE ${TINYMT_DIR}/tinymt64.c
 	APPEND PROPERTY COMPILE_FLAGS "-std=c99")
 
 add_executable (optima optima.cpp ${OPTIMA_SRCS})
-target_link_libraries (optima crypto memcached libeo libmoeo libeoutils libhotspot)
+target_link_libraries (optima crypto memcached libeo libmoeo libeoutils libhotspot rt)
 
 add_executable (solve solve.cpp ${SOLVE_SRCS})
 target_link_libraries (solve libhotspot rt)

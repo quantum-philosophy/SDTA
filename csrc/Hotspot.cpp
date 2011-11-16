@@ -580,7 +580,7 @@ size_t IterativeHotspot::solve_fixed_iterations(
 			extended_temperature, processor_count);
 	}
 
-	for (iterations = 1; iterations < max_iterations; iterations++)
+	for (iterations = 1; iterations < max_iterations; iterations++) {
 		compute_temp(model, extended_power + node_count * (step_count - 1),
 			extended_temperature, sampling_interval);
 
@@ -595,6 +595,7 @@ size_t IterativeHotspot::solve_fixed_iterations(
 			__MEMCPY(temperature + i * processor_count,
 				extended_temperature, processor_count);
 		}
+	}
 
 	__FREE(extended_temperature);
 
