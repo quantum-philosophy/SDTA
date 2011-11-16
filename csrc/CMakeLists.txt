@@ -49,10 +49,23 @@ set_property(SOURCE ${TINYMT_DIR}/tinymt64.c
 	APPEND PROPERTY COMPILE_FLAGS "-std=c99")
 
 add_executable (optima optima.cpp ${OPTIMA_SRCS})
-target_link_libraries (optima crypto memcached libeo libmoeo libeoutils libhotspot rt)
+
+if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+	target_link_libraries (optima
+		crypto memcached libeo libmoeo libeoutils libhotspot rt)
+else ()
+	target_link_libraries (optima
+		crypto memcached libeo libmoeo libeoutils libhotspot)
+endif ()
 
 add_executable (solve solve.cpp ${SOLVE_SRCS})
-target_link_libraries (solve libhotspot rt)
+
+if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+	target_link_libraries (solve libhotspot rt)
+else ()
+	target_link_libraries (solve libhotspot)
+endif ()
+
 
 include_directories (
 	${PARADISEO_DIR}/paradiseo-eo/src
