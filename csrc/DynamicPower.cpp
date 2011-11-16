@@ -8,7 +8,7 @@ DynamicPower::DynamicPower(const processor_vector_t &_processors,
 
 	processors(_processors), processor_count(_processors.size()),
 	sampling_interval(_sampling_interval),
-	step_count(ceil(deadline / _sampling_interval))
+	step_count(NUMBER_OF_STEPS(deadline, _sampling_interval))
 {
 	if (step_count == 0)
 		throw std::runtime_error("The number of steps is zero.");
@@ -47,8 +47,8 @@ void DynamicPower::compute(const Schedule &schedule, matrix_t &_dynamic_power) c
 		for (i = 0; i < task_count; i++) {
 			const ScheduleItem &item = local_schedule[i];
 
-			start = floor(item.start / sampling_interval);
-			end = floor((item.start + item.duration) / sampling_interval);
+			start = STEP_NUMBER(item.start, sampling_interval);
+			end = STEP_NUMBER(item.start + item.duration, sampling_interval);
 			end = std::min(end, step_count);
 
 			power = processor->calc_power(types[item.id]);

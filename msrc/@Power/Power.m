@@ -79,7 +79,7 @@ classdef Power < handle
       % Here we build a profile for the whole time period of the graph
       % including its actual duration (only tasks) plus the gap to
       % the deadline
-      stepCount = ceil(graph.deadline / ts);
+      stepCount = floor(graph.deadline / ts);
       profile = zeros(stepCount, length(graph.pes));
 
       for pe = graph.pes

@@ -18,6 +18,11 @@
 #include "Random.h"
 #include "matrix.h"
 
+#define NUMBER_OF_STEPS(deadline, sample) \
+	floor((double)(deadline) / (double)(sample))
+#define STEP_NUMBER(time, sample) \
+	floor((double)(time) / (double)(sample))
+
 #define __DELETE(some) 			\
 	do { 						\
 		if (some) delete some; 	\

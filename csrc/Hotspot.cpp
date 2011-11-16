@@ -195,7 +195,7 @@ FixedCondensedEquationHotspot::FixedCondensedEquationHotspot(
 
 	Hotspot(floorplan, config, config_line),
 	equation(processor_count, node_count,
-		ceil(graph.get_deadline() / sampling_interval),
+		NUMBER_OF_STEPS(graph.get_deadline(), sampling_interval),
 		sampling_interval, ambient_temperature,
 		(const double **)model->block->b, model->block->a),
 	dynamic_power(architecture.get_processors(), graph.get_tasks(),
@@ -229,7 +229,7 @@ LeakageFixedCondensedEquationHotspot::LeakageFixedCondensedEquationHotspot(
 
 	Hotspot(floorplan, config, config_line),
 	equation(processor_count, node_count,
-		ceil(graph.get_deadline() / sampling_interval),
+		NUMBER_OF_STEPS(graph.get_deadline(), sampling_interval),
 		sampling_interval, ambient_temperature,
 		model->block->b, model->block->a, leakage),
 	dynamic_power(architecture.get_processors(), graph.get_tasks(),
@@ -332,7 +332,7 @@ BasicSteadyStateHotspot::BasicSteadyStateHotspot(
 	Hotspot(floorplan, config, config_line),
 	processors(architecture.get_processors()),
 	deadline(graph.get_deadline()),
-	step_count(ceil(deadline / sampling_interval)), storage(NULL)
+	step_count(NUMBER_OF_STEPS(deadline, sampling_interval)), storage(NULL)
 {
 #ifndef SHALLOW_CHECK
 	if (step_count == 0)
@@ -377,7 +377,7 @@ void BasicSteadyStateHotspot::solve(const Schedule &schedule,
 	SlotTrace trace(processor_count, -1);
 
 	while (queue.next(event)) {
-		end = ceil(event.time / sampling_interval);
+		end = STEP_NUMBER(event.time, sampling_interval);
 
 #ifndef SHALLOW_CHECK
 		if (end > step_count)
