@@ -8,12 +8,13 @@ verbose 1
 
 # Solution
 # * condensed_equation (default)
+# * fixed_condensed_equation
 # * coarse_condensed_equation
 # * steady_state
 # * precise_steady_state
 # * hotspot
 # * transient_analytical
-solution condensed_equation
+solution fixed_condensed_equation
 max_iterations 1
 tolerance 0
 # hotspot sampling_intvl 1e-3
