@@ -46,7 +46,7 @@ foreach (template_tgffopt_config ${templates})
 	)
 
 	# Parameters
-	set (template_params_config ${CMAKE_CURRENT_SOURCE_DIR}/parameters.config)
+	set (template_params_config ${CMAKE_CURRENT_SOURCE_DIR}/params.config)
 	set (params_config ${test_path}/${test_name}_params.config)
 	add_custom_command (OUTPUT ${params_config}
 		DEPENDS ${template_params_config}

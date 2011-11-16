@@ -1,37 +1,43 @@
 setup;
 
-chunks = 30;
+chunks = 50;
 
 totalTime = 1;
 maxPower = 20;
 processorArea = 4e-6;
-spreaderSide = 37.5e-3;
+spreaderSide = 30e-3;
+sinkSide = 40e-3;
+sinkThickness = 20e-3;
 
-config = Optima('001_030');
+config = Optima('001');
 
 config.changeArea(processorArea);
 [ sinkSide, spreaderSide, dieSide, sinkThickness ] = ...
-  config.changePackage(spreaderSide);
+  config.changePackage(spreaderSide, sinkSide, sinkThickness);
 
-fprintf('Die side: %.2f mm\n', dieSide * 1e3);
-fprintf('Spreader side: %.2f mm\n', spreaderSide * 1e3);
-fprintf('Sink side: %.2f mm\n', sinkSide * 1e3);
-fprintf('Sink thickness: %.2f mm\n', sinkThickness * 1e3);
+fprintf('%20s%20s%20s%20s%20s\n', ...
+  'Area, mm^2', 'Die, mm', 'Spreader, mm', 'Sink, mm', 'Thickness, mm');
+
+fprintf('%20.2f%20.2f%20.2f%20.2f%20.2f\n', ...
+  processorArea * 1e6, dieSide * 1e3, spreaderSide * 1e3, sinkSide * 1e3, ...
+  sinkThickness * 1e3);
 
 power = Optima.get_power(config.system, config.floorplan, ...
   config.hotspot, config.params, 'deadline_ratio 1');
 
 [ stepCount, processorCount ] = size(power);
 
+timeScale = totalTime / (config.samplingInterval * stepCount);
+powerScale = maxPower / max(max(power));
+
 param_line = @(solution, max_iterations) ...
   Utils.configStream(...
     'deadline_ratio', 1, ...
     'max_iterations', max_iterations, ...
     'tolerance', 0, ...
-    'power_scale', maxPower / max(max(power)), ...
-    'time_scale', totalTime / (config.samplingInterval * stepCount), ...
+    'power_scale', powerScale, ...
+    'time_scale', timeScale, ...
     'solution', solution, ...
-    'hotspot', 'r_convec 0.1', ...
     'verbose', 0, ...
     'leakage', '');
 
@@ -52,7 +58,7 @@ fprintf('T min: %.2f C\n', min(min(chunkTce)));
 
 for i = 1:chunks
   chunkThs = Optima.solve(config.system, config.floorplan, config.hotspot, ...
-    config.params, param_line('hotspot', i)) - Constants.degreeKelvin;
+    config.params, param_line('transient_analytical', i)) - Constants.degreeKelvin;
 
   Error = [ Error; Utils.NRMSE(chunkTce, chunkThs) * 100 ];
 

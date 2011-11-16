@@ -1,24 +1,25 @@
 setup;
 
-chunks = 1:10:201;
-totalTime = 1;
-spreaderSide = 20e-3;
-sinkSide = 30e-3;
-sinkThickness = 10e-3;
+chunks = [ 1 (5:5:50) ];
 
-config = Optima('001_030');
+totalTime = 1;
+spreaderSide = 30e-3;
+sinkSide = 40e-3;
+sinkThickness = 20e-3;
+
+config = Optima('001');
 
 dieArea = [ 1, 4, 9, 16, 25 ] * 1e-6;
-variants = [ dieArea', 2 * ones(5, 1) ];
+maxPower = [ 10, 20, 40, 60, 80 ];
 
 chunkCount = length(chunks);
-variantCount = size(variants, 1);
+variantCount = length(dieArea);
 
 Error = zeros(chunkCount, variantCount);
 legend = {};
 
-fprintf('%20s%20s%20s%20s%20s%20s%20s%20s\n', ...
-  'Area, mm^2', 'Die, mm', 'Spreader, mm', 'Sink, mm', ...
+fprintf('%20s%20s%20s%20s%20s%20s%20s%20s%20s\n', ...
+  'Area, mm^2', 'Die, mm', 'Spreader, mm', 'Sink, mm', 'Thickness, mm', ...
   'Pdyn, W', 'Ptot, W', 'Tmin, C', 'Tmax, C');
 
 power = Optima.get_power(config.system, config.floorplan, ...
@@ -28,22 +29,22 @@ power = Optima.get_power(config.system, config.floorplan, ...
 timeScale = totalTime / (stepCount * config.samplingInterval);
 
 for k = 1:variantCount
-  processorArea = variants(k, 1);
-  maxPower = variants(k, 2);
+  processorArea = dieArea(k);
 
   config.changeArea(processorArea);
-  [ sinkSide, spreaderSide, dieSide ] = ...
+  [ sinkSide, spreaderSide, dieSide, sinkThickness ] = ...
     config.changePackage(spreaderSide, sinkSide, sinkThickness);
 
-  powerScale = maxPower / max(max(power));
+  powerScale = maxPower(k) / max(max(power));
 
   param_line = @(solution, max_iterations) ...
     Utils.configStream(...
       'deadline_ratio', 1, ...
+      'max_iterations', max_iterations, ...
+      'tolerance', 0, ...
       'power_scale', powerScale, ...
       'time_scale', timeScale, ...
       'solution', solution, ...
-      'max_iterations', max_iterations, ...
       'verbose', 0, ...
       'leakage', '');
 
@@ -54,16 +55,16 @@ for k = 1:variantCount
 
   for i = 1:chunkCount
     chunkThs = Optima.solve(config.system, config.floorplan, config.hotspot, ...
-      config.params, param_line('transient_analytical', i)) - Constants.degreeKelvin;
+      config.params, param_line('transient_analytical', chunks(i))) - Constants.degreeKelvin;
 
-    Error(i, k) = Utils.NRMSE(chunkTce, chunkThs, 1) * 100;
+    Error(i, k) = Utils.NRMSE(chunkTce, chunkThs) * 100;
   end
 
   legend{end + 1} = sprintf('Area = %.0f mm^2', processorArea * 1e6);
 
-  fprintf('%20.2f%20.2f%20.2f%20.2f%20.f%20.2f%20.2f%20.2f\n', ...
+  fprintf('%20.2f%20.2f%20.2f%20.2f%20.2f%20.f%20.2f%20.2f%20.2f\n', ...
     processorArea * 1e6, dieSide * 1e3, spreaderSide * 1e3, sinkSide * 1e3, ...
-    maxPower, max(max(totalPower)), ...
+    sinkThickness * 1e3, maxPower(k), max(max(totalPower)), ...
     min(min(chunkTce)), max(max(chunkTce)) ...
   );
 end
