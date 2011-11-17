@@ -75,11 +75,11 @@ In the first set of experiments, we change the number of cores while keeping the
   \hline
   $N_p$ & $N_t$ & $t_{avg}, m$ & $MTTF_{avg}$, $\times$ & $E_{avg}$, $\times$ \\
   \hline
-  4 &  20 & \todo{ 0.93} & \todo{13029.86} & \todo{0} \\
-  4 &  40 & \todo{ 1.81} & \todo{ 4311.02} & \todo{0} \\
-  4 &  80 & \todo{ 4.98} & \todo{ 2358.82} & \todo{0} \\
-  4 & 160 & \todo{10.40} & \todo{  912.70} & \todo{0} \\
-  4 & 320 & \todo{29.77} & \todo{  481.67} & \todo{0} \\
+  4 &  20 &  0.66 & 8.90 & 0.9989 \\
+  4 &  40 &  1.66 & 6.23 & 0.9997 \\
+  4 &  80 &  4.58 & 3.84 & 0.9999 \\
+  4 & 160 & 11.91 & 3.37 & 1.0000 \\
+  4 & 320 & 42.12 & 2.64 & 0.9999 \\
   \hline
 \end{itable}
 For the second set of experiments, we keep the quad-core architecture and vary the number of tasks within the application. The number of randomly generated task graphs per problem is 20. The average improvement of the MTTF along with the change in the energy consumption are given in \tabref{tab:mttf-tasks}. The observations to be made here are similar to the previous ones: taking into consideration the SSDTP of the system during the design stage can significantly prolong the MTTF without sacrificing the energy efficiency of the system.
