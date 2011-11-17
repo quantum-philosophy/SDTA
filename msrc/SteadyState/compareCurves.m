@@ -6,7 +6,7 @@ maxPower = 80;
 processorArea = 25e-6;
 
 totalTime = [ 0.1 ];
-samplingInterval = [ 1e-5 ];
+samplingInterval = [ 1e-4 ];
 
 config.changeArea(processorArea);
 [ sinkSide, spreaderSide, dieSide, sinkThickness ] = config.standardPackage();
