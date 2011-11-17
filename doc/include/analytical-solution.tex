@@ -1,6 +1,6 @@
-As it was shown in \secref{sec:hotspot-solution}, the state of the art solutions either produce inaccurate and, in extreme cases, completely useless results, or they are unacceplably slow. In this section we eliminate the first problem by obtaining an analytical expression of the SSDTP and tackle the second one in \secref{sec:condensed-equation} where a fast technique to perform the computations is proposed.
+As shown in \secref{sec:hotspot-solution}, the state of the art solutions either produce inaccurate and, in many cases, completely useless results, or they are unacceplably slow. In this section we eliminate the first problem by obtaining an analytical solution for the SSDTP and tackle the second one in \secref{sec:condensed-equation} where a fast technique to perform the computations is proposed.
 
-In the onwards explanation, without loss of generality, we assume $\v{T}(t) \equiv \v{T}(t) - \v{T}_{amb}$. Let the power consumption vector $\v{P}(t)$ be constant and equal to $\v{P}$, then the system given by \equref{eq:fourier-model} is a system of ordinary differential equations (ODE) with the following solution:
+In the following explanation, without loss of generality, we assume $\v{T}(t) \equiv \v{T}(t) - \v{T}_{amb}$. Let the power consumption vector $\v{P}(t)$ be constant and equal to $\v{P}$, then the system given by \equref{eq:fourier-model} is a system of ordinary differential equations (ODE) with the following solution:
 \begin{equation} \label{eq:solution}
   \v{T}(t) = e^{\m{A} t} \; \v{T}_0 + \m{A}^{-1}(e^{\m{A} t} - \m{I})\m{C}^{-1} \v{P}
 \end{equation}
@@ -14,12 +14,12 @@ where:
   & \m{B}_i = \m{A}^{-1}(e^{\m{A} \Delta t_i} - \m{I})\m{C}^{-1}
 \end{align*}
 
-\subsection{Transient Temperature Analysis}
-Given the initial temperature $\v{T}_0$, the recurrence in \equref{eq:recurrent-system} can be applied to perform the TTA. Our experiments show that in the case of equal time intervals, where $\m{K}_i$ and $\m{B}_i$ are constants, this approach demonstrates a significant performance improvement relative to iterative solutions of ODEs, e.g., the fourth-order Runge-Kutta method implemented in HotSpot. The same observation is made in \cite{thiele2011}.
+\subsection{Transient Temperature Analysis (TTA)}
+Given the initial temperature $\v{T}_0$, the recurrence in \equref{eq:recurrent-system} can be applied to perform the TTA. Our experiments show that when time intervals $\Delta t_i$ have the same length, i.e., $\Delta t_i = \Delta t, \forall i$, and matrices $\m{K}_i$ and $\m{B}_i$ become constant, this approach demonstrates a significant performance improvement relative to iterative solutions of ODEs, e.g., the fourth-order Runge-Kutta method implemented in HotSpot. The same observation is made in \cite{thiele2011}.
 
-The TTA using the analytical technique given in \equref{eq:recurrent-system} can be employed to approximate the SSDTP as it is described in \secref{sec:hotspot-iterative-solution} dramatically speeding up the computational process. However, the number of required simulations is unchanged since it is basically an alternative way to perform the same type of analysis. The technique that we shall propose later on equals to only two simulations using the above-mentioned analytical approach while the produced solutions are exact.
+The TTA using the analytical technique given in \equref{eq:recurrent-system} can be employed to approximate the SSDTP by applying it over successive application periods, as shown in \secref{sec:hotspot-iterative-solution}. Since each iteration of the TTA with this approach is much faster than with HotSpot, it will significantly speed up the SSDTP calculation. However, the number of required iterations is the same as with HotSpot (see \figref{fig:hotspot-error}) keeping the computational process relatively slow.
 
-\subsection{Steady-State Dynamic Temperature Analysis}
+\subsection{Steady-State Dynamic Temperature Analysis (SSDTA)}
 For the steady-state case the following system of linear equations can be derived from \equref{eq:recurrent-system}:
 \[
   \begin{cases}
@@ -28,7 +28,7 @@ For the steady-state case the following system of linear equations can be derive
     -\v{T}_0 + \m{K}_{N_s - 1} \: \v{T}_{N_s - 1} & = -\m{B}_{N_s - 1} \: \v{P}_{N_s - 1}
   \end{cases}
 \]
-where the last equation respects the boundary condition and ensures the equality of temperature values on both ends of the overall period:
+where the last equation enforces the boundary condition and ensures the equality of temperature values on both ends of the period:
 \begin{equation} \label{eq:boundary-condition}
   \v{T}_0 = \v{T}_{N_s}
 \end{equation}
@@ -63,11 +63,8 @@ where $\mathbb{K}$ is a $N_n N_s \times N_n N_s$ matrix, $\mathbb{X}$ and $\math
 
 It can be seen that we have obtained a regular system of linear equations with a specific structure. Now we shall briefly discuss possible techniques to solve it.
 
-\subsubsection{Direct Solvers for Dense Matrices}
-\input{include/direct-dense-solution}
-
-\subsubsection{Direct Solvers for Sparse Matrices}
-\input{include/direct-sparse-solution}
+\subsubsection{Direct Solvers}
+\input{include/direct-solutions}
 
 \subsubsection{Solutions for Toeplitz and Block-Circulant Systems}
 \input{include/fast-fourier-transform}

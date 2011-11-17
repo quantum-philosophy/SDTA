@@ -63,8 +63,8 @@ In each of the experiments, we compare the optimized solution with the initial o
    2 &   20 &  0.49 & 17.47 & 0.9996 \\
    4 &   40 &  1.56 &  4.52 & 0.9998 \\
    8 &   80 &  6.24 &  3.04 & 0.9999 \\
-  16 &  160 & 13.23 &  2.67 & 1.0000 \\
-  32 &  320 & \todo{0} & \todo{0} & \todo{0} \\
+  16 &  160 & 18.75 &  2.46 & 0.9999 \\
+  32 &  320 & 35.29 &  2.25 & 0.9997 \\
   \hline
 \end{itable}
 In the first set of experiments, we change the number of cores while keeping the number of tasks per core constant and equal to 10. For each problem we have generated 20 random task graphs of a similar structure and found the average improvement of the MTTF. We also have measured the change in the consumed energy. The results are given in \tabref{tab:mttf-cores}. It can be observed that the temperature-unaware task allocation and scheduling dramatically decrease the lifetime of the device and the optimization based on the SSDTP is a must for an embedded system design framework. Although, the average improvement is decreasing with the growth of the complexity of the problem, it is still considerably high. Note that the energy efficiency of the system is not suffering from the optimization.

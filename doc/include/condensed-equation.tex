@@ -1,3 +1,6 @@
+\image{sparseness-of-system}{0 210 0 210}{Sparseness of the system of linear equations for the SSDTP calculation. Each blue point corresponds to a non-zero element of the matrix of the system.}
+The matrix of the system given by \equref{eq:system} has a very specific structure that can be observed in \figref{fig:sparseness-of-system}. Non-zero elements are located only on the block diagonal (composed of $N_n \times N_n$ matrices), one subdiagonal just above the block diagonal, and one subdiagonal in the left bottom corner.
+
 In this section we propose a fast approach to solve the system given by \equref{eq:system}. The approach consists of one preparatorary step aimed to be more efficient in the future calculations and the solution itself.
 
 \subsection{Auxiliary Transformation}
