@@ -99,27 +99,27 @@ We recall that $\tilde{\m{K}}_i$ is the matrix exponential given by \equref{eq:m
 \end{align*}
 Consequently:
 \begin{align*}
-  \prod_{j = 0}^{N_s - 1} \tilde{\m{K}}_j & = e^{\tilde{\m{A}} \mathcal{T}} = \m{U} \: e^{\mathcal{T} \m{\Lambda}} \: \m{U}^T \\
+  \prod_{j = 0}^{N_s - 1} \tilde{\m{K}}_j & = e^{\tilde{\m{A}} \period} = \m{U} \: e^{\period \m{\Lambda}} \: \m{U}^T \\
     & = \m{U} \left[
       \begin{array}{ccc}
-        e^{\mathcal{T} \lambda_0} & \cdots & 0 \\
+        e^{\period \lambda_0} & \cdots & 0 \\
         \vdots & \ddots & \vdots \\
-        0 & \cdots & e^{\mathcal{T} \lambda_{N_n - 1}}
+        0 & \cdots & e^{\period \lambda_{N_n - 1}}
       \end{array}
     \right] \m{U}^T
 \end{align*}
-where $\mathcal{T}$ is the application period. Substituting this product into \equref{eq:core-system}, we obtain the following system:
+where $\period$ is the application period. Substituting this product into \equref{eq:core-system}, we obtain the following system:
 \[
-  (\m{I} - \m{U} \: e^{\mathcal{T} \m{\Lambda}} \: \m{U}^T) \: \tilde{\v{T}}_0 = \m{W}_{N_s - 1}
+  (\m{I} - \m{U} \: e^{\period \m{\Lambda}} \: \m{U}^T) \: \tilde{\v{T}}_0 = \m{W}_{N_s - 1}
 \]
 The identity matrix $\m{I}$ can be splitted into $\m{U} \m{U}^T$, hence:
 \begin{align*}
-  & \tilde{\v{T}}_0 = \m{U} \: (\m{I} - e^{\mathcal{T} \m{\Lambda}})^{-1} \: \m{U}^T \: \m{W}_{N_s - 1} \\
+  & \tilde{\v{T}}_0 = \m{U} \: (\m{I} - e^{\period \m{\Lambda}})^{-1} \: \m{U}^T \: \m{W}_{N_s - 1} \\
   & \tilde{\v{T}}_0 = \m{U} \: \left[
       \begin{array}{ccc}
-        \frac{1}{1 - e^{\mathcal{T} \lambda_0}} & \cdots & 0 \\
+        \frac{1}{1 - e^{\period \lambda_0}} & \cdots & 0 \\
         \vdots & \ddots & \vdots \\
-        0 & \cdots & \frac{1}{1 - e^{\mathcal{T} \lambda_{N_n - 1}}}
+        0 & \cdots & \frac{1}{1 - e^{\period \lambda_{N_n - 1}}}
       \end{array}
     \right] \: \m{U}^T \: \m{W}_{N_s - 1}
 \end{align*}
