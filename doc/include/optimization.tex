@@ -1,3 +1,22 @@
-The optimization procedure is held by a genetic algorithm (GA) \cite{schmitz2004} that varies mapping and scheduling of the application in order to maximize the MTTF of the system. Each chromosome is a vector of $2 \times N_t$ elements, where the first half encodes priorities of the tasks and the second represents a mapping. The population contains $4 \times N_t$ individuals that are initialized partially randomly and partially based on the mobility of the tasks \cite{schmitz2004}. Each generation, a number of individuals, called parents, are chosen for breeding by the tournament selection with the number of competitors proportional to the population size. The parents undergo the 2-point crossover with $0.8$ probability and uniform mutation with $0.05$ probability. The evolution mechanism follows the elitism model where the best individual always survives. The stopping condition is an absence of improvement within $200$ successive generations.
+The objective of the optimization procedure is to prolong the lifetime of the system by varying the mapping and scheduling of the application being executed. The problem formulation is the following.
 
-A chromosome is evaluated in a number of steps. First, the decoded priorities and mapping are given to a list scheduler that produces schedules for each of the cores. If the schedules do not respect the deadline of the application, the solution is penalized proportionally to the delay and is not further evaluated; otherwise, based on the parameters of the architecture and tasks, a dynamic power profile is obtained. Having the dynamic power profile and taking into consideration the leakage power with the linear approximation from \secref{sec:leakage}, the corresponding SSDTP is computed by the CE method. Finally, the SSDTP is assessed in terms of the reliability model given in \equref{eq:one-mttf}, where the rainflow counting method is employed to count thermal cycles \cite{xiang2010}.
+Given:
+
+\begin{itemize}
+  \item A multiprocessor system $\Pi$ (\secref{sec:architecture-model}).
+  \item A periodic application $G$ (\secref{sec:application-model}).
+  \item The floorplan of the chip at the desired level of details (\secref{sec:thermal-model}), configuration of the thermal package, and thermal parameters (\secref{sec:problem}).
+  \item The parameters of the reliability model (\secref{sec:reliability-model}), i.e., the constants $A$, $\Delta T_0$, $b$, $E_a$ (see \equref{eq:cycles-to-failure}).
+\end{itemize}
+
+Maximize:
+\begin{align}
+  & \mathcal{F} = \min_{i = 0}^{N_p - 1} \theta_i \label{eq:fitness-function} \\
+  & s.t. \nonumber \\
+  & Duration(G) \leq \period \nonumber
+\end{align}
+where $\theta_i$ is the MTTF of the $i$th processing element given by \equref{eq:one-mttf}, $\period$ is the period of the application. $Duration(G)$ denotes the execution time of the whole application mapped and scheduled onto the platform.
+
+The optimization procedure is held by a genetic algorithm (GA) \cite{schmitz2004} with the fitness function given by \equref{eq:fitness-function}. Each chromosome is a vector of $2 \times N_t$ elements, where the first half encodes priorities of the tasks and the second represents a mapping. The population contains $4 \times N_t$ individuals that are initialized partially randomly and partially based on the mobility of the tasks \cite{schmitz2004}. Each generation, a number of individuals, called parents, are chosen for breeding by the tournament selection with the number of competitors proportional to the population size. The parents undergo the 2-point crossover with $0.8$ probability and uniform mutation with $0.05$ probability. The evolution mechanism follows the elitism model where the best individual always survives. The stopping condition is an absence of improvement within $200$ successive generations.
+
+The fitness $\mathcal{F}$ of a chromosome is evaluated in a number of steps. First, the decoded priorities and mapping are given to a list scheduler that produces schedules for each of the cores. If the schedules do not respect the deadline of the application, the solution is penalized proportionally to the delay and is not further evaluated; otherwise, based on the parameters of the architecture and tasks, a power profile is obtained and the corresponding SSDTP is computed by the CE method. Finally, the MTTF of each core is estimated according to \equref{eq:one-mttf} and the fitness function $\mathcal{F}$ is computed.

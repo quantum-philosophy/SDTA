@@ -1,7 +1,7 @@
 The proposed solution of the steady-state dynamic temperature estimation can be used in a wide range of optimization procedures. One of them is the reliability optimization that we discuss in this section. We perform a temperature-aware task mapping and scheduling in order to address the thermal cycling aging effect while keeping the energy consumption at an appropriate level. Both mapping and scheduling are based on a genetic algorithm \cite{schmitz2004}. Let us start with the overall description of the system.
 
-\subsection{Application Model}
-The system executes a periodic application with a set of data dependent tasks. The overall structure of the application is defined by a task graph $G = (V, \: E, \: \period)$ where $V$ is a set of $N_t$ tasks (vertices of the graph), $E$ is a set of data dependencies between tasks (edges), and $\period$ is the period of the application. Each pair of a task $v_i \in V$ and processing element $\pi_j \in \Pi$ is characterized by a tuple $(NC_{ij}, C_{eff \; ij})$, where $NC_{ij}$ is the number of clock cycles and $C_{eff \; ij}$ is the effective switched capacitance. These parameters along with the architecture (\secref{sec:architecture-model}) and power (\secref{sec:power-model}) models determine the execution time of the task and processor load, respectively.
+\subsection{Application Model} \label{sec:application-model}
+The system executes a periodic application with a set of data dependent tasks. The overall structure of the application is defined by a task graph $G = (V, \: E, \: \period)$ where $V$ is a set of $N_t$ tasks (vertices of the graph), $E$ is a set of data dependencies between tasks (edges), and $\period$ is the period of the application. Each pair of a task $v_i \in V$ and processing element $\pi_j \in \Pi$ is characterized by a tuple $(N_{clock \: ij}, C_{eff \; ij})$, where $N_{clock \: ij}$ is the number of clock cycles and $C_{eff \; ij}$ is the effective switched capacitance. These parameters along with the architecture (\secref{sec:architecture-model}) and power (\secref{sec:power-model}) models determine the execution time of the task and processor load, respectively.
 
 \subsection{Temperature-Aware Reliability Model} \label{sec:reliability-model}
 We address temperature-driven failure mechanisms with the reliability model presented in \cite{huang2009}, \cite{xiang2010}. The model is based on the assumption that the time to failure $\mathcal{T}$ has a Weibull distribution:
@@ -25,23 +25,25 @@ The formula keeps the form of the Weibull distribution with the scaling paramete
 \end{equation}
 Consequently, the MTTF with respect to the whole application period can be obtained by combining \equref{eq:general-mttf}, \equref{eq:eta-one}, and \equref{eq:eta-many}.
 
-As mentioned previously, in order to compute the MTTF, we need to focus on a particular failure mechanism and determine $\theta_i$ needed by \equref{eq:eta-one}. We have chosen to focus on the thermal cycling (TC) fatigue, which is directly connected to the temperature variations. The cause of damage in this case is thermal cycles, which can be defined in a number of ways \cite{ciappa2003} and in general mean that the temperature starts from some initial value, reaches an extremum, and returns back \cite{xiang2010}. Since in really the temperature does not necessary come to the starting point and can exhibit a more complex behaviour, the cycle counting process becomes diverse. We follow the approach given in \cite{xiang2010} where the rainflow counting method is employed to distinguish between thermal cycles.
+As mentioned previously, in order to compute the MTTF, we need to focus on a particular failure mechanism and determine $\theta_i$ needed by \equref{eq:eta-one}. We have chosen to focus on the thermal cycling (TC) fatigue, which is directly connected to the temperature variations. In this case, the cause of damage is thermal cycles, which can be defined in a number of ways \cite{ciappa2003} and in general mean that the temperature starts from some initial value, reaches an extremum, and returns back \cite{xiang2010}. Since in really the temperature does not necessary come to the starting point and can exhibit a more complex behaviour, the cycle counting process becomes diverse. We follow the approach given in \cite{xiang2010} where the rainflow counting method is employed to distinguish between thermal cycles.
 
-When the system is experiencing identical thermal cycles, the number of such cycles to failure can be estimated using a modified version of the well-known Coffin-Manson equation with the Arrhenius term \cite{jedec2010}, \cite{xiang2010}, \cite{ciappa2003}:
+When the system is exposed to identical thermal cycles, the number of such cycles to failure can be estimated using a modified version of the well-known Coffin-Manson equation with the Arrhenius term \cite{xiang2010}, \cite{jedec2010}, \cite{ciappa2003}:
 \begin{equation} \label{eq:cycles-to-failure}
   N_c = A (\Delta T - \Delta T_0)^{-b} e^{\frac{E_a}{k T_{max}}}
 \end{equation}
-where $A$ is an empirically determined constant, $\Delta T$ is the thermal cycle excursion, $\Delta T_0$ is the portion of the temperature range in the elastic region which does not cause damage, $b$ is the Coffin-Manson exponent which is also empirically determined, $E_{a}$ is the activation energy, $k$ is the Boltzmann constant, and $T_{max}$ is the maximal temperature during the thermal cycle. Since the system can undergo a number of different cycles over the application period and each cycle causes its own damage, we let time periods $\Delta t_i$ of constant shape parameters $\eta_i$ given by \equref{eq:eta-one} be periods of thermal cycles. Therefore, having $N_m$ thermal cycles characterized by the number of cycles to failure $N_{c\:i}$ and duration $\Delta t_i$, we can compute $\theta_i$:
+where $A$ is an empirically determined constant, $\Delta T$ is the thermal cycle excursion (the distance between the minimal and maximal temperatures), $\Delta T_0$ is the portion of the temperature range in the elastic region which does not cause damage, $b$ is the Coffin-Manson exponent which is also empirically determined, $E_{a}$ is the activation energy, $k$ is the Boltzmann constant, and $T_{max}$ is the maximal temperature during the thermal cycle. Since the system can undergo a number of different cycles over the application period and each cycle causes its own damage, we let time periods $\Delta t_i$ of constant shape parameters $\eta_i$ given by \equref{eq:eta-one} be periods of thermal cycles. Therefore, having $N_m$ thermal cycles characterized by the number of cycles to failure $N_{c\:i}$ and duration $\Delta t_i$, we can compute $\theta_i$:
 \begin{equation} \label{eq:mttf-cycle}
-  \eta_i = N_{c \: i} \; \Delta t_i
+  \theta_i = N_{c \: i} \; \Delta t_i
 \end{equation}
 Taking equations \eqref{eq:general-mttf}, \eqref{eq:eta-one}, \eqref{eq:eta-many}, and \eqref{eq:mttf-cycle} together, we obtain the following expression to estimate the MTTF of one component in the system:
 \begin{align} \label{eq:one-mttf}
   \theta = \frac{\period}{\sum_{i=0}^{N_m - 1} \frac{1}{N_{c \: i}}}
 \end{align}
 
+It can be observed that the final equation includes the sum over $N_{c \: i}$ defined by \equref{eq:cycles-to-failure}. The computation requires the knowledge about the temperature oscillation during the execution of the application, i.e., the thermal excursion $\Delta T_i$ and maximal temperature $\Delta T_{max \: i}$ for each cycle. Consequently, the SSDTP of the system is an essential part of the lifetime estimation with respect to the TC failure mechanism.
+
 \subsection{Motivational Example} \label{sec:motivation}
 \input{include/motivation.tex}
 
-\subsection{Genetic Algorithm}
+\subsection{Problem Formulation and Optimization} \label{sec:reliability-problem}
 \input{include/optimization.tex}

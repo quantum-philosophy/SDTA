@@ -1,5 +1,5 @@
 \subsection{Computation Performance} \label{sec:results-ssdtp}
-In this subsection we investigate the scalability properties of the proposed solution based on the CE method and compare it with one transient temperature simulation (TTS) of the application period, which is not sufficient to reach the SSDTP as it was shown in \secref{sec:hotspot-solution}. To perform the TTA, the HotSpot thermal simulator is used.
+In this subsection we investigate the scalability properties of the proposed solution for the SSDTP calculation and compare it with one transient temperature simulation (TTS) of the application period, which is not sufficient to reach the SSDTP as it was shown in \secref{sec:hotspot-solution}. To perform the TTA, the HotSpot thermal simulator is used.
 
 \image{scaling-time}{80 230 80 230}{Scalability with the application period for a quad-core architecture. The sampling interval is fixed to 1 millisecond where 1 second on the horizontal axis corresponds to 1000 steps in the power profile. The comparison is given on the semilogarithmic scale.}
 \begin{itable}{scaling-time}{|r|r|r|r|r|}
@@ -50,7 +50,7 @@ First, we vary the application period keeping the sampling interval constant and
 The second part of the comparison is the scalability with the number of processing elements shown in \figref{fig:scaling-cores} and \tabref{tab:scaling-cores}. It can be seen that the difference between computation times of the CE method and one TTS becomes smaller when the number of cores is increasing. At the same time the mismatch between the SSDTP and temperature profile produced by one TTA dramatically increases, which means that larger number of the TTA iterations is required to reach the same level of accuracy.
 
 \subsection{Reliability Optimization}
-The experimental setup is the following. Heterogeneous architectures and periodic applications are generated randomly \cite{dick1998} in such a way that the execution time of tasks is uniformly distributed between 1 and 50 milliseconds and the leakage power accounts for 30--55\% of the total power dissipation. The corresponding temperature variation lies between the ambient temperature of $27^{\circ}C$ and maximal temperature of $100^{\circ}C$.
+In this section we present the results of the reliability optimization described in \secref{sec:reliability-problem}. The experimental setup is the following. Hypothetical platforms and periodic applications are generated randomly \cite{dick1998} in such a way that the execution time of tasks is uniformly distributed between 1 and 50 milliseconds and the leakage power accounts for 30--55\% of the total power dissipation. The corresponding temperature variation lies between the ambient temperature of $27^{\circ}C$ and maximal temperature of $100^{\circ}C$.
 
 In each of the experiments, we compare the optimized solution with the initial one that is obtained in the following way. First, we calculate the average execution time of each task among the processing elements. Then, we compute the mobility of the tasks and schedule the application according to it \cite{schmitz2004}. The mapping is done along with the scheduling where each task being considered is assigned to the earliest available core in the system. This combination of mapping and scheduling is the starting point for the future optimization. The deadline of the application is set according to the duration of the initial schedule with additional 5\%.
 
@@ -86,15 +86,15 @@ For the second set of experiments, we keep the quad-core architecture and vary t
 
 \begin{itable}{mttf-comparison}{|r|r|r|r|r|}
   {Reliability optimization for different solution techniques}
-  {$N_p$ --- the number of cores, $N_t$ --- the number of tasks, $MTTF^{CE}_{avg}$, $MTTF^{TTA}_{avg}$, and $MTTF^{SS}_{avg}$ --- the average improvements of the MTTF obtained by the CE method, TTA with HotSpot, and SS approximation, respectively.}
+  {$N_p$ --- the number of cores, $N_t$ --- the number of tasks, $MTTF^{CE}_{avg}$, $MTTF^{HS}_{avg}$, and $MTTF^{SS}_{avg}$ --- the average improvements of the MTTF obtained by the CE method, TTA with HotSpot, and SS approximation, respectively.}
   \hline
-  $N_p$ & $N_t$ & $MTTF^{CE}_{avg}$, $\times$ & $MTTF^{TTA}_{avg}$, $\times$ & $MTTF^{SS}_{avg}$, $\times$ \\
+  $N_p$ & $N_t$ & $MTTF^{CE}_{avg}$, $\times$ & $MTTF^{HS}_{avg}$, $\times$ & $MTTF^{SS}_{avg}$, $\times$ \\
   \hline
-  4 &  20 & \todo{0} & \todo{0} & \todo{0} \\
-  4 &  40 & \todo{0} & \todo{0} & \todo{0} \\
-  4 &  80 & \todo{0} & \todo{0} & \todo{0} \\
-  4 & 160 & \todo{0} & \todo{0} & \todo{0} \\
-  4 & 320 & \todo{0} & \todo{0} & \todo{0} \\
+  4 &  20 & 8.90 & \todo{0} & 5.62 \\
+  4 &  40 & 6.23 & \todo{0} & 2.87 \\
+  4 &  80 & 3.84 & \todo{0} & 2.81 \\
+  4 & 160 & 3.37 & \todo{0} & 2.78 \\
+  4 & 320 & 2.64 & \todo{0} & 2.22 \\
   \hline
 \end{itable}
 Finally, we compare the results of the optimization delivered by the CE method, TTA with HotSpot, and steady-state approximation (SS) discussed in \secref{sec:steady-state-approximation} for the same setup as in the previous set of experiments with the fixed architecture. The final solution found by the later two methods, TTA and SS, are reevaluated using the CE method and compared with the solutions found only by the CE approach. The results are summarized in \tabref{tab:mttf-comparison}. \todo{Obtain results and discuss.}
