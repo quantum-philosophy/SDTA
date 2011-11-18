@@ -8,15 +8,16 @@ A rough approximation of the SSDTP can be obtained by running a temperature simu
   {Parameters of the Die and Thermal Package}
   {The thermal parameters (i.e., thermal conductivity, specific heat, convection resistance and capacitance) used in our experiments are equal to the default ones found in HotSpot 5.0 \cite{huang2006}.}
   \hline
-  Parameter & Value, mm \\
+  Parameter & Value \\
   \hline
   \hline
-  Die thickness & 0.15 \\
-  Thermal interface material thickness & 0.02 \\
-  Heat spreader side & 30 \\
-  Heat spreader thickness & 1 \\
-  Heat sink side & 40 \\
-  Heat sink thickness & 20 \\
+  Die thickness                         & 0.15 $mm$ \\
+  Thermal interface material thickness  & 0.02 $mm$ \\
+  Heat spreader side                    &   30 $mm$ \\
+  Heat spreader thickness               &    1 $mm$ \\
+  Heat sink side                        &   40 $mm$ \\
+  Heat sink thickness                   &   20 $mm$ \\
+  Ambient temperature                   &   27 ${}^\circ C$ \\
   \hline
 \end{itable}
 The number of simulations required to reach the SSDTP depends on the thermal characteristics of the system. In order to illustrate this aspect, we have considered an application with the period of 1 second running on five hypothetical platforms with core areas between 1 and 25 $mm^2$. The configuration of the die itself and thermal package is given in \tabref{tab:parameters}. We have run the temperature simulation with HotSpot \cite{huang2006} for 50 successive periods of the application. The temperature profile in each period has been compared with the real SSDTP obtained for the same thermal circuit constructed by HotSpot and the normalized Root Mean Square Error (RMSE) has been calculated. The result is shown in \figref{fig:hotspot-error}. It can be observed that the number of successive periods over which the temperature simulation has to be performed in order to achieve a satisfactory level of accuracy is significant in the majority of configurations. This leads to large computation times, making it difficult to apply the technique inside an intensive optimization loop.
