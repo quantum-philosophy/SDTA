@@ -68,6 +68,22 @@ class Hotspot
 		throw std::runtime_error("Solve by schedule is not implemented.");
 	}
 
+	/* Verification */
+	virtual size_t verify(const matrix_t &power, matrix_t &temperature,
+		const matrix_t &reference)
+	{
+		throw std::runtime_error(
+			"Verification is not implemented.");
+	}
+
+	/* Verification by a schedule */
+	virtual size_t verify(const Schedule &schedule, matrix_t &temperature,
+		matrix_t &power, const matrix_t &reference)
+	{
+		throw std::runtime_error(
+			"Verification by schedule is not implemented.");
+	}
+
 	inline double get_sampling_interval() const
 	{
 		return sampling_interval;
@@ -416,6 +432,16 @@ class IterativeHotspot: public Hotspot
 		solve(power, temperature);
 	}
 
+	size_t verify(const matrix_t &power, matrix_t &temperature,
+		const matrix_t &reference);
+
+	inline size_t verify(const Schedule &schedule, matrix_t &temperature,
+		matrix_t &power, const matrix_t &reference)
+	{
+		dynamic_power.compute(schedule, power);
+		return verify(power, temperature, reference);
+	}
+
 	private:
 
 	inline size_t solve(double *extended_power,
@@ -434,6 +460,9 @@ class IterativeHotspot: public Hotspot
 
 	void initialize(const double *extended_power,
 		double *extended_temperature, size_t step_count);
+
+	size_t verify(double *extended_power, double *temperature,
+		size_t step_count, const double *reference);
 };
 
 class LeakageIterativeHotspot: public Hotspot

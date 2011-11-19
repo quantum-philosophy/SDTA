@@ -565,33 +565,17 @@ size_t IterativeHotspot::solve_fixed_iterations(
 {
 	double *extended_temperature = __ALLOC(node_count);
 
-	size_t iterations, i;
+	int p;
+	size_t i, j, iterations;
 
 	initialize(extended_power, extended_temperature, step_count);
 
-	__MEMCPY(temperature, extended_temperature, processor_count);
+	for (iterations = 0, p = -1; iterations < max_iterations; iterations++) {
+		for (i = 0; i < step_count; i++, p = (p + 1) % step_count) {
+			if (p >= 0)
+				compute_temp(model, extended_power + node_count * p,
+					extended_temperature, sampling_interval);
 
-	for (i = 1; i < step_count; i++) {
-		compute_temp(model, extended_power + node_count * (i - 1),
-			extended_temperature, sampling_interval);
-
-		/* Copy the new values */
-		__MEMCPY(temperature + i * processor_count,
-			extended_temperature, processor_count);
-	}
-
-	for (iterations = 1; iterations < max_iterations; iterations++) {
-		compute_temp(model, extended_power + node_count * (step_count - 1),
-			extended_temperature, sampling_interval);
-
-		/* Copy the new values */
-		__MEMCPY(temperature, extended_temperature, processor_count);
-
-		for (i = 1; i < step_count; i++) {
-			compute_temp(model, extended_power + node_count * (i - 1),
-				extended_temperature, sampling_interval);
-
-			/* Copy the new values */
 			__MEMCPY(temperature + i * processor_count,
 				extended_temperature, processor_count);
 		}
@@ -607,45 +591,31 @@ size_t IterativeHotspot::solve_error_control(
 {
 	double *extended_temperature = __ALLOC(node_count);
 
+	int p;
 	size_t i, j, k, iterations;
-	double error, max_error;
+	double error, delta;
 
 	initialize(extended_power, extended_temperature, step_count);
 
-	__MEMCPY(temperature, extended_temperature, processor_count);
+	for (iterations = 0, p = -1; iterations < max_iterations; iterations++) {
+		error = 0;
 
-	for (i = 1; i < step_count; i++) {
-		compute_temp(model, extended_power + node_count * (i - 1),
-			extended_temperature, sampling_interval);
-
-		__MEMCPY(temperature + i * processor_count,
-			extended_temperature, processor_count);
-	}
-
-	for (iterations = 1; iterations < max_iterations; iterations++) {
-		max_error = 0;
-
-		compute_temp(model, extended_power + node_count * (step_count - 1),
-			extended_temperature, sampling_interval);
-
-		for (j = 0; j < processor_count; j++, k++) {
-			error = std::abs(temperature[j] - extended_temperature[j]);
-			if (max_error < error) max_error = error;
-			temperature[j] = extended_temperature[j];
-		}
-
-		for (i = 1, k = 0; i < step_count; i++) {
-			compute_temp(model, extended_power + node_count * (i - 1),
-				extended_temperature, sampling_interval);
+		for (i = 0, k = 0; i < step_count; i++, p = (p + 1) % step_count) {
+			if (p >= 0)
+				compute_temp(model, extended_power + node_count * p,
+					extended_temperature, sampling_interval);
 
 			for (j = 0; j < processor_count; j++, k++) {
-				error = std::abs(temperature[k] - extended_temperature[j]);
-				if (max_error < error) max_error = error;
+				delta = std::abs(temperature[k] - extended_temperature[j]);
+				if (error < delta) error = delta;
 				temperature[k] = extended_temperature[j];
 			}
 		}
 
-		if (max_error < tolerance) break;
+		if (error < tolerance) {
+			iterations++;
+			break;
+		}
 	}
 
 	__FREE(extended_temperature);
@@ -676,6 +646,77 @@ void IterativeHotspot::initialize(const double *extended_power,
 	else {
 		set_temp(model, extended_temperature, config.init_temp);
 	}
+}
+
+size_t IterativeHotspot::verify(const matrix_t &power, matrix_t &temperature,
+	const matrix_t &reference)
+{
+	size_t step_count = power.rows();
+
+	temperature.resize(step_count, processor_count);
+
+	const double *_power = power;
+
+	if (power.cols() == node_count) {
+		return verify(const_cast<double *>(_power), temperature, step_count,
+			reference);
+	}
+	else {
+		matrix_t extended_power(step_count, node_count);
+		double *_extended_power = extended_power;
+
+		for (size_t i = 0; i < step_count; i++)
+			__MEMCPY(_extended_power + i * node_count,
+				_power + i * processor_count, processor_count);
+
+		return verify(_extended_power, temperature, step_count,
+			reference);
+	}
+}
+
+size_t IterativeHotspot::verify(double *extended_power,
+	double *temperature, size_t step_count, const double *reference)
+{
+	double *extended_temperature = __ALLOC(node_count);
+
+	int p;
+	size_t i, j, k, iterations;
+	double min = DBL_MAX, max = -DBL_MAX, error, delta;
+
+	for (i = 0; i < step_count; i++)
+		for (j = 0; j < processor_count; j++) {
+			min = std::min(reference[i * processor_count + j], min);
+			max = std::max(reference[i * processor_count + j], max);
+		}
+
+	initialize(extended_power, extended_temperature, step_count);
+
+	for (iterations = 0, p = -1; iterations < max_iterations; iterations++) {
+		error = 0;
+
+		for (i = 0, k = 0; i < step_count; i++, p = (p + 1) % step_count) {
+			if (p >= 0)
+				compute_temp(model, extended_power + node_count * p,
+					extended_temperature, sampling_interval);
+
+			for (j = 0; j < processor_count; j++, k++) {
+				delta = reference[k] - extended_temperature[j];
+				error += delta * delta;
+				temperature[k] = extended_temperature[j];
+			}
+		}
+
+		error = std::sqrt(error / double(step_count)) / (max - min);
+
+		if (error < tolerance) {
+			iterations++;
+			break;
+		}
+	}
+
+	__FREE(extended_temperature);
+
+	return iterations;
 }
 
 /******************************************************************************/
