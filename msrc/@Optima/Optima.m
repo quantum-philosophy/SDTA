@@ -114,7 +114,7 @@ classdef Optima < handle
 
     function [ sinkSide, spreaderSide, dieSide, sinkThickness ] = standardPackage(o)
       [ sinkSide, spreaderSide, dieSide, sinkThickness ] = ...
-        o.changePackage(30e-3, 40e-3, 20e-3);
+        o.changePackage(20e-3, 30e-3, 15e-3);
     end
 
     function changeSamplingInterval(o, samplingInterval)
