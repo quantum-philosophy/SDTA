@@ -47,7 +47,7 @@ class Generator
     population_size = 4 * options[:task_count]
 
     gaps = {
-      :repeat => GA_REALIZATIONS_PER_GRAPH,
+      :repeat => options[:repeat_count],
       :population_size => population_size,
       :stall_generations => STALL_GENERATIONS,
       :tournament_size => tournament_size

@@ -28,10 +28,10 @@ table_cnt 16
 table_attrib \
   frequency 1000e6 200e6 0 50e6, \
   voltage 1 0.2 0 0.1, \
-  ngate 10e4 0
+  ngate 10e4 0 0
 # Attributes of tasks for particular PE
 type_attrib \
-  effective_switched_capacitance 6e-9 4e-9, \
-  number_of_clock_cycles 11e6 9e6
+  effective_switched_capacitance 6e-9 4e-9 0, \
+  number_of_clock_cycles 8.7e6 7.5e6 0
 # Write
 pe_write

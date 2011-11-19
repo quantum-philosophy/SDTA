@@ -9,24 +9,19 @@ DIE_AREA = 4e-6
 # Multiplied by the number of tasks
 POPULATION_FACTOR = 4
 
-# Repetitions of the GA
-GA_REALIZATIONS_PER_GRAPH = 1
-
 STALL_GENERATIONS = 200
 
-if ARGV.length != 4
+if ARGV.length != 3
   puts 'Need some arguments...'
   puts '1. the template directory'
-  puts '2. pairs of the number of processors and tasks, e.g., "[ [ 4, 60 ], [ 8, 90 ] ]"'
-  puts '3. the number of repetitions of each pair'
-  puts '4. the output directory'
+  puts '2. pairs "[ [ cores, tasks, variants = 20, repeat = 1 ], ... ]"'
+  puts '3. the output directory'
   exit
 end
 
 input = ARGV[0]
 pairs = eval ARGV[1]
-repeat = ARGV[2].to_i
-output = ARGV[3]
+output = ARGV[2]
 
 unless File.directory? input
   puts 'Need a real template directory...'
@@ -54,7 +49,10 @@ end
 params_template = Template.new params_template
 hotspot_template = Template.new hotspot_template
 
-pairs.each do |processor_count, task_count|
+pairs.each do |processor_count, task_count, variant_count, repeat_count|
+  variant_count ||= 20
+  repeat_count ||= 1
+
   tgff_template = File.join input, ("%03d.tgffopt" % processor_count)
 
   unless File.exist? tgff_template
@@ -73,7 +71,7 @@ pairs.each do |processor_count, task_count|
 
   seed = 0
 
-  (1..repeat).each do |i|
+  (1..variant_count).each do |i|
     puts "  #{ i }:"
 
     begin
@@ -98,7 +96,7 @@ pairs.each do |processor_count, task_count|
     puts "    - parameters: #{ params }"
     Generator.params :template => params_template,
       :processor_count => processor_count, :task_count => task_count,
-      :output => params
+      :repeat_count => repeat_count, :output => params
 
     floorplan = File.join directory, ("%03d_floorplan.config" % i)
     puts "    - floorplan configuration: #{ floorplan }"

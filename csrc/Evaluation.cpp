@@ -60,6 +60,9 @@ std::ostream &operator<<(std::ostream &o, const Evaluation &e)
 		<< "  Deadline misses: " << e.deadline_misses
 			<< " (" << double(e.deadline_misses) / double(e.evaluations) * 100
 			<< "%)" << std::endl
+		<< "  Temperature runaways: " << e.temperature_runaways
+			<< " (" << double(e.temperature_runaways) / double(e.evaluations) * 100
+			<< "%)" << std::endl
 		<< "  Cache hits: " << e.cache_hits
 			<< " (" << double(e.cache_hits) / double(e.evaluations) * 100
 			<< "%)" << std::endl;
