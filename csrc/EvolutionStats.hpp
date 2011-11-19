@@ -18,11 +18,14 @@ eoMonitor &EvolutionStats<CT, PT>::operator()()
 		evaluation.evaluations - last_evaluations;
 	size_t current_deadline_misses =
 		evaluation.deadline_misses - last_deadline_misses;
+	size_t current_temperature_runaways =
+		evaluation.temperature_runaways - last_temperature_runaways;
 	size_t current_cache_hits =
 		evaluation.cache_hits - last_cache_hits;
 
 	last_evaluations = evaluation.evaluations;
 	last_deadline_misses = evaluation.deadline_misses;
+	last_temperature_runaways = evaluation.temperature_runaways;
 	last_cache_hits = evaluation.cache_hits;
 
 	std::cout
@@ -33,6 +36,7 @@ eoMonitor &EvolutionStats<CT, PT>::operator()()
 			<< std::setw(4) << current_evaluations - current_cache_hits -
 				current_deadline_misses << ", "
 			<< std::setw(4) << current_deadline_misses << ", "
+			<< std::setw(4) << current_temperature_runaways << ", "
 			<< std::setw(4) << current_cache_hits
 		<< " ]"
 		<< std::setprecision(3)

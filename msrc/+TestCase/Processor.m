@@ -46,15 +46,7 @@ classdef Processor < handle
       duration = pe.nc(type) / pe.frequency;
     end
 
-    function makeEqualTo(pe, another, onlyTypes)
-      if nargin < 3, onlyTypes = true; end
-
-      if ~onlyTypes
-        pe.frequency = another.frequency;
-        pe.voltage = another.voltage;
-        pe.ngate = another.ngate;
-      end
-
+    function equalLoadTo(pe, another)
       pe.ceff = another.ceff;
       pe.nc = another.nc;
       pe.typeCount = another.typeCount;

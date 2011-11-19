@@ -31,6 +31,7 @@ void Schedule::reorder(const order_t &order)
 std::ostream &operator<< (std::ostream &o, const Schedule &schedule)
 {
 	o
+		<< std::setprecision(3) << std::setiosflags(std::ios::fixed)
 		<< "  Duration: " << schedule.get_duration() << std::endl
 		<< "  "
 			<< std::setw(4) << "id" << " ( "

@@ -1,12 +1,8 @@
 setup;
 
-config = Optima('002');
+config = Optima('004');
 
-param_line = @(solution) ...
-  Utils.configStream(...
-    'verbose', 0, ...
-    'leakage', 'linear', ...
-    'solution', solution);
+param_line = Utils.configStream('verbose', 0);
 
 graph = config.taskGraph();
 graph.draw();
@@ -14,9 +10,9 @@ graph.draw();
 P1 = Power.calculateDynamicProfile(graph, config.samplingInterval);
 
 T1 = Optima.solve_power(config.system, config.floorplan, ...
-  config.hotspot, config.params, param_line('condensed_equation'), P1);
+  config.hotspot, config.params, param_line, P1);
 
-chromosome = [ 0, 1, 2, 7, 5, 9, 8, 6, 3, 4, 15, 12, 13, 14, 19, 18, 10, 11, 16, 17, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0 ] + 1;
+chromosome = [ 0, 1, 2, 4, 3, 5, 6, 15, 7, 8, 12, 14, 17, 16, 9, 11, 21, 19, 13, 10, 18, 23, 24, 32, 20, 31, 29, 25, 37, 26, 38, 34, 33, 36, 35, 39, 27, 28, 30, 22, 0, 3, 3, 0, 2, 0, 3, 2, 3, 2, 0, 3, 2, 2, 0, 0, 0, 3, 2, 2, 3, 2, 2, 0, 3, 2, 0, 2, 2, 2, 0, 0, 3, 3, 2, 3, 3, 1, 2, 3 ] + 1;
 
 taskCount = length(graph.tasks);
 priority = chromosome(1:taskCount);
@@ -35,7 +31,7 @@ end
 P2 = Power.calculateDynamicProfile(graph, config.samplingInterval);
 
 T2 = Optima.solve_power(config.system, config.floorplan, ...
-  config.hotspot, config.params, param_line('condensed_equation'), P2);
+  config.hotspot, config.params, param_line, P2);
 
 [ stepCount, processorCount ] = size(T1);
 
@@ -56,5 +52,6 @@ set(gca, 'XLim', [ 0 time(end) ]);
 MTTF1 = min(Lifetime.predictMultipleAndDraw(T1, config.samplingInterval));
 MTTF2 = min(Lifetime.predictMultipleAndDraw(T2, config.samplingInterval));
 
-fprintf('MTTF1: %.4f\n', MTTF1);
-fprintf('MTTF2: %.4f\n', MTTF2);
+fprintf('MTTF1: %.2f\n', MTTF1);
+fprintf('MTTF2: %.2f\n', MTTF2);
+fprintf('Improvement: %.2f\n', MTTF2 / MTTF1);

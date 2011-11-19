@@ -44,7 +44,7 @@ class Generator
 
   def self.params options
     tournament_size = [ 2, POPULATION_FACTOR * options[:task_count] / 100 + 1 ].max
-    population_size = tournament_size * 100
+    population_size = 4 * options[:task_count]
 
     gaps = {
       :repeat => GA_REALIZATIONS_PER_GRAPH,

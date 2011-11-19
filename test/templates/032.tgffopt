@@ -1,11 +1,14 @@
+# Randomize!
+seed [SEED]
+
 # Task graph label
 tg_label TASK_GRAPH
 # Number of graphs
 tg_cnt 1
 # Number of tasks per graph +/- jitter
-task_cnt 320 0.001
+task_cnt [TASK_COUNT] 0.001
 # Number of different tasks
-task_type_cnt 160
+task_type_cnt [TYPE_COUNT]
 # Average time per task including communication
 task_trans_time 1
 # Deadline jitter
@@ -23,7 +26,7 @@ eps_write
 # Processing element (PE) label
 table_label PE
 # Number of PEs
-table_cnt 32
+table_cnt [PROCESSOR_COUNT]
 # Attributes of PEs
 table_attrib \
   frequency 1000e6 200e6 0 50e6, \

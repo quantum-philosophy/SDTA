@@ -65,7 +65,7 @@ vector_t Mobility::calculate(const Architecture &architecture,
 	const Task *task;
 
 	vector_t asap(task_count, -1);
-	vector_t alap(task_count, std::numeric_limits<double>::max());
+	vector_t alap(task_count, DBL_MAX);
 	vector_t mobility(task_count);
 
 	/* Calculate ASAP */
@@ -90,10 +90,9 @@ vector_t Mobility::calculate(const Architecture &architecture,
 			collect_alap(task, duration, alap, asap_duration);
 	}
 
-	double epsilon = std::numeric_limits<double>::epsilon();
 	for (size_t i = 0; i < task_count; i++) {
 		mobility[i] = alap[i] - asap[i];
-		if (mobility[i] < epsilon) mobility[i] = 0;
+		if (mobility[i] < DBL_EPSILON) mobility[i] = 0;
 	}
 
 	return mobility;

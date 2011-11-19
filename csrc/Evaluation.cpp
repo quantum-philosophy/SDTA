@@ -14,7 +14,7 @@ price_t Evaluation::process(const Schedule &schedule)
 
 	if (difference < 0) {
 		deadline_misses++;
-		return price_t(difference, std::numeric_limits<double>::max());
+		return price_t(difference, DBL_MAX);
 	}
 
 	return compute(schedule);
@@ -27,12 +27,23 @@ price_t Evaluation::compute(const Schedule &schedule)
 	matrix_t temperature, power;
 	hotspot.solve(schedule, temperature, power);
 
+	if (max_temperature > 0) {
+		size_t total_count = temperature.size();
+		const double *ptr = temperature;
+		for (int i = 0; i < total_count; i++, ptr++)
+			if (*ptr > max_temperature) {
+				/* Temperature runaway! */
+				temperature_runaways++;
+				return price_t(max_temperature - *ptr, DBL_MAX);
+			}
+	}
+
 	double lifetime = this->lifetime.predict(temperature, sampling_interval);
 	double energy = 0;
 
 	if (!shallow) {
-		size_t total_count = power.cols() * power.rows();
-		const double *ptr = power.pointer();
+		size_t total_count = power.size();
+		const double *ptr = power;
 		for (int i = 0; i < total_count; i++, ptr++) energy += *ptr;
 		energy *= sampling_interval;
 	}

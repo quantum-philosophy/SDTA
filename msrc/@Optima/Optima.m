@@ -132,11 +132,11 @@ classdef Optima < handle
       graph = tgff.graphs{1};
       pes = tgff.pes;
 
-      homogeneous = Utils.readParameter(o.params, 'homogeneous');
+      equalLoad = Utils.readParameter(o.params, 'equal_load');
 
-      if homogeneous == 1
+      if equalLoad == 1
         for i = 2:length(pes)
-          pes{i}.makeEqualTo(pes{1});
+          pes{i}.equalLoadTo(pes{1});
         end
       end
 

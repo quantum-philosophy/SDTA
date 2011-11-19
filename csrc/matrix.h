@@ -251,7 +251,6 @@ void multiply_matrix_vector(
 
 class EigenvalueDecomposition
 {
-	static const double epsilon;
 	const int n;
 
 	matrix_t &z;

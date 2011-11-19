@@ -5,7 +5,7 @@
 #include <vector>
 #include <list>
 #include <utility>
-#include <limits>
+#include <cfloat>
 #include <iostream>
 #include <fstream>
 #include <string>

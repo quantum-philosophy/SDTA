@@ -110,13 +110,13 @@ void optimize(const string &system, const string &floorplan,
 		 */
 		if (optimization_tuning.cache.empty()) {
 			evaluation = new Evaluation(*test.architecture, *test.graph,
-				*test.hotspot);
+				*test.hotspot, system_tuning.max_temperature);
 		}
 		else {
 #ifndef WITHOUT_MEMCACHED
 			evaluation = new MemcachedEvaluation(optimization_tuning.cache,
 				optimization_tuning.multiobjective, *test.architecture,
-				*test.graph, *test.hotspot);
+				*test.graph, *test.hotspot, system_tuning.max_temperature);
 #else
 			throw runtime_error("The code is compiled without caching support.");
 #endif
@@ -130,8 +130,8 @@ void optimize(const string &system, const string &floorplan,
 
 		if (solution_tuning.assess()) {
 			assessment_hotspot = test.create_hotspot(solution_tuning.assessment);
-			assessment_evaluation = new Evaluation(
-				*test.architecture, *test.graph, *assessment_hotspot);
+			assessment_evaluation = new Evaluation(*test.architecture,
+				*test.graph, *assessment_hotspot, system_tuning.max_temperature);
 			assessed_price = assessment_evaluation->process(test.schedule);
 		}
 
@@ -207,10 +207,10 @@ void optimize(const string &system, const string &floorplan,
 				SOEvolutionStats *sstats = (SOEvolutionStats *)&stats;
 
 				cout
-					<< (sstats->best_lifetime / price.lifetime - 1.0) * 100
-					<< "% lifetime with "
-					<< (sstats->final_energy / price.energy - 1.0) * 100
-					<< "% energy"
+					<< (sstats->best_lifetime / price.lifetime)
+					<< " lifetime with "
+					<< (sstats->final_energy / price.energy)
+					<< " energy"
 					<< endl;
 
 				if (solution_tuning.assess())
@@ -222,10 +222,10 @@ void optimize(const string &system, const string &floorplan,
 				MOEvolutionStats *sstats = (MOEvolutionStats *)&stats;
 
 				cout
-					<< (sstats->best_lifetime.lifetime / price.lifetime - 1.0) * 100
-					<< "% lifetime with "
-					<< (sstats->best_lifetime.energy / price.energy - 1.0) * 100
-					<< "% energy"
+					<< (sstats->best_lifetime.lifetime / price.lifetime)
+					<< " lifetime with "
+					<< (sstats->best_lifetime.energy / price.energy)
+					<< " energy"
 					<< endl;
 			}
 
@@ -235,17 +235,17 @@ void optimize(const string &system, const string &floorplan,
 					<< "Assessed lifetime: " << best_assessed_price.lifetime << endl
 					<< "Assessed energy: " << best_assessed_price.energy << endl
 					<< "Assessed improvement: "
-					<< (best_assessed_price.lifetime / assessed_price.lifetime - 1.0) * 100
-					<< "% lifetime with "
-					<< (best_assessed_price.energy / assessed_price.energy - 1.0) * 100
-					<< "% energy"
+					<< (best_assessed_price.lifetime / assessed_price.lifetime)
+					<< " lifetime with "
+					<< (best_assessed_price.energy / assessed_price.energy)
+					<< " energy"
 					<< endl << endl;
 
 			if (system_tuning.verbose)
 				cout
 					<< "Time elapsed: " << setprecision(2)
-					<< (Time::substract(&end, &begin) / 60.0)
-					<< " minutes" << endl << endl;
+					<< Time::substract(&end, &begin)
+					<< " seconds" << endl << endl;
 
 			/* Make a back copy of the dump file */
 			if (!optimization_tuning.dump.empty() && repeat > 1)

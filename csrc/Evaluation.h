@@ -19,19 +19,23 @@ class Evaluation
 	const Graph &graph;
 	Hotspot &hotspot;
 
+	double max_temperature;
 	bool shallow;
 
 	public:
 
 	size_t evaluations;
 	size_t deadline_misses;
+	size_t temperature_runaways;
 	size_t cache_hits;
 
 	Evaluation(const Architecture &_architecture, const Graph &_graph,
-		Hotspot &_hotspot, bool _shallow = false) :
+		Hotspot &_hotspot, double _max_temperature = 0, bool _shallow = false) :
 
 		architecture(_architecture), graph(_graph), hotspot(_hotspot),
-		shallow(_shallow), evaluations(0), deadline_misses(0), cache_hits(0) {}
+		max_temperature(_max_temperature), shallow(_shallow),
+		evaluations(0), deadline_misses(0),
+		temperature_runaways(0), cache_hits(0) {}
 
 	price_t process(const Schedule &schedule);
 
@@ -44,6 +48,7 @@ class Evaluation
 	{
 		evaluations = 0;
 		deadline_misses = 0;
+		temperature_runaways = 0;
 		cache_hits = 0;
 	}
 
@@ -65,9 +70,10 @@ class MemcachedEvaluation: public Evaluation
 
 	MemcachedEvaluation(const std::string &config, bool _extended,
 		const Architecture &_architecture, const Graph &_graph,
-		Hotspot &_hotspot, bool _shallow = false) :
+		Hotspot &_hotspot, double _max_temperature = 0, bool _shallow = false) :
 
-		Evaluation(_architecture, _graph, _hotspot, _shallow), extended(_extended)
+		Evaluation(_architecture, _graph, _hotspot, _max_temperature, _shallow),
+		extended(_extended)
 	{
 		memcache = memcached_create(NULL);
 

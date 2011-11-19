@@ -72,16 +72,12 @@ class TestCase
 			}
 		}
 
-		if (system_tuning.homogeneous) {
+		if (system_tuning.equal_load) {
 			if (system_tuning.verbose)
-				std::cout << "Making the platform homogeneous." << std::endl;
+				std::cout << "Making tasks identical for each core." << std::endl;
 
 			size_t processor_count = system.nc.size();
 			for (size_t i = 1; i < processor_count; i++) {
-				system.frequency[i] = system.frequency[0];
-				system.voltage[i] = system.voltage[0];
-				system.ngate[i] = system.ngate[i];
-
 				size_t type_count = system.nc[i].size();
 				for (size_t j = 0; j < type_count; j++) {
 					system.nc[i][j] = system.nc[0][j];

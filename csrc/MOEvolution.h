@@ -133,7 +133,7 @@ class MOContinuation: public Continuation<eslabMOChromosome>
 
 	MOContinuation(const ContinuationTuning &_tuning) :
 		Continuation<eslabMOChromosome>(_tuning), last_lifetime(0),
-		last_energy(std::numeric_limits<double>::max()) {}
+		last_energy(DBL_MAX) {}
 
 	protected:
 

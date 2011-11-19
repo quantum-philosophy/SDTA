@@ -9,7 +9,7 @@
 
 price_t eslabMOPop::best_lifetime() const
 {
-	price_t price(std::numeric_limits<double>::min(), 0);
+	price_t price(0, 0);
 
 	size_t population_size = size();
 
@@ -26,7 +26,7 @@ price_t eslabMOPop::best_lifetime() const
 
 price_t eslabMOPop::best_energy() const
 {
-	price_t price(0, std::numeric_limits<double>::max());
+	price_t price(0, DBL_MAX);
 
 	size_t population_size = size();
 

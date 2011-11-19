@@ -1,8 +1,9 @@
 # System
 deadline_ratio 1.05
+max_temperature 373.15
 power_scale 1
 time_scale 1
-homogeneous 1
+equal_load 1
 reorder_tasks 0
 verbose 1
 

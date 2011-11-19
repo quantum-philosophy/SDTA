@@ -1,4 +1,5 @@
 #include "matrix.h"
+#include "float.h"
 
 void transpose_matrix(
 	const matrix_t &U, matrix_t &UT)
@@ -139,8 +140,6 @@ void multiply_matrix_vector(
 	}
 }
 
-const double EigenvalueDecomposition::epsilon = std::numeric_limits<double>::epsilon();
-
 void EigenvalueDecomposition::tred2()
 {
 	int l,k,j,i;
@@ -215,7 +214,7 @@ void EigenvalueDecomposition::tqli()
 		do {
 			for (m=l;m<n-1;m++) {
 				dd=abs(d[m])+abs(d[m+1]);
-				if (abs(e[m]) <= epsilon*dd) break;
+				if (abs(e[m]) <= DBL_EPSILON*dd) break;
 			}
 			if (m != l) {
 				if (iter++ == 30) throw("Too many iterations in tqli");

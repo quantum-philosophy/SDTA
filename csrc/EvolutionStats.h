@@ -42,7 +42,8 @@ class EvolutionStats: public BasicEvolutionStats, public eoMonitor
 
 	EvolutionStats(const Evaluation &_evaluation) :
 		BasicEvolutionStats(), evaluation(_evaluation), population(NULL),
-		last_evaluations(0), last_deadline_misses(0), last_cache_hits(0) {}
+		last_evaluations(0), last_deadline_misses(0),
+		last_temperature_runaways(0), last_cache_hits(0) {}
 
 	void watch(const population_t &_population, bool _silent = false)
 	{
@@ -64,6 +65,7 @@ class EvolutionStats: public BasicEvolutionStats, public eoMonitor
 
 	size_t last_evaluations;
 	size_t last_deadline_misses;
+	size_t last_temperature_runaways;
 	size_t last_cache_hits;
 };
 

@@ -35,7 +35,7 @@ std::ostream &operator<< (std::ostream &o, const Graph *graph)
 {
 	o	<< "Task Graph:" << std::endl
 		<< "  Number of tasks: " << graph->task_count << std::endl
-		<< std::setprecision(2) << std::setiosflags(std::ios::fixed)
+		<< std::setprecision(3) << std::setiosflags(std::ios::fixed)
 		<< "  Deadline: " << graph->deadline << std::endl;
 
 	o	<< "  " << std::setw(4) << "id" << " -> [ children ]" << std::endl;
