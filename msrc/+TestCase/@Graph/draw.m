@@ -49,7 +49,7 @@ function draw(graph, createFigure, proportionalPower)
       y(end + 1) = y0;
 
       text(task.start + 0.2 * task.duration, y0 + 0.3 * maxHeight, ...
-        [ 'T', num2str(id) ]);
+        [ 'T', num2str(id - 1) ]);
     end
 
     x(end + 1) = last;
@@ -61,7 +61,7 @@ function draw(graph, createFigure, proportionalPower)
     color = colors{mod(i - 1, length(colors)) + 1};
     line(x, y, 'Color', color);
 
-    processorNames{end + 1} = [ 'PE', num2str(i) ];
+    processorNames{end + 1} = [ 'PE', num2str(i - 1) ];
   end
 
   line([ graph.deadline, graph.deadline ], [ 1 (processorCount + 1) ], ...

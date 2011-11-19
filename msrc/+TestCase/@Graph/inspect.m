@@ -18,8 +18,8 @@ function inspect(graph)
     % Scheduling
     if graph.isScheduled
       Utils.inspectVector('Schedule', graph.schedule);
-      fprintf('Duration: %.2f s\n', graph.duration);
-      fprintf('Deadline: %.2f s\n', graph.deadline);
+      fprintf('Duration: %.3f s\n', graph.duration);
+      fprintf('Deadline: %.3f s\n', graph.deadline);
     end
   end
 
@@ -33,8 +33,8 @@ function inspect(graph)
     'alap', 'children');
   for task = graph.tasks
     task = task{1};
-    fprintf('  %4d ( %4d : %4d : %8.2f : %8.2f : %8.2f : %8.2f : %8.2f ) -> [ ', ...
-      task.id, mapping(task.id), task.type, task.start, task.duration, ...
+    fprintf('  %4d ( %4d : %4d : %8.3f : %8.3f : %8.3f : %8.3f : %8.3f ) -> [ ', ...
+      task.id - 1, mapping(task.id) - 1, task.type - 1, task.start, task.duration, ...
       task.asap, task.mobility, task.alap);
     first = true;
     for child = task.children
@@ -42,7 +42,7 @@ function inspect(graph)
       if ~first, fprintf(', ');
       else first = false;
       end
-      fprintf('%d', child.id);
+      fprintf('%d', child.id - 1);
     end
     fprintf(' ]\n');
   end

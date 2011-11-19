@@ -46,17 +46,22 @@ classdef Processor < handle
       duration = pe.nc(type) / pe.frequency;
     end
 
-    function makeEqualTo(pe, another)
-      pe.frequency = another.frequency;
-      pe.voltage = another.voltage;
-      pe.ngate = another.ngate;
+    function makeEqualTo(pe, another, onlyTypes)
+      if nargin < 3, onlyTypes = true; end
+
+      if ~onlyTypes
+        pe.frequency = another.frequency;
+        pe.voltage = another.voltage;
+        pe.ngate = another.ngate;
+      end
+
       pe.ceff = another.ceff;
       pe.nc = another.nc;
       pe.typeCount = another.typeCount;
     end
 
     function inspect(pe)
-      fprintf('Processor: %s %d\n', pe.name, pe.id);
+      fprintf('Processor: %s %d\n', pe.name, pe.id - 1);
       fprintf('  Frequency: %.2f GHz\n', pe.frequency / 1e9);
       fprintf('  Voltage: %.2f V\n', pe.voltage);
       fprintf('  Number of gates: %d\n', pe.ngate);
