@@ -1,33 +1,35 @@
 setup;
 
 Ngate = 2e5;
-Vdd = 1;
+Vdd = 0.9;
 
-T = (20:100) + Constants.degreeKelvin;
+T1 = 30 + Constants.degreeKelvin;
+T2 = 80 + Constants.degreeKelvin;
+N = 20;
+
+T = zeros(1, N);
+for i = 1:N
+  T(i) = T1 + (i - 1) * (T2 - T1) / N;
+end
+
 P = Power.calculateStatic(Ngate, T, Vdd);
 
 polynomial = polyfit(T, P, 1);
-
 P2 = polyval(polynomial, T);
 
-for i = 1:(length(polynomial) - 1)
-  if i > 1, fprintf(' + '); end
-  fprintf('%f * T^%d', polynomial(i), i);
-end
+n = length(T);
 
-fprintf(' + %f\n', polynomial(end));
+sxy = sum(T .* P);
+sx = sum(T);
+sy = sum(P);
+ssx = sum(T .^ 2);
 
-Ta = T(1);
-Tb = T(end);
-Tc = (Tb + Ta) / 2;
+b1 = (n * sxy - sx * sy) / (n * ssx - sx^2);
+b2 = (sy - b1 * sx) / n;
 
-Pa = Power.calculateStatic(Ngate, Ta, Vdd);
-Pb = Power.calculateStatic(Ngate, Tb, Vdd);
-Pc = Power.calculateStatic(Ngate, Tc, Vdd);
+fprintf('P = %f * T + %f\n', b1, b2);
 
-k = (Pb - Pa) / (Tb - Ta);
-b1 = Pa - k * Ta;
-b2 = Pc - k * Tc;
-b = (b1 + b2) / 2;
-
-plot(T, P, T, P2, T, k * T + b);
+figure;
+line(T, P, 'Color', 'k');
+line(T, P2, 'Color', 'r', 'Marker', 'x');
+line(T, b1 * T + b2, 'Color', 'g');
