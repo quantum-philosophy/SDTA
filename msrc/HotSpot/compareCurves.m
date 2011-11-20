@@ -1,6 +1,6 @@
 setup;
 
-chunks = 50;
+chunks = 20;
 
 totalTime = 1;
 maxPower = 20;
@@ -62,8 +62,8 @@ for i = 1:chunks
   Ths = [ Ths; chunkThs ];
 end
 
-fprintf('RMSE: %.2f\n', Utils.RMSE(chunkTce, chunkThs));
-fprintf('NRMSE: %.2f%%\n', Utils.NRMSE(chunkTce, chunkThs) * 100);
+fprintf('First NRMSE: %.2f%%\n', Error(1));
+fprintf('Last NRMSE: %.2f%%\n', Error(end));
 
 [ stepCount, processorCount ] = size(Tce);
 time = ((1:stepCount) - 1) * config.samplingInterval;

@@ -183,6 +183,9 @@ class TransientAnalyticalSolution: public AnalyticalSolution
 			solve_error_control(power, temperature, step_count);
 	}
 
+	size_t verify(const double *power, double *temperature, size_t step_count,
+		const double *reference);
+
 	private:
 
 	void solve_fixed_iterations(

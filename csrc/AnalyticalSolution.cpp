@@ -586,7 +586,7 @@ void TransientAnalyticalSolution::solve_error_control(
 	initialize(power, step_count);
 
 	for (i = 1; i < step_count; i++) {
-		multiply_matrix_vector_plus_vector(K, Y[i - 1], Q[i], Y[i]);
+		multiply_matrix_vector_plus_vector(K, Y[i - 1], Q[i - 1], Y[i]);
 	}
 
 	for (i = 0, k = 0; i < step_count; i++)
@@ -594,10 +594,11 @@ void TransientAnalyticalSolution::solve_error_control(
 			temperature[k] = Y[i][j] * sinvC[j] + ambient_temperature;
 
 	for (iterations = 1; iterations < max_iterations; iterations++) {
-		multiply_matrix_vector_plus_vector(K, Y[step_count - 1], Q[0], Y[0]);
+		multiply_matrix_vector_plus_vector(K, Y[step_count - 1],
+			Q[step_count - 1], Y[0]);
 
 		for (i = 1; i < step_count; i++) {
-			multiply_matrix_vector_plus_vector(K, Y[i - 1], Q[i], Y[i]);
+			multiply_matrix_vector_plus_vector(K, Y[i - 1], Q[i - 1], Y[i]);
 		}
 
 		max_error = 0;
@@ -656,13 +657,50 @@ void TransientAnalyticalSolution::initialize(const double *power, size_t step_co
 		multiply_matrix_vector(U, v_temp, Y[0]);
 	}
 	else {
-		/* We start from zero temperature, therefore, the first
-		 * multiplication by K is zero, hence:
-		 *
-		 * Y(1) = K * Y(0) + Q(0) = Q(0)
+		/* We start from zero temperature.
 		 */
-		__MEMCPY(Y[0], Q[0], node_count);
+		__NULLIFY(Y[0], node_count);
 	}
+}
+
+size_t  TransientAnalyticalSolution::verify(const double *power,
+	double *temperature, size_t step_count, const double *reference)
+{
+	int p;
+	size_t i, j, k, iterations;
+	double min = DBL_MAX, max = -DBL_MAX, error, delta;
+
+	for (i = 0; i < step_count; i++)
+		for (j = 0; j < processor_count; j++) {
+			min = std::min(reference[i * processor_count + j], min);
+			max = std::max(reference[i * processor_count + j], max);
+		}
+
+	initialize(power, step_count);
+
+	for (iterations = 0, p = -1; iterations < max_iterations; iterations++) {
+		error = 0;
+
+		for (i = 0, k = 0; i < step_count; i++, p = (p + 1) % step_count) {
+			if (p >= 0)
+				multiply_matrix_vector_plus_vector(K, Y[p], Q[p], Y[i]);
+
+			for (j = 0; j < processor_count; j++, k++) {
+				temperature[k] = Y[i][j] * sinvC[j] + ambient_temperature;
+				delta = reference[k] - temperature[k];
+				error += delta * delta;
+			}
+		}
+
+		error = std::sqrt(error / double(step_count)) / (max - min);
+
+		if (error < tolerance) {
+			iterations++;
+			break;
+		}
+	}
+
+	return iterations;
 }
 
 /******************************************************************************/

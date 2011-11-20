@@ -21,8 +21,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		params.update(param_stream);
 	}
 
+	matrix_t power;
+	from_matlab(prhs[5], power);
+
 	matrix_t reference;
-	from_matlab(prhs[5], reference);
+	from_matlab(prhs[6], reference);
 
 	SystemTuning system_tuning;
 	system_tuning.setup(params);
@@ -32,18 +35,35 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	TestCase test(system, floorplan, hotspot, system_tuning, solution_tuning);
 
-	matrix_t power;
-	matrix_t temperature;
-
 	struct timespec begin, end;
 
+	matrix_t temperature, total_power, extended_power;
+
+	matrix_t *used_power = &power;
+
+	if (solution_tuning.method == "hotspot") {
+		size_t step_count = power.rows();
+		size_t processor_count = test.architecture->size();
+		size_t node_count = 4 * processor_count + 12;
+
+		extended_power.resize(step_count, node_count);
+		extended_power.nullify();
+
+		double *_power = power;
+		double *_extended_power = extended_power;
+
+		for (size_t i = 0; i < step_count; i++)
+			__MEMCPY(_extended_power + i * node_count,
+				_power + i * processor_count, processor_count);
+
+		used_power = &extended_power;
+	}
+
 	Time::measure(&begin);
-	size_t iterations = test.hotspot->verify(
-		test.schedule, temperature, power, reference);
+	size_t iterations = test.hotspot->verify(*used_power, temperature, reference);
 	Time::measure(&end);
 
 	plhs[0] = to_matlab(temperature);
-	plhs[1] = to_matlab(power);
-	plhs[2] = to_matlab(Time::substract(&end, &begin));
-	plhs[3] = to_matlab(iterations);
+	plhs[1] = to_matlab(Time::substract(&end, &begin));
+	plhs[2] = to_matlab(iterations);
 }

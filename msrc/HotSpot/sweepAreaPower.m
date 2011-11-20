@@ -2,7 +2,7 @@ setup;
 
 chunks = [ 1 (5:5:50) ];
 
-totalTime = 1;
+totalTime = 0.5;
 
 config = Optima('001');
 
@@ -19,10 +19,13 @@ fprintf('%20s%20s%20s%20s%20s%20s%20s%20s%20s\n', ...
   'Area, mm^2', 'Die, mm', 'Spreader, mm', 'Sink, mm', 'Thickness, mm', ...
   'Pdyn, W', 'Ptot, W', 'Tmin, C', 'Tmax, C');
 
+param_line = Utils.configStream('deadline_ratio', 1, 'verbose', 0);
+
 power = Optima.get_power(config.system, config.floorplan, ...
-  config.hotspot, config.params, 'deadline_ratio 1');
+  config.hotspot, config.params, param_line);
 
 [ stepCount, processorCount ] = size(power);
+
 timeScale = totalTime / (stepCount * config.samplingInterval);
 
 for k = 1:variantCount

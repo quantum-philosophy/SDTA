@@ -1,7 +1,7 @@
 classdef Basic < handle
   properties (Constant)
-    maxIterations = 1;
-    tolerance = 0;
+    maxIterations = 1000;
+    tolerance = 0.01;
 
     hotspot_line = '';
 
@@ -141,7 +141,11 @@ classdef Basic < handle
     end
 
     function name = hsName(sweep)
-      name = struct('short', 'HS', 'long', 'One HotSpot Simulation');
+      name = struct('short', 'HS', 'long', 'One TTA with HotSpot');
+    end
+
+    function name = vhsName(sweep)
+      name = struct('short', 'vHS', 'long', 'TTA with HotSpot');
     end
 
     function name = ssName(sweep)
@@ -161,14 +165,18 @@ classdef Basic < handle
     end
 
     function name = taName(sweep)
-      name = struct('short', 'TA', 'long', 'One Analytical Simulation');
+      name = struct('short', 'TA', 'long', 'One TTA with Analytical Solution');
+    end
+
+    function name = vtaName(sweep)
+      name = struct('short', 'vTA', 'long', 'TTA with Analytical Solution');
     end
 
     function name = tamName(sweep)
-      name = struct('short', 'TAm', 'long', 'One Analytical Simulation in Matlab');
+      name = struct('short', 'TAm', 'long', 'One TTA with Analytical Solution in Matlab');
     end
 
-    function [ T, t ] = ceSolve(sweep, i, config)
+    function [ T, t ] = ceSolve(sweep, i, config, varargin)
       param_line = Utils.configStream(...
           'verbose', 0, ...
           'solution', 'condensed_equation', ...
@@ -177,7 +185,7 @@ classdef Basic < handle
       [ T, t ] = sweep.optimaSolveOnAverage(param_line);
     end
 
-    function [ T, t ] = cemSolve(sweep, i, config)
+    function [ T, t ] = cemSolve(sweep, i, config, varargin)
       param_line = Utils.configStream(...
           'verbose', 0, ...
           'solution', 'condensed_equation', ...
@@ -186,7 +194,7 @@ classdef Basic < handle
       [ T, t ] = sweep.matlabOnAverage(param_line, 'ce');
     end
 
-    function [ T, t ] = hsSolve(sweep, i, config)
+    function [ T, t ] = hsSolve(sweep, i, config, varargin)
       param_line = Utils.configStream(...
           'verbose', 0, ...
           'solution', 'hotspot', ...
@@ -197,7 +205,18 @@ classdef Basic < handle
       [ T, t ] = sweep.optimaSolveOnAverage(param_line);
     end
 
-    function [ T, t ] = ssSolve(sweep, i, config)
+    function [ T, t ] = vhsSolve(sweep, i, config, Tref)
+      param_line = Utils.configStream(...
+          'verbose', 0, ...
+          'solution', 'hotspot', ...
+          'max_iterations', sweep.maxIterations, ...
+          'tolerance', sweep.tolerance, ...
+          'leakage', '', config{:});
+
+      [ T, t ] = sweep.optimaVerifyOnAverage(param_line, Tref);
+    end
+
+    function [ T, t ] = ssSolve(sweep, i, config, varargin)
       param_line = Utils.configStream(...
           'verbose', 0, ...
           'solution', 'precise_steady_state', ...
@@ -206,7 +225,7 @@ classdef Basic < handle
       [ T, t ] = sweep.optimaSolveOnAverage(param_line);
     end
 
-    function [ T, t ] = ssmSolve(sweep, i, config)
+    function [ T, t ] = ssmSolve(sweep, i, config, varargin)
       param_line = Utils.configStream(...
           'verbose', 0, ...
           'solution', 'condensed_equation', ...
@@ -215,7 +234,7 @@ classdef Basic < handle
       [ T, t ] = sweep.matlabOnAverage(param_line, 'ss');
     end
 
-    function [ T, t ] = umfSolve(sweep, i, config)
+    function [ T, t ] = umfSolve(sweep, i, config, varargin)
       param_line = Utils.configStream(...
           'verbose', 0, ...
           'solution', 'condensed_equation', ...
@@ -224,7 +243,7 @@ classdef Basic < handle
       [ T, t ] = sweep.matlabOnAverage(param_line, 'band');
     end
 
-    function [ T, t ] = fftSolve(sweep, i, config)
+    function [ T, t ] = fftSolve(sweep, i, config, varargin)
       param_line = Utils.configStream(...
           'verbose', 0, ...
           'solution', 'condensed_equation', ...
@@ -233,16 +252,29 @@ classdef Basic < handle
       [ T, t ] = sweep.matlabOnAverage(param_line, 'bc');
     end
 
-    function [ T, t ] = taSolve(sweep, i, config)
+    function [ T, t ] = taSolve(sweep, i, config, varargin)
       param_line = Utils.configStream(...
           'verbose', 0, ...
           'solution', 'transient_analytical', ...
+          'max_iterations', 1, ...
+          'tolerance', 0, ...
           'leakage', '', config{:});
 
       [ T, t ] = sweep.optimaSolveOnAverage(param_line);
     end
 
-    function [ T, t ] = tamSolve(sweep, i, config)
+    function [ T, t ] = vtaSolve(sweep, i, config, Tref)
+      param_line = Utils.configStream(...
+          'verbose', 0, ...
+          'solution', 'transient_analytical', ...
+          'max_iterations', sweep.maxIterations, ...
+          'tolerance', sweep.tolerance, ...
+          'leakage', '', config{:});
+
+      [ T, t ] = sweep.optimaVerifyOnAverage(param_line, Tref);
+    end
+
+    function [ T, t ] = tamSolve(sweep, i, config, varargin)
       param_line = Utils.configStream(...
           'verbose', 0, ...
           'solution', 'condensed_equation', ...
@@ -259,7 +291,14 @@ classdef Basic < handle
 
       for j = 1:sweep.solutionCount
         name = sweep.solutions{j};
-        [ temp, time ] = sweep.([ name, 'Solve' ])(i, config);
+        if j > 1
+          [ temp, time ] = sweep.([ name, 'Solve' ])(i, config, T(1, :, :));
+        else
+          [ temp, time ] = sweep.([ name, 'Solve' ])(i, config);
+        end
+
+        pause(10);
+
         t(j, 1:length(time)) = time;
         T(j, 1:size(temp, 1), 1:size(temp, 2)) = temp;
       end
@@ -283,7 +322,28 @@ classdef Basic < handle
       time = total / sweep.tryCount;
     end
 
-    function [ T, time ] = matlabOnAverage(sweep, param_line, method)
+    function [ T, time ] = optimaVerifyOnAverage(sweep, param_line, Tref)
+      config = sweep.config;
+
+      n = sweep.tryCount;
+
+      for i = 1:n
+        [ T, dummy, t, it ] = Optima.verify( ...
+          config.system, config.floorplan, config.hotspot, ...
+          config.params, param_line, Tref);
+
+        if i == 1
+          total = t;
+        else
+          total = total + t;
+        end
+      end
+
+      time = total / n;
+      time(end + 1) = it / 1000;
+    end
+
+    function [ T, time ] = matlabOnAverage(sweep, param_line, method, Tref)
       config = sweep.config;
       if nargin < 3, method = 'band'; end
 

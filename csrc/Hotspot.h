@@ -189,8 +189,32 @@ class TransientAnalyticalHotspot: public Hotspot
 		const std::string &config_line, size_t max_iterations,
 		double tolerance, bool warmup);
 
-	void solve(const matrix_t &power, matrix_t &temperature);
-	void solve(const Schedule &schedule, matrix_t &temperature, matrix_t &power);
+	inline void solve(const matrix_t &power, matrix_t &temperature)
+	{
+		temperature.resize(power);
+		equation.solve(power, temperature, power.rows());
+	}
+
+	inline void solve(const Schedule &schedule,
+		matrix_t &temperature, matrix_t &power)
+	{
+		dynamic_power.compute(schedule, power);
+		solve(power, temperature);
+	}
+
+	inline size_t verify(const matrix_t &power, matrix_t &temperature,
+		const matrix_t &reference)
+	{
+		temperature.resize(power);
+		return equation.verify(power, temperature, power.rows(), reference);
+	}
+
+	inline size_t verify(const Schedule &schedule, matrix_t &temperature,
+		matrix_t &power, const matrix_t &reference)
+	{
+		dynamic_power.compute(schedule, power);
+		return verify(power, temperature, reference);
+	}
 };
 
 typedef std::vector<int> SlotTrace;

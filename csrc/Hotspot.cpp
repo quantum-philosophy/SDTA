@@ -308,20 +308,6 @@ TransientAnalyticalHotspot::TransientAnalyticalHotspot(
 #endif
 }
 
-void TransientAnalyticalHotspot::solve(
-	const matrix_t &power, matrix_t &temperature)
-{
-	temperature.resize(power);
-	equation.solve(power, temperature, power.rows());
-}
-
-void TransientAnalyticalHotspot::solve(const Schedule &schedule,
-	matrix_t &temperature, matrix_t &power)
-{
-	dynamic_power.compute(schedule, power);
-	solve(power, temperature);
-}
-
 /******************************************************************************/
 
 BasicSteadyStateHotspot::BasicSteadyStateHotspot(
