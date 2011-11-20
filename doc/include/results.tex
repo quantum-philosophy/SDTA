@@ -1,56 +1,50 @@
 \subsection{Computation Performance} \label{sec:results-ssdtp}
-In this subsection we investigate the scalability properties of the proposed solution for the SSDTP calculation and compare it with one transient temperature simulation (TTS) of the application period, which is not sufficient to reach the SSDTP as it was shown in \secref{sec:hotspot-solution}. To perform the TTA, the HotSpot thermal simulator is used.
+In this subsection we investigate the scalability properties of the proposed solution for the SSDTP calculation and compare it with the approaches based on the FFT (\secref{sec:fast-fourier-transform}), TTA with the analytical solution (\secref{sec:tta-analytical}), and TTA with HotSpot (\secref{sec:hotspot-solution})\footnote{All the experiments are done on a Linux machine with Intel\textregistered\ Core\texttrademark\ i7-2600 (3.4GHz, 4 cores, 8 threads) and 8Gb of RAM.}. In the last two case, the TTA is stopped when the normalized RMSE relative to the SSDTP obtained with the CE method is less than 1\%. The sampling interval is equal to \mbox{1 $ms$}.
 
-\image{scaling-time}{80 230 80 230}{Scalability with the application period for a quad-core architecture. The sampling interval is fixed to 1 millisecond where 1 second on the horizontal axis corresponds to 1000 steps in the power profile. The comparison is given on the semilogarithmic scale.}
-\begin{itable}{scaling-time}{|r|r|r|r|r|}
+\image{scaling-time}{40 230 40 230}{Scalability with the application period for a quad-core architecture. The comparison is given on the semilogarithmic scale.}
+\begin{itable}{scaling-time}{|r|r|r|r|r|r|r|}
   {Scalability with the application period shown in \figref{fig:scaling-time}.}
-  {$\mathcal{T}$ --- the application period, CE --- the Condensed Equation method, TTS --- one Transient Temperature Simulation, NRMSE --- the Normalized Root Mean Square Error.}
+  {$\period$ --- the application period, CE --- the CE method in $ms$, FFT --- the speed-up relative to the FFT method, $TTA^{AS}$, $TTA^{HS}$ --- the speed-up relative to the TTA with the analytical solution and TTA with HotSpot, respectively, along with the number of iterations.}
   \hline
-  $\mathcal{T}$, s & CE, ms & TTS, ms & Speedup, $\times$ & NRMSE, \% \\
+  \multirow{2}{*}{$\period$, s} & \multirow{2}{*}{CE, ms} & \multirow{2}{*}{FFT, $\times$} & \multicolumn{2}{c|}{$TTA^{AS}$} & \multicolumn{2}{c|}{$TTA^{HS}$} \\ \cline{4-7}
+  & & & $\times$ & Periods & $\times$ & Periods \\
   \hline
   \hline
-  0.05 &  0.18 &   10.24 & 56.93 & 25.81 \\
-   0.1 &  0.35 &   20.26 & 58.30 & 19.02 \\
-   0.5 &  1.63 &   97.36 & 59.73 &  9.65 \\
-     1 &  3.23 &  193.31 & 59.80 &  7.80 \\
-     2 &  6.48 &  382.59 & 59.08 &  6.46 \\
-     3 &  9.58 &  573.15 & 59.83 &  5.79 \\
-     4 & 12.78 &  770.09 & 60.25 &  5.34 \\
-     5 & 16.10 &  964.75 & 59.92 &  5.00 \\
-     6 & 19.32 & 1146.87 & 59.36 &  4.72 \\
-     7 & 22.51 & 1335.26 & 59.31 &  4.49 \\
-     8 & 25.69 & 1536.91 & 59.82 &  4.28 \\
-     9 & 28.94 & 1729.39 & 59.76 &  4.09 \\
-    10 & 32.65 & 1921.14 & 58.83 &  3.93 \\
+  0.05 & 0.18 & 52.12 & 168.71 & 385 & 6750.96 & 689 \\
+  0.10 & 0.39 & 41.64 &  77.91 & 191 & 5301.97 & 268 \\
+  0.20 & 0.67 & 41.64 &  42.79 &  95 & 5188.80 & 122 \\
+  0.30 & 1.03 & 39.09 &  27.97 &  63 & 5030.25 &  86 \\
+  0.40 & 1.36 & 39.16 &  21.43 &  48 & 4887.90 &  63 \\
+  0.50 & 1.70 & 43.56 &  16.99 &  38 & 4880.57 &  50 \\
+  0.60 & 2.04 & 40.86 &  14.34 &  32 & 4899.20 &  42 \\
+  0.70 & 2.32 & 42.46 &  12.87 &  28 & 4935.89 &  36 \\
+  0.80 & 2.66 & 41.70 &  11.07 &  24 & 4842.62 &  31 \\
+  0.90 & 2.98 & 42.54 &  10.21 &  22 & 4883.76 &  28 \\
+  1.00 & 3.33 & 45.19 &   9.23 &  20 & 4892.86 &  25 \\
   \hline
 \end{itable}
-First, we vary the application period keeping the sampling interval constant and equal to 1 millisecond. The comparison for a quad-core architecture is given in \figref{fig:scaling-time} and \tabref{tab:scaling-time}. It can be seen that the CE method is roughly 60 times faster than one iteration of the TTA\footnote{All the experiments are done on a Linux machine with Intel\textregistered\ Core\texttrademark\ i7-2600 (3.4GHz, 4 cores, 8 threads) and 8Gb of RAM.}. The application period proportionally corresponds to the number of steps in the power profile (one second is equal to 1000 steps in the power profile in the above-mentioned example). Hence, we would see the same curves, if we were investigating the dependency on the power profile discretization.
+First, we vary the application period keeping the architecture fixed, which is a quad-core platform with the core area of 4 $mm^2$ and configuration shown in \tabref{tab:parameters}. The comparison is depicted in \figref{fig:scaling-time}. The computational time of the CE method and its speed-up relative to the rest are given in \tabref{tab:scaling-time}. It can be seen that the proposed technique is roughly 5000 times faster than the TTA with HotSpot and from 9 to 170 times faster than the TTA with the analytical solution. The number of application periods, over which the TTA is performed, is significantly larger for short application periods (\secref{sec:hotspot-iterative-solution}) while longer periods imply larger numbers of steps in the power profiles keeping the cost of the analysis high.
 
-\image{scaling-cores}{80 230 80 230}{Scalability with the number of cores. The application period is fixed to 1 second that corresponds to 1000 steps in the power profile. The comparison is given on the semilogarithmic scale.}
-\begin{itable}{scaling-cores}{|r|r|r|r|r|}
+\image{scaling-cores}{40 230 40 230}{Scalability with the number of cores. The comparison is given on the semilogarithmic scale.}
+\begin{itable}{scaling-cores}{|r|r|r|r|r|r|r|}
   {Scalability with the number of cores shown in \figref{fig:scaling-cores}.}
-  {$N_p$ --- the number of processing elements (cores), CE --- the Condensed Equation method, TTS --- one Transient Temperature Simulation, NRMSE --- the Normalized Root Mean Square Error.}
+  {$N_p$ --- the number of cores, CE --- the CE method in $ms$, FFT --- the speed-up relative to the FFT method, $TTA^{AS}$, $TTA^{HS}$ --- the speed-up relative to the TTA with the analytical solution and TTA with HotSpot, respectively, along with the number of iterations.}
   \hline
-  $N_p$ & CE, ms & TTS, ms & Speedup, $\times$ & NRMSE, \% \\
+  \multirow{2}{*}{$N_p$} & \multirow{2}{*}{CE, ms} & \multirow{2}{*}{FFT, $\times$} & \multicolumn{2}{c|}{$TTA^{AS}$} & \multicolumn{2}{c|}{$TTA^{HS}$} \\ \cline{4-7}
+  & & & $\times$ & Periods & $\times$ & Periods \\
   \hline
   \hline
-    1 &    0.99 &    97.00 & 97.93 &  25.30 \\
-   10 &   16.46 &   632.50 & 38.44 &  40.61 \\
-   20 &   46.00 &  1761.75 & 38.30 &  69.51 \\
-   30 &   98.49 &  3472.21 & 35.25 & 102.00 \\
-   40 &  172.69 &  5827.77 & 33.75 & 130.02 \\
-   50 &  266.08 &  8771.93 & 32.97 & 142.30 \\
-   60 &  380.95 & 12235.91 & 32.12 & 185.32 \\
-   70 &  517.04 & 16363.54 & 31.65 & 220.10 \\
-   80 &  675.21 & 21104.98 & 31.26 & 245.43 \\
-   90 &  856.20 & 26415.77 & 30.85 & 277.00 \\
-  100 & 1058.35 & 32329.09 & 30.55 & 308.01 \\
+   2 &  0.77 & 70.79 & 15.74 & 33 & 3236.75 & 45 \\
+   4 &  1.63 & 46.09 & 17.68 & 38 & 2906.30 & 50 \\
+   8 &  4.67 & 30.08 & 20.40 & 44 & 2695.69 & 55 \\
+  16 & 15.48 & 21.08 & 24.36 & 54 & 2434.74 & 62 \\
+  32 & 56.44 & 13.13 & 27.24 & 62 & 2214.19 & 65 \\
   \hline
 \end{itable}
-The second part of the comparison is the scalability with the number of processing elements shown in \figref{fig:scaling-cores} and \tabref{tab:scaling-cores}. It can be seen that the difference between computation times of the CE method and one TTS becomes smaller when the number of cores is increasing. At the same time the mismatch between the SSDTP and temperature profile produced by one TTA dramatically increases, which means that larger number of the TTA iterations is required to reach the same level of accuracy.
+The second part of the comparison is the scalability with the number of processing elements shown in \figref{fig:scaling-cores} and \tabref{tab:scaling-cores}. The configuration of the chip is similar to the previous experiment. In can be observed that the proposed solution provides a significant performance improvement relative to its competitors where in order to keep the same level of accuracy the TTA requires larger number of periods of the application to be analyzed.
 
 \subsection{Reliability Optimization}
-In this section we present the results of the reliability optimization described in \secref{sec:reliability-problem}. The experimental setup is the following. Hypothetical platforms and periodic applications are generated randomly \cite{dick1998} in such a way that the execution time of tasks is uniformly distributed between 1 and 50 milliseconds and the leakage power accounts for 30--55\% of the total power dissipation. The corresponding temperature variation lies between the ambient temperature of $27^{\circ}C$ and maximal temperature of $100^{\circ}C$.
+In this section we present the results of the reliability optimization described in \secref{sec:reliability-problem}. The experimental setup is the following. Heterogeneous platforms and periodic applications are generated randomly \cite{dick1998} in such a way that the execution time of tasks is uniformly distributed between 1 and 20 milliseconds and the leakage power accounts for 30--50\% of the total power dissipation. The supply voltage and frequency of cores vary between \mbox{0.8--1.2 $V$} and \mbox{800--1200 $MHz$}, respectively. The corresponding temperature variation lies between the ambient temperature of $27^{\circ}C$ and maximal temperature of $100^{\circ}C$. The area of one core is 4 $mm^2$, other parameters of the die and thermal package are given in \tabref{tab:parameters}. In \equref{eq:cycles-to-failure} the Coffin-Manson exponent $b$ is set to 6 and the activation energy $E_a$ to 0.5, and the elastic temperature region $\Delta T_0$ to zero. The coefficient of proportionality $A$ is indifferent, since we are concerned about the relative improvement.
 
 In each of the experiments, we compare the optimized solution with the initial one that is obtained in the following way. First, we calculate the average execution time of each task among the processing elements. Then, we compute the mobility of the tasks and schedule the application according to it \cite{schmitz2004}. The mapping is done along with the scheduling where each task being considered is assigned to the earliest available core in the system. This combination of mapping and scheduling is the starting point for the future optimization. The deadline of the application is set according to the duration of the initial schedule with additional 5\%.
 
@@ -59,6 +53,7 @@ In each of the experiments, we compare the optimized solution with the initial o
   {$N_p$ --- the number of cores, $N_t$ --- the number of tasks, $t_{avg}$ --- the average computational time, $MTTF_{avg}$ --- the average MTTF improvement, $E_{avg}$ --- the average change in the energy consumption.}
   \hline
   $N_p$ & $N_t$ & $t_{avg}, m$ & $MTTF_{avg}$, $\times$ & $E_{avg}$, $\times$ \\
+  \hline
   \hline
    2 &   20 &  0.49 & 17.47 & 0.9996 \\
    4 &   40 &  1.56 &  4.52 & 0.9998 \\
@@ -75,6 +70,7 @@ In the first set of experiments, we change the number of cores while keeping the
   \hline
   $N_p$ & $N_t$ & $t_{avg}, m$ & $MTTF_{avg}$, $\times$ & $E_{avg}$, $\times$ \\
   \hline
+  \hline
   4 &  20 &  0.66 & 8.90 & 0.9989 \\
   4 &  40 &  1.66 & 6.23 & 0.9997 \\
   4 &  80 &  4.58 & 3.84 & 0.9999 \\
@@ -89,6 +85,7 @@ For the second set of experiments, we keep the quad-core architecture and vary t
   {$N_p$ --- the number of cores, $N_t$ --- the number of tasks, $MTTF^{CE}_{avg}$, $MTTF^{HS}_{avg}$, and $MTTF^{SS}_{avg}$ --- the average improvements of the MTTF obtained by the CE method, TTA with HotSpot, and SS approximation, respectively.}
   \hline
   $N_p$ & $N_t$ & $MTTF^{CE}_{avg}$, $\times$ & $MTTF^{HS}_{avg}$, $\times$ & $MTTF^{SS}_{avg}$, $\times$ \\
+  \hline
   \hline
   4 &  20 & 8.90 & \todo{0} & 5.62 \\
   4 &  40 & 6.23 & \todo{0} & 2.87 \\

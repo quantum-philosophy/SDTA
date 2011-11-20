@@ -1,34 +1,34 @@
 In this section we propose a fast approach to solve the system given by \equref{eq:system}. The approach consists of an auxiliary transformation aimed to be more efficient in the future calculations, \secref{sec:ce-auxiliary}, and the solution itself, \secref{sec:ce-solution}.
 
 \subsection{Observation}
-\image{sparseness-of-system}{0 210 0 210}{Sparseness of the system of linear equations for the SSDTP calculation. Each blue point corresponds to a non-zero element of the matrix of the system.}
+\image{sparseness-of-system}{-40 210 -40 210}{Sparseness of the system of linear equations for the SSDTP calculation. Each blue point corresponds to a non-zero element of the matrix of the system.}
 We make an important observation that the system given by \equref{eq:system} has a very specific structure depicted in \figref{fig:sparseness-of-system}. Non-zero elements, marked with blue points in the figure, are located only on the block diagonal, one subdiagonal just above the block diagonal, and one subdiagonal in the left bottom corner. The block diagonal is composed of $N_n \times N_n$ matrices while all elements of the subdiagonals are equal \mbox{to $-1$}. Linear systems with the same structure arise in boundary value problems for ODEs where a common technique to solve them is to form a so-called condensed equation (CE), or condensed system \cite{stoer2002}. Before undertaking this procedure, we perform an adjustment to the initial analytical solution described in the following subsection.
 
 \subsection{Auxiliary Transformation} \label{sec:ce-auxiliary}
-It can be noticed that the analytical solution in \equref{eq:solution} includes the matrix exponential and inverse of the product \mbox{$\m{A} = - \m{\m{C}}^{-1} \: \m{\m{G}}$}, which is an arbitrary square matrix. It is preferable to have a symmetric matrix to perform these computations, since for a real symmetric matrix $\m{M}$ the following eigenvalue decomposition with independent (orthogonal) eigenvectors holds \cite{press2007}:
+It can be noticed that the analytical solution in \equref{eq:solution} includes the matrix exponential and inverse of the product \mbox{$\m{A} = - \m{C}^{-1} \: \m{G}$}, which is an arbitrary square matrix. It is preferable to have a symmetric matrix to perform these computations, since for a real symmetric matrix $\m{M}$ the following eigenvalue decomposition with independent (orthogonal) eigenvectors holds \cite{press2007}:
 \begin{equation} \label{eq:eigenvalue-decomposition}
-  \m{M} = \m{\m{U}} \m{\Lambda} \m{\m{U}}^\v{T}
+  \m{M} = \m{U} \m{\Lambda} \m{U}^\v{T}
 \end{equation}
-where $\m{\m{U}}$ is a square matrix of the eigenvectors and $\m{\Lambda}$ is a diagonal matrix of the eigenvalues of $\m{M}$. Once we have obtained such a decomposition, the calculation of the matrix exponential and inverse becomes a trivial task:
+where $\m{U}$ is a square matrix of the eigenvectors and $\m{\Lambda}$ is a diagonal matrix of the eigenvalues of $\m{M}$. Once we have obtained such a decomposition, the calculation of the matrix exponential and inverse becomes a trivial task:
 \begin{align*}
-  & e^\m{M} = \m{\m{U}} \; e^{\m{\Lambda}} \; \m{\m{U}}^\v{T} = \m{\m{U}}\: \left[
+  & e^\m{M} = \m{U} \; e^{\m{\Lambda}} \; \m{U}^\v{T} = \m{U}\: \left[
       \begin{array}{ccc}
         e^{\lambda_0} & \cdots & 0 \\
         \vdots & \ddots & \vdots \\
         0 & \cdots & e^{\lambda_{n - 1}}
       \end{array}
-    \right] \; \m{\m{U}}^\v{T} \\
-  & \m{M}^{-1} = \m{\m{U}} \: \m{\Lambda}^{-1} \: \m{\m{U}}^\v{T} = \m{\m{U}} \left[
+    \right] \; \m{U}^\v{T} \\
+  & \m{M}^{-1} = \m{U} \: \m{\Lambda}^{-1} \: \m{U}^\v{T} = \m{U} \left[
       \begin{array}{ccc}
         \frac{1}{\lambda_0} & \cdots & 0 \\
         \vdots & \ddots & \vdots \\
         0 & \cdots & \frac{1}{\lambda_{n - 1}}
       \end{array}
-    \right] \m{\m{U}}^\v{T} \\
+    \right] \m{U}^\v{T} \\
 \end{align*}
-where $\lambda_i$ are eigenvalues of $M$.
+where $\lambda_i$ are eigenvalues of $\m{M}$.
 
-Since the conductance matrix $\m{\m{G}}$ is a symmetric matrix (and the capacitance $\m{\m{C}}$ a diagonal matrix) \cite{rao2007}, we can apply the following substitution aimed to keep the symmetry:
+Since the conductance matrix $\m{G}$ is a symmetric matrix (and the capacitance $\m{C}$ a diagonal matrix) \cite{rao2007}, we can apply the following substitution aimed to keep the symmetry:
 \begin{align}
   & \tilde{\v{T}}(t) = \m{C}^{\frac{1}{2}} \v{T}(t) \label{eq:substitution} \\
   & \tilde{\m{A}} = -\m{C}^{-\frac{1}{2}} \m{G} \: \m{C}^{-\frac{1}{2}} \nonumber

@@ -14,10 +14,10 @@ where:
   & \m{B}_i = \m{A}^{-1}(e^{\m{A} \Delta t_i} - \m{I})\m{C}^{-1}
 \end{align*}
 
-\subsection{Transient Temperature Analysis (TTA)}
+\subsection{Transient Temperature Analysis (TTA)} \label{sec:tta-analytical}
 Given the initial temperature $\v{T}_0$, the recurrence in \equref{eq:recurrent-system} can be applied to perform the TTA. Our experiments show that when time intervals $\Delta t_i$ have the same length, i.e., $\Delta t_i = \Delta t, \forall i$, and matrices $\m{K}_i$ and $\m{B}_i$ become constant, this approach demonstrates a significant performance improvement relative to iterative solutions of ODEs, e.g., the fourth-order Runge-Kutta method implemented in HotSpot. The same observation is made in \cite{thiele2011}.
 
-The TTA using the analytical technique given in \equref{eq:recurrent-system} can be employed to approximate the SSDTP by applying it over successive application periods, as shown in \secref{sec:hotspot-iterative-solution}. Since each iteration of the TTA with this approach is much faster than with HotSpot, it will significantly speed up the SSDTP calculation. However, the number of required iterations is the same as with HotSpot (see \figref{fig:hotspot-error}) keeping the computational process relatively slow.
+The TTA using the analytical technique given in \equref{eq:recurrent-system} can be employed to approximate the SSDTP by applying it over successive application periods, as shown in \secref{sec:hotspot-iterative-solution}. Since each iteration of the TTA with this approach is much faster than with HotSpot, it will significantly speed up the SSDTP calculation. However, the number of required iterations is similar to HotSpot (see \figref{fig:hotspot-error}) keeping the computational process relatively slow.
 
 \subsection{Steady-State Dynamic Temperature Analysis (SSDTA)}
 For the steady-state case the following system of linear equations can be derived from \equref{eq:recurrent-system}:
@@ -66,7 +66,7 @@ It can be seen that we have obtained a regular system of linear equations with a
 \subsubsection{Direct Dense and Sparse Solvers}
 \input{include/direct-solutions}
 
-\subsubsection{Solutions for Toeplitz and Block-Circulant Systems}
+\subsubsection{Solutions for Toeplitz and Block-Circulant Systems} \label{sec:fast-fourier-transform}
 \input{include/fast-fourier-transform}
 
 \subsubsection{Iterative Methods for Systems of Linear Equations}

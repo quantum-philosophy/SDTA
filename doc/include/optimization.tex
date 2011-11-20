@@ -13,7 +13,8 @@ Maximize:
 \begin{align}
   & \mathcal{F} = \min_{i = 0}^{N_p - 1} \theta_i \label{eq:fitness-function} \\
   & s.t. \nonumber \\
-  & Duration(G) \leq \period \nonumber
+  & Duration(G) \leq \period \nonumber \\
+  & \max_{i, j} \mathbb{T} \leq T_{max} \nonumber
 \end{align}
 where $\theta_i$ is the MTTF of the $i$th processing element given by \equref{eq:one-mttf}, $\period$ is the period of the application. $Duration(G)$ denotes the execution time of the whole application mapped and scheduled onto the platform.
 
