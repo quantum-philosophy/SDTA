@@ -1,0 +1,89 @@
+#!/usr/bin/env ruby
+
+if ARGV.length != 2
+  puts 'Need some arguments...'
+  puts '1. A task graph in the LEDA format.'
+  puts '2. Architecture specification like "[ [ frequency, voltage, # of gates ], ... ]"'
+  exit
+end
+
+n = '[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?'
+
+NC = []
+CEFF = []
+LINKS = []
+PIDS = []
+DEADLINE = []
+
+def new_task graph_id, task_id, nc, processor_id, ceff, priority, deadline
+  NC[task_id] = nc
+  CEFF[task_id] = ceff
+  PIDS.push processor_id
+  DEADLINE.push deadline
+end
+
+def new_edge from_graph_id, from_task_id, to_graph_id, to_task_id, type
+  (LINKS[from_task_id] ||= [])[to_task_id] = 1
+end
+
+File.open(ARGV[0], 'r') do |file|
+  while line = file.gets
+    if line =~ %r[Task:\s*\(\s*(#{n})\s+(#{n})\s*\)\s*NC:\s*(#{n})\s+map:\s*(#{n})\s+Ceff:\s*(#{n})\s+pri:\s*(#{n})\s+Deadline:\s*(#{n})]
+      new_task $1.to_i, $2.to_i, $3.to_i, $4.to_i, $5.to_f, $6.to_i, $7.to_f
+    elsif line =~ %r[Edge:\s*\(\s*(#{n})\s+(#{n})\s*\)\s*-->\s*\(\s*(#{n})\s+(#{n})\s*\)\s*etype:\s*(#{n})]
+      new_edge $1.to_i, $2.to_i, $3.to_i, $4.to_i, $5.to_i
+    end
+  end
+end
+
+task_count = NC.length
+
+PIDS.uniq!
+processor_count = PIDS.length
+platform = eval ARGV[1]
+
+if processor_count != platform.length
+  puts 'There should be #{ processor_count } cores.'
+  exit
+end
+
+puts "@type (1 x #{ task_count })"
+puts (0...task_count).to_a.join "\t"
+puts
+
+puts "@link (#{ task_count } x #{ task_count })"
+(0...task_count).each do |i|
+  links = []
+  (0...task_count).each do |j|
+    links.push((LINKS[i] || [])[j].nil? ? 0 : 1)
+  end
+  puts links.join "\t"
+end
+puts
+
+puts "@frequency (1 x #{ processor_count })"
+puts platform.collect{ |p| p[0].to_i }.join "\t"
+puts
+
+puts "@voltage (1 x #{ processor_count })"
+puts platform.collect{ |p| p[1] }.join "\t"
+puts
+
+puts "@ngate (1 x #{ processor_count })"
+puts platform.collect{ |p| p[2].to_i }.join "\t"
+puts
+
+puts "@ceff (#{ task_count } x #{ processor_count })"
+(0...task_count).each do |i|
+  puts ([ CEFF[i] ] * processor_count).join "\t"
+end
+puts
+
+puts "@nc (#{ task_count } x #{ processor_count })"
+(0...task_count).each do |i|
+  puts ([ NC[i] ] * processor_count).join "\t"
+end
+puts
+
+puts "@deadline (1 x 1)"
+puts DEADLINE.max

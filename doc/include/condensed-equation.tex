@@ -1,7 +1,7 @@
 In this section we propose a fast approach to solve the system given by \equref{eq:system}. The approach consists of an auxiliary transformation aimed to be more efficient in the future calculations, \secref{sec:ce-auxiliary}, and the solution itself, \secref{sec:ce-solution}.
 
 \subsection{Observation}
-\image{sparseness-of-system}{-40 210 -40 210}{Sparseness of the system of linear equations for the SSDTP calculation. Each blue point corresponds to a non-zero element of the matrix of the system.}
+\image{sparseness-of-system}{-60 210 -60 210}{Sparseness of the system of linear equations for the SSDTP calculation. Each blue point corresponds to a non-zero element of the matrix of the system.}
 We make an important observation that the system given by \equref{eq:system} has a very specific structure depicted in \figref{fig:sparseness-of-system}. Non-zero elements, marked with blue points in the figure, are located only on the block diagonal, one subdiagonal just above the block diagonal, and one subdiagonal in the left bottom corner. The block diagonal is composed of $N_n \times N_n$ matrices while all elements of the subdiagonals are equal \mbox{to $-1$}. Linear systems with the same structure arise in boundary value problems for ODEs where a common technique to solve them is to form a so-called condensed equation (CE), or condensed system \cite{stoer2002}. Before undertaking this procedure, we perform an adjustment to the initial analytical solution described in the following subsection.
 
 \subsection{Auxiliary Transformation} \label{sec:ce-auxiliary}

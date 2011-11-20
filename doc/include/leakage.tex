@@ -1,7 +1,7 @@
 So far in our computations, we have assumed that power is independent on temperature. In reality, due to the leakage component, the power dissipation is a strong function of temperatue that cannot be neglected (\secref{sec:power-model}). Two techniques can be applied to enhance our proposed solution with temperature dependent leakage modeling.
 
 \subsection{Alternate Computation}
-\image{leakage}{-20 0 -20 0}{The closed loop between temperature and power.}
+\image{leakage}{0 0 0 0}{The closed loop between temperature and power.}
 In this case, we have an iterative process depicted in \figref{fig:leakage} where the temperature and power profiles are calculated in turns. With each new temperature profile we update the power profile by computing the leakage power and adding it to the dynamic power:
 \[
   \mathbb{P}_i = \mathbb{P}_{dyn} + \mathbb{P}_{leak}(\mathbb{T}_i)
@@ -22,4 +22,4 @@ where:
   & \bar{\m{G}} = \m{G} - \m{A} \\
   & \bar{\v{P}} = \v{P}_{dyn} + \m{A} \: \v{T}_{amb} + \v{B}
 \end{align*}
-Therefore, all solutions proposed in this paper are valid with the linearized leakage model with no additional costs. Moreover, in spite of its simplicity, the approximation provides a good estimation as it is shown in \cite{liu2007}. In our analysis we employed the least squares regression model \cite{press2007} for the curve fitting targeted at the range between 40 and $80^\circ C$ and observed that the normalized RMSE is bounded by 1--2\%. Consequently, the linearized model has been chosen for the reliability optimization given in \secref{sec:reliability-results}.
+Therefore, all solutions proposed in this paper are valid with the linearized leakage model with no additional costs. Moreover, in spite of its simplicity, the approximation provides a good estimation as it is shown in \cite{liu2007}. In our analysis we employed the least squares regression \cite{press2007} for the curve fitting targeted at the range between 40 and $80^\circ C$ and observed that the normalized RMSE of the linear approximation with respect to the exponential model (\secref{sec:power-model}) is bounded by 1--2\%. Consequently, the linearized model has been chosen for the reliability optimization given in \secref{sec:reliability-results}.

@@ -8,6 +8,7 @@
 \usepackage{amsthm}
 \usepackage[usenames,dvipsnames]{color}
 \usepackage{multirow}
+\usepackage[margin=0.5in]{geometry}
 
 \hyphenation{SSDTP SSDTA}
 
@@ -21,6 +22,7 @@
 \renewcommand{\v}[1]{\mathbf{#1}}
 \newcommand{\period}[0]{\tau}
 \newcommand{\expectation}[1]{\mathbb{E}\left[ #1 \right]}
+\newcommand{\eqdef}{\stackrel{\text{\tiny def}}{=}}
 
 \definecolor{niceblue}{RGB}{87,181,232}
 \definecolor{nicegreen}{RGB}{129,197,122}
@@ -58,13 +60,13 @@
   \end{table}
 }
 
-\linespread{0.95}
+\linespread{0.94}
 % \marginsize{1cm}{1cm}{0.7cm}{0.7cm}
 \setlength{\abovecaptionskip}{0pt}
 \setlength{\belowcaptionskip}{0pt}
 % \setlength{\floatsep}{0pt}
-% \setlength{\textfloatsep}{0pt}
-% \setlength{\abovedisplayskip}{8pt}
+\setlength{\textfloatsep}{5pt}
+\setlength{\abovedisplayskip}{8pt}
 \setlength{\belowdisplayskip}{8pt}
 % \setlength{\parskip}{0pt}
 % \setlength{\partopsep}{0pt}
