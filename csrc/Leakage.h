@@ -163,9 +163,9 @@ class ExponentialLeakage: public Leakage
 
 class BasicLinearLeakage: public Leakage
 {
-	static const double Ta = 27 + 273.15;
-	static const double Tb = 127 + 273.15;
-	static const double Tc = (27 + 127) / 2 + 273.15;
+	static const double T1 = 30 + 273.15;
+	static const double T2 = 80 + 273.15;
+	static const size_t N = 20;
 
 	protected:
 
@@ -182,17 +182,24 @@ class BasicLinearLeakage: public Leakage
 		k = new double[processor_count];
 		b = new double[processor_count];
 
-		double Pa, Pb, Pc, b1, b2;
+		double sxy, sx, sy, ssx, T, P;
 
+		/* Least square fit */
 		for (size_t i = 0; i < processor_count; i++) {
-			Pa = ExponentialLeakage::calculate(processors[i], Ta);
-			Pb = ExponentialLeakage::calculate(processors[i], Tb);
-			Pc = ExponentialLeakage::calculate(processors[i], Tc);
+			sxy = sx = sy = ssx = 0;
 
-			k[i] = (Pb - Pa) / (Tb - Ta);
-			b1 = Pa - k[i] * Ta;
-			b2 = Pc - k[i] * Tc;
-			b[i] = (b1 + b2) / 2;
+			for (size_t j = 0; j < N; j++) {
+				T = T1 + double(j) * (T2 - T1) / double(N);
+				P = ExponentialLeakage::calculate(processors[i], T);
+
+				sxy += T * P;
+				sx += T;
+				sy += P;
+				ssx += T * T;
+			}
+
+			k[i] = (double(N) * sxy - sx * sy) / (double(N) * ssx - sx * sx);
+			b[i] = (sy - k[i] * sx) / double(N);
 		}
 	}
 
