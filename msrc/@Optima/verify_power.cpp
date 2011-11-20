@@ -43,7 +43,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	if (solution_tuning.method == "hotspot") {
 		size_t step_count = power.rows();
-		size_t processor_count = test.architecture->size();
+		size_t processor_count = power.cols();
 		size_t node_count = 4 * processor_count + 12;
 
 		extended_power.resize(step_count, node_count);

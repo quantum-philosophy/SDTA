@@ -291,13 +291,12 @@ classdef Basic < handle
 
       for j = 1:sweep.solutionCount
         name = sweep.solutions{j};
-        if j > 1
-          [ temp, time ] = sweep.([ name, 'Solve' ])(i, config, T(1, :, :));
-        else
+        if j == 1
           [ temp, time ] = sweep.([ name, 'Solve' ])(i, config);
+          reference = temp;
+        else
+          [ temp, time ] = sweep.([ name, 'Solve' ])(i, config, reference);
         end
-
-        pause(10);
 
         t(j, 1:length(time)) = time;
         T(j, 1:size(temp, 1), 1:size(temp, 2)) = temp;

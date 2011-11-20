@@ -692,7 +692,7 @@ size_t  TransientAnalyticalSolution::verify(const double *power,
 			}
 		}
 
-		error = std::sqrt(error / double(step_count)) / (max - min);
+		error = std::sqrt(error / double(step_count * processor_count)) / (max - min);
 
 		if (error < tolerance) {
 			iterations++;
