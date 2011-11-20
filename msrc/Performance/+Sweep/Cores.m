@@ -1,11 +1,9 @@
 classdef Cores < Sweep.PowerBasic
   properties (Constant)
-    processorArea = 4e-6;
-    stepCount = 1000;
+    totalTime = 0.5;
   end
 
   properties (SetAccess = private)
-    power
     processorCount
   end
 
@@ -14,10 +12,6 @@ classdef Cores < Sweep.PowerBasic
       sweep = sweep@Sweep.PowerBasic(test, varargin{:});
       sweep.variable = 'Number of Cores';
       sweep.processorCount = processorCount;
-
-      sweep.config.changeProcessorCountAndArea( ...
-        max(max(processorCount)), sweep.processorArea);
-      sweep.config.scalePackage();
     end
   end
 
@@ -30,57 +24,37 @@ classdef Cores < Sweep.PowerBasic
 
     function [ value, config ] = setupStep(sweep, i)
       processorCount = sweep.processorCount(i);
-      value = sweep.processorCount(i);
+      value = processorCount;
 
-      o = sweep.config;
+      test = sprintf('%03d', processorCount);
+      config = Optima(test);
+      sweep.config = config;
 
-      o.changeProcessorCountAndArea(processorCount, sweep.processorArea);
+      sweep.hotspot = Hotspot(config.floorplan, ...
+        config.hotspot, sweep.hotspot_line);
 
-      sweep.hotspot = Hotspot(o.floorplan, ...
-        o.hotspot, sweep.hotspot_line);
+      param_line = Utils.configStream(...
+          'verbose', 0, ...
+          'solution', 'condensed_equation', ...
+          'leakage', '');
 
-      sweep.power = rand(sweep.stepCount, processorCount) * sweep.nominalMaxPower;
+      power = Optima.get_power( ...
+        config.system, config.floorplan, config.hotspot, ...
+        config.params, param_line);
 
-      config = {};
-    end
+      timeScale = sweep.totalTime / (config.samplingInterval * size(power, 1));
 
-    function [ T, time ] = optimaSolveOnAverage(sweep, param_line)
-      config = sweep.config;
+      param_line = Utils.configStream(...
+          'verbose', 0, ...
+          'solution', 'condensed_equation', ...
+          'time_scale', timeScale, ...
+          'leakage', '');
 
-      for i = 1:sweep.tryCount
-        [ T, t ] = Optima.solve_power( ...
-          config.system, config.floorplan, config.hotspot, ...
-          config.params, param_line, sweep.power);
+      sweep.power = Optima.get_power( ...
+        config.system, config.floorplan, config.hotspot, ...
+        config.params, param_line);
 
-        if i == 1
-          total = t;
-        else
-          total = total + t;
-        end
-      end
-
-      time = total / sweep.tryCount;
-    end
-
-    function [ T, time ] = matlabOnAverage(sweep, param_line, method)
-      if nargin < 3, method = 'band'; end
-
-      if strcmp(method, 'band')
-        n = 1;
-      else
-        n = sweep.tryCount;
-      end
-
-      total = 0;
-
-      for i = 1:n
-        [ T, t ] = sweep.hotspot.solve(sweep.power, method);
-        total = total + t;
-      end
-
-      time = total / n;
-
-      time = [ time, 0, sweep.hotspot.decompositionTime, sweep.hotspot.preparationTime ];
+      config = { 'time_scale', timeScale };
     end
   end
 end

@@ -1,8 +1,5 @@
 setup;
 
-sweep = Sweep.Cores('001_030', ...
-  [ 1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 ], { 'ce', 'hs' });
+sweep = Sweep.Cores('001', [ 2, 4, 8, 16, 32 ], { 'ce', 'fft', 'vta', 'vhs' });
 sweep.perform();
 sweep.draw();
-
-legend('Condensed Equation Method', 'One Transient Temperature Simulation');
