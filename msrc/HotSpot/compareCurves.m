@@ -43,7 +43,7 @@ Ths = zeros(0, 0);
 Error = zeros(0);
 
 [ chunkTce, power ] = Optima.solve(config.system, config.floorplan, ...
-    config.hotspot, config.params, param_line('condensed_equation', 0));
+  config.hotspot, config.params, param_line('condensed_equation', 0));
 
 chunkTce = chunkTce - Constants.degreeKelvin;
 
@@ -54,7 +54,7 @@ fprintf('T min: %.2f C\n', min(min(chunkTce)));
 
 for i = 1:chunks
   chunkThs = Optima.solve(config.system, config.floorplan, config.hotspot, ...
-    config.params, param_line('transient_analytical', i)) - Constants.degreeKelvin;
+    config.params, param_line('hotspot', i)) - Constants.degreeKelvin;
 
   Error = [ Error; Utils.NRMSE(chunkTce, chunkThs) * 100 ];
 

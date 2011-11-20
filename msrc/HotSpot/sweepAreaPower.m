@@ -54,7 +54,7 @@ for k = 1:variantCount
 
   for i = 1:chunkCount
     chunkThs = Optima.solve(config.system, config.floorplan, config.hotspot, ...
-      config.params, param_line('transient_analytical', chunks(i))) - Constants.degreeKelvin;
+      config.params, param_line('hotspot', chunks(i))) - Constants.degreeKelvin;
 
     Error(i, k) = Utils.NRMSE(chunkTce, chunkThs) * 100;
   end
