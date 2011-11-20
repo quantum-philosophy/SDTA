@@ -163,7 +163,7 @@ class ExponentialLeakage: public Leakage
 
 class BasicLinearLeakage: public Leakage
 {
-	static const double T1 = 30 + 273.15;
+	static const double T1 = 40 + 273.15;
 	static const double T2 = 80 + 273.15;
 	static const size_t N = 20;
 
