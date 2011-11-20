@@ -552,7 +552,7 @@ size_t IterativeHotspot::solve_fixed_iterations(
 	double *extended_temperature = __ALLOC(node_count);
 
 	int p;
-	size_t i, j, iterations;
+	size_t i, iterations;
 
 	initialize(extended_power, extended_temperature, step_count);
 
