@@ -8,7 +8,7 @@ class Task
 	friend class Graph;
 	friend class Architecture;
 	friend class Constrain;
-	friend class Mobility;
+	friend class GraphAnalysis;
 
 	template<class PT>
 	friend class ListScheduler;

@@ -4,7 +4,7 @@
 #include "Architecture.h"
 #include "Graph.h"
 #include "Task.h"
-#include "Mobility.h"
+#include "GraphAnalysis.h"
 
 priority_t Priority::mobile(const Architecture &architecture,
 	const Graph &graph, const mapping_t &mapping)
@@ -15,9 +15,11 @@ priority_t Priority::mobile(const Architecture &architecture,
 	vector_t mobility;
 
 	if (mapping.empty())
-		mobility = Mobility::average(architecture, graph);
+		mobility = GraphAnalysis::average_mobility(
+			architecture.get_processors(), graph.get_tasks());
 	else
-		mobility = Mobility::precise(architecture, graph, mapping);
+		mobility = GraphAnalysis::precise_mobility(
+			architecture.get_processors(), graph.get_tasks(), mapping);
 
 #ifndef SHALLOW_CHECK
 	if (mobility.size() != task_count)
