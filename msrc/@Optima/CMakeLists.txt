@@ -6,10 +6,9 @@ set (MEX_SRCS
 	${PROJECT_SOURCE_DIR}/csrc/Constrain.cpp
 	${PROJECT_SOURCE_DIR}/csrc/DynamicPower.cpp
 	${PROJECT_SOURCE_DIR}/csrc/Graph.cpp
+	${PROJECT_SOURCE_DIR}/csrc/GraphAnalysis.cpp
 	${PROJECT_SOURCE_DIR}/csrc/Hotspot.cpp
 	${PROJECT_SOURCE_DIR}/csrc/Layout.cpp
-	${PROJECT_SOURCE_DIR}/csrc/Mobility.cpp
-	${PROJECT_SOURCE_DIR}/csrc/Pool.cpp
 	${PROJECT_SOURCE_DIR}/csrc/Priority.cpp
 	${PROJECT_SOURCE_DIR}/csrc/Processor.cpp
 	${PROJECT_SOURCE_DIR}/csrc/Schedule.cpp
@@ -33,6 +32,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 		-I${TINYMT_DIR}
 		-DHOTSPOT_VERSION="${HOTSPOT_VERSION}"
 		-DMEASURE_TIME
+		-DSHALLOW_CHECK
 		CFLAGS='-std=c99'
 		LDFLAGS='$$LDFLAGS -lrt'
 	)
@@ -45,6 +45,7 @@ else ()
 		-I${TINYMT_DIR}
 		-DHOTSPOT_VERSION="${HOTSPOT_VERSION}"
 		-DMEASURE_TIME
+		-DSHALLOW_CHECK
 		CFLAGS='-std=c99'
 	)
 endif ()
