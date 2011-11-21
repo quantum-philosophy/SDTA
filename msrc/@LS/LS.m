@@ -182,6 +182,137 @@ classdef LS < handle
       graph.assign(priority, mapping, schedule, start, duration);
     end
 
+    function schedule = criticalityMapAndSchedule(graph, pes, hotspot)
+      tasks = graph.tasks;
+
+      processorCount = length(pes);
+      taskCount = length(tasks);
+
+      sc = graph.staticCriticality(pes);
+
+      ids = graph.getRootIds();
+
+      pool = tasks(ids);
+
+      processed = zeros(1, taskCount);
+      scheduled = zeros(1, taskCount);
+
+      processed(ids) = 1;
+
+      schedule = zeros(0, 0);
+      mapping = zeros(1, taskCount);
+      start = zeros(1, taskCount);
+      duration = zeros(1, taskCount);
+
+      processorTime = zeros(1, processorCount);
+      taskTime = zeros(1, taskCount);
+      energy = zeros(1, processorCount);
+
+      time = zeros(taskCount, processorCount);
+      power = zeros(taskCount, processorCount);
+
+      for id = 1:taskCount
+        for pid = 1:processorCount
+          type = tasks{id}.type;
+          time(id, pid) = pes{pid}.calculateDuration(type);
+          power(id, pid) = pes{pid}.calculatePower(type);
+        end
+      end
+
+      while ~isempty(pool)
+        % Choose task and choose core
+        decisionCount = length(pool);
+
+        dc = ones(decisionCount, processorCount) * (-Inf);
+        for i = 1:decisionCount
+          id = pool{i}.id;
+          for pid = 1:processorCount
+            earliestTime = max([ taskTime(id), processorTime(pid) ]);
+            t = earliestTime + time(id, pid);
+
+            % 0.
+            % dc(i, pid) = sc(id) - time(id, pid) - earliestTime;
+
+            % 1.
+            e = energy(pid) + time(id, pid) * power(id, pid);
+            Pow = e / t;
+            dc(i, pid) = sc(id) - time(id, pid) - earliestTime - Pow;
+
+            % 2.
+            % e = energy;
+            % e(pid) = e(pid) + time(id, pid) * power(id, pid);
+            % Temp = hotspot.steady(e / t);
+            % dc(i, pid) = sc(id) - time(id, pid) - earliestTime - max(Temp);
+          end
+        end
+
+        I = 0;
+        pid = 0;
+        maxDU = -Inf;
+
+        for i = 1:decisionCount
+          for j = 1:processorCount
+            if dc(i, j) > maxDU
+              I = i;
+              pid = j;
+              maxDU = dc(i, j);
+            end
+          end
+        end
+
+        task = pool{I};
+        id = task.id;
+
+        % Exclude the task
+        pool(I) = [];
+
+        % Append to the schedule
+        schedule(end + 1) = id;
+        scheduled(id) = 1;
+
+        % Append to the mapping
+        mapping(id) = pid;
+
+        start(id) = max(taskTime(id), processorTime(pid));
+        duration(id) = time(id, pid);
+        finish = start(id) + duration(id);
+
+        processorTime(pid) = finish;
+
+        energy(pid) = energy(pid) + duration(id) * power(id, pid);
+
+        % Append new tasks, but only ready ones, and ensure absence
+        % of repetitions
+        for child = task.children
+          child = child{1};
+          taskTime(child.id) = max(taskTime(child.id), finish);
+
+          % Do not do again
+          if processed(child.id), continue; end
+
+          % All parents should be scheduled
+          ready = true;
+          for parent = child.parents
+            parent = parent{1};
+            if ~scheduled(parent.id)
+              ready = false;
+              break;
+            end
+          end
+
+          % Is it ready or should we wait for another parent?
+          if ~ready, continue; end
+
+          pool{end + 1} = child;
+
+          % We are done with it
+          processed(child.id) = 1;
+        end
+      end
+
+      graph.assign(schedule, mapping, schedule, start, duration);
+    end
+
     function schedule = process(processors, graph, layout, priority)
       tasks = graph.tasks;
 

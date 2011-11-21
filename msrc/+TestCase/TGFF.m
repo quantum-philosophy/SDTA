@@ -82,6 +82,15 @@ classdef TGFF < handle
               attrs{4} = str2num(attrs{4}) + 1;
               graph.addLink(attrs{:});
             end
+
+          case 'HARD_DEADLINE'
+            attrs = regexp(attrs, ...
+              '(\w+)\s+ON\s+(\w+)\s+AT\s+(\d+)', 'tokens');
+            if ~isempty(attrs)
+              attrs = attrs{1};
+              attrs{3} = str2num(attrs{3});
+              graph.addDeadline(attrs{:});
+            end
           end
         end
 

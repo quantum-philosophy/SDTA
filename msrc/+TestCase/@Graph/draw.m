@@ -50,6 +50,10 @@ function draw(graph, createFigure, proportionalPower)
 
       text(task.start + 0.2 * task.duration, y0 + 0.3 * maxHeight, ...
         [ 'T', num2str(id - 1) ]);
+
+      if task.deadline ~= Inf
+        text(task.start + 0.2 * task.duration, y0 + maxHeight, 'D');
+      end
     end
 
     x(end + 1) = last;

@@ -46,7 +46,16 @@ classdef Processor < handle
       duration = pe.nc(type) / pe.frequency;
     end
 
-    function equalLoadTo(pe, another)
+    function power = calculatePower(pe, type)
+      power = Power.calculateDynamic( ...
+        pe.ceff(type), pe.frequency, pe.voltage);
+    end
+
+    function equalTo(pe, another)
+      pe.frequency = another.frequency;
+      pe.voltage = another.voltage;
+      pe.ngate = another.ngate;
+
       pe.ceff = another.ceff;
       pe.nc = another.nc;
       pe.typeCount = another.typeCount;

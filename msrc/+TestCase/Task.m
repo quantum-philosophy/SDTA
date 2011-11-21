@@ -7,6 +7,7 @@ classdef Task < handle
 
     % Timing
     duration
+    deadline
     start     % Actual start time (mapped and scheduled)
     asap      % ASAP, as soon as possible
     alap      % ALAP, as late as possible
@@ -32,6 +33,7 @@ classdef Task < handle
 
       % Timing
       task.duration = 0;
+      task.deadline = Inf;
       task.start = -Inf;
       task.asap = -Inf;
       task.alap = Inf;
@@ -87,6 +89,10 @@ classdef Task < handle
 
     function assignDuration(task, time)
       task.duration = time;
+    end
+
+    function assignDeadline(task, time)
+      task.deadline = time;
     end
 
     function propagateStartTime(task, time)

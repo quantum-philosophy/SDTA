@@ -70,6 +70,15 @@ classdef Hotspot < handle
       time = toc(start);
     end
 
+    function T = steady(hs, P)
+      cores = length(P);
+      n = hs.nodes;
+      P = [ P(:); zeros(n - cores, 1) ];
+      T = hs.R * P;
+      T = diag(hs.sinvC) .* T + hs.ambientTemperature;
+      T = T(1:cores);
+    end
+
     function [ A, B ] = constructFull(hs, P, t)
       [ m, cores ] = size(P);
       n = hs.nodes;

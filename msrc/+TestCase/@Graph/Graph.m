@@ -84,6 +84,11 @@ classdef Graph < handle
       child.addParent(parent);
     end
 
+    function addDeadline(graph, name, task, time)
+      task = graph.taskMap(task);
+      task.assignDeadline(time);
+    end
+
     function assignHyperPeriod(graph, value)
       graph.hyperPeriod = value;
     end
@@ -211,6 +216,19 @@ classdef Graph < handle
       taskCount = length(graph.tasks);
       priority = zeros(1, taskCount);
       for i = 1:taskCount, priority(i) = graph.tasks{i}.mobility; end
+    end
+
+    function sc = staticCriticality(graph, pes)
+      graph.pes = pes;
+      graph.calculateAverageTime();
+
+      duration = graph.calculateASAPDuration();
+
+      taskCount = length(graph.tasks);
+      sc = zeros(1, taskCount);
+      for i = 1:taskCount
+        sc(i) = duration - graph.tasks{i}.asap;
+      end
     end
   end
 
