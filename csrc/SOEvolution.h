@@ -26,6 +26,7 @@ class eslabSOChromosome: public eslabChromosome<double>,
 		eoInt<double>(_size) {}
 #endif
 
+#if 0
 	virtual inline void set_schedule(const Schedule &schedule)
 	{
 		eslabChromosome<double>::set_schedule(schedule);
@@ -36,6 +37,7 @@ class eslabSOChromosome: public eslabChromosome<double>,
 		for (size_t i = 0; i < task_count; i++)
 			(*this)[order[i]] = (rank_t)i;
 	}
+#endif
 
 	protected:
 

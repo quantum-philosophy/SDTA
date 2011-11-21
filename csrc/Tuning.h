@@ -63,7 +63,7 @@ struct SystemTuning: public Tuning
 	double max_temperature;
 	double power_scale;
 	double time_scale;
-	bool equal_load;
+	bool homogeneous;
 	bool reorder_tasks;
 	bool verbose;
 
@@ -72,7 +72,7 @@ struct SystemTuning: public Tuning
 		max_temperature(100 + 273.15),
 		power_scale(1.0),
 		time_scale(1.0),
-		equal_load(false),
+		homogeneous(false),
 		reorder_tasks(false),
 		verbose(false) {}
 
