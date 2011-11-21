@@ -49,6 +49,7 @@ class ListScheduler: public BasicListScheduler
 typedef ListScheduler<DeterministicPool> DeterministicListScheduler;
 typedef ListScheduler<RandomPool> RandomGeneratorListScheduler;
 typedef ListScheduler<EarliestProcessorPool> EarliestProcessorListScheduler;
+typedef ListScheduler<CriticalityPool> CriticalityListScheduler;
 
 #include "ListScheduler.hpp"
 

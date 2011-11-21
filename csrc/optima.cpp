@@ -89,8 +89,7 @@ void optimize(const string &system, const string &floorplan,
 	SolutionTuning &solution_tuning = evolution_tuning.solution;
 	OptimizationTuning &optimization_tuning = evolution_tuning.optimization;
 
-	if (system_tuning.verbose)
-		cout << evolution_tuning << endl;
+	cout << evolution_tuning << endl;
 
 	Random::set_seed(optimization_tuning.seed, system_tuning.verbose);
 
@@ -144,26 +143,14 @@ void optimize(const string &system, const string &floorplan,
 			constrains = Constrain::structural(
 				*test.architecture, *test.graph, test.mapping);
 
-		if (system_tuning.verbose) {
-			cout
-				<< test.graph << endl
-				<< test.architecture << endl
-				<< "Start mapping: " << print_t<pid_t>(test.mapping) << endl
-				<< "Start priority: " << print_t<rank_t>(test.priority) << endl
-				<< "Start schedule:" << endl << test.schedule << endl
-				<< "Constrains: " << print_t<constrain_t>(constrains) << endl;
-
-			size_t out = 0;
-			size_t task_count = test.graph->size();
-			for (size_t i = 0; i < task_count; i++)
-				if (test.priority[i] < constrains[i].min ||
-					test.priority[i] > constrains[i].max) out++;
-
-			if (out > 0)
-				cout << "Out of range priorities: " << out << endl;
-		}
-
 		cout
+			<< test.graph << endl
+			<< test.architecture << endl
+			<< "Start mapping: " << print_t<pid_t>(test.mapping) << endl
+			<< "Start priority: " << print_t<rank_t>(test.priority) << endl
+			<< "Start schedule:" << endl << test.schedule << endl
+			<< "Constrains: " << print_t<constrain_t>(constrains) << endl
+			<< endl
 			<< "Initial lifetime: "
 			<< setiosflags(ios::fixed) << setprecision(2)
 			<< price.lifetime << endl
@@ -199,7 +186,10 @@ void optimize(const string &system, const string &floorplan,
 
 			Time::measure(&end);
 
-			cout << endl << endl << stats << endl << *evaluation << endl;
+			cout
+				<< endl
+				<< stats << endl
+				<< *evaluation << endl;
 
 			cout << "Improvement: " << setiosflags(ios::fixed) << setprecision(2);
 
@@ -207,9 +197,9 @@ void optimize(const string &system, const string &floorplan,
 				SOEvolutionStats *sstats = (SOEvolutionStats *)&stats;
 
 				cout
-					<< (sstats->best_lifetime / price.lifetime)
+					<< (sstats->best_price.lifetime / price.lifetime)
 					<< " lifetime with "
-					<< (sstats->final_energy / price.energy)
+					<< (sstats->best_price.energy / price.energy)
 					<< " energy"
 					<< endl;
 
@@ -241,11 +231,10 @@ void optimize(const string &system, const string &floorplan,
 					<< " energy"
 					<< endl << endl;
 
-			if (system_tuning.verbose)
-				cout
-					<< "Time elapsed: " << setprecision(2)
-					<< Time::substract(&end, &begin)
-					<< " seconds" << endl << endl;
+			cout
+				<< "Time elapsed: " << setprecision(2)
+				<< Time::substract(&end, &begin)
+				<< " seconds" << endl << endl;
 
 			/* Make a back copy of the dump file */
 			if (!optimization_tuning.dump.empty() && repeat > 1)

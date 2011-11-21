@@ -7,7 +7,10 @@
 template<class CT>
 void eslabSOGeneticAlgorithm<CT>::operator()(population_t &population)
 {
+#ifndef SHALLOW_CHECK
 	size_t population_size = population.size();;
+#endif
+
 	population_t offspring;
 
 	/* Initial evaluation */

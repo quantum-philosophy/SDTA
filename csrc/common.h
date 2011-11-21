@@ -262,8 +262,6 @@ struct system_t
 	std::vector<std::vector<unsigned long int> > nc;
 	std::vector<std::vector<double> > ceff;
 
-	mapping_t mapping;
-	priority_t priority;
 	double deadline;
 
 	system_t(const std::string &filename);

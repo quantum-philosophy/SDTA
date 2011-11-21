@@ -53,13 +53,8 @@ void SOEvolution::process(population_t &population)
 
 	/* Calculate the energy consumption */
 	evaluation.set_shallow(false);
-	price_t price = assess(stats.best_chromosome);
-	stats.final_energy = price.energy;
 
-#ifndef SHALLOW_CHECK
-	if (price.lifetime != stats.best_lifetime)
-		throw std::runtime_error("The optimization process went bad.");
-#endif
+	stats.best_price = assess(stats.best_chromosome);
 }
 
 /******************************************************************************/
@@ -70,10 +65,10 @@ eoMonitor &SOEvolutionStats::operator()()
 {
 	EvolutionStats<chromosome_t, population_t>::operator()();
 
-	worst_lifetime = population->worse_element().fitness();
-	best_lifetime = population->best_element().fitness();
-
 	if (silent) return *this;
+
+	double worst_lifetime = population->worse_element().fitness();
+	double best_lifetime = population->best_element().fitness();
 
 	std::cout
 		<< std::setprecision(2)
@@ -91,9 +86,8 @@ void SOEvolutionStats::display(std::ostream &o) const
 
 	o
 		<< std::setprecision(2)
-		<< "Best lifetime: " << best_lifetime << std::endl
-		<< "Worst lifetime: " << worst_lifetime << std::endl
-		<< "Final energy: " << final_energy << std::endl
+		<< "Best lifetime: " << best_price.lifetime << std::endl
+		<< "Final energy: " << best_price.energy << std::endl
 #ifdef REAL_RANK
 #else
 		<< std::setprecision(0)

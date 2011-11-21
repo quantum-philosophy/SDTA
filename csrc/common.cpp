@@ -55,8 +55,6 @@ system_t::system_t(const std::string &filename)
 	nc.clear();
 	ceff.clear();
 
-	mapping.clear();
-	priority.clear();
 	deadline = 0;
 
 	while (true) {
@@ -160,22 +158,6 @@ system_t::system_t(const std::string &filename)
 				for (j = 0; j < cols; j++)
 					file >> ceff[j][i];
 		}
-		else if (name == "mapping") {
-			if (rows != 1)
-				throw std::runtime_error("The mapping should be a vector.");
-
-			mapping.resize(cols);
-			for (i = 0; i < cols; i++)
-				file >> mapping[i];
-		}
-		else if (name == "priority") {
-			if (rows != 1)
-				throw std::runtime_error("The priority should be a vector.");
-
-			priority.resize(cols);
-			for (i = 0; i < cols; i++)
-				file >> priority[i];
-		}
 		else if (name == "deadline") {
 			if (rows != 1 && cols != 1)
 				throw std::runtime_error("The deadline should be a scalar.");
@@ -212,12 +194,6 @@ system_t::system_t(const std::string &filename)
 
 	if (processor_count != ceff.size() || type_count != ceff[0].size())
 		throw std::runtime_error("The size of the ceff matrix is wrong.");
-
-	if (!mapping.empty() && mapping.size() != task_count)
-		throw std::runtime_error("The size of the mapping vector is wrong.");
-
-	if (!priority.empty() && priority.size() != task_count)
-		throw std::runtime_error("The size of the priority vector is wrong.");
 
 	if (deadline < 0)
 		throw std::runtime_error("The deadline should not be negative.");

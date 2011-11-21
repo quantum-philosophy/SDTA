@@ -63,9 +63,11 @@ void SystemTuning::setup(const parameters_t &params)
 	for (parameters_t::const_iterator it = params.begin();
 		it != params.end(); it++) {
 
-		if (it->name == "deadline_ratio")
+		if (it->name == "initialization")
+			initialization = it->value;
+		else if (it->name == "deadline_ratio")
 			deadline_ratio = it->to_double();
-		if (it->name == "max_temperature")
+		else if (it->name == "max_temperature")
 			max_temperature = it->to_double();
 		else if (it->name == "power_scale")
 			power_scale = it->to_double();
@@ -84,6 +86,7 @@ void SystemTuning::display(std::ostream &o) const
 {
 	o
 		<< "System:" << std::endl
+		<< "  Initialization:       " << initialization << std::endl
 		<< "  Deadline ratio:       " << deadline_ratio << std::endl
 		<< "  Maximal temperature:  " << max_temperature << std::endl
 		<< "  Task power scale:     " << power_scale << std::endl

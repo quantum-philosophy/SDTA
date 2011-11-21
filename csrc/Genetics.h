@@ -113,8 +113,10 @@ class eslabPop: public eoPop<CT>
 
 	typedef typename CT::fitness_t fitness_t;
 
+#ifdef EXTENDED_STATS
 	size_t unique() const;
 	double diversity() const;
+#endif
 };
 
 class GeneEncoder

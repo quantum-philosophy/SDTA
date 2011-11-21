@@ -61,10 +61,7 @@ class SOEvolutionStats: public EvolutionStats<eslabSOChromosome, eslabSOPop>
 {
 	public:
 
-	double best_lifetime;
-	double worst_lifetime;
-	double final_energy;
-
+	price_t best_price;
 	chromosome_t best_chromosome;
 
 	void display(std::ostream &o) const;

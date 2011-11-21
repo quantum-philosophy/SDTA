@@ -14,7 +14,7 @@ Schedule ListScheduler<PT>::process(const layout_t &layout,
 	size_t processor_count = processors.size();
 	size_t task_count = tasks.size();
 
-	PT pool(processor_count, task_count, layout, priority, data);
+	PT pool(processors, tasks, layout, priority, data);
 
 	bit_string_t &processed = pool.processed;
 	bit_string_t &scheduled = pool.scheduled;

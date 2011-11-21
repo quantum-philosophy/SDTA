@@ -34,6 +34,7 @@ bool Chromosome::equal(const CT &one, const CT &another)
 	return true;
 }
 
+#ifdef EXTENDED_STATS
 template<class CT>
 size_t eslabPop<CT>::unique() const
 {
@@ -75,3 +76,4 @@ double eslabPop<CT>::diversity() const
 
 	return value / (double)total;
 }
+#endif

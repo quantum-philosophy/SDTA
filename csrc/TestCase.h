@@ -101,35 +101,34 @@ class TestCase
 		 * - and obtain a schedule with help of List Scheduler.
 		 */
 
-		mapping = system.mapping;
-		priority = system.priority;
 		double deadline = system.deadline;
 
-		/* 1. Calculate a priority vector based on the task mobility.
-		 *
-		 * NOTE: If the mapping is given, we are fine, the task mobility
-		 * will be calculated properly, but if we do not have mapping,
-		 * we do not know the execution time of the tasks, so, to deal
-		 * with the problem, we assume them to be equal.
-		 */
-		if (priority.empty())
-			priority = Priority::mobile(*architecture, *graph, mapping);
-		else if (system_tuning.verbose)
-			std::cout << "Using external priority." << std::endl;
-
-		/* 2. Create and assign an even mapping.
-		 *
-		 */
-		if (mapping.empty())
-			mapping = Layout::earliest(*architecture, *graph, priority);
-		else if (system_tuning.verbose)
-			std::cout << "Using external mapping." << std::endl;
-
-		/* 3. Compute a schedule.
-		 *
-		 */
 		scheduler = new DeterministicListScheduler(*architecture, *graph);
-		schedule = scheduler->process(mapping, priority);
+
+		if (system_tuning.initialization == "mobility") {
+			/* 1. Calculate a priority vector based on the task mobility.
+			 *
+			 */
+			priority = Priority::mobile(*architecture, *graph, mapping);
+
+			/* 2. Create and assign an even mapping.
+			 *
+			 */
+			mapping = Layout::earliest(*architecture, *graph, priority);
+
+			/* 3. Compute a schedule.
+			 *
+			 */
+			schedule = scheduler->process(mapping, priority);
+		}
+		else if (system_tuning.initialization == "criticality") {
+			CriticalityListScheduler another_scheduler(*architecture, *graph);
+			schedule = another_scheduler.process(layout_t(), priority_t());
+			priority = schedule.get_priority();
+			mapping = schedule.get_mapping();
+		}
+		else
+			throw std::runtime_error("The initialization method is unknown.");
 
 		/* 4. Assign a deadline.
 		 *

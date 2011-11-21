@@ -2,6 +2,7 @@
 #define __POOL_H__
 
 #include "common.h"
+#include "GraphAnalysis.h"
 
 class Pool: public std::list<tid_t>
 {
@@ -10,8 +11,15 @@ class Pool: public std::list<tid_t>
 
 	public:
 
-	Pool(size_t _processor_count, size_t _task_count, const layout_t &_layout,
-		const priority_t &_priority, void *_data = NULL);
+	Pool(const processor_vector_t &_processors, const task_vector_t &_tasks,
+		const layout_t &_layout, const priority_t &_priority, void *_data = NULL) :
+
+		processor_count(_processors.size()), task_count(_tasks.size()),
+		processor_time(processor_count, 0), task_time(task_count, 0),
+		processed(task_count, false), scheduled(task_count, false),
+		layout(_layout), priority(_priority)
+	{
+	}
 
 	virtual void push(tid_t id) = 0;
 	virtual void pull(pid_t &pid, tid_t &id) = 0;
@@ -35,10 +43,10 @@ class DeterministicPool: public Pool
 {
 	public:
 
-	DeterministicPool(size_t _processor_count, size_t _task_count,
+	DeterministicPool(const processor_vector_t &_processors, const task_vector_t &_tasks,
 		const layout_t &_layout, const priority_t &_priority, void *_data = NULL) :
 
-		Pool(_processor_count, _task_count, _layout, _priority, _data) {}
+		Pool(_processors, _tasks, _layout, _priority, _data) {}
 
 	virtual inline void push(tid_t id)
 	{
@@ -64,10 +72,10 @@ class RandomPool: public Pool
 {
 	public:
 
-	RandomPool(size_t _processor_count, size_t _task_count,
+	RandomPool(const processor_vector_t &_processors, const task_vector_t &_tasks,
 		const layout_t &_layout, const priority_t &_priority, void *_data = NULL) :
 
-		Pool(_processor_count, _task_count, _layout, _priority, _data) {}
+		Pool(_processors, _tasks, _layout, _priority, _data) {}
 
 	virtual void push(tid_t id)
 	{
@@ -107,10 +115,10 @@ class EarliestProcessorPool: public DeterministicPool
 {
 	public:
 
-	EarliestProcessorPool(size_t _processor_count, size_t _task_count,
+	EarliestProcessorPool(const processor_vector_t &_processors, const task_vector_t &_tasks,
 		const layout_t &_layout, const priority_t &_priority, void *_data = NULL) :
 
-		DeterministicPool(_processor_count, _task_count, _layout, _priority, _data) {}
+		DeterministicPool(_processors, _tasks, _layout, _priority, _data) {}
 
 	virtual void pull(pid_t &pid, tid_t &id)
 	{
@@ -124,6 +132,78 @@ class EarliestProcessorPool: public DeterministicPool
 		pid = earliest;
 
 		pop_front();
+	}
+};
+
+class CriticalityPool: public Pool
+{
+	vector_t sc;
+
+	const processor_vector_t &processors;
+	const task_vector_t &tasks;
+
+	matrix_t power;
+	matrix_t time;
+	vector_t energy;
+
+	public:
+
+	CriticalityPool(const processor_vector_t &_processors, const task_vector_t &_tasks,
+		const layout_t &_layout, const priority_t &_priority, void *_data = NULL) :
+
+		Pool(_processors, _tasks, _layout, _priority, _data),
+		processors(_processors), tasks(_tasks)
+	{
+		sc = GraphAnalysis::statical_criticality(processors, tasks);
+
+		power.resize(task_count, processor_count);
+		time.resize(task_count, processor_count);
+		energy.resize(processor_count);
+		energy.nullify();
+
+		for (size_t i = 0; i < task_count; i++) {
+			unsigned int type = tasks[i]->get_type();
+			for (size_t j = 0; j < processor_count; j++) {
+				power[i][j] = processors[j]->calc_power(type);
+				time[i][j] = processors[j]->calc_duration(type);
+			}
+		}
+	}
+
+	virtual inline void push(tid_t id)
+	{
+		push_back(id);
+	}
+
+	virtual void pull(pid_t &best_pid, tid_t &best_id)
+	{
+		iterator best_it;
+		double dc, max_dc = -DBL_MAX;
+		best_pid = best_id = 0;
+
+		/* For all tasks in the pool */
+		for (iterator it = begin(); it != end(); it++) {
+			tid_t id = *it;
+			for (pid_t pid = 0; pid < processor_count; pid++) {
+				double earliest_time = std::max(processor_time[pid], task_time[id]);
+				double e = energy[pid] + time[id][pid] * power[id][pid];
+				double p = e / (earliest_time + time[id][pid]);
+
+				dc = sc[id] - time[id][pid] - earliest_time - p;
+
+				if (dc > max_dc) {
+					max_dc = dc;
+
+					best_pid = pid;
+					best_id = id;
+					best_it = it;
+				}
+			}
+		}
+
+		energy[best_pid] += time[best_id][best_pid] * power[best_id][best_pid];
+
+		erase(best_it);
 	}
 };
 
@@ -166,10 +246,10 @@ class CrossoverPool: public Pool
 		}
 	};
 
-	CrossoverPool(size_t _processor_count, size_t _task_count,
+	CrossoverPool(const processor_vector_t &_processors, const task_vector_t &_tasks,
 		const layout_t &_layout, const priority_t &_priority, void *_data) :
 
-		Pool(_processor_count, _task_count, _layout, _priority)
+		Pool(_processors, _tasks, _layout, _priority)
 	{
 #ifndef SHALLOW_CHECK
 		if (!_data)
@@ -214,10 +294,10 @@ class MutationPool: public DeterministicPool
 
 	public:
 
-	MutationPool(size_t _processor_count, size_t _task_count,
+	MutationPool(const processor_vector_t &_processors, const task_vector_t &_tasks,
 		const layout_t &_layout, const priority_t &_priority, void *_data) :
 
-		DeterministicPool(_processor_count, _task_count, _layout, _priority)
+		DeterministicPool(_processors, _tasks, _layout, _priority)
 	{
 #ifndef SHALLOW_CHECK
 		if (!_data) throw std::runtime_error("There is not data.");
@@ -329,10 +409,10 @@ class TrainingPool: public DeterministicPool
 		size_t trial;
 	};
 
-	TrainingPool(size_t _processor_count, size_t _task_count,
+	TrainingPool(const processor_vector_t &_processors, const task_vector_t &_tasks,
 		const layout_t &_layout, const priority_t &_priority, void *_data) :
 
-		DeterministicPool(_processor_count, _task_count, _layout, _priority),
+		DeterministicPool(_processors, _tasks, _layout, _priority),
 		data((data_t *)_data)
 	{
 #ifndef SHALLOW_CHECK

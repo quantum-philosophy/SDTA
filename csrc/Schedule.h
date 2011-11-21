@@ -128,6 +128,17 @@ class Schedule
 		return duration;
 	}
 
+	inline mapping_t get_mapping() const
+	{
+		mapping_t mapping(task_count);
+		const step_t * const pointer = point_mapping();
+
+		for (size_t i = 0; i < task_count; i++)
+			mapping[i] = pointer[i];
+
+		return mapping;
+	}
+
 	inline priority_t get_priority() const
 	{
 		priority_t priority(task_count);

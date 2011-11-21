@@ -14,7 +14,6 @@ set (OPTIMA_SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/Layout.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Lifetime.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/MOEvolution.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/Pool.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Priority.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Processor.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Random.cpp
@@ -35,7 +34,6 @@ set (SOLVE_SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/GraphAnalysis.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Hotspot.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Layout.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/Pool.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Priority.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Processor.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Schedule.cpp
@@ -84,7 +82,7 @@ include_directories (
 # * VERIFY_CACHING - check what we are reading from memcached.
 # * MEASURE_TIME - measure time.
 #
-set(CMAKE_CXX_FLAGS "-Wall -Wno-deprecated-declarations -Wno-sign-compare -O3 $ENV{CFLAGS}")
+set(CMAKE_CXX_FLAGS "-DSHALLOW_CHECK -Wall -Wno-deprecated-declarations -Wno-sign-compare -O3 $ENV{CFLAGS}")
 
 add_library(libeo STATIC IMPORTED)
 set_property(
