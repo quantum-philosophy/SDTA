@@ -234,15 +234,15 @@ classdef LS < handle
             % dc(i, pid) = sc(id) - time(id, pid) - earliestTime;
 
             % 1.
-            e = energy(pid) + time(id, pid) * power(id, pid);
-            Pow = e / t;
-            dc(i, pid) = sc(id) - time(id, pid) - earliestTime - Pow;
+            % e = energy(pid) + time(id, pid) * power(id, pid);
+            % Pow = e / t;
+            % dc(i, pid) = sc(id) - time(id, pid) - earliestTime - Pow;
 
             % 2.
-            % e = energy;
-            % e(pid) = e(pid) + time(id, pid) * power(id, pid);
-            % Temp = hotspot.steady(e / t);
-            % dc(i, pid) = sc(id) - time(id, pid) - earliestTime - max(Temp);
+            e = energy;
+            e(pid) = e(pid) + time(id, pid) * power(id, pid);
+            Temp = hotspot.steady(e / t);
+            dc(i, pid) = sc(id) - time(id, pid) - earliestTime - max(Temp);
           end
         end
 

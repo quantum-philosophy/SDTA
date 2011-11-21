@@ -129,7 +129,7 @@ class BasicSteadyStateAnalyticalSolution: public AnalyticalSolution
 		double _sampling_interval, double _ambient_temperature,
 		const double **conductivity, const double *capacitance);
 
-	void solve(const double *power, double *temperature, size_t step_count = 1);
+	virtual void solve(const double *power, double *temperature, size_t step_count = 1) = 0;
 };
 
 class SteadyStateAnalyticalSolution: public BasicSteadyStateAnalyticalSolution
@@ -154,6 +154,12 @@ class LeakageSteadyStateAnalyticalSolution: public BasicSteadyStateAnalyticalSol
 		double _sampling_interval, double _ambient_temperature,
 		double **conductivity, const double *capacitance,
 		const Leakage &_leakage);
+
+	inline void solve(const double *power, double *temperature, size_t step_count = 1)
+	{
+		matrix_t total_power(step_count, processor_count);
+		(void)solve(power, temperature, total_power, step_count);
+	}
 
 	size_t solve(const double *dynamic_power,
 		double *temperature, double *total_power, size_t step_count = 1);

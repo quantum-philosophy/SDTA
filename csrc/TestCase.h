@@ -94,12 +94,18 @@ class TestCase
 		architecture = new ArchitectureBuilder(system.frequency,
 			system.voltage, system.ngate, system.nc, system.ceff);
 
-		/* In order to assign a reasonable deadline and perform
-		 * initial measurements to compare with, we:
-		 * - assign a dummy mapping,
-		 * - compute a mobility-based priority,
-		 * - and obtain a schedule with help of List Scheduler.
-		 */
+		/* Leakage model */
+		if (solution_tuning.leakage == "linear") {
+			leakage = new LinearLeakage(architecture->get_processors());
+		}
+		else if (solution_tuning.leakage == "piecewise_linear") {
+			leakage = new PiecewiseLinearLeakage(architecture->get_processors());
+		}
+		else if (solution_tuning.leakage == "exponential") {
+			leakage = new ExponentialLeakage(architecture->get_processors());
+		}
+		else if (solution_tuning.leak())
+			throw std::runtime_error("The leakage model is unknown.");
 
 		double deadline = system.deadline;
 
@@ -121,11 +127,19 @@ class TestCase
 			 */
 			schedule = scheduler->process(mapping, priority);
 		}
-		else if (system_tuning.initialization == "criticality") {
-			CriticalityListScheduler another_scheduler(*architecture, *graph);
+		else if (system_tuning.initialization == "power_criticality") {
+			PowerCriticalityListScheduler another_scheduler(*architecture, *graph);
 			schedule = another_scheduler.process(layout_t(), priority_t());
 			priority = schedule.get_priority();
 			mapping = schedule.get_mapping();
+		}
+		else if (system_tuning.initialization == "temperature_criticality") {
+			Hotspot *another_hotspot = create_hotspot("precise_steady_state", true);
+			TemperatureCriticalityListScheduler another_scheduler(*architecture, *graph);
+			schedule = another_scheduler.process(layout_t(), priority_t(), (void *)another_hotspot);
+			priority = schedule.get_priority();
+			mapping = schedule.get_mapping();
+			delete another_hotspot;
 		}
 		else
 			throw std::runtime_error("The initialization method is unknown.");
@@ -174,19 +188,6 @@ class TestCase
 #endif
 		}
 
-		/* Leakage model */
-		if (solution_tuning.leakage == "linear") {
-			leakage = new LinearLeakage(architecture->get_processors());
-		}
-		else if (solution_tuning.leakage == "piecewise_linear") {
-			leakage = new PiecewiseLinearLeakage(architecture->get_processors());
-		}
-		else if (solution_tuning.leakage == "exponential") {
-			leakage = new ExponentialLeakage(architecture->get_processors());
-		}
-		else if (solution_tuning.leak())
-			throw std::runtime_error("The leakage model is unknown.");
-
 #ifdef MEASURE_TIME
 		struct timespec begin, end;
 		Time::measure(&begin);
@@ -209,7 +210,7 @@ class TestCase
 		__DELETE(hotspot);
 	}
 
-	Hotspot *create_hotspot(const std::string &method)
+	Hotspot *create_hotspot(const std::string &method, bool one_step = false)
 	{
 		/* Thermal model */
 		if (method == "condensed_equation") {
@@ -276,11 +277,11 @@ class TestCase
 			if (leakage)
 				return new LeakagePreciseSteadyStateHotspot(
 					*architecture, *graph, floorplan_config, hotspot_config,
-					solution_tuning.hotspot, *leakage);
+					solution_tuning.hotspot, *leakage, one_step);
 			else
 				return new PreciseSteadyStateHotspot(
 					*architecture, *graph, floorplan_config, hotspot_config,
-					solution_tuning.hotspot);
+					solution_tuning.hotspot, one_step);
 		}
 		else throw std::runtime_error("The solution method is unknown.");
 	}

@@ -472,13 +472,13 @@ double *LeakageSteadyStateHotspot::compute(const SlotTrace &trace)
 PreciseSteadyStateHotspot::PreciseSteadyStateHotspot(
 	const Architecture &architecture, const Graph &graph,
 	const std::string &floorplan, const std::string &config,
-	const std::string &config_line) :
+	const std::string &config_line, bool one_step) :
 
 	Hotspot(floorplan, config, config_line),
 	equation(processor_count, node_count, sampling_interval,
 		ambient_temperature, (const double **)model->block->b, model->block->a),
 	dynamic_power(architecture.get_processors(), graph.get_tasks(),
-		graph.get_deadline(), sampling_interval)
+		one_step ? sampling_interval : graph.get_deadline(), sampling_interval)
 {
 #ifdef MEASURE_TIME
 	decomposition_time = equation.decomposition_time;
@@ -490,13 +490,14 @@ PreciseSteadyStateHotspot::PreciseSteadyStateHotspot(
 LeakagePreciseSteadyStateHotspot::LeakagePreciseSteadyStateHotspot(
 	const Architecture &architecture, const Graph &graph,
 	const std::string &floorplan, const std::string &config,
-	const std::string &config_line, const Leakage &_leakage) :
+	const std::string &config_line, const Leakage &_leakage,
+	bool one_step) :
 
 	Hotspot(floorplan, config, config_line),
 	equation(processor_count, node_count, sampling_interval, ambient_temperature,
 		model->block->b, model->block->a, _leakage),
 	dynamic_power(architecture.get_processors(), graph.get_tasks(),
-		graph.get_deadline(), sampling_interval)
+		one_step ? sampling_interval : graph.get_deadline(), sampling_interval)
 {
 #ifdef MEASURE_TIME
 	decomposition_time = equation.decomposition_time;

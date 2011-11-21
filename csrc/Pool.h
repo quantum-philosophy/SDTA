@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "GraphAnalysis.h"
+#include "Hotspot.h"
 
 class Pool: public std::list<tid_t>
 {
@@ -137,6 +138,8 @@ class EarliestProcessorPool: public DeterministicPool
 
 class CriticalityPool: public Pool
 {
+	protected:
+
 	vector_t sc;
 
 	const processor_vector_t &processors;
@@ -158,8 +161,6 @@ class CriticalityPool: public Pool
 
 		power.resize(task_count, processor_count);
 		time.resize(task_count, processor_count);
-		energy.resize(processor_count);
-		energy.nullify();
 
 		for (size_t i = 0; i < task_count; i++) {
 			unsigned int type = tasks[i]->get_type();
@@ -185,11 +186,14 @@ class CriticalityPool: public Pool
 		for (iterator it = begin(); it != end(); it++) {
 			tid_t id = *it;
 			for (pid_t pid = 0; pid < processor_count; pid++) {
-				double earliest_time = std::max(processor_time[pid], task_time[id]);
-				double e = energy[pid] + time[id][pid] * power[id][pid];
-				double p = e / (earliest_time + time[id][pid]);
-
-				dc = sc[id] - time[id][pid] - earliest_time - p;
+				/* 1. Statical criticality */
+				dc = sc[id];
+				/* 2. Worst case execution time */
+				dc -= time[id][pid];
+				/* 3. Earliest start time */
+				dc -= std::max(processor_time[pid], task_time[id]);
+				/* 4. Some additional cost */
+				dc -= estimate_cost(pid, id);
 
 				if (dc > max_dc) {
 					max_dc = dc;
@@ -201,9 +205,105 @@ class CriticalityPool: public Pool
 			}
 		}
 
-		energy[best_pid] += time[best_id][best_pid] * power[best_id][best_pid];
+		confirm_cost(best_pid, best_id);
 
 		erase(best_it);
+	}
+
+	protected:
+
+	virtual inline double estimate_cost(pid_t pid, tid_t id)
+	{
+		return 0;
+	}
+
+	virtual inline void confirm_cost(pid_t pid, tid_t id)
+	{
+	}
+};
+
+class PowerCriticalityPool: public CriticalityPool
+{
+	vector_t energy;
+
+	public:
+
+	PowerCriticalityPool(const processor_vector_t &_processors, const task_vector_t &_tasks,
+		const layout_t &_layout, const priority_t &_priority, void *_data = NULL) :
+
+		CriticalityPool(_processors, _tasks, _layout, _priority, _data)
+	{
+		energy.resize(processor_count);
+		energy.nullify();
+	}
+
+	protected:
+
+	virtual inline double estimate_cost(pid_t pid, tid_t id)
+	{
+		double total_time = std::max(processor_time[pid], task_time[id]) + time[id][pid];
+		double total_energy = energy[pid] + time[id][pid] * power[id][pid];
+		return total_energy / total_time;
+	}
+
+	virtual inline void confirm_cost(pid_t pid, tid_t id)
+	{
+		energy[pid] += time[id][pid] * power[id][pid];
+	}
+};
+
+class TemperatureCriticalityPool: public CriticalityPool
+{
+	vector_t energy;
+
+	matrix_t average_power;
+	matrix_t temperature;
+
+	Hotspot *hotspot;
+
+	public:
+
+	TemperatureCriticalityPool(const processor_vector_t &_processors, const task_vector_t &_tasks,
+		const layout_t &_layout, const priority_t &_priority, void *_data = NULL) :
+
+		CriticalityPool(_processors, _tasks, _layout, _priority, _data)
+	{
+		if (!_data)
+			throw std::runtime_error("The solver for the steady temperature is not given.");
+
+		energy.resize(processor_count);
+		energy.nullify();
+
+		average_power.resize(1, processor_count);
+
+		hotspot = (Hotspot *)_data;
+	}
+
+	protected:
+
+	virtual inline double estimate_cost(pid_t pid, tid_t id)
+	{
+		double total_time = std::max(processor_time[pid], task_time[id]) + time[id][pid];
+
+		for (size_t i = 0; i < processor_count; i++)
+			if (i == pid)
+				average_power[0][i] = (energy[i] + time[id][i] * power[id][i]) / total_time;
+			else
+				average_power[0][i] = energy[i] / total_time;
+
+		hotspot->solve(average_power, temperature);
+
+		double Tmax = -DBL_MAX;
+
+		for (size_t i = 0; i < processor_count; i++)
+			if (temperature[0][i] > Tmax) Tmax = temperature[0][i];
+
+		return Tmax;
+	}
+
+	virtual inline void confirm_cost(pid_t pid, tid_t id)
+	{
+		energy[pid] += time[id][pid] * power[id][pid];
 	}
 };
 

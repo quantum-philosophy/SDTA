@@ -376,7 +376,7 @@ class PreciseSteadyStateHotspot: public Hotspot
 	PreciseSteadyStateHotspot(
 		const Architecture &architecture, const Graph &graph,
 		const std::string &floorplan, const std::string &config,
-		const std::string &config_line);
+		const std::string &config_line, bool one_step = false);
 
 	inline void solve(const matrix_t &power, matrix_t &temperature)
 	{
@@ -403,7 +403,8 @@ class LeakagePreciseSteadyStateHotspot: public Hotspot
 	LeakagePreciseSteadyStateHotspot(
 		const Architecture &architecture, const Graph &graph,
 		const std::string &floorplan, const std::string &config,
-		const std::string &config_line, const Leakage &leakage);
+		const std::string &config_line, const Leakage &leakage,
+		bool one_step = false);
 
 	inline void solve(const matrix_t &power, matrix_t &temperature)
 	{
