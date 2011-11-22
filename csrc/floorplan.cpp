@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 		}
 
 		processor_width = sqrt(processor_area);
-		cols = sqrt(processor_count);
+		cols = ceil(sqrt(processor_count));
 
 		for (i = 0; i < processor_count; i++) {
 			x = (i % cols) * processor_width;

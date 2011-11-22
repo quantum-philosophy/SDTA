@@ -126,13 +126,22 @@ classdef Optima < handle
       Utils.writeParameter(original, o.hotspot, '-sampling_intvl', samplingInterval);
     end
 
-    function graph = taskGraph(o)
+    function graph = taskGraph(o, schedule)
+      if nargin < 2, schedule = 'earliest'; end
+
       tgff = TestCase.TGFF(o.tgff);
 
       graph = tgff.graphs{1};
       pes = tgff.pes;
 
       homogeneous = Utils.readParameter(o.params, 'homogeneous');
+      powerScale = Utils.readParameter(o.params, 'power_scale');
+
+      if powerScale ~= 1
+        for i = 1:length(pes)
+          pes{i}.scalePower(powerScale);
+        end
+      end
 
       if homogeneous == 1
         for i = 2:length(pes)
@@ -140,7 +149,12 @@ classdef Optima < handle
         end
       end
 
-      LS.mapEarliestAndSchedule(graph, pes);
+      if strcmp(schedule, 'earliest')
+        LS.mapEarliestAndSchedule(graph, pes);
+      elseif strcmp(schedule, 'criticality')
+        hotspot = Hotspot(o.floorplan, o.hotspot, '');
+        LS.criticalityMapAndSchedule(graph, pes, hotspot);
+      end
 
       deadlineRatio = Utils.readParameter(o.params, 'deadline_ratio');
 

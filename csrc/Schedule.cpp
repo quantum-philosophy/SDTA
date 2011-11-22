@@ -31,13 +31,14 @@ void Schedule::reorder(const order_t &order)
 std::ostream &operator<< (std::ostream &o, const Schedule &schedule)
 {
 	o
-		<< std::setprecision(3) << std::setiosflags(std::ios::fixed)
+		<< std::setprecision(6) << std::setiosflags(std::ios::fixed)
+
 		<< "  Duration: " << schedule.get_duration() << std::endl
 		<< "  "
 			<< std::setw(4) << "id" << " ( "
 			<< std::setw(4) << "proc" << " : "
-			<< std::setw(8) << "start" << " : "
-			<< std::setw(8) << "duration" << " )" << std::endl;
+			<< std::setw(10) << "start" << " : "
+			<< std::setw(10) << "duration" << " )" << std::endl;
 
 	size_t i, count;
 	size_t task_count = schedule.tasks();
@@ -53,10 +54,11 @@ std::ostream &operator<< (std::ostream &o, const Schedule &schedule)
 
 		const ScheduleItem &item = local_schedule[i];
 
-		o	<< std::setw(4) << id << " ( "
+		o	<< "  "
+			<< std::setw(4) << id << " ( "
 			<< std::setw(4) << pid << " : "
-			<< std::setw(8) << item.start << " : "
-			<< std::setw(8) << item.duration << " )" << std::endl;
+			<< std::setw(10) << item.start << " : "
+			<< std::setw(10) << item.duration << " )" << std::endl;
 	}
 
 	o << std::endl << "Processor load:" << std::endl;

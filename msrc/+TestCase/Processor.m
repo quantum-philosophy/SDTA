@@ -51,6 +51,10 @@ classdef Processor < handle
         pe.ceff(type), pe.frequency, pe.voltage);
     end
 
+    function scalePower(pe, factor)
+      pe.ceff = factor * pe.ceff;
+    end
+
     function equalTo(pe, another)
       pe.frequency = another.frequency;
       pe.voltage = another.voltage;
