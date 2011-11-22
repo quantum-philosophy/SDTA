@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-if ARGV.length < 2
+if ARGV.length < 1
   puts 'Need some arguments...'
   puts '1. A task graph in the LEDA format.'
   puts '2. Architecture specification like "[ [ frequency, voltage, # of gates ], ... ]"'
@@ -41,27 +41,16 @@ end
 
 task_count = NC.length
 
-PIDS.uniq!
-
-platform = eval ARGV[1]
-processor_count = platform.length
-
-raise 'The platform specification is not given' if processor_count == 0
-
-platform = platform.map do |f, v, n|
-  [ f, v, n.to_i ]
-end
-
-if CEFF.all?{ |ceff| ceff == 1.0 }
-  srand 0
-
-  min_ceff = 1e-9
-  max_ceff = 19e-9
-
-  CEFF = CEFF.map { |ceff| min_ceff + rand * (max_ceff - min_ceff) }
-end
-
 if ARGV[2] == 'optima'
+  platform = eval ARGV[1]
+  processor_count = platform.length
+
+  raise 'The platform specification is not given' if processor_count == 0
+
+  platform = platform.map do |f, v, n|
+    [ f, v, n.to_i ]
+  end
+
   puts "@type (1 x #{ task_count })"
   puts (0...task_count).to_a.join "\t"
   puts
@@ -100,6 +89,15 @@ if ARGV[2] == 'optima'
   end
   puts
 elsif ARGV[2] == 'tgff'
+  platform = eval ARGV[1]
+  processor_count = platform.length
+
+  raise 'The platform specification is not given' if processor_count == 0
+
+  platform = platform.map do |f, v, n|
+    [ f, v, n.to_i ]
+  end
+
   puts '@TASK_GRAPH 0 {'
   (0...task_count).each do |i|
     puts "  TASK t0_#{ i } TYPE #{ i }"
@@ -131,4 +129,8 @@ elsif ARGV[2] == 'tgff'
     puts "}"
     puts
   end
+else
+  puts "Number of tasks: #{ task_count }"
+  nc = NC.inject :+
+  puts "Number of clock cycles: #{ nc } (#{ nc / 1e9 * 1e3 } ms)"
 end
