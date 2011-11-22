@@ -1,0 +1,107 @@
+Task: ( 0 0 )      NC: 42595    NCMIN: 39940    NC_EXP: 40311     map: 0     Ceff: 1e-8     pri: 224      Deadline: 0
+Task: ( 0 1 )      NC: 1304065  NCMIN: 170255   NC_EXP: 356708    map: 0     Ceff: 1e-8     pri: 264      Deadline: 0
+Task: ( 0 2 )      NC: 149080   NCMIN: 4390     NC_EXP: 12685     map: 0     Ceff: 3e-8     pri: 68       Deadline: 0
+Task: ( 0 3 )      NC: 149080   NCMIN: 4390     NC_EXP: 12685     map: 0     Ceff: 1e-8     pri: 133      Deadline: 0
+Task: ( 0 4 )      NC: 149080   NCMIN: 4390     NC_EXP: 12685     map: 0     Ceff: 2e-8     pri: 312      Deadline: 0
+Task: ( 0 5 )      NC: 149080   NCMIN: 4390     NC_EXP: 12685     map: 0     Ceff: 1e-8     pri: 271      Deadline: 0
+Task: ( 0 6 )      NC: 149080   NCMIN: 4390     NC_EXP: 12685     map: 0     Ceff: 5e-8     pri: 256      Deadline: 0
+Task: ( 0 7 )      NC: 149080   NCMIN: 4390     NC_EXP: 12685     map: 0     Ceff: 1e-8     pri: 258      Deadline: 0
+Task: ( 0 8 )      NC: 149080   NCMIN: 4390     NC_EXP: 12685     map: 0     Ceff: 1e-8     pri: 42       Deadline: 0
+Task: ( 0 9 )      NC: 149080   NCMIN: 4390     NC_EXP: 12685     map: 0     Ceff: 1e-8     pri: 184      Deadline: 0
+Task: ( 0 10 )     NC: 149080   NCMIN: 4390     NC_EXP: 12685     map: 0     Ceff: 1e-8     pri: 233      Deadline: 0
+Task: ( 0 11 )     NC: 149080   NCMIN: 4390     NC_EXP: 12685     map: 0     Ceff: 2e-8     pri: 165      Deadline: 0
+Task: ( 0 12 )     NC: 149080   NCMIN: 4390     NC_EXP: 12685     map: 0     Ceff: 5e-8     pri: 314      Deadline: 0
+Task: ( 0 13 )     NC: 149080   NCMIN: 4390     NC_EXP: 12685     map: 0     Ceff: 2e-8     pri: 314      Deadline: 0
+Task: ( 0 14 )     NC: 149080   NCMIN: 4390     NC_EXP: 12685     map: 0     Ceff: 2e-8     pri: 133      Deadline: 0
+Task: ( 0 15 )     NC: 149080   NCMIN: 4390     NC_EXP: 12685     map: 0     Ceff: 3e-8     pri: 216      Deadline: 0
+Task: ( 0 16 )     NC: 4126375  NCMIN: 1618075  NC_EXP: 2179639   map: 0     Ceff: 5e-8     pri: 87       Deadline: 0
+Task: ( 0 17 )     NC: 4126375  NCMIN: 1618075  NC_EXP: 2179639   map: 0     Ceff: 2e-8     pri: 186      Deadline: 0
+Task: ( 0 18 )     NC: 4126375  NCMIN: 1618075  NC_EXP: 2179639   map: 0     Ceff: 1e-8     pri: 212      Deadline: 0
+Task: ( 0 19 )     NC: 4126375  NCMIN: 1618075  NC_EXP: 2179639   map: 0     Ceff: 2e-8     pri: 139      Deadline: 0
+Task: ( 0 20 )     NC: 4126375  NCMIN: 1618075  NC_EXP: 2179639   map: 0     Ceff: 1e-8     pri: 272      Deadline: 0.02
+Task: ( 0 21 )     NC: 67645    NCMIN: 53750    NC_EXP: 55070     map: 1     Ceff: 2e-8     pri: 3        Deadline: 0
+Task: ( 0 22 )     NC: 5535135  NCMIN: 822825   NC_EXP: 2158222   map: 1     Ceff: 1e-8     pri: 172      Deadline: 0
+Task: ( 0 23 )     NC: 5535135  NCMIN: 822825   NC_EXP: 2158222   map: 1     Ceff: 5e-8     pri: 252      Deadline: 0
+Task: ( 0 24 )     NC: 5535135  NCMIN: 822825   NC_EXP: 2158222   map: 1     Ceff: 1e-8     pri: 46       Deadline: 0
+Task: ( 0 25 )     NC: 5535135  NCMIN: 822825   NC_EXP: 2158222   map: 1     Ceff: 2e-8     pri: 16       Deadline: 0
+Task: ( 0 26 )     NC: 5535135  NCMIN: 822825   NC_EXP: 2158222   map: 1     Ceff: 5e-8     pri: 177      Deadline: 0
+Task: ( 0 27 )     NC: 67645    NCMIN: 53750    NC_EXP: 55070     map: 2     Ceff: 2e-8     pri: 248      Deadline: 0
+Task: ( 0 28 )     NC: 5535135  NCMIN: 822825   NC_EXP: 2158222   map: 2     Ceff: 1e-8     pri: 123      Deadline: 0
+Task: ( 0 29 )     NC: 5535135  NCMIN: 822825   NC_EXP: 2158222   map: 2     Ceff: 1e-8     pri: 270      Deadline: 0
+Task: ( 0 30 )     NC: 5535135  NCMIN: 822825   NC_EXP: 2158222   map: 2     Ceff: 1e-8     pri: 123      Deadline: 0
+Task: ( 0 31 )     NC: 5535135  NCMIN: 822825   NC_EXP: 2158222   map: 2     Ceff: 5e-8     pri: 153      Deadline: 0
+Task: ( 0 32 )     NC: 5535135  NCMIN: 822825   NC_EXP: 2158222   map: 2     Ceff: 2e-8     pri: 263      Deadline: 0
+Task: ( 0 33 )     NC: 5535135  NCMIN: 822825   NC_EXP: 2158222   map: 2     Ceff: 5e-8     pri: 295      Deadline: 0.02
+
+Edge: ( 0 1 )  -->  ( 0 0 )        etype: 10
+Edge: ( 0 0 )  -->  ( 0 2 )       etype: 4
+Edge: ( 0 2 )  -->  ( 0 3 )       etype: 4
+Edge: ( 0 3 )  -->  ( 0 4 )       etype: 4
+Edge: ( 0 4 )  -->  ( 0 5 )       etype: 4
+Edge: ( 0 5 )  -->  ( 0 6 )        etype: 18
+Edge: ( 0 6 )  -->  ( 0 7 )        etype: 16
+Edge: ( 0 7 )  -->  ( 0 8 )        etype: 19
+Edge: ( 0 8 )  -->  ( 0 9 )        etype: 18
+Edge: ( 0 9 )  -->  ( 0 10 )       etype: 16
+Edge: ( 0 10 )  -->  ( 0 11 )       etype: 19
+Edge: ( 0 11 )  -->  ( 0 12 )       etype: 18
+Edge: ( 0 12 )  -->  ( 0 13 )       etype: 16
+Edge: ( 0 13 )  -->  ( 0 14 )       etype: 19
+Edge: ( 0 14 )  -->  ( 0 15 )       etype: 18
+
+Edge: ( 0 1 )  -->  ( 0 16 )       etype: 19
+Edge: ( 0 1 )  -->  ( 0 17 )       etype: 0
+Edge: ( 0 1 )  -->  ( 0 18 )        etype: 20
+Edge: ( 0 1 )  -->  ( 0 19 )        etype: 20
+Edge: ( 0 1 )  -->  ( 0 20 )        etype: 11
+
+Edge: ( 0 3 )  -->  ( 0 16 )       etype: 10
+Edge: ( 0 6 )  -->  ( 0 17 )       etype: 20
+Edge: ( 0 9 )  -->  ( 0 18 )      etype: 11
+Edge: ( 0 12 )  -->  ( 0 19 )      etype: 10
+Edge: ( 0 15 )  -->  ( 0 20 )      etype: 20
+
+Edge: ( 0 1 )  -->  ( 0 21 )      etype: 11
+
+Edge: ( 0 21 )  -->  ( 0 22 )      etype: 10
+Edge: ( 0 21 )  -->  ( 0 23 )      etype: 20
+Edge: ( 0 21 )  -->  ( 0 24 )      etype: 11
+Edge: ( 0 21 )  -->  ( 0 25 )      etype: 2
+Edge: ( 0 21 )  -->  ( 0 26 )      etype: 10
+
+Edge: ( 0 2 )  -->  ( 0 22 )      etype: 10
+Edge: ( 0 5 )  -->  ( 0 23 )      etype: 10
+Edge: ( 0 8 )  -->  ( 0 24 )      etype: 10
+Edge: ( 0 11 )  -->  ( 0 25 )      etype: 10
+Edge: ( 0 14 )  -->  ( 0 26 )      etype: 10
+
+Edge: ( 0 1 )  -->  ( 0 27 )      etype: 11
+Edge: ( 0 27 )  -->  ( 0 28 )      etype: 11
+Edge: ( 0 27 )  -->  ( 0 29 )      etype: 11
+Edge: ( 0 27 )  -->  ( 0 30 )      etype: 11
+Edge: ( 0 27 )  -->  ( 0 31 )      etype: 11
+Edge: ( 0 27 )  -->  ( 0 32 )      etype: 11
+
+Edge: ( 0 0 )  -->  ( 0 28 )      etype: 11
+Edge: ( 0 4 )  -->  ( 0 29 )      etype: 11
+Edge: ( 0 7 )  -->  ( 0 30 )      etype: 11
+Edge: ( 0 10 )  -->  ( 0 31 )      etype: 11
+Edge: ( 0 13 )  -->  ( 0 32 )      etype: 11
+
+Edge: ( 0 28 )  -->  ( 0 33 )      etype: 10
+Edge: ( 0 29 )  -->  ( 0 33 )      etype: 0
+Edge: ( 0 30 )  -->  ( 0 33 )      etype: 0
+Edge: ( 0 31 )  -->  ( 0 33 )      etype: 0
+Edge: ( 0 32 )  -->  ( 0 33 )      etype: 0
+
+Edge: ( 0 22 )  -->  ( 0 33 )      etype: 0
+Edge: ( 0 23 )  -->  ( 0 33 )      etype: 0
+Edge: ( 0 24 )  -->  ( 0 33 )      etype: 0
+Edge: ( 0 25 )  -->  ( 0 33 )      etype: 0
+Edge: ( 0 26 )  -->  ( 0 33 )      etype: 8
+
+Edge: ( 0 16 )  -->  ( 0 33 )      etype: 0
+Edge: ( 0 17 )  -->  ( 0 33 )      etype: 0
+Edge: ( 0 18 )  -->  ( 0 33 )      etype: 0
+Edge: ( 0 19 )  -->  ( 0 33 )      etype: 9
+Edge: ( 0 20 )  -->  ( 0 33 )      etype: 0

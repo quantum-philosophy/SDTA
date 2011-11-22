@@ -85,3 +85,17 @@ foreach (template_tgffopt_config ${templates})
 
 	add_dependencies ("run_${test_name}" "test_${test_name}")
 endforeach()
+
+set (mpeg2_dir "${CMAKE_CURRENT_SOURCE_DIR}/mpeg2/")
+
+set (mpeg2_command ${optima}
+	-s ${mpeg2_dir}/mpeg2_system.config
+	-f ${mpeg2_dir}/mpeg2_floorplan.config
+	-h ${mpeg2_dir}/mpeg2_hotspot.config
+	-p ${mpeg2_dir}/mpeg2_params.config
+)
+
+add_custom_target ("run_mpeg2"
+	COMMAND ${mpeg2_command}
+	DEPENDS optima
+)
