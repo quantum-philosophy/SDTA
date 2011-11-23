@@ -43,14 +43,13 @@ class Generator
   end
 
   def self.params options
-    tournament_size = [ 2, POPULATION_FACTOR * options[:task_count] / 100 + 1 ].max
     population_size = 4 * options[:task_count]
 
     gaps = {
       :repeat => options[:repeat_count],
       :population_size => population_size,
       :stall_generations => STALL_GENERATIONS,
-      :tournament_size => tournament_size
+      :tournament_size => 2
     }
 
     File.open(options[:output], 'w') do |file|
