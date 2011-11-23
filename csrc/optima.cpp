@@ -191,7 +191,7 @@ void optimize(const string &system, const string &floorplan,
 				<< stats << endl
 				<< *evaluation << endl;
 
-			cout << "Improvement: " << setiosflags(ios::fixed) << setprecision(2);
+			cout << "Improvement: " << setiosflags(ios::fixed) << setprecision(3);
 
 			if (!optimization_tuning.multiobjective) {
 				SOEvolutionStats *sstats = (SOEvolutionStats *)&stats;
@@ -232,7 +232,7 @@ void optimize(const string &system, const string &floorplan,
 					<< endl << endl;
 
 			cout
-				<< "Time elapsed: " << setprecision(2)
+				<< "Time elapsed: " << setprecision(3)
 				<< Time::substract(&end, &begin)
 				<< " seconds" << endl << endl;
 
