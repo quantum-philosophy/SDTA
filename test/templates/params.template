@@ -74,7 +74,7 @@ crossover_points 2
 # Mutate
 # * uniform
 mutation uniform
-mutation_min_rate 0.05
+mutation_min_rate 0.01
 mutation_scale 0
 mutation_exponent 0
 

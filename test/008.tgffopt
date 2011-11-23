@@ -3,9 +3,9 @@ tg_label TASK_GRAPH
 # Number of graphs
 tg_cnt 1
 # Number of tasks per graph +/- jitter
-task_cnt 80 0.001
+task_cnt 160 0.001
 # Number of different tasks
-task_type_cnt 40
+task_type_cnt 80
 # Average time per task including communication
 task_trans_time 1
 # Deadline jitter
