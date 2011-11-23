@@ -1,9 +1,11 @@
 # System
 # * mobility
+# * criticality
 # * power_criticality
 # * temperature_criticality
 initialization temperature_criticality
-deadline_ratio 1
+criticality_coefficient 0.01
+deadline_ratio 1.05
 max_temperature 373.15
 power_scale 1
 time_scale 1

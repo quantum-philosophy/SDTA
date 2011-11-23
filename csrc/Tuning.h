@@ -60,6 +60,7 @@ struct Tuning
 struct SystemTuning: public Tuning
 {
 	std::string initialization;
+	double criticality_coefficient;
 	double deadline_ratio;
 	double max_temperature;
 	double power_scale;
@@ -70,6 +71,7 @@ struct SystemTuning: public Tuning
 
 	SystemTuning() :
 		initialization("mobility"),
+		criticality_coefficient(1.0),
 		deadline_ratio(1.05),
 		max_temperature(100 + 273.15),
 		power_scale(1.0),

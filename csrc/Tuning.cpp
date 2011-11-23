@@ -65,6 +65,8 @@ void SystemTuning::setup(const parameters_t &params)
 
 		if (it->name == "initialization")
 			initialization = it->value;
+		else if (it->name == "criticality_coefficient")
+			criticality_coefficient = it->to_double();
 		else if (it->name == "deadline_ratio")
 			deadline_ratio = it->to_double();
 		else if (it->name == "max_temperature")
@@ -87,6 +89,7 @@ void SystemTuning::display(std::ostream &o) const
 	o
 		<< "System:" << std::endl
 		<< "  Initialization:       " << initialization << std::endl
+		<< "  Urgency coefficient:  " << criticality_coefficient << std::endl
 		<< "  Deadline ratio:       " << deadline_ratio << std::endl
 		<< "  Maximal temperature:  " << max_temperature << std::endl
 		<< "  Task power scale:     " << power_scale << std::endl

@@ -127,19 +127,37 @@ class TestCase
 			 */
 			schedule = scheduler->process(mapping, priority);
 		}
-		else if (system_tuning.initialization == "power_criticality") {
-			PowerCriticalityListScheduler another_scheduler(*architecture, *graph);
+		else if (system_tuning.initialization == "criticality") {
+			CriticalityListScheduler another_scheduler(*architecture, *graph);
 			schedule = another_scheduler.process(layout_t(), priority_t());
 			priority = schedule.get_priority();
 			mapping = schedule.get_mapping();
 		}
-		else if (system_tuning.initialization == "temperature_criticality") {
-			Hotspot *another_hotspot = create_hotspot("precise_steady_state", true);
-			TemperatureCriticalityListScheduler another_scheduler(*architecture, *graph);
-			schedule = another_scheduler.process(layout_t(), priority_t(), (void *)another_hotspot);
+		else if (system_tuning.initialization == "power_criticality") {
+			PowerCriticalityPool::data_t data;
+			data.coefficient = system_tuning.criticality_coefficient;
+
+			PowerCriticalityListScheduler another_scheduler(*architecture, *graph);
+			schedule = another_scheduler.process(layout_t(), priority_t(),
+				(void *)&data);
+
 			priority = schedule.get_priority();
 			mapping = schedule.get_mapping();
-			delete another_hotspot;
+		}
+		else if (system_tuning.initialization == "temperature_criticality") {
+			TemperatureCriticalityPool::data_t data;
+			data.coefficient = system_tuning.criticality_coefficient;
+			data.hotspot = create_hotspot("precise_steady_state", true);
+
+			TemperatureCriticalityListScheduler another_scheduler(
+				*architecture, *graph);
+			schedule = another_scheduler.process(layout_t(), priority_t(),
+				(void *)&data);
+
+			priority = schedule.get_priority();
+			mapping = schedule.get_mapping();
+
+			delete data.hotspot;
 		}
 		else
 			throw std::runtime_error("The initialization method is unknown.");

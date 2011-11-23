@@ -54,7 +54,8 @@ void SOEvolution::process(population_t &population)
 	/* Calculate the energy consumption */
 	evaluation.set_shallow(false);
 
-	stats.best_price = assess(stats.best_chromosome);
+	stats.best_schedule = schedule(stats.best_chromosome);
+	stats.best_price = assess(stats.best_schedule);
 }
 
 /******************************************************************************/
@@ -92,7 +93,9 @@ void SOEvolutionStats::display(std::ostream &o) const
 #else
 		<< std::setprecision(0)
 #endif
-		<< "Best chromosome: " << print_t<rank_t>(best_chromosome) << std::endl;
+		<< "Best chromosome: " << print_t<rank_t>(best_chromosome) << std::endl
+		<< "Best schedule:" << std::endl
+		<< best_schedule;
 }
 
 /******************************************************************************/

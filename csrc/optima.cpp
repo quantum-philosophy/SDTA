@@ -187,7 +187,7 @@ void optimize(const string &system, const string &floorplan,
 			Time::measure(&end);
 
 			cout
-				<< endl
+				<< endl << endl
 				<< stats << endl
 				<< *evaluation << endl;
 

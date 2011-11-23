@@ -73,24 +73,28 @@ class Evolution: public BasicEvolution
 
 	stats_t &solve(const layout_t &layout, const priority_t &priority);
 
-	inline price_t assess(chromosome_t &chromosome, Evaluation &evaluation) const
+	inline price_t assess(const chromosome_t &chromosome,
+		Evaluation &evaluation) const
+	{
+		return evaluation.process(schedule(chromosome));
+	}
+
+	inline price_t assess(const Schedule &schedule) const
+	{
+		return evaluation.process(schedule);
+	}
+
+	inline Schedule schedule(const chromosome_t &chromosome) const
 	{
 		if (constrains.fixed_layout()) {
-			Schedule schedule = scheduler.process(constrains.layout, chromosome);
-			return evaluation.process(schedule);
+			return scheduler.process(constrains.layout, chromosome);
 		}
 		else {
 			layout_t layout;
 			priority_t priority;
 			GeneEncoder::split(chromosome, priority, layout);
-			Schedule schedule = scheduler.process(layout, priority);
-			return evaluation.process(schedule);
+			return scheduler.process(layout, priority);
 		}
-	}
-
-	inline price_t assess(chromosome_t &chromosome) const
-	{
-		return assess(chromosome, evaluation);
 	}
 
 	protected:

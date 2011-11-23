@@ -63,6 +63,7 @@ class SOEvolutionStats: public EvolutionStats<eslabSOChromosome, eslabSOPop>
 
 	price_t best_price;
 	chromosome_t best_chromosome;
+	Schedule best_schedule;
 
 	void display(std::ostream &o) const;
 

@@ -224,7 +224,18 @@ class CriticalityPool: public Pool
 
 class PowerCriticalityPool: public CriticalityPool
 {
+	public:
+
+	struct data_t
+	{
+		double coefficient;
+	};
+
+	private:
+
 	vector_t energy;
+
+	data_t *data;
 
 	public:
 
@@ -233,8 +244,13 @@ class PowerCriticalityPool: public CriticalityPool
 
 		CriticalityPool(_processors, _tasks, _layout, _priority, _data)
 	{
+		if (!_data)
+			throw std::runtime_error("The data is null.");
+
 		energy.resize(processor_count);
 		energy.nullify();
+
+		data = (data_t *)_data;
 	}
 
 	protected:
@@ -243,7 +259,7 @@ class PowerCriticalityPool: public CriticalityPool
 	{
 		double total_time = std::max(processor_time[pid], task_time[id]) + time[id][pid];
 		double total_energy = energy[pid] + time[id][pid] * power[id][pid];
-		return total_energy / total_time;
+		return data->coefficient * total_energy / total_time;
 	}
 
 	virtual inline void confirm_cost(pid_t pid, tid_t id)
@@ -254,12 +270,22 @@ class PowerCriticalityPool: public CriticalityPool
 
 class TemperatureCriticalityPool: public CriticalityPool
 {
+	public:
+
+	struct data_t
+	{
+		Hotspot *hotspot;
+		double coefficient;
+	};
+
+	private:
+
 	vector_t energy;
 
 	matrix_t average_power;
 	matrix_t temperature;
 
-	Hotspot *hotspot;
+	data_t *data;
 
 	public:
 
@@ -269,14 +295,14 @@ class TemperatureCriticalityPool: public CriticalityPool
 		CriticalityPool(_processors, _tasks, _layout, _priority, _data)
 	{
 		if (!_data)
-			throw std::runtime_error("The solver for the steady temperature is not given.");
+			throw std::runtime_error("The data is null.");
 
 		energy.resize(processor_count);
 		energy.nullify();
 
 		average_power.resize(1, processor_count);
 
-		hotspot = (Hotspot *)_data;
+		data = (data_t *)_data;
 	}
 
 	protected:
@@ -291,14 +317,14 @@ class TemperatureCriticalityPool: public CriticalityPool
 			else
 				average_power[0][i] = energy[i] / total_time;
 
-		hotspot->solve(average_power, temperature);
+		data->hotspot->solve(average_power, temperature);
 
 		double Tmax = -DBL_MAX;
 
 		for (size_t i = 0; i < processor_count; i++)
 			if (temperature[0][i] > Tmax) Tmax = temperature[0][i];
 
-		return Tmax;
+		return data->coefficient * Tmax;
 	}
 
 	virtual inline void confirm_cost(pid_t pid, tid_t id)
