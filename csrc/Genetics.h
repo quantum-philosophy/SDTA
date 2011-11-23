@@ -19,6 +19,19 @@ class Chromosome
 
 	template<class CT>
 	static double distance(const CT &one, const CT &another);
+
+#ifdef EXTENDED_STATS
+	template<class CT>
+	static bool equal(const CT &one, const CT &another)
+	{
+		size_t count = one.size();
+
+		for (size_t i = 0; i < count; i++)
+			if (one[i] != another[i]) return false;
+
+		return true;
+	}
+#endif
 };
 
 class GeneEncoder;
