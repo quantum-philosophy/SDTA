@@ -25,7 +25,6 @@ function showEvolutionStats(file, full)
     fid = fopen(file);
 
     stats = zeros(0, size(Stats, 2));
-    count = 0;
 
     line = fgetl(fid);
     while ischar(line)
@@ -37,7 +36,6 @@ function showEvolutionStats(file, full)
 
         switch (name)
         case 'Generations'
-          count = count + 1;
           stats(end + 1, :) = zeros(1, size(stats, 2));
           stats(end, G) = str2num(value);
         case 'Evaluations'

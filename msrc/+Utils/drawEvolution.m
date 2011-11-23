@@ -8,7 +8,7 @@ function drawEvolution(file, multi, point, full)
   labels = {};
 
   if multi
-    xlabel('Lifetime, time units');
+    xlabel('MTTF, time units');
     ylabel('Energy, J');
 
     [ generations, population ] = size(evolution);
@@ -63,20 +63,23 @@ function drawEvolution(file, multi, point, full)
       num2str(Utils.round2(minEnergy, 0.01)), ')' ];
 
     if length(point) == 2
-      percentLifetime = Utils.round2((maxLifetime/point(1) - 1) * 100, 0.01);
-      percentEnergy = Utils.round2((withEnergy/point(2) - 1) * 100, 0.01);
-      title([ 'GA (LT ', num2str(percentLifetime), '%, E ', ...
-        num2str(percentEnergy), '%)' ]);
+      timesLifetime = Utils.round2(maxLifetime/point(1), 0.01);
+      timesEnergy = Utils.round2(withEnergy/point(2), 0.01);
+      title([ 'Pareto front (LT ', num2str(timesLifetime), ', E ', ...
+        num2str(timesEnergy), ')' ]);
     elseif length(point) == 1
-      percentLifetime = Utils.round2((maxLifetime/point(1) - 1) * 100, 0.01);
-      title([ 'GA (LT ', num2str(persentLifetime), '%)' ]);
+      timesLifetime = Utils.round2((maxLifetime/point(1) - 1) * 100, 0.01);
+      title([ 'Pareto front (LT ', num2str(persentLifetime), ')' ]);
     else
-      title([ 'GA (LT ', num2str(Utils.round2(maxLifetime, 0.01)), ', E ', ...
-        num2str(Utils.round2(withEnergy, 0.01)), ')' ]);
+      energyPercent = Utils.round2(((maxEnergy / minEnergy) - 1) * 100, 0.1);
+      lifetimePercent = Utils.round2(((maxLifetime / minLifetime) - 1) * 100, 0.1);
+      name = sprintf('Pareto front, delta MTTF %.2f, delta energy %.2f', ...
+        lifetimePercent, energyPercent);
+      title(name);
     end
   else
     xlabel('Generation');
-    ylabel('Lifetime, time units');
+    ylabel('MTTF, time units');
 
     [ generations, population ] = size(evolution);
 
@@ -118,8 +121,8 @@ function drawEvolution(file, multi, point, full)
     if isempty(point)
       title([ 'GA (LT ', num2str(maxLifetime), ')' ]);
     else
-      percentLifetime = Utils.round2((maxLifetime/point - 1) * 100, 0.01);
-      title([ 'GA (+', num2str(percentLifetime), '%)' ]);
+      timesLifetime = Utils.round2((maxLifetime/point - 1) * 100, 0.01);
+      title([ 'GA (', num2str(timesLifetime), ')' ]);
     end
   end
 
