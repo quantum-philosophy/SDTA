@@ -26,19 +26,6 @@ class eslabSOChromosome: public eslabChromosome<double>,
 		eoInt<double>(_size) {}
 #endif
 
-#if 0
-	virtual inline void set_schedule(const Schedule &schedule)
-	{
-		eslabChromosome<double>::set_schedule(schedule);
-
-		const step_t * const order = schedule.point_order();
-		const size_t task_count = schedule.task_count;
-
-		for (size_t i = 0; i < task_count; i++)
-			(*this)[order[i]] = (rank_t)i;
-	}
-#endif
-
 	protected:
 
 	inline void set_fitness(const price_t &price)
@@ -148,12 +135,10 @@ class eslabSOGeneticAlgorithm: public eslabAlgorithm<CT>
 		eoEvalFunc<chromosome_t> &_evaluate_one,
 		eoSelect<chromosome_t> &_select,
 		eoTransform<chromosome_t> &_transform,
-		eoReplacement<chromosome_t> &_replace,
-		eoAlgo<chromosome_t> &_train) :
+		eoReplacement<chromosome_t> &_replace) :
 
 		eslabAlgorithm<chromosome_t>(_continuator, _evaluate_one),
-		select(_select), transform(_transform), replace(_replace),
-		train(_train) {}
+		select(_select), transform(_transform), replace(_replace) {}
 
 	void operator()(population_t &population);
 
@@ -162,7 +147,6 @@ class eslabSOGeneticAlgorithm: public eslabAlgorithm<CT>
 	eoSelect<chromosome_t> &select;
 	eoTransform<chromosome_t> &transform;
 	eoReplacement<chromosome_t> &replace;
-	eoAlgo<chromosome_t> &train;
 };
 
 class SOContinuation: public Continuation<eslabSOChromosome>

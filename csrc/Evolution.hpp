@@ -35,30 +35,42 @@ void Evolution<CT, PT, ST>::populate(population_t &population,
 		GeneEncoder::extend(chromosome, layout);
 
 	Schedule schedule;
-	RandomGeneratorListScheduler scheduler(architecture, graph);
 
 	const CreationTuning &creation_tuning = tuning.creation;
 
 	/* Fill the first part with uniform chromosomes */
 	create_count = creation_tuning.uniform_ratio * creation_tuning.population_size;
-	schedule = scheduler.process(layout, priority);
-	chromosome.set_schedule(schedule);
+
+	/* NOTE: Everything is given, so work as
+	 * the deterministic scheduler.
+	 */
+	schedule = this->scheduler.process(layout, priority);
+	GeneEncoder::reorder(chromosome, schedule);
+
+	if (!fixed_layout)
+		GeneEncoder::reallocate(chromosome, schedule);
+
 	evaluate(chromosome);
+
 	for (i = 0; i < create_count; i++)
 		population.push_back(chromosome);
+
+	RandomGeneratorListScheduler scheduler(architecture, graph);
 
 	/* Fill the second part with randomly generated chromosomes */
 	create_count = creation_tuning.population_size - create_count;
 	for (i = 0; i < create_count; i++) {
+		chromosome.invalidate();
 		if (fixed_layout) {
+			/* Partially deterministic */
 			schedule = scheduler.process(layout, priority_t());
-			chromosome.set_schedule(schedule);
 		}
 		else {
+			/* Totally stochastic */
 			schedule = scheduler.process(layout_t(), priority_t());
-			chromosome.set_schedule(schedule);
-			GeneEncoder::reallocate(chromosome);
+			GeneEncoder::reallocate(chromosome, schedule);
 		}
+		GeneEncoder::reorder(chromosome, schedule);
 		evaluate(chromosome);
 		population.push_back(chromosome);
 	}

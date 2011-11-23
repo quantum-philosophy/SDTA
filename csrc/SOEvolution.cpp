@@ -37,15 +37,11 @@ void SOEvolution::process(population_t &population)
 	/* Replace = Merge + Reduce */
 	Replacement<chromosome_t> replace(select, tuning.replacement);
 
-	/* Train */
-	Training<chromosome_t> train(architecture, graph, constrains,
-		evaluation, evaluator, tuning.training, stats);
-
 	eslabSOEvolutionMonitor evolution_monitor(population, optimization_tuning.dump);
 	checkpoint.add(evolution_monitor);
 
 	eslabSOGeneticAlgorithm<chromosome_t> ga(checkpoint, evaluator, select,
-		transform, replace, train);
+		transform, replace);
 
 	ga(population);
 
@@ -76,7 +72,7 @@ eoMonitor &SOEvolutionStats::operator()()
 		<< "[ "
 			<< std::setw(10) << worst_lifetime << ", "
 			<< std::setw(10) << best_lifetime
-		<< " ]" << std::flush;
+		<< " ]";
 
 	return *this;
 }

@@ -106,7 +106,7 @@ eoMonitor &MOEvolutionStats::operator()()
 			<< "( *, "
 				<< std::setw(10) << best_energy.energy
 			<< " )"
-		<< " ]" << std::flush;
+		<< " ]";
 
 	return *this;
 }

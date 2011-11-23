@@ -18,22 +18,6 @@ double Chromosome::distance(const CT &one, const CT &another)
 	return double(count) / double(size);
 }
 
-template<class CT>
-bool Chromosome::equal(const CT &one, const CT &another)
-{
-	size_t size = one.size();
-
-#ifndef SHALLOW_CHECK
-	if (another.size() != size)
-		throw std::runtime_error("The chromosomes have different length.");
-#endif
-
-	for (size_t i = 0; i < size; i++)
-		if (one[i] != another[i]) return false;
-
-	return true;
-}
-
 #ifdef EXTENDED_STATS
 template<class CT>
 size_t eslabPop<CT>::unique() const

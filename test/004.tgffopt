@@ -1,3 +1,5 @@
+seed 2
+
 # Task graph label
 tg_label TASK_GRAPH
 # Number of graphs

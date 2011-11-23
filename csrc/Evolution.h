@@ -12,7 +12,6 @@
 
 #include "Crossover.h"
 #include "Mutation.h"
-#include "Training.h"
 #include "Transformation.h"
 
 #include "ListScheduler.h"
@@ -104,17 +103,12 @@ class Evolution: public BasicEvolution
 
 	inline void evaluate(chromosome_t &chromosome)
 	{
-		if (chromosome.valid()) return;
+		if (!chromosome.invalid()) return;
 
 		price_t price;
 
-		if (chromosome.valid_schedule()) {
-			price = evaluation.process(chromosome.schedule);
-		}
-		else if (constrains.fixed_layout()) {
+		if (constrains.fixed_layout()) {
 			Schedule schedule = scheduler.process(constrains.layout, chromosome);
-			chromosome.set_schedule(schedule);
-
 			price = evaluation.process(schedule);
 		}
 		else {
@@ -122,9 +116,8 @@ class Evolution: public BasicEvolution
 			priority_t priority;
 
 			GeneEncoder::split(chromosome, priority, layout);
-			Schedule schedule = scheduler.process(layout, priority);
-			chromosome.set_schedule(schedule);
 
+			Schedule schedule = scheduler.process(layout, priority);
 			price = evaluation.process(schedule);
 		}
 

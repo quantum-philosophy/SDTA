@@ -19,40 +19,6 @@ class UniformMutation: public eoMonOp<CT>
 };
 
 template<class CT>
-class PeerMutation: public eoMonOp<CT>
-{
-	const constrains_t &constrains;
-	const rate_t &rate;
-
-	public:
-
-	PeerMutation(const constrains_t &_constrains, const rate_t &_rate) :
-		constrains(_constrains), rate(_rate) {}
-
-	bool operator()(CT &one);
-};
-
-template<class CT>
-class ListScheduleMutation:
-	public ListScheduler<MutationPool>,
-	public eoMonOp<CT>
-{
-	const layout_t *layout;
-	const rate_t &rate;
-
-	public:
-
-	ListScheduleMutation(const Architecture &architecture, const Graph &graph,
-		const constrains_t &constrains, const rate_t &_rate) :
-
-		ListScheduler<MutationPool>(architecture, graph),
-		layout(constrains.fixed_layout() ? &constrains.get_layout() : NULL),
-		rate(_rate) {}
-
-	bool operator()(CT &chromosome);
-};
-
-template<class CT>
 class Mutation: public eoMonOp<CT>
 {
 	const MutationTuning &tuning;
@@ -82,13 +48,6 @@ class Mutation: public eoMonOp<CT>
 
 			if (method_list[i].name == "uniform")
 				one = new UniformMutation<CT>(constrains, rate);
-
-			else if (method_list[i].name == "peer")
-				one = new PeerMutation<CT>(constrains, rate);
-
-			else if (method_list[i].name == "list_schedule")
-				one = new ListScheduleMutation<CT>(architecture, graph,
-					constrains, rate);
 
 			else throw std::runtime_error("The mutation method is unknown.");
 

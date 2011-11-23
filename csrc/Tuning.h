@@ -217,27 +217,6 @@ struct MutationTuning: public Tuning
 	void display(std::ostream &o) const;
 };
 
-struct TrainingTuning: public Tuning
-{
-	std::string method;
-	double min_rate;
-	double scale;
-	double exponent;
-	size_t max_lessons;
-	size_t stall_lessons;
-
-	TrainingTuning() :
-		method("peer"),
-		min_rate(0.01),
-		scale(1),
-		exponent(-0.05),
-		max_lessons(50),
-		stall_lessons(10) {}
-
-	void setup(const parameters_t &params);
-	void display(std::ostream &o) const;
-};
-
 struct ReplacementTuning: public Tuning
 {
 	std::string method;
@@ -263,7 +242,6 @@ class EvolutionTuning: public Tuning
 	SelectionTuning selection;
 	CrossoverTuning crossover;
 	MutationTuning mutation;
-	TrainingTuning training;
 	ReplacementTuning replacement;
 
 	void setup(const parameters_t &params);

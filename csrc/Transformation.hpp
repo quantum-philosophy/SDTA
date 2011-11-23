@@ -25,5 +25,5 @@ void Transformation<CT>::operator()(population_t &population)
 
 	/* 3. Invalidation */
 	for (i = 0; i < population_size; i++)
-		if (changes[i]) population[i].set_invalid();
+		if (changes[i]) population[i].invalidate();
 }

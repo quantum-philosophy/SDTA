@@ -82,7 +82,7 @@ include_directories (
 # * VERIFY_CACHING - check what we are reading from memcached.
 # * MEASURE_TIME - measure time.
 #
-set(CMAKE_CXX_FLAGS "-DSHALLOW_CHECK -Wall -Wno-deprecated-declarations -Wno-sign-compare -O3 $ENV{CFLAGS}")
+set(CMAKE_CXX_FLAGS "-Wall -Wno-deprecated-declarations -Wno-sign-compare -O3 $ENV{CFLAGS}")
 
 add_library(libeo STATIC IMPORTED)
 set_property(

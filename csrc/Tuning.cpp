@@ -300,39 +300,6 @@ void MutationTuning::display(std::ostream &o) const
 		<< "  Exponent:             " << exponent << std::endl;
 }
 
-void TrainingTuning::setup(const parameters_t &params)
-{
-	for (parameters_t::const_iterator it = params.begin();
-		it != params.end(); it++) {
-
-		if (it->name == "training")
-			method = it->value;
-		else if (it->name == "training_min_rate")
-			min_rate = it->to_double();
-		else if (it->name == "training_scale")
-			scale = it->to_double();
-		else if (it->name == "training_exponent")
-			exponent = it->to_double();
-		else if (it->name == "max_lessons")
-			max_lessons = it->to_int();
-		else if (it->name == "stall_lessons")
-			stall_lessons = it->to_int();
-	}
-}
-
-void TrainingTuning::display(std::ostream &o) const
-{
-	o
-		<< "Training:               " << method << std::endl
-		<< std::setprecision(3)
-		<< "  Minimal rate:         " << min_rate << std::endl
-		<< "  Scale:                " << scale << std::endl
-		<< "  Exponent:             " << exponent << std::endl
-		<< std::setprecision(0)
-		<< "  Maximum lessons:      " << max_lessons << std::endl
-		<< "  Stall lessons:        " << stall_lessons << std::endl;
-}
-
 void ReplacementTuning::setup(const parameters_t &params)
 {
 	for (parameters_t::const_iterator it = params.begin();
@@ -363,7 +330,6 @@ void EvolutionTuning::setup(const parameters_t &params)
 	selection.setup(params);
 	crossover.setup(params);
 	mutation.setup(params);
-	training.setup(params);
 	replacement.setup(params);
 }
 
@@ -391,9 +357,6 @@ void EvolutionTuning::display(std::ostream &o) const
 	o << std::endl;
 
 	mutation.display(o);
-	o << std::endl;
-
-	training.display(o);
 	o << std::endl;
 
 	replacement.display(o);

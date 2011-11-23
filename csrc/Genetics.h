@@ -19,9 +19,6 @@ class Chromosome
 
 	template<class CT>
 	static double distance(const CT &one, const CT &another);
-
-	template<class CT>
-	static bool equal(const CT &one, const CT &another);
 };
 
 class GeneEncoder;
@@ -32,72 +29,23 @@ class Evolution;
 template<class FT>
 class eslabChromosome
 {
-	friend class GeneEncoder;
-
 	template<class CT, class PT, class ST>
 	friend class Evolution;
 
 	protected:
 
-	bool invalid_schedule;
-	bool invalid_price;
-
-	Schedule schedule;
 	price_t price;
 
 	public:
-
-	eslabChromosome() : invalid_schedule(true), invalid_price(true) {}
-
-	inline bool valid() const
-	{
-		return !invalid_schedule && !invalid_price;
-	}
-
-	inline void set_invalid()
-	{
-		invalid_schedule = true;
-		invalid_price = true;
-	}
-
-	inline bool valid_schedule() const
-	{
-		return !invalid_schedule;
-	}
-
-	virtual inline void set_schedule(const Schedule &schedule)
-	{
-		this->schedule = schedule;
-		invalid_schedule = false;
-
-		/* Automatically invalidate the price */
-		invalid_price = true;
-	}
 
 	inline void set_price(const price_t &price)
 	{
 		this->price = price;
 		set_fitness(price);
-		invalid_price = false;
-	}
-
-	inline const Schedule &get_schedule() const
-	{
-#ifndef SHALLOW_CHECK
-		if (invalid_schedule)
-			throw std::runtime_error("The schedule is invalid.");
-#endif
-
-		return schedule;
 	}
 
 	inline const price_t &get_price() const
 	{
-#ifndef SHALLOW_CHECK
-		if (invalid_price)
-			throw std::runtime_error("The price is invalid.");
-#endif
-
 		return price;
 	}
 
@@ -174,9 +122,8 @@ class GeneEncoder
 	}
 
 	template<class CT>
-	static inline void reallocate(CT &chromosome)
+	static inline void reallocate(CT &chromosome, const Schedule &schedule)
 	{
-		const Schedule &schedule = chromosome.schedule;
 		const step_t * const mapping = schedule.point_mapping();
 		const size_t task_count = schedule.task_count;
 
@@ -186,13 +133,12 @@ class GeneEncoder
 #endif
 
 		for (size_t i = 0; i < task_count; i++)
-			chromosome[2 * i] = (rank_t)mapping[i];
+			chromosome[task_count + i] = (rank_t)mapping[i];
 	}
 
 	template<class CT>
-	static inline void reorder(CT &chromosome)
+	static inline void reorder(CT &chromosome, const Schedule &schedule)
 	{
-		const Schedule &schedule = chromosome.schedule;
 		const step_t * const order = schedule.point_order();
 		const size_t task_count = schedule.task_count;
 
