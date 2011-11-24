@@ -152,8 +152,9 @@ classdef Optima < handle
       if strcmp(schedule, 'earliest')
         LS.mapEarliestAndSchedule(graph, pes);
       elseif strcmp(schedule, 'criticality')
+        coefficient = Utils.readParameter(o.params, 'criticality_coefficient');
         hotspot = Hotspot(o.floorplan, o.hotspot, '');
-        LS.criticalityMapAndSchedule(graph, pes, hotspot);
+        LS.criticalityMapAndSchedule(graph, pes, hotspot, coefficient);
       end
 
       deadlineRatio = Utils.readParameter(o.params, 'deadline_ratio');

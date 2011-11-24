@@ -182,7 +182,9 @@ classdef LS < handle
       graph.assign(priority, mapping, schedule, start, duration);
     end
 
-    function schedule = criticalityMapAndSchedule(graph, pes, hotspot)
+    function schedule = criticalityMapAndSchedule(graph, pes, hotspot, coeff)
+      if nargin < 4, coeff = 1; end
+
       tasks = graph.tasks;
 
       processorCount = length(pes);
@@ -236,13 +238,13 @@ classdef LS < handle
             % 1.
             % e = energy(pid) + time(id, pid) * power(id, pid);
             % Pow = e / t;
-            % dc(i, pid) = sc(id) - time(id, pid) - earliestTime - Pow;
+            % dc(i, pid) = sc(id) - time(id, pid) - earliestTime - coeff * Pow;
 
             % 2.
             e = energy;
             e(pid) = e(pid) + time(id, pid) * power(id, pid);
             Temp = hotspot.steady(e / t);
-            dc(i, pid) = sc(id) - time(id, pid) - earliestTime - max(Temp);
+            dc(i, pid) = sc(id) - time(id, pid) - earliestTime - coeff * max(Temp);
           end
         end
 
