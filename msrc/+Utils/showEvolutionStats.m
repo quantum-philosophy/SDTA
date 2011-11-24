@@ -1,5 +1,5 @@
-function showEvolutionStats(file, full)
-  if nargin < 2, full = false;
+function showEvolutionStats(file, remove)
+  if nargin < 2, remove = []; end
 
   files = dir(file);
   count = length(files);
@@ -63,11 +63,15 @@ function showEvolutionStats(file, full)
       line = fgetl(fid);
     end
 
+    fclose(fid);
+
+    if size(stats, 1) == 0
+      continue;
+    end
+
     [ dummy, I ] = sort(stats(:, IL), 1, 'descend');
 
     Stats(end + 1, :) = stats(I(1), :);
-
-    fclose(fid);
   end
 
   count = size(Stats, 1);
@@ -77,12 +81,20 @@ function showEvolutionStats(file, full)
     '+LT, x', '+LTa, x', '+E, x', 'Time, s');
 
   for i = 1:count
-    fprintf('%10d%15d%15d%15d%15d%15.2f%15.2f%15.2f%15.4f\n', ...
-      i, Stats(i, G), Stats(i, E), Stats(i, D), Stats(i, R), ...
-      Stats(i, IL), Stats(i, AL), Stats(i, IE), Stats(i, T));
+    if any(remove == i)
+      fprintf('%10s%15d%15d%15d%15d%15.2f%15.2f%15.2f%15.4f\n', ...
+        'X', Stats(i, G), Stats(i, E), Stats(i, D), Stats(i, R), ...
+        Stats(i, IL), Stats(i, AL), Stats(i, IE), Stats(i, T));
+    else
+      fprintf('%10d%15d%15d%15d%15d%15.2f%15.2f%15.2f%15.4f\n', ...
+        i, Stats(i, G), Stats(i, E), Stats(i, D), Stats(i, R), ...
+        Stats(i, IL), Stats(i, AL), Stats(i, IE), Stats(i, T));
+    end
   end
 
   fprintf('\n');
+
+  Stats(remove, :) = [];
 
   fprintf('%10s%15d%15d%15d%15d%15.2f%15.2f%15.2f%15.2f\n', 'min', ...
     min(Stats(:, G)),  min(Stats(:, E)),  min(Stats(:, D)), ...
@@ -98,6 +110,9 @@ function showEvolutionStats(file, full)
     mean(Stats(:, G)),  mean(Stats(:, E)),  mean(Stats(:, D)), ...
     mean(Stats(:, R)),  mean(Stats(:, IL)), mean(Stats(:, AL)), ...
     mean(Stats(:, IE)), mean(Stats(:, T)));
+
+  fprintf('%10s%15s%15s%15.2f%15s%15s%15s%15s%15s\n', 'percent', ...
+    '',  '', mean(Stats(:, D)) / mean(Stats(:, E)) * 100, '', '', '', '', '');
 
   if count > 1
     figure;
