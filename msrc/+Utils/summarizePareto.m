@@ -1,5 +1,6 @@
-function summarizePareto(location, specific)
+function summarizePareto(location, specific, exclude)
   if nargin < 2, specific = []; end
+  if nargin < 3, exclude = []; end
 
   colors = Constants.roundRobinColors;
 
@@ -62,7 +63,7 @@ function summarizePareto(location, specific)
 
         [ lifetime, energy ] = Utils.extractDominant(lifetime, energy);
 
-        if nargin > 1 && specific == i
+        if ~isempty(specific) && specific == i
           Utils.drawPareto(lifetime, energy);
         end
 
@@ -76,8 +77,13 @@ function summarizePareto(location, specific)
         deltaL(end + 1) = (mxL - mnL) / mnL * 100;
         deltaE(end + 1) = (mxE - mnE) / mnE * 100;
 
-        fprintf('%5d%15.2f%15.2f%15.2f%15.2f%15.2f%15.2f\n', i, ...
-          mnL, mxL, mnE, mxE, deltaL(end), deltaE(end));
+        if any(exclude == i)
+          fprintf('%5s%15.2f%15.2f%15.2f%15.2f%15.2f%15.2f\n', 'X', ...
+            mnL, mxL, mnE, mxE, deltaL(end), deltaE(end));
+        else
+          fprintf('%5d%15.2f%15.2f%15.2f%15.2f%15.2f%15.2f\n', i, ...
+            mnL, mxL, mnE, mxE, deltaL(end), deltaE(end));
+        end
 
         S(end + 1, 1:N) = Utils.paretoSpline(lifetime, energy, N);
 
@@ -93,6 +99,14 @@ function summarizePareto(location, specific)
 
     fclose(fid);
   end
+
+  Lifetime(exclude, :) = [];
+  Energy(exclude, :) = [];
+
+  deltaL(exclude) = [];
+  deltaE(exclude) = [];
+
+  S(exclude, :) = [];
 
   mnL = mean(Lifetime(:, 1));
   mxL = mean(Lifetime(:, 2));

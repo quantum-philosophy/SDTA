@@ -1,0 +1,73 @@
+Task: ( 0 0 )  NC: 1304065 NCMIN: 170255  NC_EXP: 356708  map: 0 Ceff: 1e-8     pri: 0      Deadline: 0
+Task: ( 0 1 )  NC: 42595   NCMIN: 39940   NC_EXP: 40311   map: 0 Ceff: 1e-8     pri: 0      Deadline: 0
+Task: ( 0 2 )  NC: 2087120 NCMIN: 61460   NC_EXP: 177590  map: 0 Ceff: 2.143e-8 pri: 0      Deadline: 0
+Task: ( 0 3 )  NC: 4126375 NCMIN: 1618075 NC_EXP: 2179639 map: 0 Ceff: 5e-8     pri: 0      Deadline: 0
+Task: ( 0 4 )  NC: 4126375 NCMIN: 1618075 NC_EXP: 2179639 map: 0 Ceff: 2e-8     pri: 0      Deadline: 0
+Task: ( 0 5 )  NC: 4126375 NCMIN: 1618075 NC_EXP: 2179639 map: 0 Ceff: 1e-8     pri: 0      Deadline: 0
+Task: ( 0 6 )  NC: 4126375 NCMIN: 1618075 NC_EXP: 2179639 map: 0 Ceff: 2e-8     pri: 0      Deadline: 0
+Task: ( 0 7 )  NC: 4126375 NCMIN: 1618075 NC_EXP: 2179639 map: 0 Ceff: 1e-8     pri: 0      Deadline: 0.02
+Task: ( 0 8 )  NC: 67645   NCMIN: 53750   NC_EXP: 55070   map: 1 Ceff: 2e-8     pri: 0      Deadline: 0
+Task: ( 0 9 )  NC: 5535135 NCMIN: 822825  NC_EXP: 2158222 map: 1 Ceff: 1e-8     pri: 0      Deadline: 0
+Task: ( 0 10 ) NC: 5535135 NCMIN: 822825  NC_EXP: 2158222 map: 1 Ceff: 5e-8     pri: 0      Deadline: 0
+Task: ( 0 11 ) NC: 5535135 NCMIN: 822825  NC_EXP: 2158222 map: 1 Ceff: 1e-8     pri: 0      Deadline: 0
+Task: ( 0 12 ) NC: 5535135 NCMIN: 822825  NC_EXP: 2158222 map: 1 Ceff: 2e-8     pri: 0      Deadline: 0
+Task: ( 0 13 ) NC: 5535135 NCMIN: 822825  NC_EXP: 2158222 map: 1 Ceff: 5e-8     pri: 0      Deadline: 0
+Task: ( 0 14 ) NC: 67645   NCMIN: 53750   NC_EXP: 55070   map: 2 Ceff: 2e-8     pri: 0      Deadline: 0
+Task: ( 0 15 ) NC: 5535135 NCMIN: 822825  NC_EXP: 2158222 map: 2 Ceff: 1e-8     pri: 0      Deadline: 0
+Task: ( 0 16 ) NC: 5535135 NCMIN: 822825  NC_EXP: 2158222 map: 2 Ceff: 1e-8     pri: 0      Deadline: 0
+Task: ( 0 17 ) NC: 5535135 NCMIN: 822825  NC_EXP: 2158222 map: 2 Ceff: 1e-8     pri: 0      Deadline: 0
+Task: ( 0 18 ) NC: 5535135 NCMIN: 822825  NC_EXP: 2158222 map: 2 Ceff: 5e-8     pri: 0      Deadline: 0
+Task: ( 0 19 ) NC: 5535135 NCMIN: 822825  NC_EXP: 2158222 map: 2 Ceff: 2e-8     pri: 0      Deadline: 0
+Task: ( 0 20 ) NC: 5535135 NCMIN: 822825  NC_EXP: 2158222 map: 2 Ceff: 5e-8     pri: 0      Deadline: 0.02
+
+Edge: ( 0 0 )   -->  ( 0 1 )      etype: 0
+Edge: ( 0 0 )   -->  ( 0 8 )      etype: 0
+Edge: ( 0 0 )   -->  ( 0 14 )     etype: 0
+
+Edge: ( 0 1 )   -->  ( 0 2 )      etype: 0
+Edge: ( 0 1 )   -->  ( 0 15 )     etype: 0
+
+Edge: ( 0 2 )   -->  ( 0 3 )      etype: 0
+Edge: ( 0 2 )   -->  ( 0 4 )      etype: 0
+Edge: ( 0 2 )   -->  ( 0 5 )      etype: 0
+Edge: ( 0 2 )   -->  ( 0 6 )      etype: 0
+Edge: ( 0 2 )   -->  ( 0 7 )      etype: 0
+Edge: ( 0 2 )   -->  ( 0 9 )      etype: 0
+Edge: ( 0 2 )   -->  ( 0 10 )     etype: 0
+Edge: ( 0 2 )   -->  ( 0 11 )     etype: 0
+Edge: ( 0 2 )   -->  ( 0 12 )     etype: 0
+Edge: ( 0 2 )   -->  ( 0 13 )     etype: 0
+Edge: ( 0 2 )   -->  ( 0 16 )     etype: 0
+Edge: ( 0 2 )   -->  ( 0 17 )     etype: 0
+Edge: ( 0 2 )   -->  ( 0 18 )     etype: 0
+Edge: ( 0 2 )   -->  ( 0 19 )     etype: 0
+
+Edge: ( 0 3 )   -->  ( 0 20 )     etype: 0
+Edge: ( 0 4 )   -->  ( 0 20 )     etype: 0
+Edge: ( 0 5 )   -->  ( 0 20 )     etype: 0
+Edge: ( 0 6 )   -->  ( 0 20 )     etype: 0
+Edge: ( 0 7 )   -->  ( 0 20 )     etype: 0
+
+Edge: ( 0 8 )   -->  ( 0 9 )      etype: 0
+Edge: ( 0 8 )   -->  ( 0 10 )     etype: 0
+Edge: ( 0 8 )   -->  ( 0 11 )     etype: 0
+Edge: ( 0 8 )   -->  ( 0 12 )     etype: 0
+Edge: ( 0 8 )   -->  ( 0 13 )     etype: 0
+
+Edge: ( 0 9 )   -->  ( 0 20 )     etype: 0
+Edge: ( 0 10 )  -->  ( 0 20 )     etype: 0
+Edge: ( 0 11 )  -->  ( 0 20 )     etype: 0
+Edge: ( 0 12 )  -->  ( 0 20 )     etype: 0
+Edge: ( 0 13 )  -->  ( 0 20 )     etype: 0
+
+Edge: ( 0 14 )  -->  ( 0 15 )     etype: 0
+Edge: ( 0 14 )  -->  ( 0 16 )     etype: 0
+Edge: ( 0 14 )  -->  ( 0 17 )     etype: 0
+Edge: ( 0 14 )  -->  ( 0 18 )     etype: 0
+Edge: ( 0 14 )  -->  ( 0 19 )     etype: 0
+
+Edge: ( 0 15 )  -->  ( 0 20 )     etype: 0
+Edge: ( 0 16 )  -->  ( 0 20 )     etype: 0
+Edge: ( 0 17 )  -->  ( 0 20 )     etype: 0
+Edge: ( 0 18 )  -->  ( 0 20 )     etype: 0
+Edge: ( 0 19 )  -->  ( 0 20 )     etype: 0

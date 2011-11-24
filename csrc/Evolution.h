@@ -70,7 +70,7 @@ class Evolution: public BasicEvolution
 			throw std::runtime_error("The length cannot be zero.");
 	}
 
-	stats_t &solve(const layout_t &layout, const priority_t &priority);
+	virtual stats_t &solve(const layout_t &layout, const priority_t &priority) = 0;
 
 	inline price_t assess(const chromosome_t &chromosome,
 		Evaluation &evaluation) const
@@ -123,8 +123,6 @@ class Evolution: public BasicEvolution
 
 		chromosome.set_price(price);
 	}
-
-	virtual void process(population_t &population) = 0;
 
 	stats_t stats;
 };

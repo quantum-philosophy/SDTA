@@ -5,19 +5,6 @@
 /******************************************************************************/
 
 template<class CT, class PT, class ST>
-ST &Evolution<CT, PT, ST>::solve(const layout_t &layout,
-	const priority_t &priority)
-{
-	population_t population;
-
-	populate(population, layout, priority);
-
-	process(population);
-
-	return stats;
-}
-
-template<class CT, class PT, class ST>
 void Evolution<CT, PT, ST>::populate(population_t &population,
 	const layout_t &layout, const priority_t &priority)
 {

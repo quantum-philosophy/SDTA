@@ -1,0 +1,126 @@
+#!/usr/bin/env ruby
+#
+require 'ftools'
+
+# The area of the die in square miters
+DIE_AREA = 4e-6
+
+# Multiplied by the number of tasks
+POPULATION_FACTOR = 4
+
+STALL_GENERATIONS = 200
+
+if ARGV.length < 2
+  puts 'Need some arguments...'
+  puts '1. base name "../test/mpeg2/mpeg2"'
+  puts '2. the output directory'
+  puts '3. pairs     "[ variants = 20, repeat = 1  ]"'
+  puts '4. frequency "[ min = 0.9e9,   max = 1.1e9 ]"'
+  puts '5. voltage   "[ min = 0.9,     max = 1.1   ]"'
+  puts '6. ngate     "[ min = 10e4,    max = 15e4  ]"'
+  exit
+end
+
+base = ARGV[0]
+output = ARGV[1]
+variant_count, repeat_count = ARGV.length > 2 ? eval(ARGV[2]) : [ 20, 1 ]
+frequency = ARGV.length > 3 ? eval(ARGV[3]) : [ 0.9e9, 1.1e9 ]
+voltage = ARGV.length > 4 ? eval(ARGV[4]) : [ 0.9, 1.1 ]
+ngate = ARGV.length > 5 ? eval(ARGV[5]) : [ 10e4, 15e4 ]
+
+unless File.directory? output
+  puts 'Need a real output directory...'
+  exit
+end
+
+system = base + '_system.config'
+floorplan = base + '_floorplan.config'
+params = base + '_params.config'
+hotspot = base + '_hotspot.config'
+
+unless [ system, floorplan, params, hotspot ].map{ |f| File.exist? f }.all?
+  puts 'Some input files are missing...'
+  exit
+end
+
+common = []
+
+processor_count = nil
+task_count = nil
+
+accept = true
+File.open(system, 'r') do |file|
+  while line = file.gets
+    if line =~ /\s*@voltage\s*\((\d+)\s*x\s*(\d+)\)/ ||
+      line =~ /\s*@frequency\s*\((\d+)\s*x\s*(\d+)\)/ ||
+      line =~ /\s*@ngate\s*\((\d+)\s*x\s*(\d+)\)/
+
+      raise unless $1.to_i == 1
+
+      if processor_count.nil?
+        processor_count = $2.to_i
+      elsif processor_count != $2.to_i
+        raise
+      end
+
+      accept = false
+    elsif line =~ /\s*@link\s*\((\d+)\s*x\s*(\d+)\)/
+      task_count = $1.to_i
+      accept = true
+    elsif line =~ /\s*@\w+\s*\((\d+)\s*x\s*(\d+)\)/
+      accept = true
+    end
+
+    common << line if accept
+  end
+end
+
+puts "Cores: #{ processor_count }"
+puts "Tasks: #{ task_count }"
+
+name = "%03d_%03d" % [ processor_count, task_count ]
+directory = File.join output, name
+
+Dir::mkdir directory unless File.directory? directory
+
+puts "Test case %d x %d: %s" % [ processor_count, task_count, directory ]
+
+srand 0
+
+(1..variant_count).each do |i|
+  puts "  #{ i }:"
+
+  f = (1..processor_count).to_a.map{ |d|
+    frequency[0] + rand * (frequency[1] - frequency[0]) }.map{ |_| _.to_i }
+  v = (1..processor_count).to_a.map{ |d|
+    voltage[0] + rand * (voltage[1] - voltage[0]) }
+  n = (1..processor_count).to_a.map{ |d|
+    ngate[0] + rand * (ngate[1] - ngate[0]) }.map{ |_| _.to_i }
+
+  s = File.join directory, ("%03d_system.config" % i)
+  puts "    - system configuration: #{ s }"
+  File.open(s, 'w') do |file|
+    file.puts common
+    file.puts
+    file.puts "@frequency (1 x #{ processor_count })"
+    file.puts f.join("\t");
+    file.puts
+    file.puts "@voltage (1 x #{ processor_count })"
+    file.puts v.join("\t");
+    file.puts
+    file.puts "@ngate (1 x #{ processor_count })"
+    file.puts n.join("\t");
+  end
+
+  p = File.join directory, ("%03d_params.config" % i)
+  puts "    - parameters: #{ p }"
+  File.copy params, p
+
+  f = File.join directory, ("%03d_floorplan.config" % i)
+  puts "    - floorplan configuration: #{ f }"
+  File.copy floorplan, f
+
+  h = File.join directory, ("%03d_hotspot.config" % i)
+  puts "    - HotSpot configuration: #{ h }"
+  File.copy hotspot, h
+end

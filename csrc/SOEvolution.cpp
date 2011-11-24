@@ -9,8 +9,11 @@
 /* Evolution                                                                  */
 /******************************************************************************/
 
-void SOEvolution::process(population_t &population)
+SOEvolutionStats &SOEvolution::solve(const layout_t &layout,
+	const priority_t &priority)
 {
+	population_t population;
+
 	const SystemTuning &system_tuning = tuning.system;
 	const OptimizationTuning &optimization_tuning = tuning.optimization;
 
@@ -21,6 +24,8 @@ void SOEvolution::process(population_t &population)
 	eslabCheckPoint<chromosome_t> checkpoint(continuation);
 	stats.watch(population, !system_tuning.verbose);
 	checkpoint.add(stats);
+
+	populate(population, layout, priority);
 
 	evaluate_t evaluator(*this);
 
@@ -52,6 +57,8 @@ void SOEvolution::process(population_t &population)
 
 	stats.best_schedule = schedule(stats.best_chromosome);
 	stats.best_price = assess(stats.best_schedule);
+
+	return stats;
 }
 
 /******************************************************************************/

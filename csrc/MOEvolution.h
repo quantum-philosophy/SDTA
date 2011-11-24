@@ -119,9 +119,7 @@ class MOEvolution:
 		Evolution<chromosome_t, population_t, stats_t>(
 			_architecture, _graph, _scheduler, _evaluation, _tuning, _constrains) {}
 
-	protected:
-
-	void process(population_t &population);
+	MOEvolutionStats &solve(const layout_t &layout, const priority_t &priority);
 };
 
 class MOContinuation: public Continuation<eslabMOChromosome>

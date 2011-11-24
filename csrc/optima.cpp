@@ -143,6 +143,10 @@ void optimize(const string &system, const string &floorplan,
 			constrains = Constrain::structural(
 				*test.architecture, *test.graph, test.mapping);
 
+		double sampling_interval = test.hotspot->get_sampling_interval();
+		size_t step_count = NUMBER_OF_STEPS(test.graph->get_deadline(),
+			sampling_interval);
+
 		cout
 			<< test.graph << endl
 			<< test.architecture << endl
@@ -150,6 +154,9 @@ void optimize(const string &system, const string &floorplan,
 			<< "Start priority: " << print_t<rank_t>(test.priority) << endl
 			<< "Start schedule:" << endl << test.schedule << endl
 			<< "Constrains: " << print_t<constrain_t>(constrains) << endl
+			<< endl
+			<< "Sampling interval: " << scientific << sampling_interval << endl
+			<< "Number of steps: " << fixed << step_count << endl
 			<< endl
 			<< "Initial lifetime: "
 			<< setiosflags(ios::fixed) << setprecision(2)

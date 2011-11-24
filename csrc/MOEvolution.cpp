@@ -45,8 +45,11 @@ price_t eslabMOPop::best_energy() const
 /* Evolution                                                                  */
 /******************************************************************************/
 
-void MOEvolution::process(population_t &population)
+MOEvolutionStats &MOEvolution::solve(const layout_t &layout,
+	const priority_t &priority)
 {
+	population_t population;
+
 	const SystemTuning &system_tuning = tuning.system;
 	const OptimizationTuning &optimization_tuning = tuning.optimization;
 
@@ -57,6 +60,8 @@ void MOEvolution::process(population_t &population)
 	eslabCheckPoint<chromosome_t> checkpoint(continuation);
 	stats.watch(population, !system_tuning.verbose);
 	checkpoint.add(stats);
+
+	populate(population, layout, priority);
 
 	evaluate_t evaluator(*this);
 
@@ -82,6 +87,8 @@ void MOEvolution::process(population_t &population)
 	size_t population_size = population.size();
 	for (size_t i = 0; i < population_size; i++)
 		stats.pareto_optima.push_back((price_t)population[i].objectiveVector());
+
+	return stats;
 }
 
 /******************************************************************************/

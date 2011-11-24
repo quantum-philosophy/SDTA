@@ -92,9 +92,7 @@ class SOEvolution:
 		Evolution<chromosome_t, population_t, stats_t>(
 			_architecture, _graph, _scheduler, _evaluation, _tuning, _constrains) {}
 
-	protected:
-
-	void process(population_t &population);
+	SOEvolutionStats &solve(const layout_t &layout, const priority_t &priority);
 };
 
 template<class CT>
