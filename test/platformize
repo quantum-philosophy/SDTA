@@ -91,11 +91,11 @@ srand 0
   puts "  #{ i }:"
 
   f = (1..processor_count).to_a.map{ |d|
-    frequency[0] + rand * (frequency[1] - frequency[0]) }.map &:to_i
+    frequency[0] + rand * (frequency[1] - frequency[0]) }.map{ |_| _.to_i }
   v = (1..processor_count).to_a.map{ |d|
     voltage[0] + rand * (voltage[1] - voltage[0]) }
   n = (1..processor_count).to_a.map{ |d|
-    ngate[0] + rand * (ngate[1] - ngate[0]) }.map &:to_i
+    ngate[0] + rand * (ngate[1] - ngate[0]) }.map{ |_| _.to_i }
 
   s = File.join directory, ("%03d_system.config" % i)
   puts "    - system configuration: #{ s }"
