@@ -212,7 +212,7 @@ void ContinuationTuning::display(std::ostream &o) const
 		<< "  Minimal generations:  " << min_generations << std::endl
 		<< "  Maximum generations:  " << max_generations << std::endl
 		<< "  Stall generations:    " << stall_generations << std::endl
-		<< std::setprecision(2)
+		<< std::fixed << std::setprecision(2)
 		<< "  Time limit:           " << time_limit << std::endl;
 }
 
