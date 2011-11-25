@@ -6,14 +6,15 @@ if ARGV.length < 2
   puts 'Need some arguments...'
   puts '1. input/output directory'
   puts '2. clone directory'
-  puts '3. pair "[ max_iterations = 30, tolerance = 0.01 ]"'
+  puts %[3. pair "[ solution = 'hotspot', max_iterations = 30, tolerance = 0.01 ]"]
   exit
 end
 
 input = File.join ARGV[0], 'input'
 output = File.join ARGV[0], 'output'
 clone = ARGV[1]
-max_iterations, tolerance = ARGV[2] ? eval(ARGV[2]) : [ 30, 0.01 ]
+solution, max_iterations, tolerance =
+  ARGV[2] ? eval(ARGV[2]) : [ 'hotspot', 30, 0.01 ]
 
 unless File.directory?(input) && File.directory?(output)
   puts 'Need a real input/output directory...'
@@ -25,15 +26,24 @@ unless File.directory? clone
   exit
 end
 
-def execution_time name
+def fetch_stats name
+  time = nil
+  seed = nil
+
   File.open(name, 'r') do |file|
     while line = file.gets
-      next unless line =~ /Time elapsed:\s*(.+)\s+seconds/
-      return $1.to_f
+      if time.nil? && line =~ /Time elapsed:\s*(.+)\s+seconds/
+        time = $1.to_f
+      elsif seed.nil? && line =~ /Chosen seed:\s*(.+)\s+/
+        seed = $1.to_i
+      end
     end
   end
 
-  raise "Cannot figure out the execution time in '#{ name }'"
+  raise "Cannot figure out the execution time in '#{ name }'" if time.nil?
+  raise "Cannot figure out the seed in '#{ name }'" if seed.nil?
+
+  [ time, seed ]
 end
 
 def update_params from, to, params
@@ -79,15 +89,15 @@ Dir[File.join input, '*'].each do |src|
 
     twin = File.join output, File.basename(src), "%03d.log" % c
 
-    time = execution_time twin
+    time, seed = fetch_stats twin
 
     from, to = File.join(src, system), File.join(dst, system)
     File.copy from, to
     puts "    - system configuration: #{ to }"
 
     from, to = File.join(src, params), File.join(dst, params)
-    update_params from, to, :time_limit => time,
-      :repeat => 1, :solution => 'hotspot',
+    update_params from, to, :time_limit => time, :seed => seed,
+      :repeat => 1, :solution => solution,
       :max_iterations => max_iterations, :tolerance => tolerance,
       :assessment => 'condensed_equation'
     puts "    - parameters: #{ to }"
