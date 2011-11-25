@@ -18,9 +18,15 @@ class Continuation: public eoContinue<CT>
 	public:
 
 	Continuation(const ContinuationTuning &_tuning) :
-		tuning(_tuning), start(time(0))
+		tuning(_tuning)
 	{
 		reset();
+	}
+
+	virtual bool timeout() const
+	{
+		if (tuning.time_limit <= 0) return false;
+		return (time(0) - start) >= tuning.time_limit;
 	}
 
 	virtual bool operator()(const eoPop<CT> &population)
@@ -30,9 +36,7 @@ class Continuation: public eoContinue<CT>
 		if (generations < tuning.min_generations) return true;
 		if (generations >= tuning.max_generations) return false;
 
-		if (tuning.time_limit > 0) {
-			if ((time(0) - start) >= tuning.time_limit) return false;
-		}
+		if (timeout()) return false;
 
 		if (improved(population)) {
 			stall_generations = 0;
@@ -50,6 +54,7 @@ class Continuation: public eoContinue<CT>
 	{
 		generations = 0;
 		stall_generations = 0;
+		start = time(0);
 	}
 
 	protected:

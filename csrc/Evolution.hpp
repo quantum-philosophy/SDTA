@@ -5,8 +5,9 @@
 /******************************************************************************/
 
 template<class CT, class PT, class ST>
-void Evolution<CT, PT, ST>::populate(population_t &population,
-	const layout_t &layout, const priority_t &priority)
+bool Evolution<CT, PT, ST>::populate(population_t &population,
+	const layout_t &layout, const priority_t &priority,
+	const Continuation<CT> &continuation)
 {
 	size_t i;
 	size_t create_count;
@@ -39,6 +40,8 @@ void Evolution<CT, PT, ST>::populate(population_t &population,
 
 	evaluate(chromosome);
 
+	if (continuation.timeout()) return false;
+
 	for (i = 0; i < create_count; i++)
 		population.push_back(chromosome);
 
@@ -59,8 +62,11 @@ void Evolution<CT, PT, ST>::populate(population_t &population,
 		}
 		GeneEncoder::reorder(chromosome, schedule);
 		evaluate(chromosome);
+		if (continuation.timeout()) return false;
 		population.push_back(chromosome);
 	}
+
+	return true;
 }
 
 /******************************************************************************/

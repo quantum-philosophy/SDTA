@@ -25,30 +25,30 @@ SOEvolutionStats &SOEvolution::solve(const layout_t &layout,
 	stats.watch(population, !system_tuning.verbose);
 	checkpoint.add(stats);
 
-	populate(population, layout, priority);
+	if (populate(population, layout, priority, continuation)) {
+		evaluate_t evaluator(*this);
 
-	evaluate_t evaluator(*this);
+		/* Select */
+		Selection<chromosome_t> select(tuning.selection);
 
-	/* Select */
-	Selection<chromosome_t> select(tuning.selection);
+		/* Transform = Crossover + Mutate */
+		Crossover<chromosome_t> crossover(architecture, graph, constrains,
+			tuning.crossover, stats);
+		Mutation<chromosome_t> mutate(architecture, graph, constrains,
+			tuning.mutation, stats);
+		Transformation<chromosome_t> transform(crossover, mutate);
 
-	/* Transform = Crossover + Mutate */
-	Crossover<chromosome_t> crossover(architecture, graph, constrains,
-		tuning.crossover, stats);
-	Mutation<chromosome_t> mutate(architecture, graph, constrains,
-		tuning.mutation, stats);
-	Transformation<chromosome_t> transform(crossover, mutate);
+		/* Replace = Merge + Reduce */
+		Replacement<chromosome_t> replace(select, tuning.replacement);
 
-	/* Replace = Merge + Reduce */
-	Replacement<chromosome_t> replace(select, tuning.replacement);
+		eslabSOEvolutionMonitor evolution_monitor(population, optimization_tuning.dump);
+		checkpoint.add(evolution_monitor);
 
-	eslabSOEvolutionMonitor evolution_monitor(population, optimization_tuning.dump);
-	checkpoint.add(evolution_monitor);
+		eslabSOGeneticAlgorithm<chromosome_t> ga(checkpoint, evaluator, select,
+			transform, replace);
 
-	eslabSOGeneticAlgorithm<chromosome_t> ga(checkpoint, evaluator, select,
-		transform, replace);
-
-	ga(population);
+		ga(population);
+	}
 
 	stats.best_chromosome = population.best_element();
 

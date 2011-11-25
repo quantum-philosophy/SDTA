@@ -61,23 +61,23 @@ MOEvolutionStats &MOEvolution::solve(const layout_t &layout,
 	stats.watch(population, !system_tuning.verbose);
 	checkpoint.add(stats);
 
-	populate(population, layout, priority);
+	if (populate(population, layout, priority, continuation)) {
+		evaluate_t evaluator(*this);
 
-	evaluate_t evaluator(*this);
+		eslabMOEvolutionMonitor evolution_monitor(population, optimization_tuning.dump);
+		checkpoint.add(evolution_monitor);
 
-	eslabMOEvolutionMonitor evolution_monitor(population, optimization_tuning.dump);
-	checkpoint.add(evolution_monitor);
+		/* Transform = Crossover + Mutate */
+		Crossover<chromosome_t> crossover(architecture, graph, constrains,
+			tuning.crossover, stats);
+		Mutation<chromosome_t> mutate(architecture, graph, constrains,
+			tuning.mutation, stats);
+		Transformation<chromosome_t> transform(crossover, mutate);
 
-	/* Transform = Crossover + Mutate */
-	Crossover<chromosome_t> crossover(architecture, graph, constrains,
-		tuning.crossover, stats);
-	Mutation<chromosome_t> mutate(architecture, graph, constrains,
-		tuning.mutation, stats);
-	Transformation<chromosome_t> transform(crossover, mutate);
+		moeoNSGAII<chromosome_t> ga(checkpoint, evaluator, transform);
 
-	moeoNSGAII<chromosome_t> ga(checkpoint, evaluator, transform);
-
-	ga(population);
+		ga(population);
+	}
 
 	moeoUnboundedArchive<chromosome_t> arch;
 	arch(population);

@@ -98,8 +98,8 @@ class Evolution: public BasicEvolution
 
 	protected:
 
-	void populate(population_t &population, const layout_t &layout,
-		const priority_t &priority);
+	bool populate(population_t &population, const layout_t &layout,
+		const priority_t &priority, const Continuation<CT> &continuation);
 
 	inline void evaluate(chromosome_t &chromosome)
 	{
