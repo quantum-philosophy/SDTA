@@ -1,14 +1,13 @@
 \usepackage[english]{babel}
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage{mathtools}
-\usepackage{amssymb}
-\usepackage{graphicx}
-\usepackage{textcomp}
-\usepackage{amsthm}
+% \usepackage[utf8]{inputenc}
+% \usepackage[T1]{fontenc}
+% \usepackage{mathtools}
+% \usepackage{amssymb}
+% \usepackage{graphicx}
 \usepackage[usenames,dvipsnames]{color}
 \usepackage{multirow}
-\usepackage[margin=0.5in]{geometry}
+\usepackage{anysize}
+\usepackage{listing}
 
 \hyphenation{SSDTP SSDTA}
 
@@ -32,6 +31,13 @@
 
 \newcommand{\todo}[1]{{\color{nicepurple}#1}}
 
+\newenvironment{ilist}
+{\begin{itemize}
+  \setlength{\itemsep}{1pt}
+  \setlength{\parskip}{0pt}
+  \setlength{\parsep}{0pt}}
+{\end{itemize}}
+
 \newcommand{\innerimage}[3]{
   \includegraphics[clip=true, trim=#2, width=\linewidth]{assets/#1.pdf}
   \caption{#3}
@@ -45,30 +51,35 @@
   \end{figure}
 }
 
-\newcommand{\image}[3]{\iimage{#1}{#2}{#3}}
-
-\newenvironment{itable}[4]{\pushQED{#4}
-  \begin{table}
-    \caption{#3}
-    \label{tab:#1}
-    \begin{center}
-    \begin{tabular}{#2}
+\newenvironment{itable}[4]{
+  \label{tab:#1}
+  \begin{tabular}{#2}
 }{
-    \end{tabular}
-    \end{center}
-    \popQED
-  \end{table}
+  \end{tabular}
 }
 
+% \newenvironment{itable}[4]{\pushQED{#4}
+%   \begin{table}
+%     \caption{#3}
+%     \label{tab:#1}
+%     \begin{center}
+%     \begin{tabular}{#2}
+% }{
+%     \end{tabular}
+%     \end{center}
+%     \popQED
+%   \end{table}
+% }
+%
 \linespread{0.94}
-% \marginsize{1cm}{1cm}{0.7cm}{0.7cm}
-\setlength{\abovecaptionskip}{0pt}
-\setlength{\belowcaptionskip}{0pt}
-% \setlength{\floatsep}{0pt}
+\marginsize{1cm}{1cm}{0.7cm}{0.7cm}
+% \setlength{\abovecaptionskip}{0pt}
+% \setlength{\belowcaptionskip}{0pt}
+\setlength{\floatsep}{0pt}
 \setlength{\textfloatsep}{5pt}
 \setlength{\abovedisplayskip}{8pt}
 \setlength{\belowdisplayskip}{8pt}
-% \setlength{\parskip}{0pt}
-% \setlength{\partopsep}{0pt}
-% \addtolength{\dblfloatsep}{-15pt}
-% \addtolength{\dbltextfloatsep}{-15pt}
+\setlength{\parskip}{0pt}
+\setlength{\partopsep}{0pt}
+\addtolength{\dblfloatsep}{-15pt}
+\addtolength{\dbltextfloatsep}{-15pt}

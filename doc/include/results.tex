@@ -2,7 +2,7 @@
 In this subsection we investigate the scalability properties of the proposed solution for the SSDTP calculation and compare it with the approaches based on the FFT (\secref{sec:fast-fourier-transform}), TTA with the analytical solution (\secref{sec:tta-analytical}), and TTA with HotSpot (\secref{sec:hotspot-solution})\footnote{All the experiments are done on a Linux machine with Intel\textregistered\ Core\texttrademark\ i7-2600 (3.4GHz, 4 cores, 8 threads) and 8Gb of RAM.}. In the last two case, the TTA is run until the normalized RMSE relative to the SSDTP obtained with the CE method is less than 1\%. The sampling interval is equal to \mbox{1 $ms$}.
 
 \subsubsection{Various Application Periods}
-\image{scaling-time}{40 230 40 230}{Scalability with the application period for a quad-core architecture. The comparison is given on the semilogarithmic scale.}
+\iimage{scaling-time}{40 230 40 230}{Scalability with the application period for a quad-core architecture. The comparison is given on the semilogarithmic scale.}
 \begin{itable}{scaling-time}{|r|r|r|r|r|r|r|}
   {Scalability with the application period shown in \figref{fig:scaling-time}.}
   {$\period$ --- application period, CE --- computational time of the CE method in $ms$, FFT --- speed-up relative to the FFT method, $TTA^{AS}$, $TTA^{HS}$ --- speed-up relative to the TTA with the analytical solution and TTA with HotSpot, respectively, along with the number of iterations.}
@@ -27,7 +27,7 @@ In this subsection we investigate the scalability properties of the proposed sol
 First, we vary the application period keeping the architecture fixed, which is a quad-core platform with the core area of 4 $mm^2$ and configuration shown in \tabref{tab:parameters}. The comparison is depicted in \figref{fig:scaling-time}. The computational time of the CE method and its speed-up relative to the rest are given in \tabref{tab:scaling-time}. It can be seen that the proposed technique is roughly 5000 times faster than the TTA with HotSpot and from 9 to 170 times faster than the TTA with the analytical solution. The number of application periods, over which the TTA is performed, is significantly larger for short application periods (\secref{sec:hotspot-iterative-solution}) while longer periods imply larger numbers of steps in the power profiles keeping the cost of the analysis high.
 
 \subsubsection{Various Number of Cores}
-\image{scaling-cores}{40 230 40 230}{Scalability with the number of cores. The comparison is given on the semilogarithmic scale.}
+\iimage{scaling-cores}{40 230 40 230}{Scalability with the number of cores. The comparison is given on the semilogarithmic scale.}
 \begin{itable}{scaling-cores}{|r|r|r|r|r|r|r|}
   {Scalability with the number of cores shown in \figref{fig:scaling-cores}.}
   {$N_p$ --- number of cores, CE --- computational time of the CE method in $ms$, FFT --- speed-up relative to the FFT method, $TTA^{AS}$, $TTA^{HS}$ --- speed-up relative to the TTA with the analytical solution and TTA with HotSpot, respectively, along with the number of iterations.}
@@ -51,38 +51,38 @@ In this section we present the results of the reliability optimization described
 In each of the experiments, we compare the optimized solution with the initial temperature-aware solution described in \cite{xie2006}. First, we calculate the statical criticality (SC) of each task as the maximal distance from the task to the end of the task graph. Then, we schedule and map the application onto the platform where the next task from the ready list and an appropriate core are chosen based on their dynamic criticality (DC). The DC of a pair task/core depends on the SC, execution time, earliest possible start time on this particular core, and maximal steady-state temperature that the die can reach if the task is place on the core. This combination of mapping and scheduling is the starting point for the future optimization. The deadline of the application is set to the duration of the initial solution extended by 5\%.
 
 \subsubsection{Various Number of Cores}
-\begin{itable}{mttf-cores}{|r|r|r|r|r|r|r|}
+\begin{itable}{mttf-cores}{|r|r|r|r|r|}
   {Reliability optimization for different architectures}
-  {$N_p$ --- number of cores, $N_t$ --- number of tasks, $t_{avg}$ --- computational time, $N_{F \: avg}$ --- number of evaluated solutions, $N_{D \: avg}$ --- percentage of the deadline violations, $F_{avg}$ --- MTTF improvement, $E_{avg}$ --- decrease in the energy consumption.}
+  {$N_p$ --- number of cores, $N_t$ --- number of tasks, $t_{avg}$ --- computational time, $F_{avg}$ --- MTTF improvement, $E_{avg}$ --- decrease in the energy consumption.}
   \hline
-  $N_p$ & $N_t$ & $t_{avg}, s$ & $N_{F \: avg}$ & $N_{D \: avg}$, \% & $F_{avg}$, $\times$ & $E_{avg}$, $\times$ \\
+  $N_p$ & $N_t$ & $t_{avg}, s$ & $F_{avg}$, $\times$ & $E_{avg}$, $\times$ \\
   \hline
   \hline
-   2 &   40 &     7.84 &   59412 & 10.82 &  39.41 & 0.97 \\
- % 4 &   80 &    65.76 &  305478 & 33.29 & 144.08 & 0.98 \\ % 2 cases with unused PEs
- % 4 &   80 &    67.34 &  299905 & 33.75 &  56.53 & 0.98 \\ % 1 close to
-   4 &   80 &    65.76 &  286487 & 34.05 &  37.11 & 0.99 \\
- % 8 &  160 &   784.88 & 2106383 & 59.22 &  44.10 & 0.95 \\ % 2 cases with unused PEs
-   8 &  160 &   759.29 & 2046848 & 59.89 &  31.36 & 0.97 \\
-  16 &  320 &  3484.59 & 4914196 & 74.23 &  13.51 & 0.98 \\
-  32 &  640 & 10793.99 & 1999488 & \todo{0} & \todo{0} & \todo{0} \\
+   2 &   40 &     7.84 &  39.41 & 0.97 \\
+ % 4 &   80 &    65.76 & 144.08 & 0.98 \\ % 2 cases with unused PEs
+ % 4 &   80 &    67.34 &  56.53 & 0.98 \\ % 1 close to
+   4 &   80 &    65.76 &  37.11 & 0.99 \\
+ % 8 &  160 &   784.88 &  44.10 & 0.95 \\ % 2 cases with unused PEs
+   8 &  160 &   759.29 &  31.36 & 0.97 \\
+  16 &  320 &  3484.59 &  13.51 & 0.98 \\
+  32 &  640 &  7950.72 &   2.88 & 1.05 \\
   \hline
 \end{itable}
 In the first set of experiments, we change the number of cores while keeping the number of tasks per core constant and equal to 20. For each problem we have generated 20 random task graphs of a similar structure and found the average improvement of the MTTF. We also have measured the change in the consumed energy. The results are given in \tabref{tab:mttf-cores}. It can be observed that the thermal-cycling-unaware task allocation and scheduling dramatically decrease the lifetime of the device and the optimization based on the SSDTP is a must for an embedded system design framework. The complexity of the problem grows rapidly as it can be observed from the average number of evaluated solutions during the optimization of one task graph (\tabref{tab:mttf-cores}). Note that the energy efficiency of the system is not suffering from the optimization, on the contrary, typical solutions found by the GA have a lower level of the energy consumption, although, this is not the goal of this optimization.
 
-\subsubsection{Various Number of Tasks}
-\begin{itable}{mttf-tasks}{|r|r|r|r|r|r|r|}
+\subsubsection{Various Number of Tasks} \label{sec:results-various-tasks}
+\begin{itable}{mttf-tasks}{|r|r|r|r|r|}
   {Reliability optimization for different applications}
-  {$N_p$ --- number of cores, $N_t$ --- number of tasks, $t_{avg}$ --- computational time, $N_{F \: avg}$ --- number of evaluated solutions, $N_{D \: avg}$ --- percentage of the deadline violations, $F_{avg}$ --- MTTF improvement, $E_{avg}$ --- decrease in the energy consumption.}
+  {$N_p$ --- number of cores, $N_t$ --- number of tasks, $t_{avg}$ --- computational time, $F_{avg}$ --- MTTF improvement, $E_{avg}$ --- decrease in the energy consumption.}
   \hline
-  $N_p$ & $N_t$ & $t_{avg}, s$ & $N_{F \: avg}$ & $N_{D \: avg}$, \% & $F_{avg}$, $\times$ & $E_{avg}$, $\times$ \\
+  $N_p$ & $N_t$ & $t_{avg}, s$ & $F_{avg}$, $\times$ & $E_{avg}$, $\times$ \\
   \hline
   \hline
-  4 &  40 & \todo{0} & \todo{0} & \todo{0} & \todo{0} & \todo{0} \\
-  4 &  80 & \todo{0} & \todo{0} & \todo{0} & \todo{0} & \todo{0} \\
-  4 & 160 & \todo{0} & \todo{0} & \todo{0} & \todo{0} & \todo{0} \\
-  4 & 320 & \todo{0} & \todo{0} & \todo{0} & \todo{0} & \todo{0} \\
-  4 & 640 & \todo{0} & \todo{0} & \todo{0} & \todo{0} & \todo{0} \\
+  4 &  40 &  \todo{23.42} & 56.61 & 0.89 \\
+  4 &  80 & \todo{101.44} & 32.46 & 0.99 \\
+  4 & 160 & \todo{562.43} & 13.83 & 1.07 \\
+  4 & 320 & \todo{657.54} & 11.97 & 1.05 \\
+  4 & 640 & \todo{379.35} &  3.50 & 1.03 \\
   \hline
 \end{itable}
 For the second set of experiments, we keep the quad-core architecture and vary the number of tasks within the application. The number of randomly generated task graphs per problem is 20. The average improvement of the MTTF along with the change in the energy consumption are given in \tabref{tab:mttf-tasks}. The observations to be made here are similar to the previous ones: taking into consideration the SSDTP of the system during the design stage can significantly prolong the MTTF without sacrificing the energy efficiency of the system.
@@ -95,18 +95,18 @@ For the second set of experiments, we keep the quad-core architecture and vary t
   $N_p$ & $N_t$ & $F^{CE}_{avg}$, $\times$ & $F^{HS}_{avg}$, $\times$ & $F^{SS}_{avg}$, $\times$ \\
   \hline
   \hline
-  4 &  40 & \todo{0} & \todo{0} & \todo{0} \\
-  4 &  80 & \todo{0} & \todo{0} & \todo{0} \\
-  4 & 160 & \todo{0} & \todo{0} & \todo{0} \\
-  4 & 320 & \todo{0} & \todo{0} & \todo{0} \\
-  4 & 640 & \todo{0} & \todo{0} & \todo{0} \\
+  4 &  40 & 56.61 & 2.45 & 30.69 \\
+  4 &  80 & 32.46 & 1.90 & 18.87 \\
+  4 & 160 & 13.83 & \todo{0} &  4.74 \\
+  4 & 320 & 11.97 & \todo{0} &  3.81 \\
+  4 & 640 &  3.50 & \todo{0} &  2.46 \\
   \hline
 \end{itable}
-We compare the results of the optimization delivered by our method with the results obtained using the TTA with HotSpot (\secref{sec:hotspot-iterative-solution}) and steady-state approximation (\secref{sec:steady-state-approximation}). The setup is the same as in the previous set of experiments with the fixed architecture. The final solution found by the later two methods are reevaluated using the CE method and compared with the solutions found only by the CE approach. The results are summarized in \tabref{tab:mttf-comparison}. In can be seen that the proposed technique outperforms its competitors.
+We compare the results of the optimization delivered by our method with the results obtained using the TTA with HotSpot (\secref{sec:hotspot-iterative-solution}) and steady-state approximation (\secref{sec:steady-state-approximation}) during the same computational time. In this case, the real SSDTP is assumed to be unknown for the TTA and HotSpot is stopped when the maximal difference between two successive iterations is less than $0.01^\circ C$ or the limit of 30 iterations is reached, although, it is not sufficient for a good accuracy (see \secref{sec:hotspot-iterative-solution}). The final solutions found by the later two methods are reevaluated using the CE method and compared with the solutions found only by the CE approach. The experimental setup is the same as in \secref{sec:results-various-tasks}. The results are summarized in \tabref{tab:mttf-comparison}. In can be seen that the proposed technique outperforms its competitors.
 
 \subsubsection{Multi-Objective Optimization}
-\image{average-pareto}{0 0 0 0}{The average Pareto front found by the multi-objective optimization for a quad-core architecture and 20 applications with 80 tasks each.}
+\iimage{average-pareto}{0 0 0 0}{The average Pareto front found by the multi-objective optimization for a quad-core architecture and 20 applications with 80 tasks each.}
 In order to investigate the relation between the MTTF and energy in details, we have conducted experiments with a multi-objective optimization\footnote{The multi-objective optimization is based on the NSGA-II algorithm \cite{deb2002}.} where the energy minimization was added as the second goal. The result of such an optimization is a Pareto front, a set of non-dominant solutions for the designer to choose from. An example of a Pareto front averaged over 20 applications with 80 tasks deployed onto a quad-core platform is given in \figref{fig:average-pareto}. From the experiments we have observed that the difference in the energy consumption between the end points of the curves is typically low and usually bounded by 2--3\% while the MTTF range is much wider. Consequently, solutions optimized with respect to the cost function given by \equref{eq:fitness-function} do not compromise the energy efficiency of the system.
 
 \subsubsection{Real-Life Example}
-Finally, we have applied our optimization technique to a real-life example, namely the MPEG2 video decoder \cite{ffmpeg2011} that is deployed onto a dual-core architecture. The decoder was analysed and split into 21 tasks. The parameters of each task were obtained through a system-level simulation on the MPARM platform \cite{benini2005}. The deadline is set to 25 $ms$. The solution found by the GA with the CE method improves the lifetime of the system by 32.64 times. The same optimization problem was solved using the steady-state approximation and TTA with HotSpot as it is described in \secref{sec:results-various-techniques}. The best found solutions are 23.79 and 19.36, respectively.
+Finally, we have applied our optimization technique to a real-life example, namely the MPEG2 video decoder \cite{ffmpeg2011} that is deployed onto a dual-core architecture. The decoder was analysed and split into 21 tasks. The parameters of each task were obtained through a system-level simulation on the MPARM platform \cite{benini2005}. The deadline is set to 25 $ms$. The solution found by the GA with the CE method improves the lifetime of the system 32.64 times. The same optimization problem was solved using the steady-state approximation and TTA with HotSpot as it is described in \secref{sec:results-various-techniques}. The best found solutions are 23.79 and 19.36, respectively.

@@ -1,13 +1,12 @@
 The objective of the optimization procedure is to prolong the lifetime of the system by varying the mapping and scheduling of the application being executed. The problem formulation is the following.
 
 Given:
-
-\begin{itemize}
+\begin{ilist}
   \item A multiprocessor system $\Pi$ (\secref{sec:architecture-model}).
   \item A periodic application $G$ (\secref{sec:application-model}).
   \item The floorplan of the chip at the desired level of details (\secref{sec:thermal-model}), configuration of the thermal package, and thermal parameters (\secref{sec:problem}).
   \item The parameters of the reliability model (\secref{sec:reliability-model}), i.e., the constants $A$, $\Delta T_0$, $b$, $E_a$ (see \equref{eq:cycles-to-failure}).
-\end{itemize}
+\end{ilist}
 
 Maximize:
 \begin{align}

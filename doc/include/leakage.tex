@@ -1,7 +1,7 @@
 So far in our computations, we have assumed that power is independent on temperature. In reality, due to the leakage component, the power dissipation is a strong function of temperatue that cannot be neglected (\secref{sec:power-model}). Two techniques can be applied to enhance our proposed solution with temperature dependent leakage modeling.
 
 \subsection{Alternate Computation}
-\image{leakage}{0 0 0 0}{The closed loop between temperature and power.}
+\iimage{leakage}{0 0 0 0}{The closed loop between temperature and power.}
 In this case, we have an iterative process depicted in \figref{fig:leakage} where the temperature and power profiles are calculated in turns. With each new temperature profile we update the power profile by computing the leakage power and adding it to the dynamic power:
 \[
   \mathbb{P}_i = \mathbb{P}_{dyn} + \mathbb{P}_{leak}(\mathbb{T}_i)
