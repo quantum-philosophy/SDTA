@@ -1,0 +1,103 @@
+#!/usr/bin/env ruby
+#
+require 'ftools'
+
+if ARGV.length < 2
+  puts 'Need some arguments...'
+  puts '1. input/output directory'
+  puts '2. clone directory'
+  puts '3. pair "[ max_iterations = 30, tolerance = 0.01 ]"'
+  exit
+end
+
+input = File.join ARGV[0], 'input'
+output = File.join ARGV[0], 'output'
+clone = ARGV[1]
+max_iterations, tolerance = ARGV[2] ? eval(ARGV[2]) : [ 30, 0.01 ]
+
+unless File.directory?(input) && File.directory?(output)
+  puts 'Need a real input/output directory...'
+  exit
+end
+
+unless File.directory? clone
+  puts 'Need a real clone directory...'
+  exit
+end
+
+def execution_time name
+  File.open(name, 'r') do |file|
+    while line = file.gets
+      next unless line =~ /Time elapsed:\s*(.+)\s+seconds/
+      return $1.to_f
+    end
+  end
+
+  raise "Cannot figure out the execution time in '#{ name }'"
+end
+
+def update_params from, to, params
+  File.open(to, 'w') do |output|
+    File.open(from, 'r') do |input|
+      while line = input.gets
+        found = false
+
+        params.keys.each do |key|
+          next unless line =~ /#{ key }/
+          found = true
+          break
+        end
+
+        output.puts line unless found
+      end
+    end
+
+    params.each_pair do |key, value|
+      output.puts "#{ key } #{ value }"
+    end
+  end
+end
+
+clone = File.join clone, 'input'
+Dir::mkdir clone unless File.directory? clone
+
+Dir[File.join input, '*'].each do |src|
+  next unless File.directory? src
+
+  puts "Test case: %s" % src
+
+  cases = Dir[File.join src, '*_system.config'].length
+
+  dst = File.join clone, File.basename(src)
+  Dir::mkdir dst unless File.directory? dst
+
+  (1..cases).to_a.each do |c|
+    system = "%03d_system.config" % c
+    params = "%03d_params.config" % c
+    floorplan = "%03d_floorplan.config" % c
+    hotspot = "%03d_hotspot.config" % c
+
+    twin = File.join output, File.basename(src), "%03d.log" % c
+
+    time = execution_time twin
+
+    from, to = File.join(src, system), File.join(dst, system)
+    File.copy from, to
+    puts "    - system configuration: #{ to }"
+
+    from, to = File.join(src, params), File.join(dst, params)
+    update_params from, to, :time_limit => time,
+      :repeat => 1, :solution => 'hotspot',
+      :max_iterations => max_iterations, :tolerance => tolerance,
+      :assessment => 'condensed_equation'
+    puts "    - parameters: #{ to }"
+
+    from, to = File.join(src, floorplan), File.join(dst, floorplan)
+    File.copy from, to
+    puts "    - floorplan configuration: #{ to }"
+
+    from, to = File.join(src, hotspot), File.join(dst, hotspot)
+    File.copy from, to
+    puts "    - HotSpot configuration: #{ to }"
+  end
+end
