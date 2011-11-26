@@ -1,6 +1,6 @@
 So far, we have assumed that power is independent of temperature. However, due to the leakage component, the power dissipation is a strong function of temperatue that cannot be neglected (\secref{sec:power-model}). Two techniques can be applied to include in our proposed solution temperature dependent leakage modeling.
 
-\subsection{Iterative Computation}
+\subsection{Iterative Computation} \label{sec:iterative-leakage}
 \iimage{leakage}{0 0 0 0}{SSDTP calculation with leakage modeling.}
 In this case, we have an iterative process depicted in \figref{fig:leakage} where the temperature and power profiles are calculated in turns. With each new temperature profile we update the power profile by computing the leakage power and adding it to the dynamic power:
 \[
@@ -8,7 +8,7 @@ In this case, we have an iterative process depicted in \figref{fig:leakage} wher
 \]
 The process continues until the temperature converges, i.e., the difference between two successive temperature profiles is below a predefined bound. In our experiments we used $0.5^\circ C$ as the maximal acceptable difference and observed that the average number of required iterations to converge is 4--7.
 
-\subsection{Linear Approximation}
+\subsection{Linear Approximation} \label{sec:linearized-leakage}
 A linear approximation of the leakage power has the following matrix form:
 \[
   \v{P}_{leak}(\v{T}) = \m{A} \: \v{T}(t) + \v{B}
@@ -22,6 +22,6 @@ where:
   & \bar{\m{G}} = \m{G} - \m{A} \\
   & \bar{\v{P}} = \v{P}_{dyn} + \m{A} \: \v{T}_{amb} + \v{B}
 \end{align*}
-Therefore, all solutions proposed in this paper are \todo{perfectly} valid with the linearized leakage model. Moreover, in spite of its simplicity, the approximation provides a good estimation as it is shown in \cite{liu2007}.
+Therefore, all solutions proposed in this paper are perfectly valid with the linearized leakage model. Moreover, in spite of its simplicity, the approximation provides a good estimation as it is shown in \cite{liu2007}.
 
 In order to evaluate the linearization, we have constructed a number of hypothetical platforms with 2--32 cores (other parameters are given in \tabref{tab:parameters}) and compared temperature profiles obtained by this and exponential (\secref{sec:power-model}) models. For the later, we use the iterative approach described above. For the linearization, the power curve fitting with the least squares regression \cite{press2007} has been employed targeted at the range between 40 and $80^\circ C$. From the experiments we have observed that the normalized RMSE is bounded by 1--2\%, indicating a satisfactory accuracy of the approximation.
