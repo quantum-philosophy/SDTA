@@ -1,3 +1,16 @@
+# Available tuning flags:
+#
+# * REAL_RANK - ranking in doubles.
+# * SHALLOW_CHECK - eliminate excessive checks.
+# * UNCONSTRAINED - the genes do not have any constrains.
+# * WITHOUT_MEMCACHED - do not mention memcached in the source code.
+# * VERIFY_CACHING - check what we are reading from memcached.
+# * MEASURE_TIME - measure time.
+# * EXTENDED_STATS - diversity.
+# * PRECISE_TIMEOUT - precise timeout measurement, after each evaluation.
+#
+set(TUNING_FLAGS "-DWITHOUT_MEMCACHED -DSHALLOW_CHECK")
+
 set (PARADISEO_DIR ${VENDOR_DIR}/paradiseo)
 set (TINYMT_DIR ${VENDOR_DIR}/tinymt-1.0.1/tinymt)
 
@@ -48,12 +61,18 @@ set_property(SOURCE ${TINYMT_DIR}/tinymt64.c
 
 add_executable (optima optima.cpp ${OPTIMA_SRCS})
 
+if (${TUNING_FLAGS} MATCHES "WITHOUT_MEMCACHED")
+	set (MEMCACHED_LIBS "")
+else ()
+	set (MEMCACHED_LIBS crypto memcached)
+endif ()
+
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 	target_link_libraries (optima
-		crypto memcached libeo libmoeo libeoutils libhotspot rt)
+		${MEMCACHED_LIBS} libeo libmoeo libeoutils libhotspot rt)
 else ()
 	target_link_libraries (optima
-		crypto memcached libeo libmoeo libeoutils libhotspot)
+		${MEMCACHED_LIBS} libeo libmoeo libeoutils libhotspot)
 endif ()
 
 add_executable (solve solve.cpp ${SOLVE_SRCS})
@@ -64,7 +83,6 @@ else ()
 	target_link_libraries (solve libhotspot)
 endif ()
 
-
 include_directories (
 	${PARADISEO_DIR}/paradiseo-eo/src
 	${PARADISEO_DIR}/paradiseo-mo/src
@@ -73,17 +91,7 @@ include_directories (
 	${TINYMT_DIR}
 )
 
-# Available definitions:
-#
-# * REAL_RANK - ranking in doubles.
-# * SHALLOW_CHECK - eliminate excessive checks.
-# * UNCONSTRAINED - the genes do not have any constrains.
-# * WITHOUT_MEMCACHED - do not mention memcached in the source code.
-# * VERIFY_CACHING - check what we are reading from memcached.
-# * MEASURE_TIME - measure time.
-# * EXTENDED_STATS - diversity.
-#
-set(CMAKE_CXX_FLAGS "-DSHALLOW_CHECK -Wall -Wno-deprecated-declarations -Wno-sign-compare -O3 $ENV{CFLAGS}")
+set(CMAKE_CXX_FLAGS "${TUNING_FLAGS} -Wall -Wno-deprecated-declarations -Wno-sign-compare -O3 $ENV{CFLAGS}")
 
 add_library(libeo STATIC IMPORTED)
 set_property(

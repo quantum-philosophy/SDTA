@@ -104,19 +104,31 @@ class eslabAlgorithm: public eoAlgo<CT>
 	typedef eoPop<chromosome_t> population_t;
 
 	eslabAlgorithm(
-		eoContinue<chromosome_t> &_continuator,
+		eslabCheckPoint<chromosome_t> &_continuator,
 		eoEvalFunc<chromosome_t> &_evaluate_one) :
 
 		continuator(_continuator), evaluate_one(_evaluate_one) {}
 
 	protected:
 
+#ifdef PRECISE_TIMEOUT
+	inline bool evaluate(population_t &population) const
+	{
+		size_t size = population.size();
+		for (size_t i = 0; i < size; i++) {
+			if (continuator.timeout()) return false;
+			evaluate_one(population[i]);
+		}
+		return true;
+	}
+#else
 	inline void evaluate(population_t &population) const
 	{
 		apply<chromosome_t>(evaluate_one, population);
 	}
+#endif
 
-	eoContinue<chromosome_t> &continuator;
+	eslabCheckPoint<chromosome_t> &continuator;
 	eoEvalFunc<chromosome_t> &evaluate_one;
 };
 
@@ -129,7 +141,7 @@ class eslabSOGeneticAlgorithm: public eslabAlgorithm<CT>
 	typedef eoPop<chromosome_t> population_t;
 
 	eslabSOGeneticAlgorithm(
-		eoContinue<chromosome_t> &_continuator,
+		eslabCheckPoint<chromosome_t> &_continuator,
 		eoEvalFunc<chromosome_t> &_evaluate_one,
 		eoSelect<chromosome_t> &_select,
 		eoTransform<chromosome_t> &_transform,

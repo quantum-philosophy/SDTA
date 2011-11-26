@@ -23,7 +23,7 @@ class Continuation: public eoContinue<CT>
 		reset();
 	}
 
-	virtual bool timeout() const
+	inline bool timeout() const
 	{
 		if (tuning.time_limit <= 0) return false;
 		return (time(0) - start) >= tuning.time_limit;

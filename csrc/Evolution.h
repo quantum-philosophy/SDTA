@@ -98,8 +98,13 @@ class Evolution: public BasicEvolution
 
 	protected:
 
+#ifdef PRECISE_TIMEOUT
 	bool populate(population_t &population, const layout_t &layout,
 		const priority_t &priority, const Continuation<CT> &continuation);
+#else
+	void populate(population_t &population, const layout_t &layout,
+		const priority_t &priority);
+#endif
 
 	inline void evaluate(chromosome_t &chromosome)
 	{
@@ -136,10 +141,22 @@ class eslabCheckPoint: public eoContinue<CT>
 {
 	public:
 
-	eslabCheckPoint(eoContinue<CT> &continuator)
+	eslabCheckPoint(Continuation<CT> &continuator)
 	{
 		continuators.push_back(&continuator);
 	}
+
+#ifdef PRECISE_TIMEOUT
+	inline bool timeout() const
+	{
+		size_t count = continuators.size();
+
+		for (size_t i = 0; i < count; i++)
+			if (continuators[i]->timeout()) return true;
+
+		return false;
+	}
+#endif
 
 	bool operator()(const eoPop<CT> &population)
 	{
@@ -164,7 +181,7 @@ class eslabCheckPoint: public eoContinue<CT>
 		return go_on;
 	}
 
-	inline void add(eoContinue<CT> &continuator)
+	inline void add(Continuation<CT> &continuator)
 	{
 		continuators.push_back(&continuator);
 	}
@@ -176,7 +193,7 @@ class eslabCheckPoint: public eoContinue<CT>
 
 	private:
 
-	std::vector<eoContinue<CT> *> continuators;
+	std::vector<Continuation<CT> *> continuators;
 	std::vector<eoMonitor *> monitors;
 };
 

@@ -14,7 +14,11 @@ void eslabSOGeneticAlgorithm<CT>::operator()(population_t &population)
 	population_t offspring;
 
 	/* Initial evaluation */
+#ifdef PRECISE_TIMEOUT
+	if (!evaluate(population)) return;
+#else
 	evaluate(population);
+#endif
 
 	do {
 		/* Select */
@@ -24,7 +28,21 @@ void eslabSOGeneticAlgorithm<CT>::operator()(population_t &population)
 		transform(offspring);
 
 		/* Evaluate newcomers */
+#ifdef PRECISE_TIMEOUT
+		if (!evaluate(offspring)) {
+			typename population_t::iterator it;
+
+			for (it = offspring.begin(); it != offspring.end();) {
+				if (it->invalid()) it = offspring.erase(it);
+				else it++;
+			}
+
+			replace(population, offspring);
+			return;
+		}
+#else
 		evaluate(offspring);
+#endif
 
 		/* Evolve */
 		replace(population, offspring);

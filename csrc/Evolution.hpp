@@ -5,9 +5,14 @@
 /******************************************************************************/
 
 template<class CT, class PT, class ST>
+#ifdef PRECISE_TIMEOUT
 bool Evolution<CT, PT, ST>::populate(population_t &population,
 	const layout_t &layout, const priority_t &priority,
 	const Continuation<CT> &continuation)
+#else
+void Evolution<CT, PT, ST>::populate(population_t &population,
+	const layout_t &layout, const priority_t &priority)
+#endif
 {
 	size_t i;
 	size_t create_count;
@@ -40,7 +45,9 @@ bool Evolution<CT, PT, ST>::populate(population_t &population,
 
 	evaluate(chromosome);
 
+#ifdef PRECISE_TIMEOUT
 	if (continuation.timeout()) return false;
+#endif
 
 	for (i = 0; i < create_count; i++)
 		population.push_back(chromosome);
@@ -62,11 +69,15 @@ bool Evolution<CT, PT, ST>::populate(population_t &population,
 		}
 		GeneEncoder::reorder(chromosome, schedule);
 		evaluate(chromosome);
-		if (continuation.timeout()) return false;
 		population.push_back(chromosome);
+#ifdef PRECISE_TIMEOUT
+		if (continuation.timeout()) return false;
+#endif
 	}
 
+#ifdef PRECISE_TIMEOUT
 	return true;
+#endif
 }
 
 /******************************************************************************/
