@@ -52,25 +52,17 @@
 }
 
 \newenvironment{itable}[4]{
+  \begin{table}
+  \caption{#3}
   \label{tab:#1}
+  \begin{center}
   \begin{tabular}{#2}
 }{
   \end{tabular}
+  \end{center}
+  \end{table}
 }
 
-% \newenvironment{itable}[4]{\pushQED{#4}
-%   \begin{table}
-%     \caption{#3}
-%     \label{tab:#1}
-%     \begin{center}
-%     \begin{tabular}{#2}
-% }{
-%     \end{tabular}
-%     \end{center}
-%     \popQED
-%   \end{table}
-% }
-%
 \linespread{0.94}
 \marginsize{1cm}{1cm}{0.7cm}{0.7cm}
 % \setlength{\abovecaptionskip}{0pt}

@@ -1,8 +1,9 @@
-In this section we propose a fast approach to solve the system given by \equref{eq:system}. The approach consists of an auxiliary transformation aimed to be more efficient in the future calculations, \secref{sec:ce-auxiliary}, and the solution itself, \secref{sec:ce-solution}.
+In this section we propose a fast approach to solve the system given by \equref{eq:system}. The approach consists of an auxiliary transformation (\secref{sec:ce-auxiliary}) and the solution itself (\secref{sec:ce-solution}).
 
-\subsection{Observation}
-\iimage{sparseness-of-system}{-60 210 -60 210}{Sparseness of the system of linear equations for the SSDTP calculation. Each blue point corresponds to a non-zero element of the matrix of the system.}
+\iimage{sparseness-of-system}{-60 210 -60 210}{Sparseness of the system of linear equations for the SSDTP calculation.}
 We make an important observation that the system given by \equref{eq:system} has a very specific structure depicted in \figref{fig:sparseness-of-system}. Non-zero elements, marked with blue points in the figure, are located only on the block diagonal, one subdiagonal just above the block diagonal, and one subdiagonal in the left bottom corner. The block diagonal is composed of $N_n \times N_n$ matrices while all elements of the subdiagonals are equal \mbox{to $-1$}. Linear systems with the same structure arise in boundary value problems for ODEs where a common technique to solve them is to form a so-called condensed equation (CE), or condensed system \cite{stoer2002}. Before undertaking this procedure, we perform an adjustment to the initial analytical solution described in the following subsection.
+
+\todo{More.}
 
 \subsection{Auxiliary Transformation} \label{sec:ce-auxiliary}
 It can be noticed that the analytical solution in \equref{eq:solution} includes the matrix exponential and inverse of the product \mbox{$\m{A} = - \m{C}^{-1} \: \m{G}$}, which is an arbitrary square matrix. It is preferable to have a symmetric matrix to perform these computations, since for a real symmetric matrix $\m{M}$ the following eigenvalue decomposition with independent (orthogonal) eigenvectors holds \cite{press2007}:
@@ -74,7 +75,7 @@ Let us return back to the recurrent system given by \equref{eq:recurrent-equatio
   & \tilde{\v{T}}_{i + 1} = \tilde{\m{K}}_i \: \tilde{\v{T}}_i + \m{Q}_i, \; i = 0 \dots N_s - 1 \label{eq:ce-recurrent} \\
   & \tilde{\v{T}}_0 = \tilde{\v{T}}_{N_s + 1} \nonumber
 \end{align}
-In order to form the above-mentioned condensed equation, we perform the iterative repetition of \equref{eq:ce-recurrent} that leads us to:
+In order to form the condensed equation mentioned in the beginning of this section, we perform the iterative repetition of \equref{eq:ce-recurrent} that leads us to:
 \begin{equation} \label{eq:y-recurrent}
   \tilde{\v{T}}_i = \prod_{j = 0}^{i - 1} \tilde{\m{K}}_j \: \tilde{\v{T}}_0 + \m{W}_{i - 1}, \; i = 1 \dots N_s
 \end{equation}
@@ -125,7 +126,7 @@ The identity matrix $\m{I}$ can be splitted into $\m{U} \m{U}^T$, hence:
 \end{align*}
 The equation gives the initial solution vector $\tilde{\v{T}}_0$, the rest of vectors $\tilde{\v{T}}_i$ for \mbox{$i = 1 \dots N_s - 1$} are successively found from \equref{eq:ce-recurrent}.
 
-Now we assume that the power profile is evenly sampled with the sampling interval equal to $\Delta t$, i.e., $\Delta t_i = \Delta t$ for $i = 0 \dots N_s - 1$. Having this assumption, the recurrent process in \equref{eq:recurrent-equation} turns into:
+\todo{Now we assume that the power profile} is evenly sampled with the sampling interval equal to $\Delta t$, i.e., $\Delta t_i = \Delta t$ for $i = 0 \dots N_s - 1$. Having this assumption, the recurrent process in \equref{eq:recurrent-equation} turns into:
 \[
   \tilde{\v{T}}_{i+1} = \tilde{\m{K}} \: \tilde{\v{T}}_i + \tilde{\m{B}} \: \v{P}_i
 \]
@@ -146,4 +147,4 @@ The last step of the solution is to return back to temperature by performing the
 
 As we see, the auxiliary substitution from \secref{sec:ce-auxiliary} allows us to perform the eigenvalue decomposition with orthogonal eigenvectors (\equref{eq:eigenvalue-decomposition}) that later eases the computational process at several stages. First, the decomposition is employed to compute the matrix exponential, matrix inverse, and, consequently, matrices $\tilde{\m{K}}$ and $\tilde{\m{B}}_i$. Then, the linear system given by \equref{eq:core-system} is solved without any explicit inversion of any matrix, the solution $\tilde{\v{T}}_0$ is obtained by scalar divisions and a similarity transformation with $\m{U}$.
 
-It should be noted that the eigenvalue decomposition is performed only once for a particular RC thermal circuit and can be thought as a given for optimization purposes significantly decreasing the computational time.
+It should be noted that the eigenvalue decomposition is performed only once for a particular RC thermal circuit and can be considered as a given for optimization purposes, significantly decreasing the computational time.

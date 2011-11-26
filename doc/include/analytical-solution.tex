@@ -1,6 +1,6 @@
 As shown in \secref{sec:hotspot-solution}, the state of the art solutions either produce inaccurate and, in many cases, completely useless results, or they are unacceplably slow. In this section we eliminate the first problem by obtaining an analytical solution for the SSDTP and tackle the second one in \secref{sec:condensed-equation} where a fast technique to perform the computations is proposed.
 
-In the following explanation, without loss of generality, we assume $\v{T}(t) \equiv \v{T}(t) - \v{T}_{amb}$. Let the power consumption vector $\v{P}(t)$ be constant and equal to $\v{P}$, then the system given by \equref{eq:fourier-model} is a system of ordinary differential equations (ODE) with the following solution:
+In the following explanation, without loss of generality, we assume $\v{T}(t) \equiv \v{T}(t) - \v{T}_{amb}$. Let the power consumption vector $\v{P}(t)$ be constant and equal to $\v{P}$; then the system given by \equref{eq:fourier-model} is a system of ordinary differential equations (ODE) with the following solution:
 \begin{equation} \label{eq:solution}
   \v{T}(t) = e^{\m{A} t} \; \v{T}_0 + \m{A}^{-1}(e^{\m{A} t} - \m{I})\m{C}^{-1} \v{P}
 \end{equation}
@@ -17,7 +17,7 @@ where:
 \subsection{Transient Temperature Analysis (TTA)} \label{sec:tta-analytical}
 Given the initial temperature $\v{T}_0$, the recurrence in \equref{eq:recurrent-system} can be applied to perform the TTA. Our experiments show that when time intervals $\Delta t_i$ have the same length, i.e., $\Delta t_i = \Delta t, \forall i$, and matrices $\m{K}_i$ and $\m{B}_i$ become constant, this approach demonstrates a significant performance improvement relative to iterative solutions of ODEs, e.g., the fourth-order Runge-Kutta method implemented in HotSpot. The same observation is made in \cite{thiele2011}.
 
-The TTA using the analytical technique given in \equref{eq:recurrent-system} can be employed to approximate the SSDTP by applying it over successive application periods, as shown in \secref{sec:hotspot-iterative-solution}. Since each iteration of the TTA with this approach is much faster than with HotSpot, it will significantly speed up the SSDTP calculation. However, the number of required iterations is similar to HotSpot (see \figref{fig:hotspot-error}) keeping the computational process relatively slow (see \secref{sec:results-ssdtp}).
+The TTA using the analytical technique given in \equref{eq:recurrent-system} can be employed to approximate the SSDTP by applying it over successive application periods, as shown in \secref{sec:hotspot-iterative-solution}. Since each iteration of the TTA, with this approach, is much faster than with HotSpot, it will significantly speed up the SSDTP calculation. However, the number of required iterations is similar to HotSpot (see \figref{fig:hotspot-error}), still keeping the computational process slow (see \secref{sec:results-ssdtp}).
 
 \subsection{Steady-State Dynamic Temperature Analysis (SSDTA)}
 For the steady-state case the following system of linear equations can be derived from \equref{eq:recurrent-system}:
@@ -50,8 +50,7 @@ To get the whole picture, the system can be written as:
       \vdots \\
       \v{T}_{N_s - 1}
     \end{array}
-  \right] \nonumber \\
-  & \mathbb{B} = \left[
+  \right] \; \; \; \; \mathbb{B} = \left[
     \begin{array}{c}
       -\m{B}_0 \: \v{P}_0 \\
       \vdots \\

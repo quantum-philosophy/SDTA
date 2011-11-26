@@ -1,6 +1,18 @@
 \documentclass{sig-alternate}
 \input{include/common.tex}
 
+\makeatletter
+\renewcommand{\@maketitle}{
+  \newpage
+  \null
+  \vskip 2em%
+  \begin{center}%
+  {\ttlfnt \@title \par}%
+  \end{center}%
+  \par%
+}
+\makeatother
+
 \begin{document}
   \conferenceinfo{DAC}{'12 San Francisco, California USA}
 
@@ -10,19 +22,19 @@
   \author{}
   % \author{
   %   \alignauthor Ivan Ukhov\\
-  %     \affaddr{Link\"{o}ping Universicy}\\
+  %     \affaddr{Link\"{o}ping University}\\
   %     \affaddr{Sweden}\\
   %     \email{ivan.ukhov@liu.se}
   %   \alignauthor Min Bao\\
-  %     \affaddr{Link\"{o}ping Universicy}\\
+  %     \affaddr{Link\"{o}ping University}\\
   %     \affaddr{Sweden}\\
   %     \email{min.bao@liu.se}
   %   \alignauthor Petru Eles\\
-  %     \affaddr{Link\"{o}ping Universicy}\\
+  %     \affaddr{Link\"{o}ping University}\\
   %     \affaddr{Sweden}\\
   %     \email{petru.eles@liu.se}
   %   \alignauthor Zebo Peng\\
-  %     \affaddr{Link\"{o}ping Universicy}\\
+  %     \affaddr{Link\"{o}ping University}\\
   %     \affaddr{Sweden}\\
   %     \email{zebo.peng@liu.se}
   % }
@@ -34,6 +46,12 @@
   \begin{abstract}
     \input{include/abstract.tex}
   \end{abstract}
+
+  % \category{ESS.6.3}{Embedded systems design methodologies}{Multiple-constraint-driven embedded system design exploration, synthesis and optimization}{}
+
+  % \terms{Steady-State Dynamic Temperature Analysis}
+
+  % \keywords{temperature analysis, steady-state dynamic, thermal cycling, multicore}
 
   \section{Introduction and Prior Work}
   \input{include/introduction.tex}
