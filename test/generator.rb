@@ -48,7 +48,7 @@ class Generator
     gaps = {
       :repeat => options[:repeat_count],
       :population_size => population_size,
-      :stall_generations => STALL_GENERATIONS,
+      :stall_generations => options[:stall_generations],
       :tournament_size => 2
     }
 

@@ -9,12 +9,10 @@ DIE_AREA = 4e-6
 # Multiplied by the number of tasks
 POPULATION_FACTOR = 4
 
-STALL_GENERATIONS = 200
-
 if ARGV.length != 3
   puts 'Need some arguments...'
   puts '1. the template directory'
-  puts '2. pairs "[ [ cores, tasks, variants = 20, repeat = 1 ], ... ]"'
+  puts '2. pairs "[ [ cores, tasks, variants = 20, repeat = 1, stall = 200 ], ... ]"'
   puts '3. the output directory'
   exit
 end
@@ -49,9 +47,10 @@ end
 params_template = Template.new params_template
 hotspot_template = Template.new hotspot_template
 
-pairs.each do |processor_count, task_count, variant_count, repeat_count|
+pairs.each do |processor_count, task_count, variant_count, repeat_count, stall_generations|
   variant_count ||= 20
   repeat_count ||= 1
+  stall_generations ||= 200
 
   tgff_template = File.join input, ("%03d.tgffopt" % processor_count)
 
@@ -96,7 +95,8 @@ pairs.each do |processor_count, task_count, variant_count, repeat_count|
     puts "    - parameters: #{ params }"
     Generator.params :template => params_template,
       :processor_count => processor_count, :task_count => task_count,
-      :repeat_count => repeat_count, :output => params
+      :repeat_count => repeat_count, :stall_generations => stall_generations,
+      :output => params
 
     floorplan = File.join directory, ("%03d_floorplan.config" % i)
     puts "    - floorplan configuration: #{ floorplan }"
