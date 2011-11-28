@@ -18,10 +18,9 @@ where $\m{A}$ is a $N_n \times N_n$ diagonal matrix of the proportionality and $
   \m{C} \: \frac{d\v{T}(t)}{dt} + \bar{\m{G}} \: (\v{T}(t) - \v{T}_{amb}) = \bar{\v{P}}
 \]
 where:
-\begin{align*}
-  & \bar{\m{G}} = \m{G} - \m{A} \\
-  & \bar{\v{P}} = \v{P}_{dyn} + \m{A} \: \v{T}_{amb} + \v{B}
-\end{align*}
+\[
+  \bar{\m{G}} = \m{G} - \m{A} \hs \bar{\v{P}} = \v{P}_{dyn} + \m{A} \: \v{T}_{amb} + \v{B}
+\]
 Therefore, all solutions proposed in this paper are perfectly valid with the linearized leakage model. Moreover, in spite of its simplicity, the approximation provides a good estimation as it is shown in \cite{liu2007}.
 
 In order to evaluate the linearization, we have constructed a number of hypothetical platforms with 2--32 cores (other parameters are given in \tabref{tab:parameters}) and compared temperature profiles obtained by this and exponential (\secref{sec:power-model}) models. For the later, we use the iterative approach described above. For the linearization, the power curve fitting with the least squares regression \cite{press2007} has been employed targeted at the range between 40 and $80^\circ C$. From the experiments we have observed that the normalized RMSE is bounded by 1--2\%, indicating a satisfactory accuracy of the approximation.

@@ -1,13 +1,15 @@
 \documentclass{sig-alternate}
 \input{include/common.tex}
 
+\newfont{\titlefont}{phvb8t at 17pt}
+
 \makeatletter
 \renewcommand{\@maketitle}{
   \newpage
   \null
-  \vskip 2em%
+  % \vskip 2em%
   \begin{center}%
-  {\ttlfnt \@title \par}%
+  {\titlefont \@title \par}%
   \end{center}%
   \par%
 }

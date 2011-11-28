@@ -9,22 +9,27 @@
 \usepackage{anysize}
 \usepackage{listing}
 
-\hyphenation{SSDTP SSDTA}
+\hyphenation{SSDTP SSDTA MTTF SSA TTA}
 
 \newcommand{\equref}[1]{Eq.~(\ref{#1})}
-\newcommand{\figref}[1]{Figure~\ref{#1}}
+\newcommand{\figref}[1]{Fig.~\ref{#1}}
 \newcommand{\secref}[1]{Section~\ref{#1}}
-\newcommand{\tabref}[1]{Table~\ref{#1}}
+\newcommand{\tabref}[1]{Tab.~\ref{#1}}
 \newcommand{\dindex}[3]{#1_{#2,\;#3}}
 
 \newcommand{\m}[1]{\mathbf{#1}}
 \renewcommand{\v}[1]{\mathbf{#1}}
 \newcommand{\tm}[1]{\tilde{\m{#1}}}
+\newcommand{\tv}[1]{\tilde{\v{#1}}}
 
 \newcommand{\period}[0]{\tau}
 \newcommand{\expectation}[1]{\mathbb{E}\left[ #1 \right]}
 \newcommand{\eqdef}{\stackrel{\text{\tiny def}}{=}}
 \newcommand{\half}{\frac{1}{2}}
+\newcommand{\mttf}{\mathcal{F}}
+\newcommand{\hs}{\hspace{10mm}}
+\newcommand{\range}[2]{#1, \dots, #2}
+\newcommand{\diag}[2]{diag \left( \range{#1}{#2} \right)}
 
 \definecolor{niceblue}{RGB}{87,181,232}
 \definecolor{nicegreen}{RGB}{129,197,122}
@@ -69,7 +74,12 @@
 }
 
 \linespread{0.94}
-\marginsize{1cm}{1cm}{0.7cm}{0.7cm}
+
+\columnsep 1pc
+\marginsize{4.4pc}{4.4pc}{2pc}{2pc}
+% \marginsize{5.4pc}{5.4pc}{5.4pc}{6pc}
+% \columnsep 2pc
+
 % \setlength{\abovecaptionskip}{0pt}
 % \setlength{\belowcaptionskip}{0pt}
 \setlength{\floatsep}{0pt}

@@ -13,22 +13,10 @@ It can be noticed that the analytical solution in \equref{eq:solution} includes 
 \end{equation}
 where $\m{U}$ is a square matrix of the eigenvectors, $\m{U}^T$ is the transpose of $\m{U}$, and $\m{\Lambda}$ is a diagonal matrix of the eigenvalues of $\m{M}$. Once we have obtained such a decomposition, the calculation of the matrix exponential and inverse becomes a trivial task:
 \begin{align*}
-  & e^\m{M} = \m{U} \; e^{\m{\Lambda}} \; \m{U}^\v{T} = \m{U}\: \left[
-      \begin{array}{ccc}
-        e^{\lambda_0} & \cdots & 0 \\
-        \vdots & \ddots & \vdots \\
-        0 & \cdots & e^{\lambda_{n - 1}}
-      \end{array}
-    \right] \; \m{U}^\v{T} \\
-  & \m{M}^{-1} = \m{U} \: \m{\Lambda}^{-1} \: \m{U}^\v{T} = \m{U} \left[
-      \begin{array}{ccc}
-        \frac{1}{\lambda_0} & \cdots & 0 \\
-        \vdots & \ddots & \vdots \\
-        0 & \cdots & \frac{1}{\lambda_{n - 1}}
-      \end{array}
-    \right] \m{U}^\v{T} \\
+  & e^\m{M} = \m{U} \; e^{\m{\Lambda}} \; \m{U}^\v{T} = \m{U} \: \diag{e^{\lambda_0}}{e^{\lambda_{n - 1}}} \: \m{U}^\v{T} \\
+  & \m{M}^{-1} = \m{U} \: \m{\Lambda}^{-1} \: \m{U}^\v{T} = \m{U} \: \diag{\frac{1}{\lambda_0}}{\frac{1}{\lambda_{n - 1}}} \: \m{U}^\v{T} \\
 \end{align*}
-where $\lambda_i$ are eigenvalues of $\m{M}$.
+where $diag$ denotes a diagonal matrix and $\lambda_i$ are eigenvalues of $\m{M}$.
 
 The conductance matrix $\m{G}$ is a symmetric matrix, since if a node A is connected to B, then B is also connected to A with the same conductance \cite{huang2003}. However, as it is mentioned previously, the product of $\m{G}$ with the inverse of the capacitance matrix $\m{C}$ does not have this property. We propose to use the following transformation in order to keep the desired symmetry:
 \begin{align}
@@ -42,49 +30,36 @@ where $\tm{A}$ is a symmetric matrix, since $\tm{A}^T = -(\m{C}^{-\half} \m{G} \
 \end{align*}
 where $\tilde{\m{A}}$ is a symmetric matrix. Therefore, in the case of, e.g., the matrix exponential we have:
 \begin{equation} \label{eq:matrix-exponential}
-  e^{\tilde{\m{A}} t} = \m{U} \: e^{\m{\Lambda} t} \: \m{U}^T = \m{U} \left[
-      \begin{array}{ccc}
-        e^{t \lambda_0} & \cdots & 0 \\
-        \vdots & \ddots & \vdots \\
-        0 & \cdots & e^{t \lambda_{N_n - 1}}
-      \end{array}
-    \right] \m{U}^T
+  e^{\tm{A} t} = \m{U} \: e^{\m{\Lambda} t} \: \m{U}^T = \m{U} \: \diag{e^{t \lambda_0}}{e^{t \lambda_{N_n - 1}}} \: \m{U}^T
 \end{equation}
 where $\lambda_i$ are eigenvalues of $\tilde{\m{A}}$. A similar equation can be obtained for the matrix inverse.
 
 The next step is to update the SSDTP system given in \equref{eq:recurrent-system}:
 \begin{align}
-  & \tilde{\v{T}}_{i+1} = \tilde{\m{K}}_i \: \tilde{\v{T}}_i + \tilde{\m{B}}_i \: \v{P}_i \label{eq:recurrent-equation} \\
-  & \tilde{\m{K}}_i = e^{\tilde{\m{A}} \: \Delta t_i} \nonumber \\
-  & \tilde{\m{B}}_i = \tilde{\m{A}}^{-1} \left( e^{\tilde{\m{A}} \Delta t_i} - \m{I} \right) \m{C}^{-\frac{1}{2}} \nonumber
+  & \tv{T}_{i+1} = \tm{K}_i \: \tv{T}_i + \tm{B}_i \: \v{P}_i \label{eq:recurrent-equation} \\
+  & \tm{K}_i = e^{\tm{A} \: \Delta t_i} \hs \tm{B}_i = \tm{A}^{-1} \left( e^{\tilde{\m{A}} \Delta t_i} - \m{I} \right) \m{C}^{-\frac{1}{2}} \nonumber
 \end{align}
 Using the eigenvalue decomposition, the last equation can be computed in the following way:
 \begin{align*}
   \tilde{\m{B}}_i & = \m{U} \: \m{\Lambda}^{-1} \: \m{U}^T \left(\m{U} \: e^{\m{\Lambda} \Delta t_i} \: \m{U}^T - \m{U} \: \m{U}^T \right) \m{C}^{-\frac{1}{2}} = \\
-      & = \m{U} \left[
-        \begin{array}{ccc}
-          \frac{e^{\Delta t_i \: \lambda_0} - 1}{\lambda_0} & \cdots & 0 \\
-          \vdots & \ddots & \vdots \\
-          0 & \cdots & \frac{e^{\Delta t_i \: \lambda_{N_n - 1}} - 1}{\lambda_{N_n - 1}}
-        \end{array}
-      \right] \m{U}^T \: \m{C}^{-\frac{1}{2}}
+  & = \m{U} \: \diag{\frac{e^{\Delta t_i \: \lambda_0} - 1}{\lambda_0}}{\frac{e^{\Delta t_i \: \lambda_{N_n - 1}} - 1}{\lambda_{N_n - 1}}} \: \m{U}^T \: \m{C}^{-\frac{1}{2}}
 \end{align*}
 
 \subsection{Solution with Condensed Equation (CE)} \label{sec:ce-solution}
 Let us return back to the recurrent system given by \equref{eq:recurrent-equation} and denote \mbox{$\m{Q}_i = \tilde{\m{B}}_i \: \v{P}_i$}:
 \begin{align}
-  & \tilde{\v{T}}_{i + 1} = \tilde{\m{K}}_i \: \tilde{\v{T}}_i + \m{Q}_i, \; i = 0 \dots N_s - 1 \label{eq:ce-recurrent} \\
+  & \tilde{\v{T}}_{i + 1} = \tilde{\m{K}}_i \: \tilde{\v{T}}_i + \m{Q}_i, \; i = \range{0}{N_s - 1} \label{eq:ce-recurrent} \\
   & \tilde{\v{T}}_0 = \tilde{\v{T}}_{N_s + 1} \nonumber
 \end{align}
 In order to form the condensed equation mentioned in the beginning of this section, we perform the iterative repetition of \equref{eq:ce-recurrent} that leads us to:
 \begin{equation} \label{eq:y-recurrent}
-  \tilde{\v{T}}_i = \prod_{j = 0}^{i - 1} \tilde{\m{K}}_j \: \tilde{\v{T}}_0 + \m{W}_{i - 1}, \; i = 1 \dots N_s
+  \tv{T}_i = \prod_{j = 0}^{i - 1} \tm{K}_j \: \tv{T}_0 + \m{W}_{i - 1}, \; i = \range{1}{N_s}
 \end{equation}
 where $\m{W}_i$ are defined as the following:
 \begin{align}
   \m{W}_0 & = \m{Q}_0 \nonumber \\
-  \m{W}_i & = \sum_{l = 1}^i \prod_{j = l}^i \tilde{\m{K}}_j \: \m{Q}_{l - 1} + \m{Q}_i, \: i = 1 \dots N_s - 1 \nonumber \\
-  \m{W}_i & = \tilde{\m{K}}_i \: \m{W}_{i - 1} + \m{Q}_i, \; i = 1 \dots N_s - 1 \label{eq:p-recurrent}
+  \m{W}_i & = \sum_{l = 1}^i \prod_{j = l}^i \tilde{\m{K}}_j \: \m{Q}_{l - 1} + \m{Q}_i, \: i = \range{1}{N_s - 1} \nonumber \\
+  \m{W}_i & = \tilde{\m{K}}_i \: \m{W}_{i - 1} + \m{Q}_i, \; i = \range{1}{N_s - 1} \label{eq:p-recurrent}
 \end{align}
 Therefore, we can calculate the final vector $\tilde{\v{T}}_{N_s}$ using \equref{eq:y-recurrent} and \equref{eq:p-recurrent}:
 \[
@@ -95,20 +70,13 @@ Taking into account the boundary condition given by \equref{eq:boundary-conditio
   (\m{I} - \prod_{j = 0}^{N_s - 1} \tilde{\m{K}}_j) \: \tilde{\v{T}}_0 = \m{W}_{N_s - 1}
 \end{equation}
 We recall that $\tilde{\m{K}}_i$ is the matrix exponential given by \equref{eq:matrix-exponential}, therefore, the following simplification holds:
-\begin{align*}
-  \prod_{j = i}^l \tilde{\m{K}}_j = \prod_{j = i}^l e^{\tilde{\m{A}} \Delta t_j} & = e^{\tilde{\m{A}} \sum_{j = i}^l \Delta t_j} \\
-  & = \m{U} e^{\left( \sum_{j = i}^l \Delta t_j \: \m{\Lambda} \right)} \m{U}^T
-\end{align*}
+\[
+  \prod_{j = i}^l \tilde{\m{K}}_j = \prod_{j = i}^l e^{\tilde{\m{A}} \Delta t_j} = e^{\tilde{\m{A}} \sum_{j = i}^l \Delta t_j} = \m{U} e^{\left( \sum_{j = i}^l \Delta t_j \: \m{\Lambda} \right)} \m{U}^T
+\]
 Consequently:
 \begin{align*}
   \prod_{j = 0}^{N_s - 1} \tilde{\m{K}}_j & = e^{\tilde{\m{A}} \period} = \m{U} \: e^{\period \m{\Lambda}} \: \m{U}^T \\
-    & = \m{U} \left[
-      \begin{array}{ccc}
-        e^{\period \lambda_0} & \cdots & 0 \\
-        \vdots & \ddots & \vdots \\
-        0 & \cdots & e^{\period \lambda_{N_n - 1}}
-      \end{array}
-    \right] \m{U}^T
+  & = \m{U} \: \diag{e^{\period \lambda_0}}{e^{\period \lambda_{N_n - 1}}} \: \m{U}^T
 \end{align*}
 where $\period$ is the application period. Substituting this product into \equref{eq:core-system}, we obtain the following system:
 \[
@@ -120,35 +88,28 @@ The identity matrix $\m{I}$ can be splitted into $\m{U} \m{U}^T$, hence:
 \]
 where:
 \begin{equation} \label{eq:m-matrix}
-  \m{M} = \m{U} \: \left[
-      \begin{array}{ccc}
-        \frac{1}{1 - e^{\period \lambda_0}} & \cdots & 0 \\
-        \vdots & \ddots & \vdots \\
-        0 & \cdots & \frac{1}{1 - e^{\period \lambda_{N_n - 1}}}
-      \end{array}
-    \right] \: \m{U}^T
+  \m{M} = \m{U} \: \diag{\frac{1}{1 - e^{\period \lambda_0}}}{\frac{1}{1 - e^{\period \lambda_{N_n - 1}}}} \: \m{U}^T
 \end{equation}
-The equation gives the initial solution vector $\tilde{\v{T}}_0$, the rest of vectors $\tilde{\v{T}}_i$ for \mbox{$i = 1 \dots N_s - 1$} are successively found from \equref{eq:ce-recurrent}.
+The equation gives the initial solution vector $\tv{T}_0$, the rest of vectors $\tv{T}_i$ for $i = \range{1}{N_s - 1}$ are successively found from \equref{eq:ce-recurrent}.
 
-Since the power profile is evenly sampled with the sampling interval $\Delta t$, i.e., $\Delta t_i = \Delta t$ for $i = 0 \dots N_s - 1$, the recurrent process in \equref{eq:recurrent-equation} turns into:
+Since the power profile is evenly sampled with the sampling interval $\Delta t$, i.e., $\Delta t_i = \Delta t$ for $i = \range{0}{N_s - 1}$, the recurrent process in \equref{eq:recurrent-equation} turns into:
 \[
   \tilde{\v{T}}_{i+1} = \tilde{\m{K}} \: \tilde{\v{T}}_i + \tilde{\m{B}} \: \v{P}_i
 \]
 where:
-\begin{align*}
-  & \tm{K} = e^{\tm{A} \: \Delta t} \\
-  & \tm{B} = \tm{A}^{-1} ( e^{\tm{A} \: \Delta t} - \m{I} ) \m{C}^{-\frac{1}{2}}
-\end{align*}
+\[
+  \tm{K} = e^{\tm{A} \: \Delta t} \hs \tm{B} = \tm{A}^{-1} ( e^{\tm{A} \: \Delta t} - \m{I} ) \m{C}^{-\frac{1}{2}}
+\]
 Here $\tm{K}$ and $\tm{B}$ are constants, since they depend only on the matrices $\tm{A}$, $\m{C}$, and sampling interval $\Delta t$, which is fixed. In this case, the block diagonal of the matrix $\tilde{\mathbb{K}}$, similar to \equref{eq:system}, is composed of the same repeating block $\tilde{\m{K}}$ and the recurrent expressions take the following form:
 \begin{align}
-  & \tilde{\v{T}}_{i + 1} = \tilde{\m{K}} \: \tilde{\v{T}}_i + \m{Q}_i, \; i = 0 \dots N_s - 1 \nonumber \\
-  & \m{W}_i = \tilde{\m{K}} \: \m{W}_{i - 1} + \m{Q}_i, \; i = 1 \dots N_s - 1 \nonumber
+  & \tv{T}_{i + 1} = \tm{K} \: \tv{T}_i + \m{Q}_i, \; i = \range{0}{N_s - 1} \nonumber \\
+  & \m{W}_i = \tm{K} \: \m{W}_{i - 1} + \m{Q}_i, \; i = \range{1}{N_s - 1} \nonumber
 \end{align}
 The last step of the solution is to return back to temperature by performing the backward substitution opposite to \equref{eq:substitution}:
 \[
-  \v{T}_i = \m{C}^{-\frac{1}{2}} \: \tilde{\v{T}}_i, \: i = 0 \dots N_s - 1
+  \v{T}_i = \m{C}^{-\frac{1}{2}} \: \tv{T}_i, \: i = \range{0}{N_s - 1}
 \]
 
-As we see, the auxiliary substitution from \secref{sec:ce-auxiliary} allows us to perform the single-time eigenvalue decomposition with orthogonal eigenvectors (\equref{eq:eigenvalue-decomposition}) that later eases the computational process at several stages. First, the decomposition is employed to compute the matrix exponential, matrix inverse, and, consequently, matrices $\tilde{\m{K}}$ and $\tilde{\m{B}}$. Then, the linear system given by \equref{eq:core-system} is solved without any explicit inversion of any matrix, the solution $\tilde{\v{T}}_0$ is obtained by scalar divisions and a similarity transformation with $\m{U}$ (\equref{eq:m-matrix}).
+As we see, the auxiliary substitution from \secref{sec:ce-auxiliary} allows us to perform the single-time eigenvalue decomposition with orthogonal eigenvectors (\equref{eq:eigenvalue-decomposition}) that later eases the computational process at several stages. First, the decomposition is employed to compute the matrix exponential, matrix inverse, and, consequently, matrices $\tm{K}$ and $\tm{B}$. Then, the linear system given by \equref{eq:core-system} is solved without any explicit inversion of any matrix, the solution $\tv{T}_0$ is obtained by scalar divisions and a similarity transformation with $\m{U}$ (\equref{eq:m-matrix}).
 
 As it was mentioned previously, the eigenvalue decomposition along with $\tm{K}$ and $\tm{B}$ are computed only once for a particular RC thermal circuit and can be considered as a given for optimization purposes, significantly decreasing the computational time. Moreover, if the subject of optimization is the same time interval, \equref{eq:m-matrix} is a constant as well.
