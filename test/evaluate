@@ -2,25 +2,20 @@
 
 require File.join File.dirname(__FILE__), 'common'
 
-if ARGV.length < 2
+if ARGV.length < 1
   puts 'Need some arguments...'
-  puts '1. an input directory'
-  puts '2. an output directory'
-  puts '3. overwrite'
+  puts '1. an input/output directory'
+  puts '2. overwrite'
   exit
 end
 
-input = ARGV[0]
-output = ARGV[1]
-overwrite = ARGV[2..-1].join ' '
+dir = ARGV[0]
+input = File.join dir, 'input'
+output = File.join dir, 'output'
+overwrite = ARGV[1..-1].join ' '
 
-unless File.exist? input
-  puts 'Need a real input directory...'
-  exit
-end
-
-unless File.exist? output
-  puts 'Need a real output directory...'
+unless File.exist?(input) and File.exist?(output)
+  puts 'Need a real input/output directory...'
   exit
 end
 
