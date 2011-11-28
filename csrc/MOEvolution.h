@@ -124,37 +124,50 @@ class MOEvolution:
 
 class MOContinuation: public Continuation<eslabMOChromosome>
 {
+	const size_t stall_generations;
+	size_t stall_count;
 	double last_lifetime;
 	double last_energy;
 
 	public:
 
 	MOContinuation(const ContinuationTuning &_tuning) :
-		Continuation<eslabMOChromosome>(_tuning), last_lifetime(0),
-		last_energy(DBL_MAX) {}
+		Continuation<eslabMOChromosome>(_tuning),
+		stall_generations(_tuning.stall_generations), stall_count(0),
+		last_lifetime(0), last_energy(DBL_MAX) {}
+
+	inline void reset()
+	{
+		Continuation<eslabMOChromosome>::reset();
+		stall_count = 0;
+		last_lifetime = 0;
+		last_energy = DBL_MAX;
+	}
 
 	protected:
 
-	inline bool improved(const eoPop<eslabMOChromosome> &_population)
+	inline bool stop(const eoPop<eslabMOChromosome> &_population)
 	{
 		const eslabMOPop *population =
 			dynamic_cast<const eslabMOPop *>(&_population);
+
+		stall_count++;
 
 		price_t lifetime = population->best_lifetime();
 
 		if (lifetime.lifetime > last_lifetime) {
 			last_lifetime = lifetime.lifetime;
-			return true;
+			stall_count = 0;
 		}
 
 		price_t energy = population->best_energy();
 
 		if (energy.energy < last_energy) {
 			last_energy = energy.energy;
-			return true;
+			stall_count = 0;
 		}
 
-		return false;
+		return (stall_count > stall_generations);
 	}
 };
 

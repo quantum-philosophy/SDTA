@@ -200,6 +200,8 @@ void ContinuationTuning::setup(const parameters_t &params)
 			max_generations = it->to_int();
 		else if (it->name == "stall_generations")
 			stall_generations = it->to_int();
+		else if (it->name == "stall_tolerance")
+			stall_tolerance = it->to_double();
 		else if (it->name == "time_limit")
 			time_limit = it->to_double();
 	}
@@ -213,6 +215,7 @@ void ContinuationTuning::display(std::ostream &o) const
 		<< "  Maximum generations:  " << max_generations << std::endl
 		<< "  Stall generations:    " << stall_generations << std::endl
 		<< std::fixed << std::setprecision(2)
+		<< "  Stall tolerance:      " << stall_tolerance << std::endl
 		<< "  Time limit:           " << time_limit << std::endl;
 }
 

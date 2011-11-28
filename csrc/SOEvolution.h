@@ -161,28 +161,46 @@ class eslabSOGeneticAlgorithm: public eslabAlgorithm<CT>
 
 class SOContinuation: public Continuation<eslabSOChromosome>
 {
-	double last_lifetime;
+	const size_t length;
+	const double tolerance;
+	vector_t history;
+	size_t position;
 
 	public:
 
 	SOContinuation(const ContinuationTuning &_tuning) :
-		Continuation<eslabSOChromosome>(_tuning), last_lifetime(0) {}
+		Continuation<eslabSOChromosome>(_tuning),
+		length(_tuning.stall_generations), tolerance(_tuning.stall_tolerance),
+		history(length, 0), position(0)
+	{
+	}
+
+	inline void reset()
+	{
+		Continuation<eslabSOChromosome>::reset();
+		position = 0;
+		history.nullify();
+	}
 
 	protected:
 
-	inline bool improved(const eoPop<eslabSOChromosome> &_population)
+	inline bool stop(const eoPop<eslabSOChromosome> &_population)
 	{
 		const eslabSOPop *population =
 			dynamic_cast<const eslabSOPop *>(&_population);
 
-		double lifetime = population->best_lifetime();
+		double current, last;
 
-		if (lifetime > last_lifetime) {
-			last_lifetime = lifetime;
-			return true;
-		}
+		last = history[position];
+		current = history[position] = population->best_lifetime();
+		position = (position + 1) % length;
 
-		return false;
+		if (generations < length) return false;
+
+		if (current == last) return true; /* Stop it! */
+		else if (last == 0) return false; /* What? */
+
+		return (current / last - 1) <= tolerance;
 	}
 };
 

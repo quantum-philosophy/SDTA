@@ -152,12 +152,14 @@ struct ContinuationTuning: public Tuning
 	size_t min_generations;
 	size_t max_generations;
 	size_t stall_generations;
+	double stall_tolerance;
 	double time_limit;
 
 	ContinuationTuning() :
 		min_generations(0),
 		max_generations(500),
 		stall_generations(100),
+		stall_tolerance(0),
 		time_limit(0) {}
 
 	void setup(const parameters_t &params);

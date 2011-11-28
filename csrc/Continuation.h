@@ -6,13 +6,13 @@
 template<class CT>
 class Continuation: public eoContinue<CT>
 {
+	protected:
+
 	typedef typename CT::fitness_t fitness_t;
 
 	const ContinuationTuning &tuning;
 
 	size_t generations;
-	size_t stall_generations;
-
 	time_t start;
 
 	public:
@@ -38,28 +38,21 @@ class Continuation: public eoContinue<CT>
 
 		if (timeout()) return false;
 
-		if (improved(population)) {
-			stall_generations = 0;
-			return true;
-		}
-
-		stall_generations++;
-
-		if (stall_generations >= tuning.stall_generations) return false;
-
-		return true;
+		return !stop(population);
 	}
 
-	void reset()
+	virtual void reset()
 	{
 		generations = 0;
-		stall_generations = 0;
 		start = time(0);
 	}
 
 	protected:
 
-	virtual bool improved(const eoPop<CT> &population) = 0;
+	virtual bool stop(const eoPop<CT> &population)
+	{
+		return false;
+	}
 };
 
 #endif
