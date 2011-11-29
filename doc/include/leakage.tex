@@ -1,12 +1,12 @@
 So far, we have assumed that power is independent of temperature. However, due to the leakage component, the power dissipation is a strong function of temperatue that cannot be neglected (\secref{sec:power-model}). Two techniques can be applied to include in our proposed solution temperature dependent leakage modeling.
 
 \subsection{Iterative Computation} \label{sec:iterative-leakage}
-\iimage{leakage}{0 0 0 0}{SSDTP calculation with leakage modeling.}
 In this case, we have an iterative process depicted in \figref{fig:leakage} where the temperature and power profiles are calculated in turns. With each new temperature profile we update the power profile by computing the leakage power and adding it to the dynamic power:
 \[
   \mathbb{P}_i = \mathbb{P}_{dyn} + \mathbb{P}_{leak}(\mathbb{T}_i)
 \]
 The process continues until the temperature converges, i.e., the difference between two successive temperature profiles is below a predefined bound. In our experiments we used $0.5^\circ C$ as the maximal acceptable difference and observed that the average number of required iterations to converge is 4--7.
+\iimage{leakage}{-100 0 -100 0}{SSDTP calculation with leakage modeling.}
 
 \subsection{Linear Approximation} \label{sec:linearized-leakage}
 A linear approximation of the leakage power has the following matrix form:

@@ -1,8 +1,14 @@
 \documentclass{sig-alternate}
 \input{include/common.tex}
 
-\newfont{\titlefont}{phvb8t at 17pt}
+% Remove the copyright
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd{\maketitle}{\@copyrightspace}{}{}{}
+\makeatother
 
+% Change the title font and spacing
+\newfont{\titlefont}{phvb8t at 17pt}
 \makeatletter
 \renewcommand{\@maketitle}{
   \newpage

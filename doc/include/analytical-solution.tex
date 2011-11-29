@@ -33,8 +33,8 @@ where the last equation enforces the boundary condition and ensures the equality
 \end{equation}
 To get the whole picture, the system can be written as:
 \begin{align}
-  & \mathbb{K} \: \mathbb{X} = \mathbb{B} \label{eq:system} \\
-  & \mathbb{K} = \left[
+  & \mathbb{A} \: \mathbb{X} = \mathbb{B} \label{eq:system} \\
+  & \mathbb{A} = \left[
     \begin{array}{ccccc}
       \m{K}_0 & -\m{I} & 0 & \cdots & 0 \\
       0 & \m{K}_1 & -\m{I} &  & \vdots \\
@@ -57,7 +57,7 @@ To get the whole picture, the system can be written as:
     \end{array}
   \right] \nonumber
 \end{align}
-where $\mathbb{K}$ is a $N_n N_s \times N_n N_s$ matrix, $\mathbb{X}$ and $\mathbb{B}$ are vectors with $N_n N_s$ elements. It can be seen that we have obtained a regular system of linear equations. Now we shall briefly discuss possible techniques to solve it.
+where $\mathbb{A}$ is a $N_n N_s \times N_n N_s$ matrix, $\mathbb{X}$ and $\mathbb{B}$ are vectors with $N_n N_s$ elements. It can be seen that we have obtained a regular system of linear equations. Now we shall briefly discuss possible techniques to solve it.
 
 \input{include/direct-solutions}
 

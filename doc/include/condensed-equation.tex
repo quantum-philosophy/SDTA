@@ -7,7 +7,7 @@ The major problem with the earlier-discussed techniques is that (1) the sparsene
 Let us start with from the discussion on the above-mentioned specific structure, which importance is immense, of the system given by \equref{eq:system} and depicted in \figref{fig:sparseness-of-system}. It can be seen that non-zero elements, marked with blue points in the figure, are located only on the block diagonal, one subdiagonal just above the block diagonal, and one subdiagonal in the left bottom corner. The block diagonal is composed of $N_n \times N_n$ matrices while all elements of the subdiagonals are equal \mbox{to $-1$}. Linear systems with the same structure arise in boundary value problems for ODEs where a common technique to solve them is to form a so-called condensed equation (CE), or condensed system \cite{stoer2002}. Before undertaking this procedure, we perform an adjustment to the initial analytical solution described in the following subsection.
 
 \subsection{Auxiliary Transformation} \label{sec:ce-auxiliary}
-It can be noticed that the analytical solution in \equref{eq:solution} includes two computationally expensive operations, namely the matrix exponential and inverse involving \mbox{$\m{A} = - \m{C}^{-1} \: \m{G}$}, which is an arbitrary square matrix. It is preferable to have a symmetric matrix to perform these computations, since for a real symmetric matrix $\m{M}$ the following eigenvalue decomposition with independent (orthogonal) eigenvectors holds \cite{press2007}:
+It can be noticed that the analytical solution in \equref{eq:solution} includes two computationally expensive operations, namely the matrix exponential and inverse involving \mbox{$\m{A} = - \m{C}^{-1} \: \m{G}$}, which is an arbitrary square matrix. It is preferable to have a symmetric matrix to perform these computations, since for a real symmetric matrix $\m{M}$ the following eigenvalue decomposition with independent eigenvectors holds \cite{press2007}:
 \begin{equation} \label{eq:eigenvalue-decomposition}
   \m{M} = \m{U} \m{\Lambda} \m{U}^\v{T}
 \end{equation}
@@ -19,11 +19,10 @@ where $\m{U}$ is a square matrix of the eigenvectors, $\m{U}^T$ is the transpose
 where $diag$ denotes a diagonal matrix and $\lambda_i$ are eigenvalues of $\m{M}$.
 
 The conductance matrix $\m{G}$ is a symmetric matrix, since if a node A is connected to B, then B is also connected to A with the same conductance \cite{huang2003}. However, as it is mentioned previously, the product of $\m{G}$ with the inverse of the capacitance matrix $\m{C}$ does not have this property. We propose to use the following transformation in order to keep the desired symmetry:
-\begin{align}
-  & \tilde{\v{T}}(t) = \m{C}^{\frac{1}{2}} \v{T}(t) \label{eq:substitution} \\
-  & \tilde{\m{A}} = -\m{C}^{-\frac{1}{2}} \m{G} \: \m{C}^{-\frac{1}{2}} \nonumber
-\end{align}
-where $\tm{A}$ is a symmetric matrix, since $\tm{A}^T = -(\m{C}^{-\half} \m{G} \m{C}^{-\half})^T = -(\m{C}^{-\half})^T \m{G}^T (\m{C}^{-\half})^T = \tilde{\m{A}}$. Note that the capacitance matrix $\m{C}$ is a diagonal matrix \cite{huang2003}, hence, $\m{C}^\half$ takes linear time to compute. Consequently, the system of ODEs (\equref{eq:fourier-model}) and its solutions (\equref{eq:solution}) can be rewritten as the following:
+\begin{equation} \label{eq:substitution}
+  \tilde{\v{T}}(t) = \m{C}^{\frac{1}{2}} \v{T}(t) \hs \tilde{\m{A}} = -\m{C}^{-\frac{1}{2}} \m{G} \: \m{C}^{-\frac{1}{2}}
+\end{equation}
+where $\tm{A}$ is symmetric, since $\tm{A}^T = -(\m{C}^{-\half} \m{G} \m{C}^{-\half})^T = -(\m{C}^{-\half})^T \m{G}^T (\m{C}^{-\half})^T = \tilde{\m{A}}$. Note that the capacitance matrix $\m{C}$ is a diagonal matrix \cite{huang2003}, hence, $\m{C}^\half$ takes linear time to compute. Consequently, the system of ODEs (\equref{eq:fourier-model}) and its solutions (\equref{eq:solution}) can be rewritten as the following:
 \begin{align*}
   & \frac{d\tilde{\v{T}}(t)}{dt} = \tilde{\m{A}} \: \m{Y}(t) + \m{C}^{-\frac{1}{2}} \v{P} \\
   & \tilde{\v{T}}(t) = e^{\tilde{\m{A}} t} \tilde{\v{T}}_0 + \tilde{\m{A}}^{-1} (e^{\tilde{\m{A}} t} - \m{I}) \m{C}^{-\frac{1}{2}} \v{P}
@@ -58,7 +57,7 @@ In order to form the condensed equation mentioned in the beginning of this secti
 where $\m{W}_i$ are defined as the following:
 \begin{align}
   \m{W}_0 & = \m{Q}_0 \nonumber \\
-  \m{W}_i & = \sum_{l = 1}^i \prod_{j = l}^i \tilde{\m{K}}_j \: \m{Q}_{l - 1} + \m{Q}_i, \: i = \range{1}{N_s - 1} \nonumber \\
+  %\m{W}_i & = \sum_{l = 1}^i \prod_{j = l}^i \tilde{\m{K}}_j \: \m{Q}_{l - 1} + \m{Q}_i, \: i = \range{1}{N_s - 1} \nonumber \\
   \m{W}_i & = \tilde{\m{K}}_i \: \m{W}_{i - 1} + \m{Q}_i, \; i = \range{1}{N_s - 1} \label{eq:p-recurrent}
 \end{align}
 Therefore, we can calculate the final vector $\tilde{\v{T}}_{N_s}$ using \equref{eq:y-recurrent} and \equref{eq:p-recurrent}:
@@ -74,21 +73,20 @@ We recall that $\tilde{\m{K}}_i$ is the matrix exponential given by \equref{eq:m
   \prod_{j = i}^l \tilde{\m{K}}_j = \prod_{j = i}^l e^{\tilde{\m{A}} \Delta t_j} = e^{\tilde{\m{A}} \sum_{j = i}^l \Delta t_j} = \m{U} e^{\left( \sum_{j = i}^l \Delta t_j \: \m{\Lambda} \right)} \m{U}^T
 \]
 Consequently:
-\begin{align*}
-  \prod_{j = 0}^{N_s - 1} \tilde{\m{K}}_j & = e^{\tilde{\m{A}} \period} = \m{U} \: e^{\period \m{\Lambda}} \: \m{U}^T \\
-  & = \m{U} \: \diag{e^{\period \lambda_0}}{e^{\period \lambda_{N_n - 1}}} \: \m{U}^T
-\end{align*}
+\[
+  \prod_{j = 0}^{N_s - 1} \tilde{\m{K}}_j = \m{U} \: \diag{e^{\period \lambda_0}}{e^{\period \lambda_{N_n - 1}}} \: \m{U}^T
+\]
 where $\period$ is the application period. Substituting this product into \equref{eq:core-system}, we obtain the following system:
 \[
   (\m{I} - \m{U} \: e^{\period \m{\Lambda}} \: \m{U}^T) \: \tilde{\v{T}}_0 = \m{W}_{N_s - 1}
 \]
 The identity matrix $\m{I}$ can be splitted into $\m{U} \m{U}^T$, hence:
 \[
-  \tilde{\v{T}}_0 = \m{U} \: (\m{I} - e^{\period \m{\Lambda}})^{-1} \: \m{U}^T \: \m{W}_{N_s - 1} = \m{M} \: \m{W}_{N_s - 1}
+  \tilde{\v{T}}_0 = \m{U} \: (\m{I} - e^{\period \m{\Lambda}})^{-1} \: \m{U}^T \: \m{W}_{N_s - 1} = \m{Z} \: \m{W}_{N_s - 1}
 \]
 where:
 \begin{equation} \label{eq:m-matrix}
-  \m{M} = \m{U} \: \diag{\frac{1}{1 - e^{\period \lambda_0}}}{\frac{1}{1 - e^{\period \lambda_{N_n - 1}}}} \: \m{U}^T
+  \m{Z} = \m{U} \: \diag{\frac{1}{1 - e^{\period \lambda_0}}}{\frac{1}{1 - e^{\period \lambda_{N_n - 1}}}} \: \m{U}^T
 \end{equation}
 The equation gives the initial solution vector $\tv{T}_0$, the rest of vectors $\tv{T}_i$ for $i = \range{1}{N_s - 1}$ are successively found from \equref{eq:ce-recurrent}.
 
@@ -100,7 +98,7 @@ where:
 \[
   \tm{K} = e^{\tm{A} \: \Delta t} \hs \tm{B} = \tm{A}^{-1} ( e^{\tm{A} \: \Delta t} - \m{I} ) \m{C}^{-\frac{1}{2}}
 \]
-Here $\tm{K}$ and $\tm{B}$ are constants, since they depend only on the matrices $\tm{A}$, $\m{C}$, and sampling interval $\Delta t$, which is fixed. In this case, the block diagonal of the matrix $\tilde{\mathbb{K}}$, similar to \equref{eq:system}, is composed of the same repeating block $\tilde{\m{K}}$ and the recurrent expressions take the following form:
+Here $\tm{K}$ and $\tm{B}$ are constants, since they depend only on the matrices $\tm{A}$, $\m{C}$, and sampling interval $\Delta t$, which is fixed. In this case, the block diagonal of the matrix $\tilde{\mathbb{A}}$, similar to \equref{eq:system}, is composed of the same repeating block $\tilde{\m{K}}$ and the recurrent expressions take the following form:
 \begin{align}
   & \tv{T}_{i + 1} = \tm{K} \: \tv{T}_i + \m{Q}_i, \; i = \range{0}{N_s - 1} \nonumber \\
   & \m{W}_i = \tm{K} \: \m{W}_{i - 1} + \m{Q}_i, \; i = \range{1}{N_s - 1} \nonumber
