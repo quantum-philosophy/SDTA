@@ -58,7 +58,7 @@ where $\m{W}_i$ are defined as the following:
 \begin{align}
   \m{W}_0 & = \m{Q}_0 \nonumber \\
   %\m{W}_i & = \sum_{l = 1}^i \prod_{j = l}^i \tilde{\m{K}}_j \: \m{Q}_{l - 1} + \m{Q}_i, \: i = \range{1}{N_s - 1} \nonumber \\
-  \m{W}_i & = \tilde{\m{K}}_i \: \m{W}_{i - 1} + \m{Q}_i, \; i = \range{1}{N_s - 1} \label{eq:p-recurrent}
+  \m{W}_i & = \tm{K}_i \: \m{W}_{i - 1} + \m{Q}_i, \; i = \range{1}{N_s - 1} \label{eq:p-recurrent}
 \end{align}
 Therefore, we can calculate the final vector $\tilde{\v{T}}_{N_s}$ using \equref{eq:y-recurrent} and \equref{eq:p-recurrent}:
 \[
@@ -66,23 +66,23 @@ Therefore, we can calculate the final vector $\tilde{\v{T}}_{N_s}$ using \equref
 \]
 Taking into account the boundary condition given by \equref{eq:boundary-condition}, we obtain the following system of linear equations:
 \begin{equation} \label{eq:core-system}
-  (\m{I} - \prod_{j = 0}^{N_s - 1} \tilde{\m{K}}_j) \: \tilde{\v{T}}_0 = \m{W}_{N_s - 1}
+  (\m{I} - \prod_{j = 0}^{N_s - 1} \tm{K}_j) \: \tv{T}_0 = \m{W}_{N_s - 1}
 \end{equation}
-We recall that $\tilde{\m{K}}_i$ is the matrix exponential given by \equref{eq:matrix-exponential}, therefore, the following simplification holds:
+We recall that $\tm{K}_i$ is the matrix exponential given by \equref{eq:matrix-exponential}, therefore, the following simplification holds:
 \[
-  \prod_{j = i}^l \tilde{\m{K}}_j = \prod_{j = i}^l e^{\tilde{\m{A}} \Delta t_j} = e^{\tilde{\m{A}} \sum_{j = i}^l \Delta t_j} = \m{U} e^{\left( \sum_{j = i}^l \Delta t_j \: \m{\Lambda} \right)} \m{U}^T
+  \prod_{j = i}^l \tm{K}_j = \prod_{j = i}^l e^{\tm{A} \Delta t_j} = e^{\tm{A} \sum_{j = i}^l \Delta t_j} = \m{U} e^{\left( \sum_{j = i}^l \Delta t_j \: \m{\Lambda} \right)} \m{U}^T
 \]
 Consequently:
 \[
-  \prod_{j = 0}^{N_s - 1} \tilde{\m{K}}_j = \m{U} \: \diag{e^{\period \lambda_0}}{e^{\period \lambda_{N_n - 1}}} \: \m{U}^T
+  \prod_{j = 0}^{N_s - 1} \tm{K}_j = \m{U} \: \diag{e^{\period \lambda_0}}{e^{\period \lambda_{N_n - 1}}} \: \m{U}^T
 \]
 where $\period$ is the application period. Substituting this product into \equref{eq:core-system}, we obtain the following system:
 \[
-  (\m{I} - \m{U} \: e^{\period \m{\Lambda}} \: \m{U}^T) \: \tilde{\v{T}}_0 = \m{W}_{N_s - 1}
+  (\m{I} - \m{U} \: e^{\period \m{\Lambda}} \: \m{U}^T) \: \tv{T}_0 = \m{W}_{N_s - 1}
 \]
 The identity matrix $\m{I}$ can be splitted into $\m{U} \m{U}^T$, hence:
 \[
-  \tilde{\v{T}}_0 = \m{U} \: (\m{I} - e^{\period \m{\Lambda}})^{-1} \: \m{U}^T \: \m{W}_{N_s - 1} = \m{Z} \: \m{W}_{N_s - 1}
+  \tv{T}_0 = \m{U} \: (\m{I} - e^{\period \m{\Lambda}})^{-1} \: \m{U}^T \: \m{W}_{N_s - 1} = \m{Z} \: \m{W}_{N_s - 1}
 \]
 where:
 \begin{equation} \label{eq:m-matrix}
