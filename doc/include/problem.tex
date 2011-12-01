@@ -1,6 +1,6 @@
-Consider a multicore system that consists of $N_p$ processing elements $\Pi = \{ \pi_k: k = \range{0}{N_p - 1} \}$ and executes a periodic application with a period $\period$. We construct an equivalent RC thermal circuit of the system which contains $N_n$ thermal nodes. The dynamic power profile of the system is sampled into $N_s$ time interals of duration $\Delta t$, called sampling interval, in such a way that the dynamic power dissipation and temperature of each node are assumed to be constant within an interval. The discrete dynamic power profile is defined as $\mathbb{P}_{dyn} \eqdef \{ P_{ij}: \: i = \range{0}{N_s - 1}; \: j = \range{0}{N_n - 1} \}$ where $P_{ij}$ is the dynamic power dissipation during the $i$th time interval of the $j$th thermal node. After the stabilization process is finished and the steady state is reached, the corresponding temperature profile becomes periodic and is defined as $\mathbb{T} \eqdef \{ T_{ij}: \: i = \range{0 }{N_s - 1}; \: j = \range{0}{N_n - 1} \}$ where $T_{ij}$ is the temperature in the $i$th time interval of the $j$th node. The profile is called the Steady-State Dynamic Temperature Profile (SSDTP).
+Consider a multicore system that consists of $N_p$ processing elements $\Pi = \{ \pi_i: i = \range{0}{N_p - 1} \}$ and executes a periodic application with a period $\period$. We construct an equivalent RC thermal circuit of the system which contains $N_n$ thermal nodes. The dynamic power profile of the system is sampled into $N_s$ time interals of duration $\Delta t$, called sampling interval, in such a way that the dynamic power dissipation and temperature of each node are assumed to be constant within an interval. The discrete dynamic power profile is defined as $\mathbb{P}_{dyn} \eqdef \{ P_{ij}: \: i = \range{0}{N_s - 1}; \: j = \range{0}{N_n - 1} \}$ where $P_{ij}$ is the dynamic power dissipation during the $i$th time interval of the $j$th thermal node. After the steady state is reached, the corresponding temperature profile becomes periodic and is defined as $\mathbb{T} \eqdef \{ T_{ij}: \: i = \range{0 }{N_s - 1}; \: j = \range{0}{N_n - 1} \}$ where $T_{ij}$ is the temperature of the $j$th node in the $i$th time interval. The profile is called the Steady-State Dynamic Temperature Profile (SSDTP).
 
-Given:
+\statement{Given}:
 \begin{ilist}
   \item A multicore system with a set of processing elements $\Pi$ executing a periodic application.
   \item The discrete dynamic power profile $\mathbb{P}_{\:dyn}$ of the system\footnote{The power dissipation of inactive nodes is zero.} with the sampling interval $\Delta t$.
@@ -9,9 +9,8 @@ Given:
   \item The thermal parameters of the die and package, e.g., the thermal conductivity and thermal capacitance.
 \end{ilist}
 
-Find:
+\statement{Find}:
 \begin{ilist}
   \item The corresponding periodic temperature profile $\mathbb{T}$ of the system when the steady state is reached.
 \end{ilist}
-
-Reasonable requirements for a solution are speed and accuracy, since the temperature analysis is often a part of an intensive optimization procedure where the SSDTP is to be computed thousands of times. Such a problem is described in \secref{sec:reliability}.
+% Reasonable requirements for a solution are speed and accuracy, since the temperature analysis is often a part of an intensive optimization procedure where the SSDTP is to be computed thousands of times. Such a problem is described in \secref{sec:reliability}.

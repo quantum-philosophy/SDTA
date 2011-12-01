@@ -1,31 +1,20 @@
-\subsection{Architecture Model} \label{sec:architecture-model}
+\label{sec:architecture-model}
 We consider a heterogeneous multicore architecture with a set of processing elements $\Pi$ defined as the following:
 \[
   \Pi = \{ \pi_i = (V_i, \: f_i, \: N_{gate \: i}): \; i = \range{0}{N_p - 1} \}
 \]
-where $V_i$, $f_i$, and $N_{gate \: i}$ are the supply voltage, frequency, and number of gates \cite{liao2005} of the $i$th core, respectively. The first two parameters are used for the dynamic power estimation while the last one for the leakage power as described in the following subsection.
+where $V_i$, $f_i$, and $N_{gate \: i}$ are the supply voltage, frequency, and number of gates \cite{liao2005} of the $i$th core, respectively.
 
-\subsection{Power Model} \label{sec:power-model}
-The total power dissipation of a processing element is defined as the sum of the dynamic and leakage power:
-\[
-  P = P_{dyn} + P_{leak} \hs P_{dyn} = C_{eff} \cdot f \cdot V^2
-\]
-where $C_{eff}$ is the effective switched capacitance, $V$ and $f$ are the supply voltage and frequency, respectively. The leakage part of the power dissipation is defined as \cite{liao2005}:
+\label{sec:power-model}
+The total power dissipation of a processing element is defined as the sum of the dynamic and leakage power: $P = P_{dyn} + P_{leak}$. The dynamic part is modeled as $P_{dyn} = C_{eff} \cdot f \cdot V^2$ where $C_{eff}$ is the effective switched capacitance, $V$ and $f$ are the supply voltage and frequency, respectively. The leakage part of the power dissipation is defined as \cite{liao2005}:
 \begin{equation} \label{eq:total-power}
   P_{leak}(T) = N_{gate} \: V \: I_0 \left[ A \: T^2 e^{\frac{\alpha \: V + \beta}{T}} + B e^{(\gamma \: V + \delta)} \right]
 \end{equation}
 where $T$ and $V$ are the current temperature and supply voltage, respectively, $N_{gate}$ is the number of gates in the circuit, $I_0$ is the average leakage current at the reference temperature and supply voltage. $A$, $B$, $\alpha$, $\beta$, $\gamma$, and $\delta$ are the technology dependent constants found in \cite{liao2005}.
 
-\subsection{Thermal Model} \label{sec:thermal-model}
+\label{sec:thermal-model}
 Our proposed technique is based on the RC thermal model that employs the analogy between electrical and thermal circuits \cite{kreith2000}. Heat transfer is modeled with the following system of differential equations:
 \begin{equation} \label{eq:fourier-model}
   \m{C} \: \frac{d\v{T}(t)}{dt} + \m{G} \: (\v{T}(t) - \v{T}_{amb})= \v{P}(t)
 \end{equation}
-where $\v{T}$ is the temperature vector, $\v{T}_{amb}$ is the ambient temperature vector, $\m{C}$ is the thermal capacitance matrix, $\m{G}$ is the thermal conductance matrix, and $\v{P}$ is the power dissipation vector (the source of heat). The dimensions of the system are $N_n \times N_n$, where $N_n$ is the number of thermal nodes.
-
-The equivalent circuit of a multiprocessor system with a thermal package can be built in different ways depending on the intended level of details. Consequently, the number of nodes $N_n$ and structure of matrices $\m{C}$ and $\v{G}$ depend on a particular implementation of the model. Thermal nodes that belong to the package are called inactive in the sense that their power dissipation is assumed to be zero.
-
-\iimage{circuit}{-50 0 -50 0}{A simplified equivalent RC thermal circuit of a dual-core die with a thermal package.}
-Without loss of generality, in the paper we use thermal circuits constructed according to the block model used in HotSpot 5.0 \cite{huang2003} where each of the $N_p$ processing elements is captured by one thermal node. In the model, three cooling layers are present, namely the thermal interface material, heat spreader, and heat sink captured by $N_p$, $N_p + 4$, and $N_p + 8$ inactive thermal nodes, respectively. Therefore, the total number of thermal nodes $N_n$ is $4 \times N_p + 12$. A simplified example of such a thermal circuit for a dual-core architecture is depicted in \figref{fig:circuit}. It can be seen that the inter-core dependency is taken into account by modeling the heat flux between the cores (the top two thermal nodes) with the corresponding thermal resistance.
-
-Some or all cores can be also modeled at a higher level of granularity where caches, ALUs, or registers will be captured as individual thermal nodes.
+where $\v{T}$ is the temperature vector, $\v{T}_{amb}$ is the ambient temperature vector, $\m{C}$ is the thermal capacitance matrix, $\m{G}$ is the thermal conductance matrix, and $\v{P}$ is the power dissipation vector. The dimensions of the system are $N_n \times N_n$, where $N_n$ is the number of nodes in the equivalent RC thermal circuit, which is further discussed in \appref{ap:thermal-circuits}.

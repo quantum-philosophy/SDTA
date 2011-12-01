@@ -18,6 +18,7 @@
   {\titlefont \@title \par}%
   \end{center}%
   \par%
+  \vspace{40pt}%
 }
 \makeatother
 
@@ -61,56 +62,43 @@
 
   % \keywords{temperature analysis, steady-state dynamic, thermal cycling, multicore}
 
-  \section{Introduction and Prior Work}
+  \isection{Introduction and Prior Work}
   \input{include/introduction.tex}
 
-  \section{Preliminaries} \label{sec:preliminaries}
+  \isection{Architecture, Power, and\\Thermal Models} \label{sec:preliminaries}
   \input{include/preliminaries.tex}
 
-  \section{Problem Formulation} \label{sec:problem}
+  \isection{Problem Formulation} \label{sec:problem}
   \input{include/problem.tex}
 
-  \section{State of the Art Solutions} \label{sec:hotspot-solution}
+  \isection{State of the Art Solutions} \label{sec:hotspot-solution}
   \input{include/hotspot-solution.tex}
 
-  \section{Analytical Solutions} \label{sec:analytical-solution}
+  \isection{Analytical Solution} \label{sec:analytical-solution}
   \input{include/analytical-solution.tex}
 
-  \section{Proposed Technique} \label{sec:condensed-equation}
+  \isection{Proposed Technique} \label{sec:condensed-equation}
   \input{include/condensed-equation}
 
-  \section{Leakage Power} \label{sec:leakage}
+  \isection{Leakage Power} \label{sec:leakage}
   \input{include/leakage.tex}
 
-  \section{Reliability Optimization} \label{sec:reliability}
+  \isection{Reliability Optimization} \label{sec:reliability}
   \input{include/reliability.tex}
 
-  \section{Experimental Results} \label{sec:results}
+  \isection{Experimental Results} \label{sec:results}
   \input{include/results.tex}
 
-  \section{Conclusion} \label{sec:conclusion}
+  \isection{Conclusion} \label{sec:conclusion}
   \input{include/conclusion.tex}
 
-%  \section{Acknowledgments}
+%  \isection{Acknowledgments}
 %  We would like to thank Prof. {\AA}ke Bj\"{o}rck from Link\"{o}ping University for the valuable discussions and suggestions about the analytical solution.
 %
+  \vspace{-5pt}
   \input{include/bibliography.tex}
 
   \appendix
 
-  \section{Straight-Forward Solutions}
-  Move the straight-forward solutions \secref{sec:ssdta-analytical}.
-
-  \section{Analytical Transient Temperature Analysis}
-  Move the TTA from \secref{sec:tta-analytical}.
-
-  \section{Reliability Model}
-  Move the reliability model from \secref{sec:reliability}.
-
-  \section{Genetic Algorithm}
-  Move the description of the GA from \secref{sec:reliability-problem}.
-
-  \section{Experimental Setup}
-  Move here \tabref{tab:parameters}.
-
+  \input{include/appendix.tex}
 \end{document}

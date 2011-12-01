@@ -1,4 +1,4 @@
-As shown in \secref{sec:hotspot-solution}, the state of the art solutions either produce inaccurate and, in many cases, completely useless results, or they are unacceplably slow. In this section we eliminate the first problem by obtaining an analytical solution for the SSDTP and tackle the second one in \secref{sec:condensed-equation} where a fast technique to perform the computations is proposed.
+As shown in \secref{sec:hotspot-solution}, the state of the art solutions either produce inaccurate and, in many cases, completely useless results, or they are unacceplably slow. In this section we eliminate the first problem by obtaining an analytical solution for the SSDTP and tackle the second one in \secref{sec:condensed-equation} where a fast solution technique is proposed.
 
 In the following explanation, without loss of generality, we assume $\v{T}(t) \equiv \v{T}(t) - \v{T}_{amb}$. Let the power consumption vector $\v{P}(t)$ be constant and equal to $\v{P}$; then the system given by \equref{eq:fourier-model} is a system of ordinary differential equations (ODE) with the following solution:
 \begin{equation} \label{eq:solution}
@@ -8,18 +8,9 @@ where $\m{A} = -\m{C}^{-1} \: \m{G}$, $\v{T}_0$ is the initial temperature, and 
 \begin{equation} \label{eq:recurrent-system}
   \v{T}_{i+1} = \m{K}_i \: \v{T}_i + \m{B}_i \: \v{P}_i
 \end{equation}
-where:
-\[
-  \m{K}_i = e^{\m{A} \Delta t_i} \hs \m{B}_i = \m{A}^{-1}(e^{\m{A} \Delta t_i} - \m{I})\m{C}^{-1}
-\]
+where $\m{K}_i = e^{\m{A} \Delta t_i}$ and $\m{B}_i = \m{A}^{-1}(e^{\m{A} \Delta t_i} - \m{I})\m{C}^{-1}$.
 
-\subsection{Transient Temperature Analysis (TTA)} \label{sec:tta-analytical}
-Given the initial temperature $\v{T}_0$, the recurrence in \equref{eq:recurrent-system} can be applied to perform the TTA. Our experiments show that, since intervals $\Delta t_i$ have the same length and matrices $\m{K}_i$ and $\m{B}_i$ become constant, this approach demonstrates a significant performance improvement relative to iterative solutions of ODEs, e.g., the fourth-order Runge-Kutta method implemented in HotSpot. The same observation is made in \cite{thiele2011}.
-
-The TTA using the analytical technique given in \equref{eq:recurrent-system} can be employed to approximate the SSDTP by applying it over successive application periods, as shown in \secref{sec:hotspot-iterative-solution}. Since each iteration of the TTA, with this approach, is much faster than with HotSpot, it will significantly speed up the SSDTP calculation. However, the number of required iterations is similar to HotSpot (\figref{fig:hotspot-error}), still keeping the computational process slow (\secref{sec:results-ssdtp}).
-
-\subsection{Steady-State Dynamic Temperature Analysis (SSDTA)} \label{sec:ssdta-analytical}
-For the steady-state case the following system of linear equations can be derived from \equref{eq:recurrent-system}:
+The approach can be used to perform the TTA as it is discussed in \appref{ap:tta-analytical}. For the SSDTA case the following system of linear equations can be derived from \equref{eq:recurrent-system}:
 \[
   \begin{cases}
     \m{K}_0 \: \v{T}_0 - \v{T}_1 & = -\m{B}_0 \: \v{P}_0 \\
@@ -32,9 +23,9 @@ where the last equation enforces the boundary condition and ensures the equality
   \v{T}_0 = \v{T}_{N_s}
 \end{equation}
 To get the whole picture, the system can be written as:
-\begin{align}
-  & \mathbb{A} \: \mathbb{X} = \mathbb{B} \label{eq:system} \\
-  & \mathbb{A} = \left[
+\begin{equation} \label{eq:system}
+\resizebox{0.9\linewidth}{!}{
+  $\underbrace{\left[
     \begin{array}{ccccc}
       \m{K}_0 & -\m{I} & 0 & \cdots & 0 \\
       0 & \m{K}_1 & -\m{I} &  & \vdots \\
@@ -42,25 +33,23 @@ To get the whole picture, the system can be written as:
       0 &  &  & \m{K}_{N_s - 2} & -\m{I} \\
       -\m{I} & 0 & \cdots & 0 & \m{K}_{N_s - 1}
     \end{array}
-  \right] \nonumber \\
-  & \mathbb{X} = \left[
+  \right]}_{\displaystyle \mathbb{A}} \underbrace{\left[
     \begin{array}{c}
       \v{T}_0 \\
+      \\
       \vdots \\
+      \\
       \v{T}_{N_s - 1}
     \end{array}
-  \right] \; \; \; \; \mathbb{B} = \left[
+  \right]}_{\displaystyle \mathbb{X}} = \underbrace{\left[
     \begin{array}{c}
       -\m{B}_0 \: \v{P}_0 \\
+      \\
       \vdots \\
+      \\
       -\m{B}_{N_s - 1} \: \v{P}_{N_s - 1}
     \end{array}
-  \right] \nonumber
-\end{align}
-where $\mathbb{A}$ is a $N_n N_s \times N_n N_s$ matrix, $\mathbb{X}$ and $\mathbb{B}$ are vectors with $N_n N_s$ elements. It can be seen that we have obtained a regular system of linear equations. Now we shall briefly discuss possible techniques to solve it.
-
-\input{include/direct-solutions}
-
-\input{include/fast-fourier-transform}
-
-\input{include/iterative-solutions}
+  \right]}_{\displaystyle \mathbb{B}}$
+}
+\end{equation}
+where $\mathbb{A}$ is a $N_n N_s \times N_n N_s$ matrix, $\mathbb{X}$ and $\mathbb{B}$ are vectors with $N_n N_s$ elements. It can be seen that we have obtained a regular system of linear equations with well-known. Straight-forward techniques to solve it and their disadvantages are further discussed in \appref{ap:straight-forward}.

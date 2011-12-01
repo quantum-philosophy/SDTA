@@ -1,49 +1,10 @@
-The proposed solution of the SSDTA can be used in a wide range of optimization procedures. One of them is reliability optimization that we discuss in this section. We perform a temperature-aware task mapping and scheduling in order to address the thermal cycling ageing effect while keeping the energy consumption at an appropriate level. Both mapping and scheduling are based on a genetic algorithm \cite{schmitz2004}.
+The proposed calculation of the SSDTA can be used in a wide range of optimization procedures. One of them is reliability optimization that we discuss in this section. We perform a temperature-aware task mapping and scheduling in order to address the thermal cycling fatigue. Both mapping and scheduling are based on a genetic algorithm \cite{schmitz2004}.
 
-\subsection{Application Model} \label{sec:application-model}
-The overall structure of the periodic application is modeled as a task graph $G = (V, \: E, \: \period)$ where $V$ is a set of $N_t$ tasks (vertices of the graph), $E$ is a set of data dependencies between tasks (edges), and $\period$ is the period of the application, which we assume to be equal to the deadline. Each pair of a task $v_i \in V$ and processing element $\pi_j \in \Pi$ is characterized by a tuple $(N_{clock \: ij}, C_{eff \; ij})$, where $N_{clock \: ij}$ is the number of clock cycles and $C_{eff \; ij}$ is the effective switched capacitance. These parameters along with the architecture (\secref{sec:architecture-model}) and power (\secref{sec:power-model}) models determine the execution time of the task and processor load, respectively.
+\isubsection{Application Model} \label{sec:application-model}
+The periodic application is modeled as a task graph $G = (V, \: E, \: \period)$ where $V$ is a set of $N_t$ tasks (vertices of the graph), $E$ is a set of data dependencies between tasks (edges), and $\period$ is the period of the application, which we assume to be equal to the deadline. Each pair of a task $v_i \in V$ and processing element $\pi_j \in \Pi$ is characterized by a tuple $(N_{clock \: ij}, C_{eff \; ij})$, where $N_{clock \: ij}$ is the number of clock cycles and $C_{eff \; ij}$ is the effective switched capacitance.
 
-\subsection{Temperature-Aware Reliability Model} \label{sec:reliability-model}
-We address temperature-driven failure mechanisms with the reliability model presented in \cite{huang2009}, \cite{xiang2010}. The model is based on the assumption that the time to failure $\mathcal{T}$ has a Weibull distribution:
-\begin{align}
-  & \mathcal{T} \sim Weibull(\eta, \beta) \nonumber \\
-  & \expectation{\mathcal{T}} = \eta \; \Gamma(1 + \frac{1}{\beta}) \label{eq:general-mttf}
-\end{align}
-where $\eta$ and $\beta$ are the scaling and shape parameters of the distribution, respectively, $\Gamma$ is the gamma function. The expectation given by \equref{eq:general-mttf} is the mean time to failure (MTTF) that we denote by $\theta = \expectation{\mathcal{T}}$.
+\isubsection{Temperature-Aware Reliability Model} \label{sec:reliability-model}
+\input{include/reliability-model.tex}
 
-The shape parameter $\beta$ is found to be independent on the temperature variation \cite{chang2006}, which, however, is not the case with the scaling parameter $\eta$. Therefore, the distribution varies with the temperature. We can split the overall period of the application $\period$ into $N_m$ time intervals $\Delta t_i$, so that during each time interval $\Delta t_i$ the corresponding $\eta_i$ is a constant:
-\begin{equation} \label{eq:eta-one}
-  \eta_i = \frac{\theta_i}{\Gamma(1 + \frac{1}{\beta})}
-\end{equation}
-where $\theta_i$ is the MTTF in the $i$th time interval as if we had the failure distribution of this interval all the time. For now the values $\theta_i$ are unknown and depend on the particular failure mechanism. As it is shown in \cite{xiang2010}, the reliability function $R(t)$, i.e., the probability of survival until an arbitrary time $t \geq 0$, can be approximated as the following:
-\[
-  R(t) = e^{-(\frac{t}{\period} \sum_{i=0}^{N_m - 1} \frac{\Delta t_i}{\eta_i})^\beta}
-\]
-The formula keeps the form of the Weibull distribution with the scaling parameter equal to:
-\begin{equation} \label{eq:eta-many}
-  \eta = \frac{\period}{\sum_{i=0}^{N_m - 1} \frac{\Delta t_i}{\eta_i}}
-\end{equation}
-Consequently, the MTTF with respect to the whole application period can be obtained by combining \equref{eq:general-mttf}, \equref{eq:eta-one}, and \equref{eq:eta-many}.
-
-As mentioned previously, in order to compute the MTTF, we need to consider the particular failure mechanism and determine the values $\theta_i$ needed in \equref{eq:eta-one}. In this paper, our focus is on the thermal cycling (TC) fatigue, which is directly connected to the temperature variations. According to this model, the parameters affecting reliability are the amplitude and number of thermal cycles as well as the maximal temperature. A thermal cycle is a time interval in which the temperature starts from a certain value and, after reaching an extremum, returns to the starting point. We follow the approach given in \cite{xiang2010} where the rainflow counting method is employed to identify thermal cycles in the temperature curve. Assuming this concrete failure model the duration $\Delta t_i$, during which the corresponding scaling parameter $\eta_i$ is constant \equref{eq:eta-one}, is exactly a thermal cycle.
-
-When the system is exposed to identical thermal cycles, the number of such cycles to failure can be estimated using a modified version of the well-known Coffin-Manson equation with the Arrhenius term \cite{xiang2010}, \cite{jedec2010}, \cite{ciappa2003}:
-\begin{equation} \label{eq:cycles-to-failure}
-  N_c = A (\Delta T - \Delta T_0)^{-b} e^{\frac{E_a}{k T_{max}}}
-\end{equation}
-where $A$ is an empirically determined constant, $\Delta T$ is the thermal cycle excursion (the distance between the minimal and maximal temperatures), $\Delta T_0$ is the portion of the temperature range in the elastic region which does not cause damage, $b$ is the Coffin-Manson exponent which is also empirically determined, $E_{a}$ is the activation energy, $k$ is the Boltzmann constant, and $T_{max}$ is the maximal temperature during the thermal cycle. The system undergoes a number of different thermal cycles each with its own duration $\Delta t_i$ over the application period and each cycle causes its own damage. Therefore, having $N_m$ thermal cycles characterized by the number of cycles to failure $N_{c\:i}$ and duration $\Delta t_i$, we can compute $\theta_i$:
-\begin{equation} \label{eq:mttf-cycle}
-  \theta_i = N_{c \: i} \; \Delta t_i
-\end{equation}
-Taking equations \eqref{eq:general-mttf}, \eqref{eq:eta-one}, \eqref{eq:eta-many}, and \eqref{eq:mttf-cycle} together, we obtain the following expression to estimate the MTTF of one component in the system:
-\begin{align} \label{eq:one-mttf}
-  \theta = \frac{\period}{\sum_{i=0}^{N_m - 1} \frac{1}{N_{c \: i}}}
-\end{align}
-
-It can be observed that the final equation includes the sum over $N_{c \: i}$ defined by \equref{eq:cycles-to-failure}. The computation requires the identification of the thermal cycles with their amplitudes and maximal temperatures. All the prerequisites are captured by the SSDTP, which is needed as an input to the reliability optimization.
-
-\subsection{Motivational Example} \label{sec:motivation}
-\input{include/motivation.tex}
-
-\subsection{Problem Formulation and Optimization} \label{sec:reliability-problem}
+\isubsection{Problem Formulation and Optimization} \label{sec:reliability-problem}
 \input{include/optimization.tex}

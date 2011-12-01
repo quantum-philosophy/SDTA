@@ -14,10 +14,15 @@
 
 \hyphenation{SSDTP SSDTA MTTF SSA TTA}
 
+\newcommand{\isection}[1]{\vspace{-5pt}\section{#1}}
+\newcommand{\isubsection}[1]{\vspace{-5pt}\subsection{#1}}
+\newcommand{\isubsubsection}[1]{\subsubsection{#1}}
+
 \newcommand{\equref}[1]{Eq.~(\ref{#1})}
 \newcommand{\figref}[1]{Fig.~\ref{#1}}
-\newcommand{\secref}[1]{Section~\ref{#1}}
+\newcommand{\secref}[1]{Sec.~\ref{#1}}
 \newcommand{\tabref}[1]{Tab.~\ref{#1}}
+\newcommand{\appref}[1]{Appendix~\ref{#1}}
 \newcommand{\dindex}[3]{#1_{#2,\;#3}}
 
 \newcommand{\m}[1]{\mathbf{#1}}
@@ -35,6 +40,7 @@
 \newcommand{\hs}{\hspace{10mm}}
 \newcommand{\range}[2]{#1, \dots, #2}
 \newcommand{\diag}[2]{diag \left( \range{#1}{#2} \right)}
+\newcommand{\people}[2]{#1 et al}
 
 \definecolor{niceblue}{RGB}{87,181,232}
 \definecolor{nicegreen}{RGB}{129,197,122}
@@ -43,15 +49,21 @@
 \definecolor{nicepurple}{RGB}{195,0,191}
 
 \newcommand{\todo}[1]{{\color{nicepurple}#1}}
+\newcommand{\statement}[1]{\underline{#1}}
 
 \renewcommand{\labelitemi}{$\circ$}
 
+\newcommand{\publication}[4]{#1. #2. \emph{#3}, #4.}
+
 \newenvironment{ilist}
-{\begin{itemize}
-  \setlength{\itemsep}{1pt}
+{\vspace{-4pt}\begin{itemize}
+  \setlength{\leftskip}{-1em}
+  \setlength{\partopsep}{0pt}
+  \setlength{\topsep}{0pt}
+  \setlength{\itemsep}{0.5pt}
   \setlength{\parskip}{0pt}
   \setlength{\parsep}{0pt}}
-{\end{itemize}}
+{\end{itemize}\vspace{-5pt}}
 
 \newcommand{\innerimage}[3]{
   \includegraphics[clip=true, trim=#2, width=\linewidth]{assets/#1.pdf}
@@ -66,32 +78,33 @@
   \end{figure}
 }
 
-\newenvironment{itable}[4]{
-  \begin{table}
-  \caption{#3}
-  \label{tab:#1}
-  \begin{center}
-  \begin{tabular}{#2}
-}{
-  \end{tabular}
-  \end{center}
-  \end{table}
-}
-
-\linespread{0.94}
+\newcommand{\itablefloat}[2]{\subfloat[#1]{#2}}
 
 \columnsep 1pc
-\marginsize{4.4pc}{4.4pc}{2pc}{2pc}
-% \marginsize{5.4pc}{5.4pc}{5.4pc}{6pc}
-% \columnsep 2pc
+\marginsize{4.4pc}{4.4pc}{4pc}{2pc}
 
-% \setlength{\abovecaptionskip}{0pt}
-% \setlength{\belowcaptionskip}{0pt}
-\setlength{\floatsep}{0pt}
-\setlength{\textfloatsep}{5pt}
-\setlength{\abovedisplayskip}{8pt}
-\setlength{\belowdisplayskip}{8pt}
+\topmargin 3pc
+\advance\topmargin by -1in
+
+\textheight 740pt
+
+\linespread{0.9}
+
 \setlength{\parskip}{0pt}
+\setlength{\parsep}{0pt}
+\setlength{\headsep}{0pt}
+\setlength{\topskip}{0pt}
+\setlength{\topsep}{0pt}
 \setlength{\partopsep}{0pt}
-% \addtolength{\dblfloatsep}{-15pt}
-% \addtolength{\dbltextfloatsep}{-15pt}
+
+\setlength{\abovecaptionskip}{5pt}
+\setlength{\belowcaptionskip}{5pt}
+
+\setlength{\floatsep}{-10pt}
+\setlength{\textfloatsep}{-10pt}
+
+\setlength{\abovedisplayskip}{-30pt}
+\setlength{\belowdisplayskip}{-30pt}
+
+\addtolength{\dblfloatsep}{-15pt}
+\addtolength{\dbltextfloatsep}{-15pt}
