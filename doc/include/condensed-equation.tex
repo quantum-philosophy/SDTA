@@ -87,7 +87,7 @@ where $\period$ is the application period. Substituting this product into \equre
 \[
   (\m{I} - \m{U} \: e^{\period \m{\Lambda}} \: \m{U}^T) \: \tv{T}_0 = \m{W}_{N_s - 1}
 \]
-The identity matrix $\m{I}$ can be splitted into $\m{U} \m{U}^T$, hence:
+The identity matrix $\m{I}$ can be split into $\m{U} \m{U}^T$, hence:
 \begin{equation} \label{eq:t0}
   \tv{T}_0 = \m{U} \: (\m{I} - e^{\period \m{\Lambda}})^{-1} \: \m{U}^T \: \m{W}_{N_s - 1} = \m{Z} \: \m{W}_{N_s - 1}
 \end{equation}
@@ -114,6 +114,6 @@ The last step of the solution is to return to temperature by performing the back
   \v{T}_i = \m{C}^{-\frac{1}{2}} \: \tv{T}_i, \: i = \range{0}{N_s - 1}
 \]
 
-As we see, the auxiliary substitution from \secref{sec:ce-auxiliary} allows us to perform the single-time eigenvalue decomposition with orthogonal eigenvectors (\equref{eq:eigenvalue-decomposition}) that later eases the computational process at several stages. In \secref{sec:ce-solution} it can be observed that the solution of the system in \equref{eq:system} has been reduced to two succesive recurrences in \equref{eq:final-p-recurrence} and \equref{eq:final-y-recurrence} over $N_s$ steps in the power profile, which implies a linear complexity on $N_s$.
+As we see, the auxiliary substitution from \secref{sec:ce-auxiliary} allows us to perform the single-time eigenvalue decomposition with orthogonal eigenvectors (\equref{eq:eigenvalue-decomposition}) that later eases the computational process at several stages. In \secref{sec:ce-solution} it can be observed that the solution of the system in \equref{eq:system} has been reduced to two successive recurrences in \equref{eq:final-p-recurrence} and \equref{eq:final-y-recurrence} over $N_s$ steps in the power profile, which implies a linear complexity on $N_s$.
 
 It should be mentioned that the eigenvalue decomposition along with $\tm{K}$ and $\tm{B}$ are computed only once for a particular RC thermal circuit and can be considered as a given together with the RC circuit. It has not to be recalculated when a SSDTP is generated, which significantly decreases the computational time.
