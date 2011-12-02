@@ -4,7 +4,7 @@ Assuming the TC fatigue, the parameters affecting reliability are the amplitude 
 \begin{equation} \label{eq:cycles-to-failure}
   N_c = A (\Delta T - \Delta T_0)^{-b} e^{\frac{E_a}{k T_{max}}}
 \end{equation}
-where $\Delta T$ is the thermal cycle excursion (the distance between the minimal and maximal temperatures) and $T_{max}$ is the maximal temperature during the thermal cycle. The expression for the MTTF estimation of one processing element in the system has the following form:
+where $\Delta T$ is the thermal cycle excursion (the distance between the minimal and maximal temperatures) and $T_{max}$ is the maximal temperature during the thermal cycle. The mean time to failure (MTTF) of one processing element in the system can be estimated as the following:
 \begin{align} \label{eq:one-mttf}
   \theta = \frac{\period}{\sum_{i=0}^{N_m - 1} \frac{1}{N_{c \: i}}}
 \end{align}

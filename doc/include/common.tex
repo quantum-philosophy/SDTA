@@ -8,7 +8,8 @@
 \usepackage{multirow}
 \usepackage{anysize}
 \usepackage{listing}
-\usepackage{subfig}
+\usepackage[config, labelfont={rm,bf,up}, font={rm,bf,up}]{caption,subfig}
+\usepackage{balance}
 
 \newcounter{copyrightbox}
 
@@ -35,11 +36,11 @@
 \newcommand{\eqdef}{\stackrel{\text{\tiny def}}{=}}
 \newcommand{\half}{\frac{1}{2}}
 \newcommand{\mttf}{\mathcal{F}}
-\newcommand{\mttfimp}{\mathcal{F}_{\times}}
-\newcommand{\eimp}{E_{\times}}
+\newcommand{\mttfimp}{\scriptstyle \text{MTTF}}
+\newcommand{\eimp}{\scriptstyle \text{Energy}}
 \newcommand{\hs}{\hspace{10mm}}
 \newcommand{\range}[2]{#1, \dots, #2}
-\newcommand{\diag}[2]{diag \left( \range{#1}{#2} \right)}
+\newcommand{\diag}[2]{\text{diag} \left( \range{#1}{#2} \right)}
 \newcommand{\people}[2]{#1 et al}
 
 \definecolor{niceblue}{RGB}{87,181,232}
