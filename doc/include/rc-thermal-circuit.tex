@@ -1,18 +1,10 @@
 The equivalent circuit of a multiprocessor system with a thermal package can be built in different ways depending on the intended level of details. Consequently, the number of nodes $N_n$ and structure of the matrices $\m{C}$ and $\v{G}$ in \equref{eq:fourier-model} depend on the particular model. Thermal nodes that belong to the package are called inactive in the sense that their power dissipation is assumed to be zero.
 
-Without loss of generality, in this paper we use thermal circuits where each of the $N_p$ processing elements is captured by one thermal node\footnote{The block model implemented in HotSpot \cite{huang2003} 5.0.}. In the model, three cooling layers are present, namely the thermal interface material, heat spreader, and heat sink captured by $N_p$, $N_p + 4$, and $N_p + 8$ inactive thermal nodes, respectively. Therefore, the total number of thermal nodes $N_n$ is $4 \times N_p + 12$. The parameters of the die and thermal package, used through out this paper, are given in \tabref{tab:parameters}.
+Without loss of generality, in this paper we use thermal circuits\footnote{The block model implemented in HotSpot \cite{huang2003} 5.0.} where each of the $N_p$ processing elements is captured by one thermal node. In the model, three cooling layers are present, namely the thermal interface material, heat spreader, and heat sink captured by $N_p$, $N_p + 4$, and $N_p + 8$ inactive thermal nodes, respectively. Therefore, the total number of thermal nodes $N_n$ is $4 \times N_p + 12$. The parameters of the die and thermal package, used throughout this paper, are given in \tabref{tab:parameters}.
 
 A simplified example of such a thermal circuit for a dual-core architecture is depicted in \figref{fig:circuit}. It can be seen that the inter-core thermal influence is taken into account by modeling the heat flux between the cores (the top two thermal nodes) with the corresponding thermal resistance.
 
 Some or all cores can be also modeled at a finer level of granularity, where caches, ALUs, or registers will be captured as individual thermal nodes.
-\begin{figure}
-  \centering
-  \includegraphics[width=\linewidth]{assets/circuit.pdf}
-  \vspace{-15pt}
-  \caption{Equivalent RC thermal circuit.}
-  \label{fig:circuit}
-  \vspace{15pt}
-\end{figure}
 \begin{table}[b]
   \vspace{15pt}
   \caption{Parameters of the die and package.}

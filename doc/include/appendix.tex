@@ -1,23 +1,27 @@
-\isection{RC Thermal Circuit} \label{ap:thermal-circuits}
+\renewcommand{\thesection}{S\arabic{section}}
+\renewcommand{\thetable}{S\arabic{table}}
+\renewcommand{\thefigure}{S\arabic{figure}}
+\setcounter{table}{0}
+\setcounter{figure}{0}
+
+\isection{RC Thermal Circuit} \label{app:thermal-circuits}
 \input{include/rc-thermal-circuit}
 
 \isection{Analytical Solution}
 In this section we further discuss the analytical solution from \secref{sec:analytical-solution}, its application for the TTA, and possible solution techniques in the case of the SSDTA.
 
-\isubsection{Transient Temperature Analysis (TTA)}
+\isubsection{Transient Temperature Analysis (TTA)} \label{app:tta-analytical}
 \input{include/tta-analytical}
 
-\isubsection{Straight-Forward Solutions (SSDTA)} \label{ap:straight-forward}
+\isubsection{Straight-Forward Solutions (SSDTA)} \label{app:straight-forward}
 \input{include/straight-forward}
 
-\isection{Reliability Optimization} \label{ap:reliability}
+\balance
+\isection{Reliability Optimization} \label{app:reliability-optimization}
 Due to the shortage of space, the motivational example for the reliability optimization, discussed in \secref{sec:reliability}, and details about the reliability model and actual optimization procedure are given in this section.
-
-\isubsection{Motivational Example}
-\input{include/motivation.tex}
 
 \isubsection{Temperature-Aware Reliability Model}
 \input{include/reliability-model-extended.tex}
 
-\isubsection{Genetic Algorithm} \label{ap:genetic-algorithm}
+\isubsection{Genetic Algorithm} \label{app:genetic-algorithm}
 \input{include/genetic-algorithm.tex}

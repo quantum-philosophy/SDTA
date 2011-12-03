@@ -8,9 +8,9 @@ where $\m{A} = -\m{C}^{-1} \: \m{G}$, $\v{T}_0$ is the initial temperature, and 
 \begin{equation} \label{eq:recurrent-system}
   \v{T}_{i+1} = \m{K}_i \: \v{T}_i + \m{B}_i \: \v{P}_i
 \end{equation}
-where $\m{K}_i = e^{\m{A} \Delta t_i}$ and $\m{B}_i = \m{A}^{-1}(e^{\m{A} \Delta t_i} - \m{I})\m{C}^{-1}$.
+where $\m{K}_i = e^{\m{A} \Delta t_i}$ and $\m{B}_i = \m{A}^{-1}(e^{\m{A} \Delta t_i} - \m{I})\m{C}^{-1}$. The approach can be used to perform the TTA as it is discussed in the appendix (\appref{tta-analytical}).
 
-The approach can be used to perform the TTA as it is discussed in \appref{ap:tta-analytical}. For the SSDTA case the following system of linear equations can be derived from \equref{eq:recurrent-system}:
+For the SSDTA calculation the following system of linear equations can be derived from \equref{eq:recurrent-system}:
 \[
   \begin{cases}
     \m{K}_0 \: \v{T}_0 - \v{T}_1 & = -\m{B}_0 \: \v{P}_0 \\
@@ -18,7 +18,7 @@ The approach can be used to perform the TTA as it is discussed in \appref{ap:tta
     -\v{T}_0 + \m{K}_{N_s - 1} \: \v{T}_{N_s - 1} & = -\m{B}_{N_s - 1} \: \v{P}_{N_s - 1}
   \end{cases}
 \]
-where the last equation enforces the boundary condition and ensures the equality of temperature values on both ends of the period:
+where the last equation enforces the boundary condition, the equality of temperature values on both ends of the period:
 \begin{equation} \label{eq:boundary-condition}
   \v{T}_0 = \v{T}_{N_s}
 \end{equation}
@@ -52,4 +52,4 @@ To get the whole picture, the system can be written as:
   \right]}_{\displaystyle \mathbb{B}}$
 }
 \end{equation}
-where $\mathbb{A}$ is a $N_n N_s \times N_n N_s$ matrix, $\mathbb{X}$ and $\mathbb{B}$ are vectors with $N_n N_s$ elements. It can be seen that we have obtained a regular system of linear equations. Straight-forward techniques to solve it and their disadvantages are further discussed in \appref{ap:straight-forward}.
+where $\mathbb{A}$ is a $N_n N_s \times N_n N_s$ matrix, $\mathbb{X}$ and $\mathbb{B}$ are vectors with $N_n N_s$ elements. It can be seen that we have obtained a regular system of linear equations, straight-forward techniques to solve it and their disadvantages are further discussed in the appendix (\appref{straight-forward}).

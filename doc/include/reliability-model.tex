@@ -1,11 +1,15 @@
-We address temperature-driven failure mechanisms with the reliability model presented in \cite{huang2009, xiang2010}. In this paper, our particular focus is on the thermal cycling (TC) fatigue, which is directly connected to the temperature variations. A motivational example and detailed discussion of the model are given in \appref{ap:reliability}; here we outline the basic concepts.
+We address temperature-driven failure mechanisms with the reliability model presented in \cite{huang2009, xiang2010}. In this paper, our particular focus is on the thermal cycling (TC) fatigue, which is directly connected to the temperature variations. The derivation of the model is given in the appendix (\appref{reliability-optimization}).
 
-Assuming the TC fatigue, the parameters affecting reliability are the amplitude and number of thermal cycles as well as the maximal temperature. A thermal cycle is a time interval in which the temperature starts from a certain value and, after reaching an extremum, returns to the starting point. The number of thermal cycles to failure is modeled by the following equation \cite{xiang2010, jedec2010}:
-\begin{equation} \label{eq:cycles-to-failure}
-  N_c = A (\Delta T - \Delta T_0)^{-b} e^{\frac{E_a}{k T_{max}}}
-\end{equation}
-where $\Delta T$ is the thermal cycle excursion (the distance between the minimal and maximal temperatures) and $T_{max}$ is the maximal temperature during the thermal cycle. The mean time to failure (MTTF) of one processing element in the system can be estimated as the following:
+Assuming the TC fatigue, the parameters affecting reliability are the amplitude and number of thermal cycles as well as the maximal temperature. A thermal cycle is a time interval in which the temperature starts from a certain value and, after reaching an extremum, returns back.
+
+The mean time to failure (MTTF) of one processing element in the system can be estimated as the following:
 \begin{align} \label{eq:one-mttf}
   \theta = \frac{\period}{\sum_{i=0}^{N_m - 1} \frac{1}{N_{c \: i}}}
 \end{align}
-where $N_m$ is the number of different thermal cycles during the application period $\period$. It can be observed that the final equation includes the sum over $N_{c \: i}$ defined by \equref{eq:cycles-to-failure}. The computation requires the identification of the thermal cycles with their amplitudes and maximal temperatures. All the prerequisites are captured by the SSDTP, which is needed as an input to the reliability optimization.
+where $N_m$ is the number of thermal cycles during the application period $\period$. $N_{c \: i}$ characterizes $i$th thermal cycle and is calculated according to the following expression:
+\begin{equation} \label{eq:cycles-to-failure}
+  N_c = A (\Delta T - \Delta T_0)^{-b} e^{\frac{E_a}{k T_{max}}}
+\end{equation}
+where $\Delta T$ is the thermal cycle excursion (the distance between the minimal and maximal temperatures) and $T_{max}$ is the maximal temperature during the thermal cycle.
+
+It can be seen that the computation requires the identification of the thermal cycles with their amplitudes and maximal temperatures. All the prerequisites are captured by the SSDTP, which is needed as an input to the reliability optimization.

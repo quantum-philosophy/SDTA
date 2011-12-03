@@ -1,0 +1,116 @@
+% \begin{table*}
+%   \centering
+%   \caption{Performance comparison.}
+%   \itablefloat{Scaling with the application period.}{
+%     \label{tab:scaling-time}
+%     \begin{tabular}{|r|r|r|r|r|}
+%       \hline
+%       $\period$, $s$ & $PM$, $ms$ & $FFT$, $\times$ & $TTA^{AS}$, $\times$ & $TTA^{HS}$, $\times$ \\
+%       \hline
+%       \hline
+%       % 0.05 & 0.18 & 52.12 & 168.71 & 6750.96 \\
+%       % 0.10 & 0.39 & 41.64 &  77.91 & 5301.97 \\
+%       0.20 & 0.67 & 41.64 &  42.79 & 5188.80 \\
+%       % 0.30 & 1.03 & 39.09 &  27.97 & 5030.25 \\
+%       0.40 & 1.36 & 39.16 &  21.43 & 4887.90 \\
+%       % 0.50 & 1.70 & 43.56 &  16.99 & 4880.57 \\
+%       0.60 & 2.04 & 40.86 &  14.34 & 4899.20 \\
+%       % 0.70 & 2.32 & 42.46 &  12.87 & 4935.89 \\
+%       0.80 & 2.66 & 41.70 &  11.07 & 4842.62 \\
+%       % 0.90 & 2.98 & 42.54 &  10.21 & 4883.76 \\
+%       1.00 & 3.33 & 45.19 &   9.23 & 4892.86 \\
+%       \hline
+%     \end{tabular}
+%   }
+%   \itablefloat{Scaling with the number of cores.}{
+%     \label{tab:scaling-cores}
+%     \begin{tabular}{|r|r|r|r|r|}
+%       \hline
+%       $N_p$ & $PM$, $ms$ & $FFT$, $\times$ & $TTA^{AS}$, $\times$ & $TTA^{HS}$, $\times$ \\
+%       \hline
+%       \hline
+%        2 &  0.77 & 70.79 & 15.74 & 3236.75 \\
+%        4 &  1.63 & 46.09 & 17.68 & 2906.30 \\
+%        8 &  4.67 & 30.08 & 20.40 & 2695.69 \\
+%       16 & 15.48 & 21.08 & 24.36 & 2434.74 \\
+%       32 & 56.44 & 13.13 & 27.24 & 2214.19 \\
+%       \hline
+%     \end{tabular}
+%   }
+% \end{table*}
+\begin{table*}
+  \small
+  \centering
+  \caption{Results of the optimization.}
+  \vspace{-5pt}
+  \itablefloat{Different numbers of cores.}{ \label{tab:mttf-cores}
+    \begin{tabular}{|r|r|r|r|r|}
+      \hline
+      $N_p$ & $N_t$ & $t, s$ & $\mttfimp$ & $\eimp$ \\
+      \hline
+      \hline
+      % 0% tolerance, 200-200-200-200-200 (mine)
+       2 &   40 &     7.84 &  39.41 & 0.97 \\
+       4 &   80 &    65.76 &  37.11 & 0.99 \\
+       8 &  160 &   759.29 &  31.36 & 0.97 \\
+      16 &  320 &  3484.59 &  13.51 & 0.98 \\
+      % 32 &  640 &  7358.01 &   3.05 & 1.05 \\
+      % 400 stall
+      % 32 &  640 & 12732.54 &   3.82 & 1.05 \\
+
+      % 0.5% tolerance, 200-200-200-400-400 (mine)
+      %  2 &   40 &    5.51 &  50.99 & 0.98 \\
+      %  4 &   80 &   34.27 &  39.95 & 0.98 \\
+      %  8 &  160 &  267.77 &  28.28 & 0.93 \\
+      % 16 &  320 & 2150.12 &   8.38 & 0.99 \\
+      % 32 &  640 & 7596.63 &   3.82 & 1.05 \\
+      \hline
+    \end{tabular}
+  }
+  \itablefloat{Different application sizes.}{ \label{tab:mttf-tasks}
+    \begin{tabular}{|r|r|r|r|r|}
+      \hline
+      $N_p$ & $N_t$ & $t, s$ & $\mttfimp$ & $\eimp$ \\
+      \hline
+      \hline
+      % 0% tolerance, 200-200-200-200-200 (Min)
+      4 &  40 &   9.96 & 64.53 & 0.88 \\
+      4 &  80 &  56.57 & 38.01 & 0.96 \\
+      4 & 160 & 352.20 & 18.08 & 1.07 \\
+      4 & 320 & 408.42 & 12.92 & 1.05 \\
+      % 4 & 640 & 222.46 &  3.90 & 1.03 \\
+      % 1000 stall
+      % 4 & 640 & 1042.86 & 5.60 & 1.03 \\
+
+      % 0.5% tolerance, 200-300-400-500-600 (Sergiu)
+      % 4 &  40 &    6.49 & 121.54 & 0.93 \\
+      % 4 &  80 &   34.32 &  51.80 & 0.97 \\
+      % 4 & 160 &  150.61 &  39.90 & 1.03 \\
+      % 4 & 320 &  426.93 &   6.55 & 1.07 \\
+      % 4 & 640 &  519.22 &   3.75 & 1.03 \\
+
+      % 0.5% tolerance, 200-200-300-500-1000 (Sergiu)
+      % 4 &  40 &   8.38 & 61.46 & 0.89 \\
+      % 4 &  80 &  31.03 & 36.79 & 0.95 \\
+      % 4 & 160 & 126.77 & 15.23 & 0.99 \\
+      % 4 & 320 & 436.02 &  7.50 & 1.07 \\
+      % 4 & 640 & 815.95 &  5.09 & 1.03 \\
+      \hline
+    \end{tabular}
+  }
+  \itablefloat{Different techniques.}{ \label{tab:mttf-comparison}
+    \begin{tabular}{|r|r|r|r|r|}
+      \hline
+      $N_p$ & $N_t$ & $\mttfimp^{PM}$ & $\mttfimp^{HS}$ & $\mttfimp^{SSA}$ \\
+      \hline
+      \hline
+      4 &  40 & 64.53 & 1.29 & 25.10 \\
+      4 &  80 & 38.01 & 1.67 & 13.87 \\
+      4 & 160 & 18.08 & 2.02 &  5.33 \\
+      4 & 320 & 12.92 & 1.72 &  3.82 \\
+      % 4 & 640 &  3.09 & 1.20 &  2.70 \\
+      \hline
+    \end{tabular}
+  }
+  \vspace{-10pt}
+\end{table*}

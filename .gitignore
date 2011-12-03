@@ -6,6 +6,10 @@
 *.out
 *.aux
 doc/*.pdf
+doc/*.bib
+*.blg
+*.run.xml
+*.bbl
 
 *.mex*
 *.o

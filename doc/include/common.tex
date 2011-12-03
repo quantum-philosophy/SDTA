@@ -10,6 +10,7 @@
 \usepackage{listing}
 \usepackage[config, labelfont={rm,bf,up}, font={rm,bf,up}]{caption,subfig}
 \usepackage{balance}
+\usepackage{fixltx2e}
 
 \newcounter{copyrightbox}
 
@@ -23,7 +24,7 @@
 \newcommand{\figref}[1]{Fig.~\ref{#1}}
 \newcommand{\secref}[1]{Sec.~\ref{#1}}
 \newcommand{\tabref}[1]{Tab.~\ref{#1}}
-\newcommand{\appref}[1]{Appendix~\ref{#1}}
+\newcommand{\appref}[1]{Sec.~\ref{app:#1}}
 \newcommand{\dindex}[3]{#1_{#2,\;#3}}
 
 \newcommand{\m}[1]{\mathbf{#1}}
@@ -36,8 +37,8 @@
 \newcommand{\eqdef}{\stackrel{\text{\tiny def}}{=}}
 \newcommand{\half}{\frac{1}{2}}
 \newcommand{\mttf}{\mathcal{F}}
-\newcommand{\mttfimp}{\scriptstyle \text{MTTF}}
-\newcommand{\eimp}{\scriptstyle \text{Energy}}
+\newcommand{\mttfimp}{\scriptstyle \text{MTTF}_\times}
+\newcommand{\eimp}{\scriptstyle \text{E}_\times}
 \newcommand{\hs}{\hspace{10mm}}
 \newcommand{\range}[2]{#1, \dots, #2}
 \newcommand{\diag}[2]{\text{diag} \left( \range{#1}{#2} \right)}
@@ -65,19 +66,6 @@
   \setlength{\parskip}{0pt}
   \setlength{\parsep}{0pt}}
 {\end{itemize}\vspace{-5pt}}
-
-\newcommand{\innerimage}[3]{
-  \includegraphics[clip=true, trim=#2, width=\linewidth]{assets/#1.pdf}
-  \caption{#3}
-  \label{fig:#1}
-}
-
-\newcommand{\iimage}[3]{
-  \begin{figure}
-    \centering
-    \innerimage{#1}{#2}{#3}
-  \end{figure}
-}
 
 \newcommand{\itablefloat}[2]{\subfloat[#1]{#2}}
 

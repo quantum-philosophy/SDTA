@@ -22,6 +22,8 @@
 }
 \makeatother
 
+\bibliographystyle{soft}
+
 \begin{document}
   \conferenceinfo{DAC}{'12 San Francisco, California USA}
 
@@ -89,16 +91,17 @@
   \isection{Experimental Results} \label{sec:results}
   \input{include/results.tex}
 
+  \vspace{-5pt}
   \isection{Conclusion} \label{sec:conclusion}
   \input{include/conclusion.tex}
 
 %  \isection{Acknowledgments}
 %  We would like to thank Prof. {\AA}ke Bj\"{o}rck from Link\"{o}ping University for the valuable discussions and suggestions about the analytical solution.
-%
-  \vspace{-5pt}
-  \input{include/bibliography.tex}
+  \vspace{-10pt}
+  {\fontsize{7.5pt}{8pt}\selectfont
+  \bibliography{include/references}
+  }
 
   \appendix
-
   \input{include/appendix.tex}
 \end{document}
