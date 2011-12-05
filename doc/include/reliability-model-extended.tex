@@ -4,7 +4,7 @@ In our analysis, we use the reliability model presented in \cite{huang2009, xian
 \end{equation}
 where $\Gamma$ is the gamma function. $\expectation{\mathcal{T}}$ is the mean time to failure (MTTF) that we denote by $\theta$.
 
-The shape parameter $\beta$ is independent on the temperature variation \citeapp{chang2006}, which, however, is not the case with the scaling parameter $\eta$. Therefore, the distribution varies with the temperature. We can split the overall period of the application $\period$ into $N_m$ time intervals $\Delta t_i$, so that during each time interval $\Delta t_i$ the corresponding $\eta_i$ is a constant:
+The shape parameter $\beta$ is independent of the temperature variation \citeapp{chang2006}, which, however, is not the case with the scaling parameter $\eta$. Therefore, the distribution varies with the temperature. We can split the overall period of the application $\period$ into $N_m$ time intervals $\Delta t_i$, so that during each time interval $\Delta t_i$ the corresponding $\eta_i$ is a constant:
 \begin{equation} \label{eq:eta-one}
   \eta_i = \frac{\theta_i}{\Gamma(1 + \frac{1}{\beta})}
 \end{equation}
@@ -18,7 +18,7 @@ The formula keeps the form of the Weibull distribution with the scaling paramete
 \end{equation}
 The MTTF with respect to the whole application period can be obtained by combining \equref{eq:general-mttf}, \equref{eq:eta-one}, and \equref{eq:eta-many}.
 
-As mentioned previously, in order to compute the MTTF, we need to consider the particular failure mechanism and determine the values $\theta_i$ needed in \equref{eq:eta-one}. We focus on the thermal cycling fatigue (\secref{sec:reliability-model}). Assuming this concrete failure model the duration $\Delta t_i$, during which the corresponding scaling parameter $\eta_i$ is constant \equref{eq:eta-one}, is exactly a thermal cycle.
+As mentioned previously, in order to compute the MTTF, we need to consider the particular failure mechanism and determine the values $\theta_i$ needed in \equref{eq:eta-one}. We focus on the thermal cycling fatigue (\secref{sec:reliability-model}). Assuming this concrete failure model, the duration $\Delta t_i$, during which the corresponding scaling parameter $\eta_i$ is constant \equref{eq:eta-one}, is exactly a thermal cycle.
 
 When the system is exposed to identical thermal cycles, the number of such cycles to failure can be estimated using a modified version of the well-known Coffin-Manson equation with the Arrhenius term \cite{xiang2010, jedec2010}:
 \[

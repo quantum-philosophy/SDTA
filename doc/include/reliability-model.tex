@@ -6,10 +6,10 @@ The mean time to failure (MTTF) of one processing element in the system can be e
 \begin{align} \label{eq:one-mttf}
   \theta = \frac{\period}{\sum_{i=0}^{N_m - 1} \frac{1}{N_{c \: i}}}
 \end{align}
-where $N_m$ is the number of thermal cycles during the application period $\period$. $N_{c \: i}$ characterizes $i$th thermal cycle and is calculated according to the following expression:
+where $N_m$ is the number of thermal cycles during the application period $\period$. $N_{c \: i}$ characterizes the $i$th thermal cycle and is calculated according to the following expression:
 \begin{equation} \label{eq:cycles-to-failure}
   N_c = A (\Delta T - \Delta T_0)^{-b} e^{\frac{E_a}{k T_{max}}}
 \end{equation}
-where $\Delta T$ is the thermal cycle excursion (the distance between the minimal and maximal temperatures) and $T_{max}$ is the maximal temperature during the thermal cycle.
+where $\Delta T$ is the thermal cycle excursion (the distance between the minimal and maximal temperatures) and $T_{max}$ is the maximal temperature during the thermal cycle (more details in \appref{reliability-optimization}).
 
-It can be seen that the computation requires the identification of the thermal cycles with their amplitudes and maximal temperatures. All the prerequisites are captured by the SSDTP, which is needed as an input to the reliability optimization.
+It can be seen that the computation requires the identification of the thermal cycles with their amplitudes and maximal temperatures. All these are captured by the SSDTP, which is needed as an input to the reliability optimization.
