@@ -4,7 +4,7 @@ In the following explanation, without loss of generality, we assume $\v{T}(t) \e
 \begin{equation} \label{eq:solution}
   \v{T}(t) = e^{\m{A} t} \; \v{T}_0 + \m{A}^{-1} (e^{\m{A} t} - \m{I}) \; \m{C}^{-1} \v{P}
 \end{equation}
-where $\m{A} = -\m{C}^{-1} \: \m{G}$, $\v{T}_0$ is the initial temperature, and $\m{I}$ is the identity matrix. Therefore, given a discrete power profile, the corresponding temperature profile can be found using the following recurrence:
+where $\m{A} = -\m{C}^{-1} \: \m{G}$, $\v{T}_0$ is the initial temperature and $\m{I}$ is the identity matrix. Therefore, given a discrete power profile, the corresponding temperature profile can be found using the following recurrence:
 \begin{equation} \label{eq:recurrent-system}
   \v{T}_{i+1} = \m{K}_i \: \v{T}_i + \m{B}_i \: \v{P}_i
 \end{equation}

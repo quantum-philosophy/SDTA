@@ -4,7 +4,7 @@ In our analysis, we use the reliability model presented in \cite{huang2009, xian
 \end{equation}
 where $\Gamma$ is the gamma function. $\expectation{\mathcal{T}}$ is the mean time to failure (MTTF) that we denote by $\theta$.
 
-The shape parameter $\beta$ is independent on the temperature variation \cite{chang2006}, which, however, is not the case with the scaling parameter $\eta$. Therefore, the distribution varies with the temperature. We can split the overall period of the application $\period$ into $N_m$ time intervals $\Delta t_i$, so that during each time interval $\Delta t_i$ the corresponding $\eta_i$ is a constant:
+The shape parameter $\beta$ is independent on the temperature variation \citeapp{chang2006}, which, however, is not the case with the scaling parameter $\eta$. Therefore, the distribution varies with the temperature. We can split the overall period of the application $\period$ into $N_m$ time intervals $\Delta t_i$, so that during each time interval $\Delta t_i$ the corresponding $\eta_i$ is a constant:
 \begin{equation} \label{eq:eta-one}
   \eta_i = \frac{\theta_i}{\Gamma(1 + \frac{1}{\beta})}
 \end{equation}
@@ -24,7 +24,7 @@ When the system is exposed to identical thermal cycles, the number of such cycle
 \[
   N_c = A (\Delta T - \Delta T_0)^{-b} e^{\frac{E_a}{k T_{max}}}
 \]
-where $A$ is an empirically determined constant, $\Delta T$ is the thermal cycle excursion, $\Delta T_0$ is the portion of the temperature range in the elastic region which does not cause damage, $b$ is the Coffin-Manson exponent, which is also empirically determined, $E_{a}$ is the activation energy, $k$ is the Boltzmann constant, and $T_{max}$ is the maximal temperature during the thermal cycle. The system undergoes a number of different thermal cycles each with its own duration $\Delta t_i$ over the application period and each cycle causes its own damage. Therefore, having $N_m$ thermal cycles characterized by the number of cycles to failure $N_{c\:i}$ and duration $\Delta t_i$, we can compute $\theta_i$:
+where $A$ is an empirically determined constant, $\Delta T$ is the thermal cycle excursion, $\Delta T_0$ is the portion of the temperature range in the elastic region which does not cause damage, $b$ is the Coffin-Manson exponent, which is also empirically determined, $E_{a}$ is the activation energy, $k$ is the Boltzmann constant, and $T_{max}$ is the maximal temperature during the thermal cycle. Over the application period, the system undergoes a number of different thermal cycles each with its own duration $\Delta t_i$ and each cycle causes its own damage. Therefore, having $N_m$ thermal cycles characterized by the number of cycles to failure $N_{c\:i}$ and duration $\Delta t_i$, we can compute $\theta_i$:
 \begin{equation} \label{eq:mttf-cycle}
   \theta_i = N_{c \: i} \; \Delta t_i
 \end{equation}

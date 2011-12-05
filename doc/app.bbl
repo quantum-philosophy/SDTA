@@ -1,0 +1,19 @@
+\begin{thebibliography}{1}\vspace{10pt} \label{app:references}
+
+\bibitem[S1]{umfpack2004}
+T.~A. Davis.
+\newblock Algorithm 832: {UMFPACK}.
+\newblock {\em ACM Trans. Mathematical Software}, 30(2):196--199, 2004.
+
+\bibitem[S2]{mazancourt1983}
+T.~De Mazancourt et~al.
+\newblock The inverse of a block-circulant matrix.
+\newblock {\em IEEE Trans. Anten. Prop.}, 31(5):808--810, 1983.
+
+\bibitem[S3]{chang2006}
+S.-C. Chang et~al.
+\newblock Electrical characteristics and reliability properties of {MOSFET}
+  with {Dy2O3} gate dielectric.
+\newblock {\em Applied Physics Letters}, 89(5), 2006.
+
+\end{thebibliography}

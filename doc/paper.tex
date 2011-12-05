@@ -1,6 +1,10 @@
 \documentclass{sig-alternate}
 \input{include/common.tex}
 
+% \usepackage[sectionbib]{chapterbib}
+\usepackage{multibib}
+\newcites{app}{Appendix References}
+
 % Remove the copyright
 \usepackage{etoolbox}
 \makeatletter
@@ -21,8 +25,6 @@
   \vspace{40pt}%
 }
 \makeatother
-
-\bibliographystyle{soft}
 
 \begin{document}
   \conferenceinfo{DAC}{'12 San Francisco, California USA}
@@ -98,10 +100,14 @@
 %  \isection{Acknowledgments}
 %  We would like to thank Prof. {\AA}ke Bj\"{o}rck from Link\"{o}ping University for the valuable discussions and suggestions about the analytical solution.
   \vspace{-10pt}
-  {\fontsize{7.5pt}{8pt}\selectfont
+  \bibliographystyle{soft}
   \bibliography{include/references}
-  }
 
   \appendix
   \input{include/appendix.tex}
+
+  \bibliographystyleapp{soft}
+  \bibliographyapp{include/references-appendix}
+  \vspace{10pt}
+
 \end{document}

@@ -10,6 +10,7 @@ doc/*.bib
 *.blg
 *.run.xml
 *.bbl
+*.dvi
 
 *.mex*
 *.o

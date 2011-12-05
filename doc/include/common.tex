@@ -12,6 +12,11 @@
 \usepackage{balance}
 \usepackage{fixltx2e}
 
+\makeatletter
+\let\oldtb=\thebibliography
+\renewcommand{\thebibliography}{\small\oldtb}
+\makeatother
+
 \newcounter{copyrightbox}
 
 \hyphenation{SSDTP SSDTA MTTF SSA TTA}
