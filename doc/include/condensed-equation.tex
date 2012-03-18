@@ -15,7 +15,7 @@ The conductance matrix $\m{G}$ is a symmetric matrix, since if a node A is conne
 \begin{equation} \label{eq:substitution}
   \tilde{\v{T}}(t) = \m{C}^{\frac{1}{2}} \v{T}(t) \hs \tilde{\m{A}} = -\m{C}^{-\frac{1}{2}} \m{G} \: \m{C}^{-\frac{1}{2}}
 \end{equation}
-where $\tm{A}$ is symmetric, since $\tm{A}^T = -(\m{C}^{-\half} \m{G} \m{C}^{-\half})^T = -(\m{C}^{-\half})^T \m{G}^T (\m{C}^{-\half})^T = \tilde{\m{A}}$. Consequently, the system of ODEs (\equref{eq:fourier-model}) and its solutions (\equref{eq:solution}) can be rewritten as the following:
+where $\tm{A}$ is symmetric\footnote{$\tm{A}^T = -(\m{C}^{-\half} \m{G} \m{C}^{-\half})^T = -(\m{C}^{-\half})^T \m{G}^T (\m{C}^{-\half})^T = \tilde{\m{A}}$.}. Consequently, the system of ODEs (\equref{eq:fourier-model}) and its solutions (\equref{eq:solution}) can be rewritten as the following:
 \begin{align*}
   & \frac{d\tilde{\v{T}}(t)}{dt} = \tilde{\m{A}} \: \m{Y}(t) + \m{C}^{-\frac{1}{2}} \v{P} \\
   & \tilde{\v{T}}(t) = e^{\tilde{\m{A}} t} \tilde{\v{T}}_0 + \tilde{\m{A}}^{-1} (e^{\tilde{\m{A}} t} - \m{I}) \m{C}^{-\frac{1}{2}} \v{P}
@@ -40,7 +40,7 @@ Using the eigenvalue decomposition, the last equation can be computed in the fol
 In the recurrence given by \equref{eq:recurrent-equation} we denote $\m{Q}_i = \tm{B}_i \: \v{P}_i$:
 \begin{align}
   & \tv{T}_{i + 1} = \tm{K}_i \: \tv{T}_i + \m{Q}_i, \; i = \range{0}{N_s - 1} \label{eq:ce-recurrent} \\
-  & \tv{T}_0 = \tv{T}_{N_s + 1} \nonumber
+  & \tv{T}_0 = \tv{T}_{N_s} \nonumber
 \end{align}
 Performing the iterative repetition of \equref{eq:ce-recurrent} leads to:
 \begin{equation} \label{eq:y-recurrent}

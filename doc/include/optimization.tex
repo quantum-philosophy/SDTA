@@ -17,11 +17,11 @@ The problem formulation is the following:
 \end{minipage}
 \begin{minipage}{0.6\linewidth}
   \begin{align}
-    & s.t. \nonumber \\
-    & t_{end \: i} \leq \period, \: \forall i \label{eq:deadline} \\
-    & T_{ij} \leq T_{max}, \: \forall i, j \label{eq:t-max}
+    & \text{s.t.} \nonumber \\
+    & t_{\text{end} \: i} \leq \period, \: \forall i \label{eq:deadline} \\
+    & T_{ij} \leq T_\text{max}, \: \forall i, j \label{eq:t-max}
   \end{align}
 \end{minipage}\vspace{5pt}
-where $\theta_i$ is the MTTF of the $i$th processing element given by \equref{eq:one-mttf}, $t_{end \: i}$ denotes the end time of the $i$th task, $\period$ is the period of the application, and $T_{ij}$ are temperature values in the SSDTP. \equref{eq:deadline} imposes the application deadline, which we assume to be equal to the period. \equref{eq:t-max} enforces the constraint on the maximal temperature in the temperature profile $\mathbb{T} = \{ T_{ij} \}$.
+where $\theta_i$ is the MTTF of the $i$th processing element given by \equref{eq:one-mttf}, $t_{\text{end} \: i}$ denotes the end time of the $i$th task, $\period$ is the period of the application, and $T_{ij}$ are temperature values in the SSDTP. \equref{eq:deadline} imposes the application deadline, which we assume to be equal to the period. \equref{eq:t-max} enforces the constraint on the maximal temperature in the temperature profile $\mathbb{T} = \{ T_{ij} \}$.
 
 The optimization procedure is based on a genetic algorithm (GA) \cite{schmitz2004} with the fitness function $\mttf$ given by \equref{eq:fitness-function}. The algorithm is outlined in \appref{genetic-algorithm}.

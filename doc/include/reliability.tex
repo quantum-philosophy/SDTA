@@ -1,7 +1,7 @@
 The proposed calculation of the SSDTA can be used in a wide range of system optimizations. One of them is reliability optimization that we discuss in this section. We perform a temperature-aware task mapping and scheduling in order to address the thermal cycling fatigue.
 
 \isubsection{Application Model} \label{sec:application-model}
-The periodic application is modeled as a task graph $G = (V, \: E, \: \period)$ where $V$ is a set of $N_t$ tasks (vertices of the graph), $E$ is a set of data dependencies between tasks (edges), and $\period$ is the period of the application, which we assume to be equal to the deadline. Each pair of a task $v_i \in V$ and processing element $\pi_j \in \Pi$ is characterized by a tuple $(N_{clock \: ij}, C_{eff \; ij})$, where $N_{clock \: ij}$ is the number of clock cycles and $C_{eff \; ij}$ is the effective switched capacitance.
+The periodic application is modeled as a task graph $G = (V, \: E, \: \period)$ where $V$ is a set of $N_t$ tasks (vertices of the graph), $E$ is a set of data dependencies between tasks (edges), and $\period$ is the period of the application, which we assume to be equal to the deadline. Each pair of a task $v_i \in V$ and processing element $\pi_j \in \Pi$ is characterized by a tuple $(N_{\text{clock} \: ij}, C_{\text{eff} \; ij})$, where $N_{\text{clock} \: ij}$ is the number of clock cycles and $C_{\text{eff} \; ij}$ is the effective switched capacitance.
 
 \isubsection{Temperature-Aware Reliability Model} \label{sec:reliability-model}
 \input{include/reliability-model.tex}

@@ -6,51 +6,76 @@
 \newcites{app}{Appendix References}
 
 % Remove the copyright
-\usepackage{etoolbox}
-\makeatletter
-\patchcmd{\maketitle}{\@copyrightspace}{}{}{}
-\makeatother
+% \usepackage{etoolbox}
+% \makeatletter
+% \patchcmd{\maketitle}{\@copyrightspace}{}{}{}
+% \makeatother
 
 % Change the title font and spacing
 \newfont{\titlefont}{phvb8t at 17pt}
+\newfont{\authornamefont}{phvr8t at 12pt}
+\newfont{\universityfont}{phvr8t at 10pt}
+\newfont{\countryfont}{phvr8t at 10pt}
+\newfont{\authoremailfont}{phvr8t at 12pt}
+
+\newcommand{\authorname}[1]{{\authornamefont #1}}
+\newcommand{\university}[1]{{\universityfont #1}}
+\newcommand{\country}[1]{{\countryfont #1}}
+\newcommand{\authoremail}[1]{{\authoremailfont #1}}
+
 \makeatletter
 \renewcommand{\@maketitle}{
   \newpage
   \null
   % \vskip 2em%
   \begin{center}%
-  {\titlefont \@title \par}%
+    {\titlefont \@title \par}%
+    \vspace{1.5em}
+    {\@author \par}%
   \end{center}%
   \par%
-  \vspace{40pt}%
+  \vspace{14pt}%
 }
 \makeatother
 
 \begin{document}
-  \conferenceinfo{DAC}{'12 San Francisco, California USA}
+  \conferenceinfo{DAC}{'12 San Francisco, California, USA}
+  \CopyrightYear{2012}
+  % \crdata{}
 
   \title{Steady-State Dynamic Temperature Analysis and Reliability Optimization for Embedded Multiprocessor Systems}
 
   \numberofauthors{4}
-  \author{}
   % \author{
-  %   \alignauthor Ivan Ukhov\\
+  %   \alignauthor
+  %     Ivan Ukhov\\
   %     \affaddr{Link\"{o}ping University}\\
   %     \affaddr{Sweden}\\
   %     \email{ivan.ukhov@liu.se}
-  %   \alignauthor Min Bao\\
+  %   \alignauthor
+  %     Min Bao\\
   %     \affaddr{Link\"{o}ping University}\\
   %     \affaddr{Sweden}\\
   %     \email{min.bao@liu.se}
-  %   \alignauthor Petru Eles\\
+  %   \alignauthor
+  %     Petru Eles\\
   %     \affaddr{Link\"{o}ping University}\\
   %     \affaddr{Sweden}\\
   %     \email{petru.eles@liu.se}
-  %   \alignauthor Zebo Peng\\
+  %   \alignauthor
+  %     Zebo Peng\\
   %     \affaddr{Link\"{o}ping University}\\
   %     \affaddr{Sweden}\\
   %     \email{zebo.peng@liu.se}
   % }
+  \author{
+    \begin{tabular}[t]{@{\extracolsep{14pt}}cccc}
+      \authorname{Ivan Ukhov} & \authorname{Min Bao} & \authorname{Petru Eles} & \authorname{Zebo Peng} \\
+      \university{Link\"{o}ping University} & \university{Link\"{o}ping University} & \university{Link\"{o}ping University} & \university{Link\"{o}ping University} \\
+      \country{Sweden} & \country{Sweden} & \country{Sweden} & \country{Sweden} \\
+      \authoremail{ivan.ukhov@liu.se} & \authoremail{min.bao@liu.se} & \authoremail{petru.eles@liu.se} & \authoremail{zebo.peng@liu.se}
+    \end{tabular}
+  }
 
   \date{July 3--7, 2012}
 
@@ -60,11 +85,21 @@
     \input{include/abstract.tex}
   \end{abstract}
 
-  % \category{ESS.6.3}{Embedded systems design methodologies}{Multiple-constraint-driven embedded system design exploration, synthesis and optimization}{}
+  % http://www.acm.org/about/class/how-to-use
+  % http://www.acm.org/about/class/ccs98-html
+  \vspace{-5pt}
+  \category{C.3}{Special-Purpose and Application-Based Systems}{Microprocessor/microcomputer applications, real-time and embedded systems}
+  \category{G.1.3}{Numerical Linear Algebra}{Sparse, structured, and very large systems}
+  \category{G.3}{Probability and Statistics}{Reliability and life testing}
+  \category{J.6}{Computer-Aided Engineering}{Computer-aided design.}
 
-  % \terms{Steady-State Dynamic Temperature Analysis}
+  % http://www.acm.org/about/class/1998
+  \vspace{-5pt}
+  \terms{Algorithms, Design, Performance, Reliability.}
 
-  % \keywords{temperature analysis, steady-state dynamic, thermal cycling, multicore}
+  % Capitalized
+  \vspace{-5pt}
+  \keywords{Multicore, Temperature Analysis, Leakage Power.}
 
   \isection{Introduction and Prior Work}
   \input{include/introduction.tex}
@@ -75,6 +110,7 @@
   \isection{Problem Formulation} \label{sec:problem}
   \input{include/problem.tex}
 
+  % \vfill\eject
   \isection{State of the Art Solutions} \label{sec:hotspot-solution}
   \input{include/hotspot-solution.tex}
 
@@ -97,8 +133,9 @@
   \isection{Conclusion} \label{sec:conclusion}
   \input{include/conclusion.tex}
 
-%  \isection{Acknowledgments}
-%  We would like to thank Prof. {\AA}ke Bj\"{o}rck from Link\"{o}ping University for the valuable discussions and suggestions about the analytical solution.
+  \isection{Acknowledgments}
+  We would like to thank Prof. {\AA}ke Bj\"{o}rck from Link\"{o}ping University for the valuable discussions and suggestions about the analytical solution.
+
   \vspace{-10pt}
   \bibliographystyle{soft}
   \bibliography{include/references}

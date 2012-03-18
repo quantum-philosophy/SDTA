@@ -1,6 +1,6 @@
 As shown in \secref{sec:hotspot-solution}, the state of the art solutions either produce inaccurate and, in many cases, completely useless results, or they are unacceptably slow. In this section we eliminate the first problem by obtaining an analytical solution for the SSDTP and tackle the second one in \secref{sec:condensed-equation} where a fast solution technique is proposed.
 
-In the following explanation, without loss of generality, we assume $\v{T}(t) \equiv \v{T}(t) - \v{T}_{amb}$. Let the power consumption vector $\v{P}(t)$ be constant and equal to $\v{P}$; then the system given by \equref{eq:fourier-model} is a system of ordinary differential equations (ODE) with the following solution:
+In the following explanation, without loss of generality, we assume $\v{T}(t) \equiv \v{T}(t) - \v{T}_\text{amb}$. Let the power consumption vector $\v{P}(t)$ be constant and equal to $\v{P}$; then the system given by \equref{eq:fourier-model} is a system of ordinary differential equations (ODE) with the following solution:
 \begin{equation} \label{eq:solution}
   \v{T}(t) = e^{\m{A} t} \; \v{T}_0 + \m{A}^{-1} (e^{\m{A} t} - \m{I}) \; \m{C}^{-1} \v{P}
 \end{equation}
