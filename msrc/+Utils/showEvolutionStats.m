@@ -73,6 +73,9 @@ function showEvolutionStats(file, remove, take)
     if strcmp(take, 'max')
       [ dummy, I ] = sort(stats(:, IL), 1, 'descend');
       Stats(end + 1, :) = stats(I(1), :);
+    elseif strcmp(take, 'min')
+      [ dummy, I ] = sort(stats(:, IL), 1, 'descend');
+      Stats(end + 1, :) = stats(I(end), :);
     elseif strcmp(take, 'mean')
       Stats(end + 1, :) = mean(stats, 1);
     elseif strcmp(take, 'first')
