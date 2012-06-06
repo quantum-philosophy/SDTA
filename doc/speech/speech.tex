@@ -24,46 +24,46 @@ The first type is known as the Steady-State Temperature Analysis. In this case, 
 
 The second type is the Transient Temperature Analysis, TTA. Here we already have a power profile, samples of the power dissipation of the system, and we are interested in the corresponding evolution of temperature. The result is a transient temperature profile.
 
-The third type of temperature analysis is the Steady-State Dynamic Temperature Analysis, SSDTA. In this case, it is assumed that the power profile is periodic and, after a sufficiently long period of time, temperature also starts following some periodic pattern, called the Steady-State Dynamic Temperature Profile, SSDTP, which we would like to find. The result is again a profile, but this time periodic.
+The third type of temperature analysis is the Steady-State Dynamic Temperature Analysis, SSDTA. In this case, it is assumed that the power profile is periodic and, after a sufficiently long period of time, temperature also starts following some periodic pattern, called the Steady-State Dynamic Temperature Profile, SSDTP. The result is again a profile, but this time periodic. And our work is mostly about this last type of temperature analysis.
 
 \section{Slide 2: Overview}
-And our work is mostly about this last type of temperature analysis. We have a multiprocessor platform with a thermal package and a discrete dynamic power profile, which is periodic, and we want to find the corresponding periodic temperature profile, the SSDTP.
+ So, we have a multiprocessor platform with a thermal package and a discrete periodic power profile, and we want to find the corresponding periodic temperature profile, the SSDTP.
 
-In the second part of the work, we demonstrate the importance of the SSDTA in terms of a reliability optimization based on the thermal cycling fatigue, which I shall explain later.
+Also, in our work, we demonstrate the importance of the SSDTA in terms of a reliability optimization based on the thermal cycling fatigue, which I shall explain later.
 
 \section{Slide 3: The State of The Art (1)}
-Now, how can one perform the SSDTA using the existing tools? So, the first option is to construct a very long power profile by repeating the same periodic power chunk a number of times. Then, the Transient Temperature Analysis of this long trace is performed, and it is assumed that, if the number of chunks is sufficiently large, temperature by the last chunk reaches the desired SSDTP. Unfortunately, depending on the application, this approach can burn a lot of time without any guarantees of accuracy.
+So, how can one perform the SSDTA using the existing tools? Well, the first option is to construct a very long power profile by repeating the same periodic power chunk a number of times. Then one needs to perform the TTA of this long trace and assume that, if the number of chunks is sufficiently large, temperature by the last chunk reaches the desired SSDTP. Unfortunately, this approach can burn a lot of time without any guarantees of accuracy.
 
 \section{Slide 4: The State of The Art (2)}
-Another option is known as the Steady-State Approximation, SSA. In this case, one employs the Steady-State Temperature Analysis, not Steady-State Dynamic, in order to approximate the SSDTP. So, at each moment of time, it is assumed that the temperature is the same as what it would be if the system were in a thermal balance with the power dissipation of this particular moment of time being constant forever. The final temperature curve becomes stepwise, as it is illustrated in the slide, the orange curve. The approximation is fast, but, unfortunately, can be dramatically inaccurate since in general temperature does not have time to reach the assumed thermal balance.
+Another option is known as the Steady-State Approximation, SSA. In this case, one employs the Steady-State Temperature Analysis, not Steady-State Dynamic, in order to approximate the SSDTP. So, in order to calculate temperature at a certain moment of time, it is assumed that the temperature is the same as what it would be if the system were in a thermal balance with the power dissipation of this particular moment of time being constant forever. The final temperature curve becomes stepwise, the orange curve here. The approximation is fast, but, unfortunately, can be dramatically inaccurate since in general temperature does not have time to reach the assumed thermal balance.
 
 \section{Slide 5: Thermal RC Circuit}
-Now, how do we propose to perform the SSDTA? Well, the beginning is standard. Given a multiprocessor platform with a thermal package, an equivalent thermal RC circuit is constructed. The circuit is composed of a number of thermal nodes that are characterized by thermal capacitance and thermal resistance. The nodes that belong to the die itself are said to be the sources of heat in the sense that they dissipate power.
+Now, how do we propose to perform the SSDTA? Well, the beginning is standard. Given a multiprocessor platform with a thermal package, an equivalent thermal RC circuit is constructed. The circuit is composed of a number of thermal nodes connected with each other and characterized by thermal capacitance and thermal resistance. The nodes that belong to the die itself are said to be the sources of heat in the sense that they dissipate power.
 
 \section{Slide 6: Proposed Method (1)}
 The thermal behaviour of the circuit is described with the well-known expression given at the top of the slide. $T$ is the temperature vector, $P$ is the power vector, $C$ and $G$ are the matrices of the capacitance and conductance, respectively. The dimensions of the system correspond to the number of thermal nodes. In general, the equation does not have a closed-form solution, but when the power on the right-hand side is constant, it becomes a system of ordinary differential equations, which can be solved analytically. Now, since the given power profile is discrete, it is reasonable to assume that between neighbour samples the power dissipation stays constant.
 
-In this case, we can solve this system of ordinary differential equations for each of the intervals, forming an iterative process shown in the slide. $K$ and $B$ here are the coefficients that connects the current temperature and power with the temperature at the next moment of time.
+In this case, we can solve the equation for each step of the power profile, forming an iterative process shown in the slide. $K$ and $B$ here are the coefficients that connects the current temperature and power with the temperature at the next moment of time.
 
 This iterative solution is already employed in the literature to perform the TTA.
 
-We propose to employ it to perform the SSDTA as well. Since we are looking for a periodic curve, we have one additional equation, shown in the slide, that ensures that the values on both sides of the temperature profile are equal.
+We propose to employ it to perform the SSDTA as well. Since we are looking for a periodic curve, we have one additional equation that ensures that the temperature is the same on both ends of the resulting profile.
 
 \section{Slide 7: Proposed Method (2)}
-When we write this iterative equation for each step of the power profile and add the boundary condition mentioned above, we obtain a huge system of linear equation, which is to be solved. The dimensions of the system are the number of steps, $N_s$, in the power profile multiplied by the number nodes, $N_n$, in the thermal circuit. The problem here is that the system is so large that straight-forward solutions just do not work.
+When we write this iterative equation for each step of the power profile and add the boundary condition, we obtain a huge system of linear equation. The dimensions of the system are the number of steps, $N_s$, in the power profile multiplied by the number nodes, $N_n$, in the thermal circuit. The problem here is that the system is so large that straight-forward solutions just do not work.
 
 \section{Slide 8: Proposed Method (3)}
-Fortunately, we have a fast and accurate solution to this problem. Although, I am not going into details right now, we can take them to the poster session or you can find everything in the paper. What we propose consists of two parts. First, we perform a one-time auxiliary transformation of the heat equation, which I shown you before. This transformation allows us to undertake all the computations in a more efficient manner. Secondly, we propose an efficient way of actually finding the solution, the SSDTP, by forming a so-called condensed system. The approach takes into consideration all the features of the problem, which are the structure and sparseness of the system. The solution is analytical and, therefore, accurate withing the thermal model. Also, it is relatively cheap to obtain. As an example, the computational complexity of direct solvers of linear systems is $N_s^3 N_n^3$. Our solution has just a linear dependency on $N_s$, the number of steps in the power profile, which usually by far dominates.
+Fortunately, we have a fast and accurate solution to this problem. Although, I am not going into details right now, we can take them to the poster session or you can find everything in the paper. What we propose consists of two parts. First, we perform a one-time auxiliary transformation of the heat equation, which I shown you before. This transformation allows us to undertake all the computations in a more efficient manner. Secondly, we propose an efficient way of actually finding the solution, the SSDTP, by forming a so-called condensed system. The approach takes into consideration all the features of the problem, which are the structure and sparseness of the system. The solution is analytical and, therefore, accurate from the perspective of the underlying thermal model. Also, it is relatively cheap to obtain. As an example, the computational complexity of direct solvers of linear systems is $N_s^3 N_n^3$. Our solution has just a linear dependency on $N_s$, the number of steps in the power profile, which usually by far dominates.
 
 \section{Slide 9: Experimental Results (1)}
-Now, a few words about the experimental results. Here is a comparison with HotSpot, a well-known thermal simulator, where we let it to successively perform the TTA. In the left graph we vary the number of steps in the power profile, in the right --- the number of processing elements that, according to some equation, corresponds to the number of thermal nodes. As you can see, we are 2000--5000 times faster.
+Now, a few words about the experimental results. Here is a comparison with HotSpot, a well-known thermal simulator, where we let it to successively perform the TTA. In the left graph we vary the number of steps in the power profile, in the right --- the number of thermal nodes. As you can see, we are 2000--5000 times faster.
 
 \section{Slide 10: Thermal Cycling Fatigue}
 The second part of the paper is dedicated to the reliability optimization where we demonstrate our technique in action. One of the failure mechanisms that cannot be properly addressed without the knowledge of the exact SSDTP is the thermal cycling fatigue. Thermal cycling refers to the damage caused by the fluctuation of temperature and depends on the maximal temperature, amplitudes, and frequency of temperature changes in time.
 
-For example, here you can see the periodic temperature profile of two cores, PE0 and PE1. PE0 is exposed to three thermal cycles while PE1 is exposed to one cycle.
+Here you can see an example of the periodic temperature profile of two cores. One is exposed to three thermal cycles while another is exposed to one cycle.
 
-It is important that just the average temperature is by no means sufficient in this case to estimate the damage; the SSDTP is a must.
+It is important that just the average temperature is by no means sufficient in this case to estimate the damage.
 
 \section{Slide 11: Reliability Optimization: Motivation}
 Now I would like to show you one more example that motivates our optimization. Lets assume that we have a periodic application with six tasks mapped onto two cores. Assume also that the initial mapping and schedule are those shown on the left side of the slide. The resulting temperature fluctuation is shown on the right side; please pay your attention to the blue curve when there are three thermal cycles.
@@ -72,15 +72,13 @@ Now, we can try to change the mapping of the application and move task T5 to PE1
 
 We can also try to reorder T1 and T3. As a result, we have just one cycle for PE0 and a 55\%-improvement of the lifetime.
 
-As you can see, by altering the mapping and schedule one can significantly decrease the temperature variation and, therefore, prolong the lifetime of the system.
-
 \section{Slide 12: Reliability Optimization: Summary}
-So, and our optimization is based on this idea. We employ a genetic algorithm that varies the mapping and schedule of the application in order to minimize the damage from the thermal cycling, and in order to compute the damage we employ out technique to perform the SSDTA.
+And our optimization is based on this idea. We employ a genetic algorithm that varies the mapping and schedule of the application in order to minimize the damage from the thermal cycling, and in order to compute the damage we employ out technique to perform the SSDTA.
 
 Also, we demonstrate in the paper that the energy efficiency of the system is not compromised by our optimization. For this particular purpose we conducted a multiobjective optimization with energy as the second goal.
 
 \section{Slide 13: Experimental Results (2)}
-And here is the last slide where I would like to show you some experimental results. Synthetic test cases can be found in the paper; here we have a real-life example, which is the MPEG2 decoder. The decoder was analysed using the MPARM platform and decomposed into 34 tasks deployed onto 2 cores. With our method the genetic algorithm managed to find a solution that increases the lifetime of the system by 24 times relative to the initial configuration. However, when we replace our technique inside the genetic algorithm with the TTA using HotSpot, it manages to find a solution that is only 5 times better than the initial one.
+And here is the last slide where I would like to show you some experimental results. Synthetic test cases can be found in the paper; here we have a real-life example, which is the MPEG2 decoder. The decoder was analysed using the MPARM platform and decomposed into 34 tasks deployed onto 2 cores. Using our method the genetic algorithm managed to find a solution that increases the lifetime of the system by 24 times relative to the initial configuration. However, when we replace our technique inside the genetic algorithm with the TTA and HotSpot, it managed to find a solution that is only 5 times better than the initial one.
 
 \section{Thanks}
 Thank you for your attention. If you have any questions, please feel free to ask.
